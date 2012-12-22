@@ -117,7 +117,7 @@ limitations under the License.
                     deprecation="off"
                     source="${build.conf.javac.source}"
                     target="${build.conf.javac.source}"
-                    encoding="ISO-8859-1"
+                    encoding="UTF-8"
                     fork="true"
                     debug="on"
                     includeantruntime="false"
