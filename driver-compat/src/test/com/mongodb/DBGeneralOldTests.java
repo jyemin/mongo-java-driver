@@ -16,11 +16,11 @@
 
 package com.mongodb;
 
-import org.mongodb.Document;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mongodb.Document;
 
 import java.net.UnknownHostException;
 import java.util.Arrays;

@@ -87,7 +87,7 @@ public class DocumentSerializer implements Serializer<Document> {
         if (value instanceof DBRef) {
             serializeDBRef(bsonWriter, (DBRef) value);
         } else if (value instanceof CodeWithScope) {
-            serializerCodeWithScope(bsonWriter, (CodeWithScope) value);
+            serializeCodeWithScope(bsonWriter, (CodeWithScope) value);
         } else if (value instanceof Map) {
             serializeMap(bsonWriter, (Map<String, Object>) value);
         } else if (value instanceof Iterable<?>) {
@@ -113,9 +113,9 @@ public class DocumentSerializer implements Serializer<Document> {
         bsonWriter.writeEndDocument();
     }
 
-    private void serializerCodeWithScope(final BSONWriter bsonWriter, final CodeWithScope codeWithScope) {
+    private void serializeCodeWithScope(final BSONWriter bsonWriter, final CodeWithScope codeWithScope) {
         bsonWriter.writeJavaScriptWithScope(codeWithScope.getCode());
-        this.serialize(bsonWriter, codeWithScope.getScope());
+        serialize(bsonWriter, codeWithScope.getScope());
     }
 
     private void serializeIterable(final BSONWriter bsonWriter, final Iterable<?> iterable) {

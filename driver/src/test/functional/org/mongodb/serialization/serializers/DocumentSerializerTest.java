@@ -27,13 +27,14 @@ import org.bson.io.BasicOutputBuffer;
 import org.bson.io.InputBuffer;
 import org.bson.types.Binary;
 import org.bson.types.Code;
+import org.bson.types.CodeWithScope;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
-import org.mongodb.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.DatabaseTestCase;
+import org.mongodb.Document;
 import org.mongodb.serialization.PrimitiveSerializers;
 
 import java.io.ByteArrayOutputStream;
@@ -94,6 +95,23 @@ public class DocumentSerializerTest extends DatabaseTestCase {
         final InputBuffer inputBuffer = createInputBuffer();
         final Document deserializedDoc = serializer.deserialize(new BSONBinaryReader(new BSONReaderSettings(),
                                                                                      inputBuffer));
+        assertEquals(doc, deserializedDoc);
+    }
+
+    @Test
+    public void testCodeWithScopeSerialization() throws IOException {
+        final Document scope = new Document()
+                .append("i", 1)
+                .append("b", 2);
+
+        final Document doc = new Document();
+        doc.put("codewithscope", new CodeWithScope("var m = i + b", scope));
+
+        serializer.serialize(writer, doc);
+
+        final InputBuffer inputBuffer = createInputBuffer();
+        final Document deserializedDoc = serializer.deserialize(new BSONBinaryReader(new BSONReaderSettings(),
+                inputBuffer));
         assertEquals(doc, deserializedDoc);
     }
 

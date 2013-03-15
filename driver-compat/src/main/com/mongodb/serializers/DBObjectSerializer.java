@@ -25,10 +25,12 @@ import com.mongodb.DBRefBase;
 import com.mongodb.MongoInternalException;
 import com.mongodb.ReflectionDBObject;
 import org.bson.BSON;
+import org.bson.BSONObject;
 import org.bson.BSONReader;
 import org.bson.BSONType;
 import org.bson.BSONWriter;
 import org.bson.types.Binary;
+import org.bson.types.CodeWScope;
 import org.mongodb.serialization.PrimitiveSerializers;
 import org.mongodb.serialization.Serializer;
 
@@ -60,8 +62,7 @@ public class DBObjectSerializer implements Serializer<DBObject> {
         this.pathToClassMap = createPathToClassMap(topLevelClass, stringPathToClassMap);
         if (ReflectionDBObject.class.isAssignableFrom(topLevelClass)) {
             wrapper = ReflectionDBObject.getWrapper(topLevelClass);
-        }
-        else {
+        } else {
             wrapper = null;
         }
     }
@@ -124,25 +125,39 @@ public class DBObjectSerializer implements Serializer<DBObject> {
         final Object value = BSON.applyEncodingHooks(initialValue);
         if (value instanceof DBRefBase) {
             serializeDBRef(bsonWriter, (DBRefBase) value);
-        }
-        else if (value instanceof DBObject) {
+        } else if (value instanceof DBObject) {
             serializeEmbeddedDBObject(bsonWriter, (DBObject) value);
-        }
-        else if (value instanceof Map) {
+        } else if (value instanceof CodeWScope) {
+            serializeCodeWScope(bsonWriter, (CodeWScope) value);
+        } else if (value instanceof Map) {
             serializeEmbeddedMap(bsonWriter, (Map<String, Object>) value);
-        }
-        else if (value instanceof Iterable) {
+        } else if (value instanceof Iterable) {
             serializeIterable(bsonWriter, (Iterable) value);
-        }
-        else if (value instanceof byte[]) {
+        } else if (value instanceof byte[]) {
             primitiveSerializers.serialize(bsonWriter, new Binary((byte[]) value));
-        }
-        else if (value != null && value.getClass().isArray()) {
+        } else if (value != null && value.getClass().isArray()) {
             serializeArray(bsonWriter, value);
-        }
-        else {
+        } else {
             primitiveSerializers.serialize(bsonWriter, value);
         }
+    }
+
+    private void serializeCodeWScope(final BSONWriter bsonWriter, final CodeWScope value) {
+        bsonWriter.writeJavaScriptWithScope(value.getCode());
+        BSONObject scope = value.getScope();
+        bsonWriter.writeStartDocument();
+        if (scope != null) {
+            for (String key : scope.keySet()) {
+                validateField(key);
+                if (skipField(key)) {
+                    continue;
+                }
+                bsonWriter.writeName(key);
+                writeValue(bsonWriter, scope.get(key));
+            }
+        }
+
+        bsonWriter.writeEndDocument();
     }
 
     private void serializeArray(final BSONWriter bsonWriter, final Object value) {
@@ -259,19 +274,24 @@ public class DBObjectSerializer implements Serializer<DBObject> {
                 path.add(fieldName);
             }
 
-            if (bsonType.equals(BSONType.DOCUMENT)) {
-                initialRetVal = deserializeDocument(reader, path);
-            }
-            // Must be an array, since there are only two container types
-            else {
-                initialRetVal = readArray(reader, path);
+            switch (bsonType) {
+                case DOCUMENT:
+                    initialRetVal = deserializeDocument(reader, path);
+                    break;
+                case ARRAY:
+                    initialRetVal = readArray(reader, path);
+                    break;
+                case JAVASCRIPT_WITH_SCOPE:
+                    initialRetVal = readCodeWScope(reader, path);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("This type is not supported");
             }
 
             if (fieldName != null) {
                 path.remove(path.size() - 1);
             }
-        }
-        else {
+        } else {
             initialRetVal = primitiveSerializers.deserialize(reader);
         }
 
@@ -288,12 +308,26 @@ public class DBObjectSerializer implements Serializer<DBObject> {
         return list;
     }
 
+    private CodeWScope readCodeWScope(final BSONReader bsonReader, final List<String> path) {
+        final String code = bsonReader.readJavaScriptWithScope();
+
+        final DBObject document = getNewInstance(path);
+
+        bsonReader.readStartDocument();
+        while (bsonReader.readBSONType() != BSONType.END_OF_DOCUMENT) {
+            final String fieldName = bsonReader.readName();
+            document.put(fieldName, readValue(bsonReader, fieldName, path));
+        }
+
+        bsonReader.readEndDocument();
+
+        return new CodeWScope(code, document);
+    }
+
     private Map<List<String>, Class<? extends DBObject>> createPathToClassMap(
-            final Class<? extends DBObject>
-                    topLevelClass,
-            final HashMap<String,
-                    Class<? extends DBObject>>
-                    stringPathToClassMap) {
+            final Class<? extends DBObject> topLevelClass,
+            final HashMap<String, Class<? extends DBObject>> stringPathToClassMap
+    ) {
         final Map<List<String>, Class<? extends DBObject>> pathToClassMap
                 = new HashMap<List<String>, Class<? extends DBObject>>();
         pathToClassMap.put(EMPTY_PATH, topLevelClass);
