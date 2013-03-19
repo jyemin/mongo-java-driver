@@ -16,8 +16,59 @@
 
 package com.mongodb.util;
 
+import org.bson.BSONCallback;
+
+/**
+ * Helper methods for JSON serialization and de-serialization
+ */
 public class JSON {
-    public static String serialize(final Object o) {
-        return "{}";  // TODO: re-implement this
+
+    /**
+     * Serializes an object into its JSON form.
+     * <p/>
+     * This method delegates serialization to <code>JSONSerializers.getLegacy</code>
+     *
+     * @param o object to serialize
+     * @return String containing JSON form of the object
+     * @see com.mongodb.util.JSONSerializers#getLegacy()
+     */
+    public static String serialize(Object o) {
+        StringBuilder buf = new StringBuilder();
+        serialize(o, buf);
+        return buf.toString();
+    }
+
+    /**
+     * Serializes an object into its JSON form.
+     * <p/>
+     * This method delegates serialization to <code>JSONSerializers.getLegacy</code>
+     *
+     * @param o   object to serialize
+     * @param buf StringBuilder containing the JSON representation under construction
+     * @return String containing JSON form of the object
+     * @see com.mongodb.util.JSONSerializers#getLegacy()
+     */
+    public static void serialize(Object o, StringBuilder buf) {
+        JSONSerializers.getLegacy().serialize(o, buf);
+    }
+
+    /**
+     * Parses a JSON string representing a JSON value
+     *
+     * @param s the string to parse
+     * @return the object
+     */
+    public static Object parse(String s) {
+        return parse(s, null);
+    }
+
+    /**
+     * Parses a JSON string representing a JSON value
+     *
+     * @param s the string to parse
+     * @return the object
+     */
+    public static Object parse(final String s, final BSONCallback c) {
+        return null;
     }
 }

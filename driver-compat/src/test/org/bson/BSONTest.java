@@ -14,19 +14,42 @@
  * limitations under the License.
  */
 
-package org.mongodb;
+package org.bson;
 
 import com.mongodb.BasicDBObject;
-import org.bson.BSON;
 import org.junit.Test;
+
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
 public class BSONTest {
+
+    @Test
+    public void testRegexFlags() {
+        assertEquals(256, BSON.regexFlags("g"));
+        assertEquals(52, BSON.regexFlags("stx"));
+        assertEquals(266, BSON.regexFlags("img"));
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRegexInvalidModifier() {
+        BSON.regexFlags("ilk");
+    }
+
+    @Test
+    public void testConversionFromInt() {
+        assertEquals("ix", BSON.regexFlags(Pattern.CASE_INSENSITIVE | Pattern.COMMENTS));
+        assertEquals("t", BSON.regexFlags(Pattern.LITERAL));
+        assertEquals("", BSON.regexFlags(0));
+    }
+
     @Test
     public void testEncodingDecode() {
         final BasicDBObject inputDoc = new BasicDBObject("_id", 1);
         final byte[] encoded = BSON.encode(inputDoc);
         assertEquals(inputDoc, BSON.decode(encoded));
     }
+
 }

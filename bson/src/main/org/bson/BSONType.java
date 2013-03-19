@@ -121,6 +121,6 @@ public enum BSONType {
     }
 
     public boolean isContainer() {
-        return this == DOCUMENT || this == ARRAY;
+        return this == DOCUMENT || this == ARRAY || this == JAVASCRIPT_WITH_SCOPE;
     }
 }
