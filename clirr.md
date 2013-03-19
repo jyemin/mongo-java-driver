@@ -1,0 +1,240 @@
+- [ ] com.mongodb.AggregationOutput: Class com.mongodb.AggregationOutput removed
+
+---------------------------------------
+
+- [ ] com.mongodb.DB: Removed field _readOnly
+- [ ] com.mongodb.DB: Accessibility of method 'public DB(com.mongodb.Mongo, java.lang.String)' has been decreased from public to package
+- [ ] com.mongodb.DB: Parameter 2 of 'public com.mongodb.CommandResult command(com.mongodb.DBObject, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DB: Parameter 3 of 'public com.mongodb.CommandResult command(com.mongodb.DBObject, int, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DB: Parameter 4 of 'public com.mongodb.CommandResult command(com.mongodb.DBObject, int, com.mongodb.ReadPreference, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DB: Method 'protected com.mongodb.DBCollection doGetCollection(java.lang.String)' has been removed
+---------------------------------------
+- [ ] com.mongodb.DBAddress: Class com.mongodb.DBAddress removed
+- [ ] com.mongodb.DBApiLayer: Class com.mongodb.DBApiLayer removed
+- [ ] com.mongodb.DBCallback: Class com.mongodb.DBCallback removed
+- [ ] com.mongodb.DBCallbackFactory: Class com.mongodb.DBCallbackFactory removed
+- [ ] com.mongodb.DBCollection: Removed field _fullName
+- [ ] com.mongodb.DBCollection: Removed field _hintFields
+- [ ] com.mongodb.DBCollection: Removed field _name
+- [ ] com.mongodb.DBCollection: Removed field _objectClass
+- [ ] com.mongodb.DBCollection: Parameter 1 of 'protected DBCollection(com.mongodb.DB, java.lang.String)' has changed its type to java.lang.String
+- [ ] com.mongodb.DBCollection: Parameter 2 of 'protected DBCollection(com.mongodb.DB, java.lang.String)' has changed its type to com.mongodb.DB
+- [ ] com.mongodb.DBCollection: Accessibility of method 'protected DBCollection(com.mongodb.DB, java.lang.String)' has been decreased from protected to package
+- [ ] com.mongodb.DBCollection: Method 'protected com.mongodb.DBObject _checkObject(com.mongodb.DBObject, boolean, boolean)' has been removed
+- [ ] com.mongodb.DBCollection: Return type of method 'public com.mongodb.AggregationOutput aggregate(com.mongodb.DBObject, com.mongodb.DBObject[])' has been changed to com.mongodb.IDBCollection$AggregationOutput
+- [ ] com.mongodb.DBCollection: Method 'protected boolean checkReadOnly(boolean)' has been removed
+- [ ] com.mongodb.DBCollection: Parameter 3 of 'public void createIndex(com.mongodb.DBObject, com.mongodb.DBObject, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DBCollection: Method 'protected void doapply(com.mongodb.DBObject)' has been removed
+- [ ] com.mongodb.DBCollection: Method 'public java.lang.String genIndexName(com.mongodb.DBObject)' has been removed
+- [ ] com.mongodb.DBCollection: Return type of method 'public com.mongodb.DBDecoderFactory getDBDecoderFactory()' has been changed to com.mongodb.IDBCollection$DBDecoderFactory
+- [ ] com.mongodb.DBCollection: Return type of method 'public com.mongodb.DBEncoderFactory getDBEncoderFactory()' has been changed to com.mongodb.IDBCollection$DBEncoderFactory
+- [ ] com.mongodb.DBCollection: Method 'protected java.lang.Class getInternalClass(java.lang.String)' has been removed
+- [ ] com.mongodb.DBCollection: Parameter 1 of 'public com.mongodb.DBObject group(com.mongodb.GroupCommand)' has changed its type to com.mongodb.IDBCollection$GroupCommand
+- [ ] com.mongodb.DBCollection: Parameter 1 of 'public com.mongodb.DBObject group(com.mongodb.GroupCommand, com.mongodb.ReadPreference)' has changed its type to com.mongodb.IDBCollection$GroupCommand
+- [ ] com.mongodb.DBCollection: Parameter 3 of 'public com.mongodb.WriteResult insert(com.mongodb.DBObject[], com.mongodb.WriteConcern, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DBCollection: Parameter 3 of 'public com.mongodb.WriteResult insert(java.util.List, com.mongodb.WriteConcern, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DBCollection: Parameter 3 of 'public com.mongodb.WriteResult remove(com.mongodb.DBObject, com.mongodb.WriteConcern, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DBCollection: Parameter 1 of 'public void setDBDecoderFactory(com.mongodb.DBDecoderFactory)' has changed its type to com.mongodb.IDBCollection$DBDecoderFactory
+- [ ] com.mongodb.DBCollection: Parameter 1 of 'public void setDBEncoderFactory(com.mongodb.DBEncoderFactory)' has changed its type to com.mongodb.IDBCollection$DBEncoderFactory
+- [ ] com.mongodb.DBCollection: Parameter 6 of 'public com.mongodb.WriteResult update(com.mongodb.DBObject, com.mongodb.DBObject, boolean, boolean, com.mongodb.WriteConcern, com.mongodb.DBEncoder)' has changed its type to com.mongodb.IDBCollection$DBEncoder
+- [ ] com.mongodb.DBConnector: Class com.mongodb.DBConnector removed
+- [ ] com.mongodb.DBCursor: Method 'public com.mongodb.DBDecoderFactory getDecoderFactory()' has been removed
+- [ ] com.mongodb.DBCursor: Method 'public com.mongodb.DBCursor setDecoderFactory(com.mongodb.DBDecoderFactory)' has been removed
+- [ ] com.mongodb.DBDecoder: Class com.mongodb.DBDecoder removed
+- [ ] com.mongodb.DBDecoderFactory: Class com.mongodb.DBDecoderFactory removed
+- [ ] com.mongodb.DBEncoder: Class com.mongodb.DBEncoder removed
+- [ ] com.mongodb.DBEncoderFactory: Class com.mongodb.DBEncoderFactory removed
+- [ ] com.mongodb.DBPointer: Class com.mongodb.DBPointer removed
+- [ ] com.mongodb.DBPort: Class com.mongodb.DBPort removed
+- [ ] com.mongodb.DBPortPool: Class com.mongodb.DBPortPool removed
+- [ ] com.mongodb.DBPortPool$ConnectionWaitTimeOut: Class com.mongodb.DBPortPool$ConnectionWaitTimeOut removed
+- [ ] com.mongodb.DBPortPool$NoMoreConnection: Class com.mongodb.DBPortPool$NoMoreConnection removed
+- [ ] com.mongodb.DBPortPool$SemaphoresOut: Class com.mongodb.DBPortPool$SemaphoresOut removed
+- [ ] com.mongodb.DBTCPConnector: Class com.mongodb.DBTCPConnector removed
+- [ ] com.mongodb.DefaultDBCallback: Class com.mongodb.DefaultDBCallback removed
+- [ ] com.mongodb.DefaultDBDecoder: Class com.mongodb.DefaultDBDecoder removed
+- [ ] com.mongodb.DefaultDBEncoder: Class com.mongodb.DefaultDBEncoder removed
+- [ ] com.mongodb.GroupCommand: Class com.mongodb.GroupCommand removed
+- [ ] com.mongodb.InUseConnectionBean: Class com.mongodb.InUseConnectionBean removed
+- [ ] com.mongodb.Java5MongoConnectionPoolMBean: Class com.mongodb.Java5MongoConnectionPoolMBean removed
+- [ ] com.mongodb.LazyDBCallback: Class com.mongodb.LazyDBCallback removed
+- [ ] com.mongodb.LazyDBDecoder: Class com.mongodb.LazyDBDecoder removed
+- [ ] com.mongodb.LazyDBEncoder: Class com.mongodb.LazyDBEncoder removed
+- [ ] com.mongodb.LazyDBObject: Class com.mongodb.LazyDBObject removed
+- [ ] com.mongodb.LazyWriteableDBCallback: Class com.mongodb.LazyWriteableDBCallback removed
+- [ ] com.mongodb.LazyWriteableDBDecoder: Class com.mongodb.LazyWriteableDBDecoder removed
+- [ ] com.mongodb.LazyWriteableDBObject: Class com.mongodb.LazyWriteableDBObject removed
+- [ ] com.mongodb.Mongo: Field MAJOR_VERSION has been removed, but it was previously a constant
+- [ ] com.mongodb.Mongo: Field MINOR_VERSION has been removed, but it was previously a constant
+- [ ] com.mongodb.Mongo: Parameter 1 of 'public Mongo(java.lang.String)' has changed its type to com.mongodb.MongoClientURI
+- [ ] com.mongodb.Mongo: Accessibility of method 'public Mongo(java.lang.String)' has been decreased from public to package
+- [ ] com.mongodb.Mongo: Parameter 1 of 'public Mongo(com.mongodb.ServerAddress)' has changed its type to org.mongodb.impl.MongoClientAdapter
+- [ ] com.mongodb.Mongo: Accessibility of method 'public Mongo(com.mongodb.ServerAddress)' has been decreased from public to package
+- [ ] com.mongodb.Mongo: Parameter 2 of 'public Mongo(com.mongodb.ServerAddress, com.mongodb.MongoOptions)' has changed its type to com.mongodb.MongoClientOptions
+- [ ] com.mongodb.Mongo: Accessibility of method 'public Mongo(com.mongodb.ServerAddress, com.mongodb.MongoOptions)' has been decreased from public to package
+- [ ] com.mongodb.Mongo: Parameter 2 of 'public Mongo(java.util.List, com.mongodb.MongoOptions)' has changed its type to com.mongodb.MongoClientOptions
+- [ ] com.mongodb.Mongo: Accessibility of method 'public Mongo(java.util.List, com.mongodb.MongoOptions)' has been decreased from public to package
+- [ ] com.mongodb.Mongo: Method 'public Mongo()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(java.lang.String, com.mongodb.MongoOptions)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(java.lang.String, int)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(com.mongodb.ServerAddress, com.mongodb.ServerAddress)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(com.mongodb.ServerAddress, com.mongodb.ServerAddress, com.mongodb.MongoOptions)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(java.util.List)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public Mongo(com.mongodb.MongoURI)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.DB connect(com.mongodb.DBAddress)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.lang.String debugString()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public void dropDatabase(java.lang.String)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.CommandResult fsync(boolean)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.CommandResult fsyncAndLock()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.ServerAddress getAddress()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.util.List getAllAddress()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.lang.String getConnectPoint()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.DBTCPConnector getConnector()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.util.List getDatabaseNames()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public int getMajorVersion()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public int getMaxBsonObjectSize()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public int getMinorVersion()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.MongoOptions getMongoOptions()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.ReplicaSetStatus getReplicaSetStatus()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.util.Collection getUsedDatabases()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public java.lang.String getVersion()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public boolean isLocked()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public void resetOptions()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public void setOptions(int)' has been removed
+- [ ] com.mongodb.Mongo: Method 'public void slaveOk()' has been removed
+- [ ] com.mongodb.Mongo: Method 'public com.mongodb.DBObject unlock()' has been removed
+- [ ] com.mongodb.Mongo$Holder: Class com.mongodb.Mongo$Holder removed
+- [ ] com.mongodb.MongoClient: Accessibility of method 'public MongoClient(com.mongodb.ServerAddress, com.mongodb.MongoClientOptions)' has been decreased from public to private
+- [ ] com.mongodb.MongoClient: Accessibility of method 'public MongoClient(java.util.List, com.mongodb.MongoClientOptions)' has been decreased from public to private
+- [ ] com.mongodb.MongoClientOptions: Method 'public com.mongodb.DBDecoderFactory getDbDecoderFactory()' has been removed
+- [ ] com.mongodb.MongoClientOptions: Method 'public com.mongodb.DBEncoderFactory getDbEncoderFactory()' has been removed
+- [ ] com.mongodb.MongoClientOptions: Method 'public javax.net.SocketFactory getSocketFactory()' has been removed
+- [ ] com.mongodb.MongoClientOptions: Method 'public boolean isCursorFinalizerEnabled()' has been removed
+- [ ] com.mongodb.MongoClientOptions$Builder: Method 'public com.mongodb.MongoClientOptions$Builder cursorFinalizerEnabled(boolean)' has been removed
+- [ ] com.mongodb.MongoClientOptions$Builder: Method 'public com.mongodb.MongoClientOptions$Builder dbDecoderFactory(com.mongodb.DBDecoderFactory)' has been removed
+- [ ] com.mongodb.MongoClientOptions$Builder: Method 'public com.mongodb.MongoClientOptions$Builder dbEncoderFactory(com.mongodb.DBEncoderFactory)' has been removed
+- [ ] com.mongodb.MongoClientOptions$Builder: Method 'public com.mongodb.MongoClientOptions$Builder legacyDefaults()' has been removed
+- [ ] com.mongodb.MongoClientOptions$Builder: Method 'public com.mongodb.MongoClientOptions$Builder socketFactory(javax.net.SocketFactory)' has been removed
+- [ ] com.mongodb.MongoConnectionPoolMXBean: Class com.mongodb.MongoConnectionPoolMXBean removed
+- [ ] com.mongodb.MongoInterruptedException: Class com.mongodb.MongoInterruptedException removed
+- [ ] com.mongodb.MongoOptions: Class com.mongodb.MongoOptions removed
+- [ ] com.mongodb.MongoURI: Class com.mongodb.MongoURI removed
+- [ ] com.mongodb.QueryOperators: Accessibility of method 'public QueryOperators()' has been decreased from public to private
+- [ ] com.mongodb.RawDBObject: Class com.mongodb.RawDBObject removed
+- [ ] com.mongodb.ReadPreference: Method 'public com.mongodb.ReadPreference withTags(java.util.Map)' has been removed
+- [ ] com.mongodb.ReadPreference: Method 'public com.mongodb.ReadPreference withTags(com.mongodb.DBObject)' has been removed
+- [ ] com.mongodb.ReadPreference$TaggedReadPreference: Class com.mongodb.ReadPreference$TaggedReadPreference removed
+- [ ] com.mongodb.ReplicaSetStatus: Class com.mongodb.ReplicaSetStatus removed
+- [ ] com.mongodb.ServerAddress: Method 'public java.lang.String defaultHost()' has been removed
+- [ ] com.mongodb.ServerAddress: Method 'public int defaultPort()' has been removed
+- [ ] com.mongodb.ServerAddress: Method 'public boolean sameHost(java.lang.String)' has been removed
+- [ ] com.mongodb.WriteConcern: Method 'public void setWObject(java.lang.Object)' has been removed
+- [ ] com.mongodb.WriteResult: Method 'public java.lang.String getError()' has been removed
+- [ ] com.mongodb.WriteResult: Method 'public java.lang.Object getField(java.lang.String)' has been removed
+- [ ] com.mongodb.WriteResult: Method 'public com.mongodb.CommandResult getLastError(com.mongodb.WriteConcern)' has been removed
+- [ ] com.mongodb.WriteResult: Method 'public int getN()' has been removed
+- [ ] com.mongodb.WriteResult: Method 'public boolean isLazy()' has been removed
+- [ ] com.mongodb.io.ByteBufferFactory: Class com.mongodb.io.ByteBufferFactory removed
+- [ ] com.mongodb.io.ByteBufferFactory$SimpleHeapByteBufferFactory: Class com.mongodb.io.ByteBufferFactory$SimpleHeapByteBufferFactory removed
+- [ ] com.mongodb.io.ByteBufferHolder: Class com.mongodb.io.ByteBufferHolder removed
+- [ ] com.mongodb.io.ByteBufferInputStream: Class com.mongodb.io.ByteBufferInputStream removed
+- [ ] com.mongodb.io.ByteBufferOutputStream: Class com.mongodb.io.ByteBufferOutputStream removed
+- [ ] com.mongodb.io.ByteStream: Class com.mongodb.io.ByteStream removed
+- [ ] com.mongodb.tools.ConnectionPoolStat: Class com.mongodb.tools.ConnectionPoolStat removed
+- [ ] com.mongodb.util.Args: Class com.mongodb.util.Args removed
+- [ ] com.mongodb.util.Base64Codec: Class com.mongodb.util.Base64Codec removed
+- [ ] com.mongodb.util.ConnectionPoolStatisticsBean: Class com.mongodb.util.ConnectionPoolStatisticsBean removed
+- [ ] com.mongodb.util.FastStack: Class com.mongodb.util.FastStack removed
+- [ ] com.mongodb.util.Hash: Class com.mongodb.util.Hash removed
+- [ ] com.mongodb.util.IdentitySet: Class com.mongodb.util.IdentitySet removed
+- [ ] com.mongodb.util.JSON: Method 'public java.lang.Object parse(java.lang.String)' has been removed
+- [ ] com.mongodb.util.JSON: Method 'public java.lang.Object parse(java.lang.String, org.bson.BSONCallback)' has been removed
+- [ ] com.mongodb.util.JSON: Method 'public void serialize(java.lang.Object, java.lang.StringBuilder)' has been removed
+- [ ] com.mongodb.util.JSONCallback: Class com.mongodb.util.JSONCallback removed
+- [ ] com.mongodb.util.JSONParseException: Class com.mongodb.util.JSONParseException removed
+- [ ] com.mongodb.util.JSONSerializers: Class com.mongodb.util.JSONSerializers removed
+- [ ] com.mongodb.util.MyAsserts: Class com.mongodb.util.MyAsserts removed
+- [ ] com.mongodb.util.MyAsserts$MyAssert: Class com.mongodb.util.MyAsserts$MyAssert removed
+- [ ] com.mongodb.util.ObjectSerializer: Class com.mongodb.util.ObjectSerializer removed
+- [ ] com.mongodb.util.OptionMap: Class com.mongodb.util.OptionMap removed
+- [ ] com.mongodb.util.SimplePool: Class com.mongodb.util.SimplePool removed
+- [ ] com.mongodb.util.StringBuilderPool: Class com.mongodb.util.StringBuilderPool removed
+- [ ] com.mongodb.util.StringParseUtil: Class com.mongodb.util.StringParseUtil removed
+- [ ] com.mongodb.util.ThreadPool: Class com.mongodb.util.ThreadPool removed
+- [ ] com.mongodb.util.ThreadUtil: Class com.mongodb.util.ThreadUtil removed
+- [ ] com.mongodb.util.TimeConstants: Class com.mongodb.util.TimeConstants removed
+- [ ] com.mongodb.util.UniqueList: Class com.mongodb.util.UniqueList removed
+- [ ] com.mongodb.util.WeakBag: Class com.mongodb.util.WeakBag removed
+- [ ] com.mongodb.util.management.JMException: Class com.mongodb.util.management.JMException removed
+- [ ] com.mongodb.util.management.MBeanServer: Class com.mongodb.util.management.MBeanServer removed
+- [ ] com.mongodb.util.management.MBeanServerFactory: Class com.mongodb.util.management.MBeanServerFactory removed
+- [ ] com.mongodb.util.management.NullMBeanServer: Class com.mongodb.util.management.NullMBeanServer removed
+- [ ] com.mongodb.util.management.jmx.JMXMBeanServer: Class com.mongodb.util.management.jmx.JMXMBeanServer removed
+- [ ] org.bson.BSON: Removed field _utf8
+- [ ] org.bson.BSON: Return type of method 'public org.bson.BSONObject decode(byte[])' has been changed to com.mongodb.DBObject
+- [ ] org.bson.BSON: Parameter 1 of 'public byte[] encode(org.bson.BSONObject)' has changed its type to com.mongodb.DBObject
+- [ ] org.bson.BSON: Method 'public int regexFlag(char)' has been removed
+- [ ] org.bson.BSON: Method 'public int regexFlags(java.lang.String)' has been removed
+- [ ] org.bson.BSON: Method 'public java.lang.String regexFlags(int)' has been removed
+- [ ] org.bson.BSON: Method 'public int toInt(java.lang.Object)' has been removed
+- [ ] org.bson.BSONCallback: Class org.bson.BSONCallback removed
+- [ ] org.bson.BSONDecoder: Class org.bson.BSONDecoder removed
+- [ ] org.bson.BSONEncoder: Class org.bson.BSONEncoder removed
+- [ ] org.bson.BSONLazyDecoder: Class org.bson.BSONLazyDecoder removed
+- [ ] org.bson.BasicBSONCallback: Class org.bson.BasicBSONCallback removed
+- [ ] org.bson.BasicBSONDecoder: Class org.bson.BasicBSONDecoder removed
+- [ ] org.bson.BasicBSONDecoder$BSONInput: Class org.bson.BasicBSONDecoder$BSONInput removed
+- [ ] org.bson.BasicBSONEncoder: Class org.bson.BasicBSONEncoder removed
+- [ ] org.bson.EmptyBSONCallback: Class org.bson.EmptyBSONCallback removed
+- [ ] org.bson.KeyCachingLazyBSONObject: Class org.bson.KeyCachingLazyBSONObject removed
+- [ ] org.bson.LazyBSONCallback: Class org.bson.LazyBSONCallback removed
+- [ ] org.bson.LazyBSONDecoder: Class org.bson.LazyBSONDecoder removed
+- [ ] org.bson.LazyBSONList: Class org.bson.LazyBSONList removed
+- [ ] org.bson.LazyBSONList$LazyBSONListIterator: Class org.bson.LazyBSONList$LazyBSONListIterator removed
+- [ ] org.bson.LazyBSONObject: Class org.bson.LazyBSONObject removed
+- [ ] org.bson.LazyBSONObject$LazyBSONKeySet: Class org.bson.LazyBSONObject$LazyBSONKeySet removed
+- [ ] org.bson.LazyDBList: Class org.bson.LazyDBList removed
+- [ ] org.bson.NewBSONDecoder: Class org.bson.NewBSONDecoder removed
+- [ ] org.bson.io.BSONByteBuffer: Class org.bson.io.BSONByteBuffer removed
+- [ ] org.bson.io.BasicOutputBuffer: Method 'public java.lang.String asString()' has been removed
+- [ ] org.bson.io.BasicOutputBuffer: Method 'public java.lang.String asString(java.lang.String)' has been removed
+- [ ] org.bson.io.BasicOutputBuffer: Return type of method 'public int pipe(java.io.OutputStream)' has been changed to void
+- [ ] org.bson.io.BasicOutputBuffer: Method 'public int pipe(java.io.DataOutput)' has been removed
+- [ ] org.bson.io.BasicOutputBuffer: Method 'public void seekEnd()' has been removed
+- [ ] org.bson.io.BasicOutputBuffer: Method 'public void seekStart()' has been removed
+- [ ] org.bson.io.BasicOutputBuffer: Accessibility of method 'public void setPosition(int)' has been decreased from public to private
+- [ ] org.bson.io.Bits: Class org.bson.io.Bits removed
+- [ ] org.bson.io.OutputBuffer: Method 'public java.lang.String asString()' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public java.lang.String asString(java.lang.String)' has been removed
+- [ ] org.bson.io.OutputBuffer: Abstract method 'public void backpatchSize(int)' has been added
+- [ ] org.bson.io.OutputBuffer: Abstract method 'protected void backpatchSize(int, int)' has been added
+- [ ] org.bson.io.OutputBuffer: Method 'public java.lang.String hex()' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public java.lang.String md5()' has been removed
+- [ ] org.bson.io.OutputBuffer: Return type of method 'public int pipe(java.io.OutputStream)' has been changed to void
+- [ ] org.bson.io.OutputBuffer: Method 'public void seekEnd()' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public void seekStart()' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public void setPosition(int)' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public void writeInt(int, int)' has been removed
+- [ ] org.bson.io.OutputBuffer: Method 'public void writeIntBE(int)' has been removed
+- [ ] org.bson.io.PoolOutputBuffer: Class org.bson.io.PoolOutputBuffer removed
+- [ ] org.bson.types.CodeWScope: Parameter 2 of 'public CodeWScope(java.lang.String, org.bson.BSONObject)' has changed its type to com.mongodb.DBObject
+- [ ] org.bson.types.CodeWScope: Return type of method 'public org.bson.BSONObject getScope()' has been changed to com.mongodb.DBObject
+- [ ] org.bson.types.ObjectId: In method 'public ObjectId(java.util.Date, int, int)' the number of arguments has changed
+- [ ] org.bson.types.ObjectId: In method 'public ObjectId(int, int, int)' the number of arguments has changed
+- [ ] org.bson.types.ObjectId: In method 'public ObjectId(java.lang.String, boolean)' the number of arguments has changed
+- [ ] org.bson.types.ObjectId: Accessibility of method 'public ObjectId(java.lang.String, boolean)' has been decreased from public to private
+- [ ] org.bson.types.ObjectId: Method 'public int _flip(int)' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public int _inc()' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public int _machine()' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public int _time()' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public java.lang.String babbleToMongod(java.lang.String)' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public boolean isNew()' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public org.bson.types.ObjectId massageToObjectId(java.lang.Object)' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public void notNew()' has been removed
+- [ ] org.bson.types.ObjectId: Method 'public java.lang.String toStringBabble()' has been removed
+- [ ] org.bson.util.Assertions: Decreased visibility of class from public to package
+- [ ] org.bson.util.SimplePool: Class org.bson.util.SimplePool removed
+- [ ] org.bson.util.annotations.GuardedBy: Class org.bson.util.annotations.GuardedBy removed
+- [ ] org.bson.util.annotations.Immutable: Class org.bson.util.annotations.Immutable removed
+- [ ] org.bson.util.annotations.NotThreadSafe: Class org.bson.util.annotations.NotThreadSafe removed
+- [ ] org.bson.util.annotations.ThreadSafe: Class org.bson.util.annotations.ThreadSafe removed
