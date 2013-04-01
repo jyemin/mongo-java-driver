@@ -18,11 +18,12 @@ package org.mongodb.operation;
 
 import org.mongodb.result.ServerCursor;
 
-public class GetMore extends MongoOperation {
+@MongoOperation
+public class MongoGetMore {
     private final int batchSize;
     private final ServerCursor serverCursor;
 
-    public GetMore(final ServerCursor serverCursor, final int batchSize) {
+    public MongoGetMore(final ServerCursor serverCursor, final int batchSize) {
         this.serverCursor = serverCursor;
         this.batchSize = batchSize;
     }

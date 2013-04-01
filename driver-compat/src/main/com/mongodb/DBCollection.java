@@ -33,20 +33,15 @@ import org.mongodb.command.Distinct;
 import org.mongodb.command.DistinctCommandResult;
 import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
+import org.mongodb.command.FindAndModify;
 import org.mongodb.command.FindAndModifyCommandResult;
 import org.mongodb.command.FindAndModifyCommandResultSerializer;
-import org.mongodb.command.FindAndRemove;
-import org.mongodb.command.FindAndReplace;
-import org.mongodb.command.FindAndUpdate;
+import org.mongodb.command.FindAndModifyOptions;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.command.MongoDuplicateKeyException;
 import org.mongodb.command.RenameCollection;
 import org.mongodb.command.RenameCollectionOptions;
-import org.mongodb.operation.MongoCommand;
 import org.mongodb.operation.MongoFind;
-import org.mongodb.operation.MongoFindAndRemove;
-import org.mongodb.operation.MongoFindAndReplace;
-import org.mongodb.operation.MongoFindAndUpdate;
 import org.mongodb.operation.MongoInsert;
 import org.mongodb.operation.MongoRemove;
 import org.mongodb.operation.MongoReplace;
@@ -1339,39 +1334,16 @@ public class DBCollection implements IDBCollection {
     public DBObject findAndModify(final DBObject query, final DBObject fields, final DBObject sort,
                                   final boolean remove, final DBObject update,
                                   final boolean returnNew, final boolean upsert) {
-        final MongoCommand mongoCommand;
-
-        if (remove) {
-            final MongoFindAndRemove<DBObject> mongoFindAndRemove = new MongoFindAndRemove<DBObject>()
-                    .where(toDocument(query))
-                    .sortBy(toDocument(sort))
-                    .returnNew(returnNew);
-            mongoCommand = new FindAndRemove<DBObject>(mongoFindAndRemove, getName());
-        } else {
-            if (update == null) {
-                throw new IllegalArgumentException("Update document can't be null");
-            }
-            if (!update.keySet().isEmpty() && update.keySet().iterator().next().charAt(0) == '$') {
-
-                final MongoFindAndUpdate<DBObject> mongoFindAndUpdate = new MongoFindAndUpdate<DBObject>()
-                        .where(toDocument(query))
-                        .sortBy(toDocument(sort))
-                        .returnNew(returnNew)
-                        .select(toDocument(fields))
-                        .updateWith(toUpdateOperationsDocument(update))
-                        .upsert(upsert);
-                mongoCommand = new FindAndUpdate<DBObject>(mongoFindAndUpdate, getName());
-            } else {
-                final MongoFindAndReplace<DBObject> mongoFindAndReplace
-                        = new MongoFindAndReplace<DBObject>(update)
-                        .where(toDocument(query))
-                        .sortBy(toDocument(sort))
-                        .select(toDocument(fields))
-                        .returnNew(returnNew)
-                        .upsert(upsert);
-                mongoCommand = new FindAndReplace<DBObject>(mongoFindAndReplace, getName());
-            }
-        }
+        final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                .filter(toDocument(query))
+                .sortCriteria(toDocument(sort))
+                .returnNew(returnNew)
+                .selector(toDocument(fields))
+                .update(toDocument(update))
+                .upsert(upsert)
+                .collectionName(getName())
+                .remove(remove)
+                .build();
 
         final FindAndModifyCommandResultSerializer<DBObject> serializer = new
                 FindAndModifyCommandResultSerializer<DBObject>(
@@ -1379,10 +1351,9 @@ public class DBCollection implements IDBCollection {
                 getSerializer()
         );
 
-        final FindAndModifyCommandResult<DBObject> commandResult =
-                new FindAndModifyCommandResult<DBObject>(getConnector().command(getDB().getName(), mongoCommand, serializer));
-
-        return commandResult.getValue();
+        return new FindAndModifyCommandResult<DBObject>(
+                getConnector().command(getDB().getName(), new FindAndModify(findAndModifyOptions), serializer)
+        ).getValue();
     }
 
     private Get asGetOrder(final boolean returnNew) {

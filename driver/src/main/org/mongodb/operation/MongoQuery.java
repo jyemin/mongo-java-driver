@@ -18,7 +18,8 @@ package org.mongodb.operation;
 
 import org.mongodb.ReadPreference;
 
-public abstract class MongoQuery extends MongoOperation {
+@MongoOperation
+public abstract class MongoQuery {
     private ReadPreference readPreference;
     //CHECKSTYLE:OFF
     protected int batchSize;  // TODO: make private

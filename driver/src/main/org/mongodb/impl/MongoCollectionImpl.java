@@ -39,16 +39,12 @@ import org.mongodb.command.Count;
 import org.mongodb.command.CountCommandResult;
 import org.mongodb.command.Distinct;
 import org.mongodb.command.DistinctCommandResult;
+import org.mongodb.command.FindAndModify;
 import org.mongodb.command.FindAndModifyCommandResult;
 import org.mongodb.command.FindAndModifyCommandResultSerializer;
-import org.mongodb.command.FindAndRemove;
-import org.mongodb.command.FindAndReplace;
-import org.mongodb.command.FindAndUpdate;
-import org.mongodb.operation.GetMore;
+import org.mongodb.command.FindAndModifyOptions;
+import org.mongodb.operation.MongoGetMore;
 import org.mongodb.operation.MongoFind;
-import org.mongodb.operation.MongoFindAndRemove;
-import org.mongodb.operation.MongoFindAndReplace;
-import org.mongodb.operation.MongoFindAndUpdate;
 import org.mongodb.operation.MongoInsert;
 import org.mongodb.operation.MongoRemove;
 import org.mongodb.operation.MongoReplace;
@@ -596,22 +592,22 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
         //CHECKSTYLE:OFF
         //TODO: absolute disaster area
         public T modifyAndGet(final Document updateOperations, final Get beforeOrAfter) {
-            final MongoFindAndUpdate<T> findAndUpdate;
-            findAndUpdate = new MongoFindAndUpdate<T>().where(findOp.getFilter())
-                    .updateWith(updateOperations)
+            final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                    .filter(findOp.getFilter())
+                    .update(updateOperations)
+                    .selector(findOp.getFields())
+                    .sortCriteria(findOp.getOrder())
                     .returnNew(asBoolean(beforeOrAfter))
-                    .select(findOp.getFields())
-                    .sortBy(findOp.getOrder());
+                    .collectionName(getName())
+                    .build();
 
-            //TODO: Still need to tidy up some of this command stuff, especially around return values
-            final FindAndUpdate<T> findAndUpdateCommand = new FindAndUpdate<T>(findAndUpdate, getName());
             final FindAndModifyCommandResultSerializer<T> serializer = new
                     FindAndModifyCommandResultSerializer<T>(
                     getOptions()
                             .getPrimitiveSerializers(),
                     getSerializer());
             return new FindAndModifyCommandResult<T>(connector.command(getDatabase().getName(),
-                    findAndUpdateCommand,
+                    new FindAndModify(findAndModifyOptions),
                     serializer)).getValue();
         }
 
@@ -622,18 +618,20 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public T modifyOrInsertAndGet(final Document updateOperations, final Get beforeOrAfter) {
-            final MongoFindAndUpdate<T> findAndUpdate = new MongoFindAndUpdate<T>().where(findOp.getFilter()).updateWith(
-
-                    updateOperations)
-                    .upsert(true)
+            final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                    .filter(findOp.getFilter())
+                    .update(updateOperations)
+                    .selector(findOp.getFields())
+                    .sortCriteria(findOp.getOrder())
                     .returnNew(asBoolean(beforeOrAfter))
-                    .select(findOp.getFields()).sortBy(
-                            findOp
-                                    .getOrder());
+                    .upsert(true)
+                    .collectionName(getName())
+                    .build();
+
             return new FindAndModifyCommandResult<T>(
                     connector.command(
                             getDatabase().getName(),
-                            new FindAndUpdate<T>(findAndUpdate, getName()),
+                            new FindAndModify(findAndModifyOptions),
                             new FindAndModifyCommandResultSerializer<T>(getOptions().getPrimitiveSerializers(),getSerializer())
                     )).getValue();
         }
@@ -645,18 +643,15 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public T replaceAndGet(final T replacement, final Get beforeOrAfter) {
-            final MongoFindAndReplace<T> findAndReplace = new MongoFindAndReplace<T>(replacement).where(
-                    findOp
-                            .getFilter())
-                    .returnNew(asBoolean(
-                                        beforeOrAfter))
-                    .select(findOp
-                            .getFields())
-                    .sortBy(
-                           findOp
-                           .getOrder());
+            final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                    .filter(findOp.getFilter())
+                    .returnNew(asBoolean(beforeOrAfter))
+                    .selector(findOp.getFields())
+                    .sortCriteria(findOp.getOrder())
+                    .collectionName(getName())
+                    .build();
             return new FindAndModifyCommandResult<T>(connector.command(getDatabase().getName(),
-                    new FindAndReplace<T>(findAndReplace,getName()),
+                    new FindAndModify(findAndModifyOptions),
                     new FindAndModifyCommandResultSerializer<T>(
                             getOptions()
                                     .getPrimitiveSerializers(),
@@ -666,19 +661,16 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public T replaceOrInsertAndGet(final T replacement, final Get beforeOrAfter) {
-            final MongoFindAndReplace<T> findAndReplace = new MongoFindAndReplace<T>(replacement).where(
-                    findOp
-                            .getFilter())
-                    .returnNew(asBoolean(
-                                        beforeOrAfter))
-                    .upsert(true).select(
-                            findOp
-                                    .getFields())
-                    .sortBy(
-                           findOp
-                           .getOrder());
+            final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                    .filter(findOp.getFilter())
+                    .returnNew(asBoolean(beforeOrAfter))
+                    .selector(findOp.getFields())
+                    .sortCriteria(findOp.getOrder())
+                    .collectionName(getName())
+                    .upsert(true)
+                    .build();
             return new FindAndModifyCommandResult<T>(connector.command(getDatabase().getName(),
-                    new FindAndReplace<T>(findAndReplace, getName()),
+                    new FindAndModify(findAndModifyOptions),
                     new FindAndModifyCommandResultSerializer<T>(
                             getOptions()
                                     .getPrimitiveSerializers(),
@@ -688,16 +680,20 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public T removeAndGet() {
-            final MongoFindAndRemove<T> findAndRemove = new MongoFindAndRemove<T>().where(findOp.getFilter())
-                    .select(findOp.getFields())
-                    .sortBy(findOp.getOrder());
+            final FindAndModifyOptions findAndModifyOptions = FindAndModifyOptions.builder()
+                    .filter(findOp.getFilter())
+                    .selector(findOp.getFields())
+                    .sortCriteria(findOp.getOrder())
+                    .remove(true)
+                    .collectionName(getName())
+                    .build();
 
-            final FindAndModifyCommandResultSerializer<T> serializer
-                    = new FindAndModifyCommandResultSerializer<T>(getOptions().getPrimitiveSerializers(),
-                    getSerializer());
             return new FindAndModifyCommandResult<T>(connector.command(getDatabase().getName(),
-                    new FindAndRemove<T>(findAndRemove,getName()),
-                    serializer))
+                    new FindAndModify(findAndModifyOptions),
+                    new FindAndModifyCommandResultSerializer<T>(
+                            getOptions().getPrimitiveSerializers(),
+                            getSerializer())
+            ))
                     .getValue();
         }
         //CHECKSTYLE:OFF
@@ -900,7 +896,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                 }
                 else {
                     connector
-                            .asyncGetMore(getNamespace(), new GetMore(result.getCursor(), findOp.getBatchSize()),
+                            .asyncGetMore(getNamespace(), new MongoGetMore(result.getCursor(), findOp.getBatchSize()),
                                     getSerializer(), new QueryResultSingleResultCallback(block));
                 }
             }
