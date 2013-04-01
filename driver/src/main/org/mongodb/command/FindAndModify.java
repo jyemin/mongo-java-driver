@@ -14,31 +14,11 @@
  * limitations under the License.
  */
 
-package org.mongodb.operation;
+package org.mongodb.command;
 
-import org.mongodb.WriteConcern;
+public class FindAndModify extends MongoCommand {
 
-public class MongoSave<T> extends MongoWrite {
-    private final T document;
-
-    public MongoSave(final T document) {
-        this.document = document;
+    public FindAndModify(final FindAndModifyOptions findAndModifyOptions) {
+        super(findAndModifyOptions.toDocument());
     }
-
-    public T getDocument() {
-        return document;
-    }
-
-    @Override
-    public MongoSave<T> writeConcern(final WriteConcern writeConcern) {
-        super.writeConcern(writeConcern);
-        return this;
-    }
-
-    @Override
-    public MongoSave<T> writeConcernIfAbsent(final WriteConcern writeConcern) {
-        super.writeConcernIfAbsent(writeConcern);
-        return this;
-    }
-
 }
