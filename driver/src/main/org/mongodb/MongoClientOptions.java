@@ -50,7 +50,6 @@ public final class MongoClientOptions {
     private final int connectTimeout;
     private final int socketTimeout;
     private final boolean socketKeepAlive;
-    private final boolean asyncEnabled;
     //CHECKSTYLE:OFF
     private final boolean SSLEnabled;
     //CHECKSTYLE:ON
@@ -97,7 +96,6 @@ public final class MongoClientOptions {
         //CHECKSTYLE:OFF
         private boolean SSLEnabled = false;
         //CHECKSTYLE:ON
-        private boolean asyncEnabled = AsyncDetector.isAsyncEnabled();
         private boolean alwaysUseMBeans = false;
 
         private int heartbeatFrequency = 5000;
@@ -315,20 +313,6 @@ public final class MongoClientOptions {
             return this;
         }
         //CHECKSTYLE:ON
-
-        /**
-         * Sets whether to disable async.
-         *
-         * @return {@code this}
-         * @see org.mongodb.MongoClientOptions#isAsyncEnabled()
-         */
-        public Builder asyncEnabled(final boolean aAsyncEnabled) {
-            if (aAsyncEnabled && !AsyncDetector.isAsyncEnabled()) {
-                throw new IllegalArgumentException("Can not enable async if the platform version is not supported");
-            }
-            this.asyncEnabled = aAsyncEnabled;
-            return this;
-        }
 
         /**
          * Sets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is Java 6 or greater. If
@@ -585,14 +569,6 @@ public final class MongoClientOptions {
     }
 
     /**
-     * Whether to enable asynchronous operations.  The default is true if the platform version supports it (currently Java 7 and above), and
-     * false otherwise/
-     */
-    public boolean isAsyncEnabled() {
-        return asyncEnabled;
-    }
-
-    /**
      * Gets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is Java 6 or greater. If false,
      * the driver will use MXBeans if the VM is Java 6 or greater, and use MBeans if the VM is Java 5. <p> Default is false. </p>
      */
@@ -645,7 +621,7 @@ public final class MongoClientOptions {
      * @return a SocketSettings object populated with the connection settings from this MongoClientOptions instance.
      * @see org.mongodb.connection.SocketSettings
      */
-    SocketSettings getSocketSettings() {
+    public SocketSettings getSocketSettings() {
         return socketSettings;
     }
 
@@ -656,7 +632,7 @@ public final class MongoClientOptions {
      * @return a SocketSettings object populated with the heartbeat connection settings from this MongoClientOptions instance.
      * @see org.mongodb.connection.SocketSettings
      */
-    SocketSettings getHeartbeatSocketSettings() {
+    public SocketSettings getHeartbeatSocketSettings() {
         return heartbeatSocketSettings;
     }
 
@@ -668,7 +644,7 @@ public final class MongoClientOptions {
      * @return a ConnectionPoolSettings populated with the settings from this options instance that relate to the connection provider.
      * @see org.mongodb.connection.ConnectionPoolSettings
      */
-    ConnectionPoolSettings getConnectionPoolSettings() {
+    public ConnectionPoolSettings getConnectionPoolSettings() {
         return connectionPoolSettings;
     }
 
@@ -679,7 +655,7 @@ public final class MongoClientOptions {
      * @return a ServerSettings object populated with settings from this MongoClientOptions instance
      * @see ServerSettings
      */
-    ServerSettings getServerSettings() {
+    public ServerSettings getServerSettings() {
         return serverSettings;
     }
 
@@ -689,7 +665,7 @@ public final class MongoClientOptions {
      * @return an SSLSettings wrapping the SSL settings from this MongoClientOptions.
      * @see SSLSettings
      */
-    SSLSettings getSslSettings() {
+    public SSLSettings getSslSettings() {
         return sslSettings;
     }
 
@@ -725,7 +701,6 @@ public final class MongoClientOptions {
                + ", writeConcern=" + writeConcern
                + ", primitiveCodecs=" + primitiveCodecs
                + ", SSLEnabled=" + SSLEnabled
-               + ", asyncEnabled=" + asyncEnabled
                + ", alwaysUseMBeans=" + alwaysUseMBeans
                + ", heartbeatFrequency=" + heartbeatFrequency
                + ", heartbeatConnectRetryFrequency=" + heartbeatConnectRetryFrequency
@@ -750,7 +725,6 @@ public final class MongoClientOptions {
         writeConcern = builder.writeConcern;
         primitiveCodecs = builder.primitiveCodecs;
         SSLEnabled = builder.SSLEnabled;
-        asyncEnabled = builder.asyncEnabled;
         alwaysUseMBeans = builder.alwaysUseMBeans;
         heartbeatFrequency = builder.heartbeatFrequency;
         heartbeatConnectRetryFrequency = builder.heartbeatConnectRetryFrequency;
