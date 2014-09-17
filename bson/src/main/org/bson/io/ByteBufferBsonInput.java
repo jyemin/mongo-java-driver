@@ -23,7 +23,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
 /**
- * An implementation of {@code BsonInputStream} that is backed by a {@code ByteBuf}.
+ * An implementation of {@code BsonInput} that is backed by a {@code ByteBuf}.
  * @since 3.0
  */
 public class ByteBufferBsonInput implements BsonInput {
