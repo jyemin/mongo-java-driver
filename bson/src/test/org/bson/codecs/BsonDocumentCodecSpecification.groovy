@@ -41,8 +41,8 @@ import org.bson.BsonTimestamp
 import org.bson.BsonUndefined
 import org.bson.ByteBufNIO
 import org.bson.RawBsonDocument
-import org.bson.io.BasicInputBuffer
 import org.bson.io.BasicOutputBuffer
+import org.bson.io.ByteBufferBsonInput
 import org.bson.types.ObjectId
 import spock.lang.Specification
 
@@ -85,8 +85,8 @@ class BsonDocumentCodecSpecification extends Specification {
         when:
         BsonBinaryWriter writer = new BsonBinaryWriter(new BasicOutputBuffer(), false)
         new BsonDocumentCodec().encode(writer, doc, EncoderContext.builder().build())
-        BsonBinaryReader reader = new BsonBinaryReader(new BasicInputBuffer(new ByteBufNIO(ByteBuffer.wrap(writer.buffer.toByteArray()))),
-                                                       true)
+        BsonBinaryReader reader = new BsonBinaryReader(new ByteBufferBsonInput(
+                new ByteBufNIO(ByteBuffer.wrap(writer.bsonOutput.toByteArray()))), true)
         def decodedDoc = new BsonDocumentCodec().decode(reader, DecoderContext.builder().build())
 
         then:

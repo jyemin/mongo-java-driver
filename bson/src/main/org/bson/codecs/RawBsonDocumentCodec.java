@@ -22,8 +22,8 @@ import org.bson.BsonBinaryWriter;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.RawBsonDocument;
-import org.bson.io.BasicInputBuffer;
 import org.bson.io.BasicOutputBuffer;
+import org.bson.io.ByteBufferBsonInput;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class RawBsonDocumentCodec implements Codec<RawBsonDocument> {
 
     @Override
     public void encode(final BsonWriter writer, final RawBsonDocument value, final EncoderContext encoderContext) {
-        BsonBinaryReader reader = new BsonBinaryReader(new BasicInputBuffer(value.getByteBuffer()), true);
+        BsonBinaryReader reader = new BsonBinaryReader(new ByteBufferBsonInput(value.getByteBuffer()), true);
         try {
             writer.pipe(reader);
         } finally {
@@ -54,11 +54,13 @@ public class RawBsonDocumentCodec implements Codec<RawBsonDocument> {
 
     @Override
     public RawBsonDocument decode(final BsonReader reader, final DecoderContext decoderContext) {
-        BsonBinaryWriter writer = new BsonBinaryWriter(new BasicOutputBuffer(), true);
+        BasicOutputBuffer buffer = new BasicOutputBuffer();
+        BsonBinaryWriter writer = new BsonBinaryWriter(buffer, true);
         try {
             writer.pipe(reader);
-            BufferExposingByteArrayOutputStream byteArrayOutputStream = new BufferExposingByteArrayOutputStream(writer.getBuffer().size());
-            writer.getBuffer().pipe(byteArrayOutputStream);
+            BufferExposingByteArrayOutputStream byteArrayOutputStream = new BufferExposingByteArrayOutputStream(writer.getBsonOutput()
+                                                                                                                      .getSize());
+            buffer.pipe(byteArrayOutputStream);
             return new RawBsonDocument(byteArrayOutputStream.getInternalBytes());
         } catch (IOException e) {
             // impossible with a byte array output stream

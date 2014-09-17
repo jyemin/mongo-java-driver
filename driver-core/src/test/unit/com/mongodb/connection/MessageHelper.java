@@ -8,9 +8,9 @@ import org.bson.ByteBufNIO;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
-import org.bson.io.BasicInputBuffer;
 import org.bson.io.BasicOutputBuffer;
-import org.bson.io.InputBuffer;
+import org.bson.io.BsonInput;
+import org.bson.io.ByteBufferBsonInput;
 import org.bson.io.OutputBuffer;
 import org.bson.json.JsonReader;
 import org.bson.json.JsonWriter;
@@ -49,21 +49,21 @@ final class MessageHelper {
         headerByteBuffer.putInt(numDocuments); //numberReturned
         headerByteBuffer.flip();
 
-        BasicInputBuffer headerInputBuffer = new BasicInputBuffer(new ByteBufNIO(headerByteBuffer));
+        ByteBufferBsonInput headerInputBuffer = new ByteBufferBsonInput(new ByteBufNIO(headerByteBuffer));
         return new ReplyHeader(headerInputBuffer);
     }
 
-    public static String decodeCommandAsJson(final InputBuffer inputBuffer) {
-        inputBuffer.readInt32(); // length
-        inputBuffer.readInt32(); //requestId
-        inputBuffer.readInt32(); //responseTo
-        inputBuffer.readInt32(); // opcode
-        inputBuffer.readInt32(); // flags
-        inputBuffer.readCString(); //collectionName
-        inputBuffer.readInt32(); // numToSkip
-        inputBuffer.readInt32(); // numToReturn
+    public static String decodeCommandAsJson(final BsonInput bsonInput) {
+        bsonInput.readInt32(); // length
+        bsonInput.readInt32(); //requestId
+        bsonInput.readInt32(); //responseTo
+        bsonInput.readInt32(); // opcode
+        bsonInput.readInt32(); // flags
+        bsonInput.readCString(); //collectionName
+        bsonInput.readInt32(); // numToSkip
+        bsonInput.readInt32(); // numToReturn
 
-        BsonBinaryReader reader = new BsonBinaryReader(inputBuffer, true);
+        BsonBinaryReader reader = new BsonBinaryReader(bsonInput, true);
         BsonDocumentCodec codec = new BsonDocumentCodec();
         BsonDocument document = codec.decode(reader, DecoderContext.builder().build());
         StringWriter writer = new StringWriter();

@@ -23,8 +23,8 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.RootCodecRegistry;
-import org.bson.io.BasicInputBuffer;
 import org.bson.io.BasicOutputBuffer;
+import org.bson.io.ByteBufferBsonInput;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -69,10 +69,11 @@ public class RawBsonDocument extends BsonDocument {
      * @param codec    the codec to facilitate the transformation
      */
     public <T> RawBsonDocument(final T document, final Codec<T> codec) {
-        BsonBinaryWriter writer = new BsonBinaryWriter(new BasicOutputBuffer(), true);
+        BasicOutputBuffer buffer = new BasicOutputBuffer();
+        BsonBinaryWriter writer = new BsonBinaryWriter(buffer, true);
         try {
             codec.encode(writer, document, EncoderContext.builder().build());
-            this.bytes = writer.getBuffer().toByteArray();
+            this.bytes = buffer.toByteArray();
         } finally {
             writer.close();
         }
@@ -260,7 +261,7 @@ public class RawBsonDocument extends BsonDocument {
     }
 
     private BsonBinaryReader createReader() {
-        return new BsonBinaryReader(new BasicInputBuffer(getByteBuffer()), true);
+        return new BsonBinaryReader(new ByteBufferBsonInput(getByteBuffer()), true);
     }
 
     private BsonDocument toBsonDocument() {

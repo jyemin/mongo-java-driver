@@ -17,7 +17,7 @@
 package com.mongodb.protocol.message;
 
 import com.mongodb.CursorFlag;
-import org.bson.io.OutputBuffer;
+import org.bson.io.BsonOutput;
 
 import java.util.EnumSet;
 
@@ -35,10 +35,10 @@ public abstract class BaseQueryMessage extends RequestMessage {
         this.numberToReturn = numberToReturn;
     }
 
-    protected void writeQueryPrologue(final OutputBuffer buffer) {
-        buffer.writeInt(CursorFlag.fromSet(cursorFlags));
-        buffer.writeCString(getCollectionName());
-        buffer.writeInt(skip);
-        buffer.writeInt(numberToReturn);
+    protected void writeQueryPrologue(final BsonOutput bsonOutput) {
+        bsonOutput.writeInt32(CursorFlag.fromSet(cursorFlags));
+        bsonOutput.writeCString(getCollectionName());
+        bsonOutput.writeInt32(skip);
+        bsonOutput.writeInt32(numberToReturn);
     }
 }

@@ -16,8 +16,8 @@
 
 package org.bson;
 
-import org.bson.io.BasicInputBuffer;
 import org.bson.io.Bits;
+import org.bson.io.ByteBufferBsonInput;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,11 +43,11 @@ public class BasicBSONDecoder implements BSONDecoder {
     @Override
     public int decode(final byte[] bytes, final BSONCallback callback) {
         BsonBinaryReader reader = new BsonBinaryReader(
-                                                      new BasicInputBuffer(new ByteBufNIO(ByteBuffer.wrap(bytes))), true);
+                                                      new ByteBufferBsonInput(new ByteBufNIO(ByteBuffer.wrap(bytes))), true);
         try {
             BsonWriter writer = new BSONCallbackAdapter(new BsonWriterSettings(), callback);
             writer.pipe(reader);
-            return reader.getBuffer().getPosition(); //TODO check this.
+            return reader.getBsonInput().getPosition(); //TODO check this.
         } finally {
             reader.close();
         }

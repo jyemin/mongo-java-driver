@@ -16,87 +16,106 @@
 
 package org.bson.io;
 
-import org.bson.BsonType;
 import org.bson.ByteBuf;
 import org.bson.types.ObjectId;
 
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
-public class BasicInputBuffer implements InputBuffer {
+/**
+ * An implementation of {@code BsonInput} that is backed by a {@code ByteBuf}.
+ * @since 3.0
+ */
+public class ByteBufferBsonInput implements BsonInput {
     private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
     private ByteBuf buffer;
+    private int mark = -1;
 
-    public BasicInputBuffer(final ByteBuf buffer) {
+    /**
+     * Construct an instance with the given byte buffer.  The stream takes over ownership of the buffer and closes it when this instance
+     * is closed.
+     * @param buffer the byte buffer
+     */
+    public ByteBufferBsonInput(final ByteBuf buffer) {
+        if (buffer == null) {
+            throw new IllegalArgumentException("buffer can not be null");
+        }
         this.buffer = buffer;
         buffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
     @Override
     public int getPosition() {
+        ensureOpen();
         return buffer.position();
     }
 
     @Override
-    public boolean readBoolean() {
-        return buffer.get() == 0x1;
-    }
-
-    @Override
     public byte readByte() {
+        ensureOpen();
         return buffer.get();
     }
 
     @Override
-    public byte[] readBytes(final int size) {
-        // TODO: should we really allocate byte array here?
-        byte[] bytes = new byte[size];
+    public void readBytes(final byte[] bytes) {
+        ensureOpen();
         buffer.get(bytes);
-        return bytes;
+    }
+
+    @Override
+    public void readBytes(final byte[] bytes, final int offset, final int length) {
+        ensureOpen();
+        buffer.get(bytes, offset, length);
     }
 
     @Override
     public long readInt64() {
+        ensureOpen();
         return buffer.getLong();
     }
 
     @Override
     public double readDouble() {
+        ensureOpen();
         return buffer.getDouble();
     }
 
     @Override
     public int readInt32() {
+        ensureOpen();
         return buffer.getInt();
     }
 
     @Override
     public String readString() {
+        ensureOpen();
         int size = readInt32();
-        byte[] bytes = readBytes(size);
+        byte[] bytes = new byte[size];
+        readBytes(bytes);
         return new String(bytes, 0, size - 1, UTF8_CHARSET);
     }
 
     @Override
     public ObjectId readObjectId() {
-        return new ObjectId(readBytes(12));
-    }
-
-    @Override
-    public BsonType readBSONType() {
-        return BsonType.findByValue(buffer.get());
+        ensureOpen();
+        byte[] bytes = new byte[12];
+        readBytes(bytes);
+        return new ObjectId(bytes);
     }
 
     @Override
     public String readCString() {
+        ensureOpen();
+
         // TODO: potentially optimize this
         int mark = buffer.position();
         readUntilNullByte();
         int size = buffer.position() - mark - 1;
         buffer.position(mark);
 
-        byte[] bytes = readBytes(size);
+        byte[] bytes = new byte[size];
+        readBytes(bytes);
         readByte();  // read the trailing null byte
 
         return new String(bytes, UTF8_CHARSET);
@@ -112,16 +131,45 @@ public class BasicInputBuffer implements InputBuffer {
 
     @Override
     public void skipCString() {
+        ensureOpen();
         readUntilNullByte();
     }
 
     @Override
     public void skip(final int numBytes) {
+        ensureOpen();
         buffer.position(buffer.position() + numBytes);
+    }
+
+    @Override
+    public void mark(final int readLimit) {
+        ensureOpen();
+        mark = buffer.position();
+    }
+
+    @Override
+    public void reset() {
+        ensureOpen();
+        if (mark == -1) {
+            throw new IllegalStateException("Mark not set");
+        }
+        buffer.position(mark);
+    }
+
+    @Override
+    public boolean hasRemaining() {
+        ensureOpen();
+        return buffer.hasRemaining();
     }
 
     public void close() {
         buffer.close();
         buffer = null;
+    }
+
+    private void ensureOpen() {
+        if (buffer == null) {
+            throw new IllegalStateException("Stream is closed");
+        }
     }
 }

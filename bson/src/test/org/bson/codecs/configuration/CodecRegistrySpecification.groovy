@@ -26,8 +26,8 @@ import org.bson.codecs.Codec
 import org.bson.codecs.DecoderContext
 import org.bson.codecs.EncoderContext
 import org.bson.codecs.MinKeyCodec
-import org.bson.io.BasicInputBuffer
 import org.bson.io.BasicOutputBuffer
+import org.bson.io.ByteBufferBsonInput
 import org.bson.types.MinKey
 import spock.lang.Specification
 
@@ -81,11 +81,11 @@ class CodecRegistrySpecification extends Specification {
         def writer = new BsonBinaryWriter(new BasicOutputBuffer(), false)
         topCodec.encode(writer, top, EncoderContext.builder().build())
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        writer.getBuffer().pipe(os);
+        writer.getBsonOutput().pipe(os);
         writer.close()
 
         then:
-        topCodec.decode(new BsonBinaryReader(new BasicInputBuffer(new ByteBufNIO(ByteBuffer.wrap(os.toByteArray()))), false),
+        topCodec.decode(new BsonBinaryReader(new ByteBufferBsonInput(new ByteBufNIO(ByteBuffer.wrap(os.toByteArray()))), false),
                         DecoderContext.builder().build()) == top
     }
 

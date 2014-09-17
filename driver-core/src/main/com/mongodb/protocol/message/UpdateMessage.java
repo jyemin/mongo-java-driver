@@ -18,7 +18,7 @@ package com.mongodb.protocol.message;
 
 import com.mongodb.operation.BaseUpdateRequest;
 import com.mongodb.operation.UpdateRequest;
-import org.bson.io.OutputBuffer;
+import org.bson.io.BsonOutput;
 
 import java.util.List;
 
@@ -31,9 +31,9 @@ public class UpdateMessage extends BaseUpdateMessage {
     }
 
     @Override
-    protected RequestMessage encodeMessageBody(final OutputBuffer buffer, final int messageStartPosition) {
-        writeBaseUpdate(buffer);
-        addDocument(updates.get(0).getUpdateOperations(), getBsonDocumentCodec(), buffer, new UpdateFieldNameValidator());
+    protected RequestMessage encodeMessageBody(final BsonOutput bsonOutput, final int messageStartPosition) {
+        writeBaseUpdate(bsonOutput);
+        addDocument(updates.get(0).getUpdateOperations(), getBsonDocumentCodec(), bsonOutput, new UpdateFieldNameValidator());
         if (updates.size() == 1) {
             return null;
         } else {

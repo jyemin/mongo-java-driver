@@ -18,6 +18,7 @@ package org.bson.io;
 
 import org.bson.BsonSerializationException;
 import org.bson.ByteBuf;
+import org.bson.types.ObjectId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,8 +27,13 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public abstract class OutputBuffer extends OutputStream {
+/**
+ * An abstract base class for classes implementing {@code BsonOutput}.
+ *
+ */
+public abstract class OutputBuffer extends OutputStream implements BsonOutput {
 
+    @Override
     public void write(final byte[] b) {
         write(b, 0, b.length);
     }
@@ -36,21 +42,80 @@ public abstract class OutputBuffer extends OutputStream {
     public void close() {
     }
 
-    public abstract void write(byte[] b, int off, int len);
+    @Override
+    public void write(final byte[] bytes, final int offset, final int length) {
+        writeBytes(bytes, offset, length);
+    }
 
-    public abstract void write(int b);
+    @Override
+    public void writeBytes(final byte[] bytes) {
+        writeBytes(bytes, 0, bytes.length);
+    }
 
-    public abstract int getPosition();
+    @Override
+    public void writeInt32(final int value) {
+        write(value >> 0);
+        write(value >> 8);
+        write(value >> 16);
+        write(value >> 24);
+    }
+
+    @Override
+    public void writeInt32(final int position, final int value) {
+        write(position, value >> 0);
+        write(position + 1, value >> 8);
+        write(position + 2, value >> 16);
+        write(position + 3, value >> 24);
+    }
+
+    @Override
+    public void writeInt64(final long value) {
+        write((byte) (0xFFL & (value >> 0)));
+        write((byte) (0xFFL & (value >> 8)));
+        write((byte) (0xFFL & (value >> 16)));
+        write((byte) (0xFFL & (value >> 24)));
+        write((byte) (0xFFL & (value >> 32)));
+        write((byte) (0xFFL & (value >> 40)));
+        write((byte) (0xFFL & (value >> 48)));
+        write((byte) (0xFFL & (value >> 56)));
+    }
+
+    @Override
+    public void writeDouble(final double x) {
+        writeLong(Double.doubleToRawLongBits(x));
+    }
+
+    @Override
+    public void writeString(final String str) {
+        writeInt(0); // making space for size
+        int strLen = writeCharacters(str, false);
+        writeInt32(getPosition() - strLen - 4, strLen);
+    }
+
+    @Override
+    public void writeCString(final String value) {
+        writeCharacters(value, true);
+    }
+
+    @Override
+    public void writeObjectId(final ObjectId value) {
+        write(value.toByteArray());
+    }
 
     /**
-     * @return size of data so far
+     * Gets the output size in bytes.
+     * @return the size
      */
-    public abstract int size();
+    public int size() {
+        return getSize();
+    }
 
     /**
      * Pipe the contents of this output buffer into the given output stream
      *
+     * @param out the stream to pipe to
      * @return number of bytes written to the stream
+     * @throws java.io.IOException if the stream throws an exception
      */
     public abstract int pipe(OutputStream out) throws IOException;
 
@@ -62,16 +127,14 @@ public abstract class OutputBuffer extends OutputStream {
      */
     public abstract List<ByteBuf> getByteBuffers();
 
-    /**
-     * Truncates the buffer to the given new position, which must be greater than or equal to zero and less than or equal to the current
-     * size of this buffer.
-     *
-     * @param newPosition the position to truncate this buffer to
-     */
+    @Override
     public abstract void truncateToPosition(int newPosition);
 
     /**
-     * mostly for testing
+     * Gets a copy of the buffered bytes.
+     *
+     * @return the byte array
+     * @see org.bson.io.OutputBuffer#pipe(java.io.OutputStream)
      */
     public byte[] toByteArray() {
         try {
@@ -83,46 +146,42 @@ public abstract class OutputBuffer extends OutputStream {
         }
     }
 
-
-    public void writeInt(final int x) {
-        write(x >> 0);
-        write(x >> 8);
-        write(x >> 16);
-        write(x >> 24);
+    @Override
+    public void write(final int value) {
+        writeByte(value);
     }
 
     /**
-     * Backpatches the size of a document or string by writing the size into the four bytes starting at getPosition() - size.
+     * Writes the given integer value to the buffer.
      *
-     * @param size the size of the document/string
+     * @param value the value to write
+     * @see #writeInt32
      */
-    public abstract void backpatchSize(final int size);
-
-    protected abstract void backpatchSize(final int size, final int additionalOffset);
-
-    public void writeLong(final long x) {
-        write((byte) (0xFFL & (x >> 0)));
-        write((byte) (0xFFL & (x >> 8)));
-        write((byte) (0xFFL & (x >> 16)));
-        write((byte) (0xFFL & (x >> 24)));
-        write((byte) (0xFFL & (x >> 32)));
-        write((byte) (0xFFL & (x >> 40)));
-        write((byte) (0xFFL & (x >> 48)));
-        write((byte) (0xFFL & (x >> 56)));
+    public void writeInt(final int value) {
+        writeInt32(value);
     }
 
-    public void writeDouble(final double x) {
-        writeLong(Double.doubleToRawLongBits(x));
+    @Override
+    public String toString() {
+        return getClass().getName() + " size: " + size() + " pos: " + getPosition();
     }
 
-    public void writeString(final String str) {
-        writeInt(0); // making space for size
-        int strLen = writeCharacters(str, false);
-        backpatchSize(strLen, 4);
-    }
+    /**
+     * Write the specified byte at the specified position.
+     *
+     * @param position the position, which must be greater than equal to 0 and at least 4 less than the stream size
+     * @param value the value to write.  The 24 high-order bits of the value are ignored.
+     */
+    protected abstract void write(final int position, final int value);
 
-    public int writeCString(final String str) {
-       return writeCharacters(str, true);
+    /**
+     * Writes the given long value to the buffer.
+     *
+     * @param value the value to write
+     * @see #writeInt64
+     */
+    public void writeLong(final long value) {
+        writeInt64(value);
     }
 
     private int writeCharacters(final String str, final boolean checkForNullCharacters) {
@@ -162,9 +221,5 @@ public abstract class OutputBuffer extends OutputStream {
         write((byte) 0);
         total++;
         return total;
-    }
-
-    public String toString() {
-        return getClass().getName() + " size: " + size() + " pos: " + getPosition();
     }
 }

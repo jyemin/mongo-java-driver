@@ -18,7 +18,7 @@ package com.mongodb.connection;
 
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
-import org.bson.io.InputBuffer;
+import org.bson.io.BsonInput;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class PlainAuthenticatorUnitTest {
 
         subject.authenticate();
 
-        List<InputBuffer> sent = connection.getSent();
+        List<BsonInput> sent = connection.getSent();
         String command = MessageHelper.decodeCommandAsJson(sent.get(0));
         String expectedCommand = "{ \"saslStart\" : 1, "
                 + "\"mechanism\" : \"PLAIN\", "

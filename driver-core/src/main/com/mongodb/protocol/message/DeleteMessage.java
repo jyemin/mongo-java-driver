@@ -17,7 +17,7 @@
 package com.mongodb.protocol.message;
 
 import com.mongodb.operation.RemoveRequest;
-import org.bson.io.OutputBuffer;
+import org.bson.io.BsonOutput;
 
 import java.util.List;
 
@@ -31,8 +31,8 @@ public class DeleteMessage extends RequestMessage {
     }
 
     @Override
-    protected RequestMessage encodeMessageBody(final OutputBuffer buffer, final int messageStartPosition) {
-        writeDelete(removeRequests.get(0), buffer);
+    protected RequestMessage encodeMessageBody(final BsonOutput bsonOutput, final int messageStartPosition) {
+        writeDelete(removeRequests.get(0), bsonOutput);
         if (removeRequests.size() == 1) {
             return null;
         } else {
@@ -40,17 +40,17 @@ public class DeleteMessage extends RequestMessage {
         }
     }
 
-    private void writeDelete(final RemoveRequest removeRequest, final OutputBuffer buffer) {
-        buffer.writeInt(0); // reserved
-        buffer.writeCString(getCollectionName());
+    private void writeDelete(final RemoveRequest removeRequest, final BsonOutput bsonOutput) {
+        bsonOutput.writeInt32(0); // reserved
+        bsonOutput.writeCString(getCollectionName());
 
         if (removeRequest.isMulti()) {
-            buffer.writeInt(0);
+            bsonOutput.writeInt32(0);
         } else {
-            buffer.writeInt(1);
+            bsonOutput.writeInt32(1);
         }
 
-        addDocument(removeRequest.getCriteria(), getBsonDocumentCodec(), buffer, new NoOpFieldNameValidator());
+        addDocument(removeRequest.getCriteria(), getBsonDocumentCodec(), bsonOutput, new NoOpFieldNameValidator());
     }
 }
 
