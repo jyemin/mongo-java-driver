@@ -21,51 +21,55 @@ import org.bson.BsonDocument;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * A representation of an update where the update is a document that completely replaces the existing document.
+ * A representation of a delete.
  *
  * @since 3.0
  */
-public final class ReplaceRequest extends BaseUpdateRequest {
-    private final BsonDocument replacement;
+public final class DeleteRequest extends WriteRequest {
+    private final BsonDocument criteria;
+    private boolean isMulti = true;
 
     /**
-     * Construct an instance.
+     * Construct a new instance.
      *
      * @param criteria the non-null query criteria
-     * @param replacement the non-null replacement document
      */
-    public ReplaceRequest(final BsonDocument criteria, final BsonDocument replacement) {
-        super(criteria);
-        this.replacement = notNull("replacement", replacement);
+    public DeleteRequest(final BsonDocument criteria) {
+        super();
+        this.criteria = notNull("criteria", criteria);
     }
 
     /**
-     * Get the document to replace the existing one with.
+     * Gets the query criteria.
      *
-     * @return the replacement
+     * @return the criteria
      */
-    public BsonDocument getReplacement() {
-        return replacement;
+    public BsonDocument getCriteria() {
+        return criteria;
     }
 
     /**
-     * Sets whether this is an upsert.
+     * Sets whether all documents matching the query criteria will be removed.
      *
-     * @param isUpsert whether this update will insert a new document if no documents match the criteria
+     * @param isMulti true if all documents matching the query criteria will be removed
      * @return this
      */
-    public ReplaceRequest upsert(final boolean isUpsert) {
-        super.upsert(isUpsert);
+    public DeleteRequest multi(final boolean isMulti) {
+        this.isMulti = isMulti;
         return this;
     }
 
-    @Override
+    /**
+     * Gets whether all documents matching the query criteria will be removed.  The default is true.
+     *
+     * @return whether all documents matching the query criteria will be removed
+     */
     public boolean isMulti() {
-        return false;
+        return isMulti;
     }
 
     @Override
     public Type getType() {
-        return Type.REPLACE;
+        return Type.DELETE;
     }
 }

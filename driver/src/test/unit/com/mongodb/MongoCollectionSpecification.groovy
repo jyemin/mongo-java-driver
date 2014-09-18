@@ -41,15 +41,15 @@ import com.mongodb.codecs.DocumentCodecProvider
 import com.mongodb.operation.AggregateOperation
 import com.mongodb.operation.AggregateToCollectionOperation
 import com.mongodb.operation.CountOperation
+import com.mongodb.operation.DeleteOperation
+import com.mongodb.operation.DeleteRequest
 import com.mongodb.operation.DistinctOperation
-import com.mongodb.operation.FindAndRemoveOperation
+import com.mongodb.operation.FindAndDeleteOperation
 import com.mongodb.operation.FindAndReplaceOperation
 import com.mongodb.operation.FindAndUpdateOperation
+import com.mongodb.operation.FindOperation
 import com.mongodb.operation.InsertOperation
 import com.mongodb.operation.MixedBulkWriteOperation
-import com.mongodb.operation.FindOperation
-import com.mongodb.operation.RemoveOperation
-import com.mongodb.operation.ReplaceOperation
 import com.mongodb.operation.UpdateOperation
 import com.mongodb.protocol.AcknowledgedWriteResult
 import org.bson.BsonArray
@@ -66,6 +66,8 @@ import spock.lang.Specification
 import java.util.concurrent.TimeUnit
 
 import static com.mongodb.ReadPreference.secondary
+import static com.mongodb.operation.WriteRequest.Type.REPLACE
+import static com.mongodb.operation.WriteRequest.Type.UPDATE
 
 class MongoCollectionSpecification extends Specification {
 
@@ -172,13 +174,14 @@ class MongoCollectionSpecification extends Specification {
                                            new ReplaceOneOptions().upsert(true))
 
         then:
-        def operation = executor.getWriteOperation() as ReplaceOperation
+        def operation = executor.getWriteOperation() as UpdateOperation
 
-        def replaceRequest = operation.replaceRequests[0]
+        def replaceRequest = operation.updateRequests[0]
+        replaceRequest.type == REPLACE
         !replaceRequest.multi
         replaceRequest.upsert
         replaceRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        replaceRequest.replacement == new BsonDocument('color', new BsonString('blue'))
+        replaceRequest.update == new BsonDocument('color', new BsonString('blue'))
 
         result.modifiedCount == 0
         result.matchedCount == 1
@@ -199,10 +202,11 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as UpdateOperation
 
         def updateRequest = operation.updateRequests[0]
+        updateRequest.type == UPDATE
         !updateRequest.multi
         updateRequest.upsert
         updateRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        updateRequest.updateOperations == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
+        updateRequest.update == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
 
         result.modifiedCount == 0
         result.matchedCount == 1
@@ -223,10 +227,11 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as UpdateOperation
 
         def updateRequest = operation.updateRequests[0]
+        updateRequest.type == UPDATE
         updateRequest.multi
         updateRequest.upsert
         updateRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        updateRequest.updateOperations == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
+        updateRequest.update == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
 
         result.modifiedCount == 0
         result.matchedCount == 1
@@ -242,9 +247,9 @@ class MongoCollectionSpecification extends Specification {
         def result = collection.deleteOne(new Document('_id', 1));
 
         then:
-        def operation = executor.getWriteOperation() as RemoveOperation
+        def operation = executor.getWriteOperation() as DeleteOperation
 
-        def removeRequest = operation.removeRequests[0]
+        def removeRequest = operation.deleteRequests[0]
         !removeRequest.multi
         removeRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
 
@@ -260,11 +265,11 @@ class MongoCollectionSpecification extends Specification {
         def result = collection.deleteMany(new Document('_id', 1));
 
         then:
-        def operation = executor.getWriteOperation() as RemoveOperation
+        def operation = executor.getWriteOperation() as DeleteOperation
 
-        def updateRequest = operation.removeRequests[0]
-        updateRequest.multi
-        updateRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
+        def deleteRequest = operation.deleteRequests[0]
+        deleteRequest.multi
+        deleteRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
 
         result.deletedCount == 1
     }
@@ -407,28 +412,31 @@ class MongoCollectionSpecification extends Specification {
         insertRequest.document == new BsonDocument('_id', new BsonObjectId(document.getObjectId('_id')))
 
         def updateOneRequest = operation.writeRequests[1] as com.mongodb.operation.UpdateRequest
+        updateOneRequest.type == UPDATE
         !updateOneRequest.multi
         updateOneRequest.upsert
         updateOneRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        updateOneRequest.updateOperations == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
+        updateOneRequest.update == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
 
         def updateManyRequest = operation.writeRequests[2] as com.mongodb.operation.UpdateRequest
+        updateManyRequest.type == UPDATE
         updateManyRequest.multi
         updateManyRequest.upsert
         updateManyRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        updateManyRequest.updateOperations == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
+        updateManyRequest.update == new BsonDocument('$set', new BsonDocument('color', new BsonString('blue')))
 
-        def replaceRequest = operation.writeRequests[3] as com.mongodb.operation.ReplaceRequest
+        def replaceRequest = operation.writeRequests[3] as com.mongodb.operation.UpdateRequest
+        replaceRequest.type == REPLACE
         !replaceRequest.multi
         replaceRequest.upsert
         replaceRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
-        replaceRequest.replacement == new BsonDocument('color', new BsonString('blue'))
+        replaceRequest.update == new BsonDocument('color', new BsonString('blue'))
 
-        def deleteOneRequest = operation.writeRequests[4] as com.mongodb.operation.RemoveRequest
+        def deleteOneRequest = operation.writeRequests[4] as DeleteRequest
         !deleteOneRequest.multi
         deleteOneRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
 
-        def deleteManyRequest = operation.writeRequests[5] as com.mongodb.operation.RemoveRequest
+        def deleteManyRequest = operation.writeRequests[5] as DeleteRequest
         deleteManyRequest.multi
         deleteManyRequest.criteria == new BsonDocument('_id', new BsonInt32(1))
 
@@ -522,7 +530,7 @@ class MongoCollectionSpecification extends Specification {
                                                                               .sort(new Document('sort', -1)))
 
         then:
-        def operation = executor.getWriteOperation() as FindAndRemoveOperation
+        def operation = executor.getWriteOperation() as FindAndDeleteOperation
         operation.getCriteria() == new BsonDocument('cold', new BsonBoolean(true))
         operation.getProjection() == new BsonDocument('field', new BsonInt32(1))
         operation.getSort() == new BsonDocument('sort', new BsonInt32(-1))

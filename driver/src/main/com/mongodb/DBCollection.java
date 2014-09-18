@@ -23,12 +23,15 @@ import com.mongodb.operation.AggregateToCollectionOperation;
 import com.mongodb.operation.BaseWriteOperation;
 import com.mongodb.operation.CountOperation;
 import com.mongodb.operation.CreateIndexesOperation;
+import com.mongodb.operation.DeleteOperation;
+import com.mongodb.operation.DeleteRequest;
 import com.mongodb.operation.DistinctOperation;
 import com.mongodb.operation.DropCollectionOperation;
 import com.mongodb.operation.DropIndexOperation;
-import com.mongodb.operation.FindAndRemoveOperation;
+import com.mongodb.operation.FindAndDeleteOperation;
 import com.mongodb.operation.FindAndReplaceOperation;
 import com.mongodb.operation.FindAndUpdateOperation;
+import com.mongodb.operation.FindOperation;
 import com.mongodb.operation.GetIndexesOperation;
 import com.mongodb.operation.Index;
 import com.mongodb.operation.InsertOperation;
@@ -41,13 +44,8 @@ import com.mongodb.operation.MapReduceWithInlineResultsOperation;
 import com.mongodb.operation.MixedBulkWriteOperation;
 import com.mongodb.operation.OrderBy;
 import com.mongodb.operation.ParallelScanOperation;
-import com.mongodb.operation.FindOperation;
 import com.mongodb.operation.ReadOperation;
-import com.mongodb.operation.RemoveOperation;
-import com.mongodb.operation.RemoveRequest;
 import com.mongodb.operation.RenameCollectionOperation;
-import com.mongodb.operation.ReplaceOperation;
-import com.mongodb.operation.ReplaceRequest;
 import com.mongodb.operation.UpdateOperation;
 import com.mongodb.operation.UpdateRequest;
 import com.mongodb.operation.WriteOperation;
@@ -368,9 +366,10 @@ public class DBCollection {
     private WriteResult replaceOrInsert(final DBObject obj, final Object id, final WriteConcern writeConcern) {
         DBObject filter = new BasicDBObject(ID_FIELD_NAME, id);
 
-        ReplaceRequest replaceRequest = new ReplaceRequest(wrap(filter), wrap(obj, objectCodec)).upsert(true);
+        UpdateRequest replaceRequest = new UpdateRequest(wrap(filter), wrap(obj, objectCodec),
+                                                         com.mongodb.operation.WriteRequest.Type.REPLACE).upsert(true);
 
-        return executeWriteOperation(new ReplaceOperation(getNamespace(), false, writeConcern, asList(replaceRequest)));
+        return executeWriteOperation(new UpdateOperation(getNamespace(), false, writeConcern, asList(replaceRequest)));
     }
 
     /**
@@ -418,13 +417,15 @@ public class DBCollection {
 
         try {
             if (!update.keySet().isEmpty() && update.keySet().iterator().next().startsWith("$")) {
-                UpdateRequest updateRequest = new UpdateRequest(wrap(query), wrap(update, encoder)).upsert(upsert).multi(multi);
+                UpdateRequest updateRequest = new UpdateRequest(wrap(query), wrap(update, encoder),
+                                                                com.mongodb.operation.WriteRequest.Type.UPDATE).upsert(upsert).multi(multi);
 
                 return executeWriteOperation(new UpdateOperation(getNamespace(), false, aWriteConcern, asList(updateRequest)));
             } else {
-                ReplaceRequest replaceRequest = new ReplaceRequest(wrap(query), wrap(update, encoder)).upsert(upsert);
-                return executeWriteOperation(new ReplaceOperation(getNamespace(), true, aWriteConcern,
-                                                                  asList(replaceRequest)));
+                UpdateRequest replaceRequest = new UpdateRequest(wrap(query), wrap(update, encoder),
+                                                                 com.mongodb.operation.WriteRequest.Type.REPLACE)
+                                               .upsert(upsert);
+                return executeWriteOperation(new UpdateOperation(getNamespace(), true, aWriteConcern, asList(replaceRequest)));
             }
         } catch (WriteConcernException e) {
             if (e.getWriteResult().getUpsertedId() != null && e.getWriteResult().getUpsertedId() instanceof BsonValue) {
@@ -502,7 +503,7 @@ public class DBCollection {
      * @mongodb.driver.manual tutorial/remove-documents/ Remove
      */
     public WriteResult remove(final DBObject query, final WriteConcern writeConcern) {
-        return executeWriteOperation(new RemoveOperation(getNamespace(), false, writeConcern, asList(new RemoveRequest(wrap(query)))));
+        return executeWriteOperation(new DeleteOperation(getNamespace(), false, writeConcern, asList(new DeleteRequest(wrap(query)))));
     }
 
     /**
@@ -516,9 +517,9 @@ public class DBCollection {
      * @mongodb.driver.manual tutorial/remove-documents/ Remove
      */
     public WriteResult remove(final DBObject query, final WriteConcern writeConcern, final DBEncoder encoder) {
-        RemoveRequest removeRequest = new RemoveRequest(wrap(query, encoder));
+        DeleteRequest deleteRequest = new DeleteRequest(wrap(query, encoder));
 
-        return executeWriteOperation(new RemoveOperation(getNamespace(), false, writeConcern, asList(removeRequest)));
+        return executeWriteOperation(new DeleteOperation(getNamespace(), false, writeConcern, asList(deleteRequest)));
     }
 
     /**
@@ -1527,7 +1528,7 @@ public class DBCollection {
                                   final long maxTime, final TimeUnit maxTimeUnit) {
         WriteOperation<DBObject> operation;
         if (remove) {
-            operation = new FindAndRemoveOperation<DBObject>(getNamespace(), objectCodec)
+            operation = new FindAndDeleteOperation<DBObject>(getNamespace(), objectCodec)
                             .criteria(wrapAllowNull(query))
                             .projection(wrapAllowNull(fields))
                             .sort(wrapAllowNull(sort))

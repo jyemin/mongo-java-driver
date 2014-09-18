@@ -21,32 +21,55 @@ import org.bson.BsonDocument;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An update that uses update operators to perform partial updates of a document.
+ * An update to one or more documents.
  *
  * @since 3.0
  */
-public final class UpdateRequest extends BaseUpdateRequest {
-    private final BsonDocument updateOperations;
+public final class UpdateRequest extends WriteRequest {
+    private final BsonDocument update;
+    private final Type updateType;
+    private final BsonDocument criteria;
     private boolean isMulti = true;
+    private boolean isUpsert = false;
 
     /**
      * Construct a new instance.
-     *
-     * @param criteria the non-null query criteria
-     * @param updateOperations the non-null update operations
+     *  @param criteria the non-null query criteria
+     * @param update the non-null update operations
+     * @param updateType the update type, which must be either UPDATE or REPLACE
      */
-    public UpdateRequest(final BsonDocument criteria, final BsonDocument updateOperations) {
-        super(criteria);
-        this.updateOperations = notNull("updateOperations", updateOperations);
+    public UpdateRequest(final BsonDocument criteria, final BsonDocument update, final Type updateType) {
+        if (updateType != Type.UPDATE && updateType != Type.REPLACE) {
+            throw new IllegalArgumentException("Update type must be UPDATE or REPLACE");
+        }
+
+        this.criteria = notNull("criteria", criteria);
+        this.update = notNull("update", update);
+        this.updateType = updateType;
+        this.isMulti = updateType == Type.UPDATE;
+    }
+
+    @Override
+    public Type getType() {
+        return updateType;
     }
 
     /**
-     * Gets the update operations.
+     * Gets the query criteria for the update.
      *
-     * @return the update operations
+     * @return the criteria
      */
-    public BsonDocument getUpdateOperations() {
-        return updateOperations;
+    public BsonDocument getCriteria() {
+        return criteria;
+    }
+
+    /**
+     * Gets the update.
+     *
+     * @return the update
+     */
+    public BsonDocument getUpdate() {
+        return update;
     }
 
     /**
@@ -65,20 +88,29 @@ public final class UpdateRequest extends BaseUpdateRequest {
      * @return this
      */
     public UpdateRequest multi(final boolean isMulti) {
+        if (isMulti && updateType == Type.REPLACE) {
+            throw new IllegalArgumentException("Replacements can not be multi");
+        }
         this.isMulti = isMulti;
         return this;
     }
 
-    @Override
+    /**
+     * Gets whether this update will insert a new document if no documents match the criteria.  The default is false.
+     * @return whether this update will insert a new document if no documents match the criteria
+     */
+    public boolean isUpsert() {
+        return isUpsert;
+    }
+
+    /**
+     * Sets whether this update will insert a new document if no documents match the criteria.
+     * @param isUpsert whether this update will insert a new document if no documents match the criteria
+     * @return this
+     */
     public UpdateRequest upsert(final boolean isUpsert) {
-        super.upsert(isUpsert);
+        this.isUpsert = isUpsert;
         return this;
     }
-
-    @Override
-    public Type getType() {
-        return Type.UPDATE;
-    }
-
 }
 

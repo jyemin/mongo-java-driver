@@ -35,8 +35,6 @@ import com.mongodb.protocol.DeleteProtocol;
 import com.mongodb.protocol.IndexMap;
 import com.mongodb.protocol.InsertCommandProtocol;
 import com.mongodb.protocol.InsertProtocol;
-import com.mongodb.protocol.ReplaceCommandProtocol;
-import com.mongodb.protocol.ReplaceProtocol;
 import com.mongodb.protocol.UpdateCommandProtocol;
 import com.mongodb.protocol.UpdateProtocol;
 import com.mongodb.protocol.WriteCommandProtocol;
@@ -62,8 +60,8 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.operation.OperationHelper.AsyncCallableWithConnection;
 import static com.mongodb.operation.OperationHelper.CallableWithConnection;
 import static com.mongodb.operation.OperationHelper.withConnection;
+import static com.mongodb.operation.WriteRequest.Type.DELETE;
 import static com.mongodb.operation.WriteRequest.Type.INSERT;
-import static com.mongodb.operation.WriteRequest.Type.REMOVE;
 import static com.mongodb.operation.WriteRequest.Type.REPLACE;
 import static com.mongodb.operation.WriteRequest.Type.UPDATE;
 import static java.lang.String.format;
@@ -371,14 +369,12 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
         BulkWriteResult execute(final Connection connection) {
             final BulkWriteResult nextWriteResult;
 
-            if (type == UPDATE) {
+            if (type == UPDATE || type == REPLACE) {
                 nextWriteResult = getUpdatesRunExecutor((List<UpdateRequest>) runWrites, connection).execute();
-            } else if (type == REPLACE) {
-                nextWriteResult = getReplacesRunExecutor((List<ReplaceRequest>) runWrites, connection).execute();
             } else if (type == INSERT) {
                 nextWriteResult = getInsertsRunExecutor((List<InsertRequest>) runWrites, connection).execute();
-            } else if (type == REMOVE) {
-                nextWriteResult = getRemovesRunExecutor((List<RemoveRequest>) runWrites, connection).execute();
+            } else if (type == DELETE) {
+                nextWriteResult = getDeletesRunExecutor((List<DeleteRequest>) runWrites, connection).execute();
             } else {
                 throw new UnsupportedOperationException(format("Unsupported write of type %s", type));
             }
@@ -389,55 +385,33 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
         MongoFuture<BulkWriteResult> executeAsync(final Connection connection) {
             final MongoFuture<BulkWriteResult> nextWriteResult;
 
-            if (type == UPDATE) {
+            if (type == UPDATE || type == REPLACE) {
                 nextWriteResult = getUpdatesRunExecutor((List<UpdateRequest>) runWrites, connection).executeAsync();
-            } else if (type == REPLACE) {
-                nextWriteResult = getReplacesRunExecutor((List<ReplaceRequest>) runWrites, connection).executeAsync();
             } else if (type == INSERT) {
                 nextWriteResult = getInsertsRunExecutor((List<InsertRequest>) runWrites, connection).executeAsync();
-            } else if (type == REMOVE) {
-                nextWriteResult = getRemovesRunExecutor((List<RemoveRequest>) runWrites, connection).executeAsync();
+            } else if (type == DELETE) {
+                nextWriteResult = getDeletesRunExecutor((List<DeleteRequest>) runWrites, connection).executeAsync();
             } else {
                 throw new UnsupportedOperationException(format("Unsupported write of type %s", type));
             }
             return nextWriteResult;
         }
 
-        @SuppressWarnings("unchecked")
-        RunExecutor getReplacesRunExecutor(final List<ReplaceRequest> replaceRequests, final Connection connection) {
+        RunExecutor getDeletesRunExecutor(final List<DeleteRequest> deleteRequests, final Connection connection) {
             return new RunExecutor(connection) {
                 WriteProtocol getWriteProtocol(final int index) {
-                    return new ReplaceProtocol(namespace,
-                                               ordered, writeConcern,
-                                               asList(replaceRequests.get(index)));
-                }
-
-                WriteCommandProtocol getWriteCommandProtocol() {
-                    return new ReplaceCommandProtocol(namespace, ordered, writeConcern, replaceRequests);
-                }
-
-                @Override
-                WriteRequest.Type getType() {
-                    return REPLACE;
-                }
-            };
-        }
-
-        RunExecutor getRemovesRunExecutor(final List<RemoveRequest> removeRequests, final Connection connection) {
-            return new RunExecutor(connection) {
-                WriteProtocol getWriteProtocol(final int index) {
-                    return new DeleteProtocol(namespace, ordered, writeConcern, asList(removeRequests.get(index))
+                    return new DeleteProtocol(namespace, ordered, writeConcern, asList(deleteRequests.get(index))
                     );
                 }
 
                 WriteCommandProtocol getWriteCommandProtocol() {
-                    return new DeleteCommandProtocol(namespace, ordered, writeConcern, removeRequests
+                    return new DeleteCommandProtocol(namespace, ordered, writeConcern, deleteRequests
                     );
                 }
 
                 @Override
                 WriteRequest.Type getType() {
-                    return REMOVE;
+                    return DELETE;
                 }
             };
         }
@@ -516,7 +490,7 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
                             if (result.wasAcknowledged()) {
                                 BulkWriteResult bulkWriteResult;
                                 if (getType() == UPDATE || getType() == REPLACE) {
-                                    bulkWriteResult = getResult(result, (BaseUpdateRequest) runWrites.get(i));
+                                    bulkWriteResult = getResult(result, (UpdateRequest) runWrites.get(i));
                                 } else {
                                     bulkWriteResult = getResult(result);
                                 }
@@ -574,7 +548,7 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
                         } else if (result.wasAcknowledged()) {
                             BulkWriteResult bulkWriteResult;
                             if (getType() == UPDATE || getType() == REPLACE) {
-                                bulkWriteResult = getResult(result, (BaseUpdateRequest) runWrites.get(currentPosition));
+                                bulkWriteResult = getResult(result, (UpdateRequest) runWrites.get(currentPosition));
                             } else {
                                 bulkWriteResult = getResult(result);
                             }
@@ -597,7 +571,7 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
                 return getResult(writeResult, getUpsertedItems(writeResult));
             }
 
-            BulkWriteResult getResult(final WriteResult writeResult, final BaseUpdateRequest updateRequest) {
+            BulkWriteResult getResult(final WriteResult writeResult, final UpdateRequest updateRequest) {
                 return getResult(writeResult, getUpsertedItems(writeResult, updateRequest));
             }
 
@@ -615,22 +589,13 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
 
             @SuppressWarnings("unchecked")
             List<BulkWriteUpsert> getUpsertedItems(final WriteResult writeResult,
-                                                   final BaseUpdateRequest baseUpdateRequest) {
+                                                   final UpdateRequest updateRequest) {
                 if (writeResult.getUpsertedId() == null) {
-                    if (writeResult.isUpdateOfExisting() || !baseUpdateRequest.isUpsert()) {
+                    if (writeResult.isUpdateOfExisting() || !updateRequest.isUpsert()) {
                         return Collections.emptyList();
                     } else {
-                        BsonDocument update;
-                        BsonDocument filter;
-                        if (baseUpdateRequest instanceof ReplaceRequest) {
-                            ReplaceRequest replaceRequest = (ReplaceRequest) baseUpdateRequest;
-                            update = replaceRequest.getReplacement();
-                            filter = replaceRequest.getCriteria();
-                        } else {
-                            UpdateRequest updateRequest = (UpdateRequest) baseUpdateRequest;
-                            update = updateRequest.getUpdateOperations();
-                            filter = updateRequest.getCriteria();
-                        }
+                        BsonDocument update = updateRequest.getUpdate();
+                        BsonDocument filter = updateRequest.getCriteria();
 
                         if (update.containsKey("_id")) {
                             return asList(new BulkWriteUpsert(0, update.get("_id")));

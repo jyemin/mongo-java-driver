@@ -30,15 +30,14 @@ import com.mongodb.codecs.CollectibleCodec;
 import com.mongodb.operation.AsyncReadOperation;
 import com.mongodb.operation.AsyncWriteOperation;
 import com.mongodb.operation.CountOperation;
+import com.mongodb.operation.DeleteOperation;
+import com.mongodb.operation.DeleteRequest;
 import com.mongodb.operation.FindOperation;
 import com.mongodb.operation.InsertOperation;
 import com.mongodb.operation.InsertRequest;
-import com.mongodb.operation.RemoveOperation;
-import com.mongodb.operation.RemoveRequest;
-import com.mongodb.operation.ReplaceOperation;
-import com.mongodb.operation.ReplaceRequest;
 import com.mongodb.operation.UpdateOperation;
 import com.mongodb.operation.UpdateRequest;
+import com.mongodb.operation.WriteRequest;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
 import org.bson.codecs.Codec;
@@ -307,9 +306,9 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
         @SuppressWarnings("unchecked")
         public MongoFuture<WriteResult> replace(final T replacement) {
             notNull("replacement", replacement);
-            return execute(new ReplaceOperation(getNamespace(), true, options.getWriteConcern(),
-                                                   asList(new ReplaceRequest((BsonDocument) findModel.getOptions().getCriteria(),
-                                                                             asBson(replacement))
+            return execute(new UpdateOperation(getNamespace(), true, options.getWriteConcern(),
+                                                   asList(new UpdateRequest((BsonDocument) findModel.getOptions().getCriteria(),
+                                                                             asBson(replacement), WriteRequest.Type.REPLACE)
                                                           .upsert(upsert))
             ));
         }
@@ -320,7 +319,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
             return execute(new UpdateOperation(getNamespace(), true, options.getWriteConcern(),
                                                asList(new UpdateRequest((BsonDocument) findModel.getOptions().getCriteria(),
                                                                         new BsonDocumentWrapper<Document>(updateOperations,
-                                                                                                          options.getDocumentCodec()))
+                                                                                                          options.getDocumentCodec()),
+                                                                        WriteRequest.Type.UPDATE)
                                                       .upsert(upsert).multi(true))
             ));
         }
@@ -331,22 +331,23 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
             return execute(new UpdateOperation(getNamespace(), true, options.getWriteConcern(),
                                                asList(new UpdateRequest((BsonDocument) findModel.getOptions().getCriteria(),
                                                                         new BsonDocumentWrapper<Document>(updateOperations,
-                                                                                                          options.getDocumentCodec()))
+                                                                                                          options.getDocumentCodec()),
+                                                                        WriteRequest.Type.UPDATE)
                                                       .upsert(upsert).multi(false))
             ));
         }
 
         @Override
         public MongoFuture<WriteResult> remove() {
-            return execute(new RemoveOperation(getNamespace(), true, options.getWriteConcern(),
-                                               asList(new RemoveRequest((BsonDocument) findModel.getOptions().getCriteria())
+            return execute(new DeleteOperation(getNamespace(), true, options.getWriteConcern(),
+                                               asList(new DeleteRequest((BsonDocument) findModel.getOptions().getCriteria())
                                                       .multi(true))));
         }
 
         @Override
         public MongoFuture<WriteResult> removeOne() {
-            return execute(new RemoveOperation(getNamespace(), true, options.getWriteConcern(),
-                                               asList(new RemoveRequest((BsonDocument) findModel.getOptions().getCriteria())
+            return execute(new DeleteOperation(getNamespace(), true, options.getWriteConcern(),
+                                               asList(new DeleteRequest((BsonDocument) findModel.getOptions().getCriteria())
                                                       .multi(false))));
         }
 

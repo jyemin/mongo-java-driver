@@ -18,8 +18,8 @@ package com.mongodb.operation;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
-import com.mongodb.protocol.ReplaceCommandProtocol;
-import com.mongodb.protocol.ReplaceProtocol;
+import com.mongodb.protocol.DeleteCommandProtocol;
+import com.mongodb.protocol.DeleteProtocol;
 import com.mongodb.protocol.WriteCommandProtocol;
 import com.mongodb.protocol.WriteProtocol;
 import org.mongodb.BulkWriteResult;
@@ -29,57 +29,53 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An operation that atomically replaces a document in a collection with a new document.
+ * An operation that deletes one or more documents from a collection.
  *
  * @since 3.0
  */
-public class ReplaceOperation extends BaseWriteOperation {
-    private final List<ReplaceRequest> replaceRequests;
+public class DeleteOperation extends BaseWriteOperation {
+    private final List<DeleteRequest> deleteRequests;
 
     /**
      * Construct an instance.
      *
      * @param namespace the database and collection namespace for the operation.
-     * @param ordered whether the requests are ordered.
+     * @param ordered whether the writes are ordered.
      * @param writeConcern the write concern for the operation.
-     * @param replaceRequests the list of replace requests.
+     * @param deleteRequests the remove requests.
      */
-    public ReplaceOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
-                            final List<ReplaceRequest> replaceRequests) {
+    public DeleteOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
+                           final List<DeleteRequest> deleteRequests) {
         super(namespace, ordered, writeConcern);
-        this.replaceRequests = notNull("replace", replaceRequests);
+        this.deleteRequests = notNull("removes", deleteRequests);
     }
 
     /**
-     * Get the replace requests.
-     * @return the list of replace requests
+     * Gets the list of remove requests.
+     *
+     * @return the remove requests
      */
-    public List<ReplaceRequest> getReplaceRequests() {
-        return replaceRequests;
+    public List<DeleteRequest> getDeleteRequests() {
+        return deleteRequests;
     }
 
     @Override
     protected WriteProtocol getWriteProtocol() {
-        return new ReplaceProtocol(getNamespace(), isOrdered(), getWriteConcern(), replaceRequests);
+        return new DeleteProtocol(getNamespace(), isOrdered(), getWriteConcern(), deleteRequests);
     }
 
     @Override
     protected WriteCommandProtocol getCommandProtocol() {
-        return new ReplaceCommandProtocol(getNamespace(), isOrdered(), getWriteConcern(), replaceRequests);
+        return new DeleteCommandProtocol(getNamespace(), isOrdered(), getWriteConcern(), deleteRequests);
     }
 
     @Override
     protected WriteRequest.Type getType() {
-        return WriteRequest.Type.REPLACE;
+        return WriteRequest.Type.DELETE;
     }
 
     @Override
     protected int getCount(final BulkWriteResult bulkWriteResult) {
-        return bulkWriteResult.getMatchedCount() + bulkWriteResult.getUpserts().size();
-    }
-
-    @Override
-    protected boolean getUpdatedExisting(final BulkWriteResult bulkWriteResult) {
-        return bulkWriteResult.getMatchedCount() > 0;
+        return bulkWriteResult.getRemovedCount();
     }
 }
