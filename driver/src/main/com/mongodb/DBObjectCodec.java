@@ -16,11 +16,6 @@
 
 package com.mongodb;
 
-import com.mongodb.codecs.BinaryToByteArrayTransformer;
-import com.mongodb.codecs.BinaryToUuidTransformer;
-import com.mongodb.codecs.CollectibleCodec;
-import com.mongodb.codecs.IdGenerator;
-import com.mongodb.codecs.ObjectIdGenerator;
 import org.bson.BSON;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
@@ -37,7 +32,12 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.BasicBSONList;
 import org.bson.types.Binary;
+import org.bson.types.BinaryToByteArrayTransformer;
+import org.bson.types.BinaryToUuidTransformer;
 import org.bson.types.CodeWScope;
+import org.bson.types.CollectibleCodec;
+import org.bson.types.IdGenerator;
+import org.bson.types.ObjectIdGenerator;
 import org.bson.types.Symbol;
 
 import java.lang.reflect.Array;

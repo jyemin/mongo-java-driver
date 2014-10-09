@@ -18,13 +18,13 @@ package com.mongodb.operation
 
 import category.Async
 import com.mongodb.OperationFunctionalSpecification
-import com.mongodb.codecs.DocumentCodec
 import org.bson.BsonBinary
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.codecs.BsonDocumentCodec
+import org.bson.types.Document
+import org.bson.types.DocumentCodec
 import org.junit.experimental.categories.Category
-import org.mongodb.Document
 
 import static com.mongodb.ClusterFixture.getAsyncBinding
 import static com.mongodb.ClusterFixture.getBinding

@@ -42,7 +42,6 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.codecs.CollectibleCodec;
 import com.mongodb.operation.AggregateOperation;
 import com.mongodb.operation.AggregateToCollectionOperation;
 import com.mongodb.operation.CountOperation;
@@ -79,8 +78,9 @@ import org.bson.BsonValue;
 import org.bson.codecs.Codec;
 import org.bson.codecs.Decoder;
 import org.bson.codecs.DecoderContext;
+import org.bson.types.CollectibleCodec;
+import org.bson.types.Document;
 import org.mongodb.BulkWriteResult;
-import org.mongodb.Document;
 import org.mongodb.WriteResult;
 
 import java.util.ArrayList;

@@ -17,12 +17,12 @@
 package com.mongodb;
 
 import com.mongodb.annotations.Immutable;
-import com.mongodb.codecs.DocumentCodecProvider;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.configuration.RootCodecRegistry;
+import org.bson.types.DocumentCodecProvider;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;

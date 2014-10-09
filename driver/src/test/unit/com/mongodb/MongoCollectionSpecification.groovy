@@ -37,8 +37,6 @@ import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateManyModel
 import com.mongodb.client.model.UpdateOneModel
 import com.mongodb.client.model.UpdateOptions
-import com.mongodb.codecs.DocumentCodec
-import com.mongodb.codecs.DocumentCodecProvider
 import com.mongodb.operation.AggregateOperation
 import com.mongodb.operation.AggregateToCollectionOperation
 import com.mongodb.operation.CountOperation
@@ -69,8 +67,10 @@ import org.bson.BsonJavaScript
 import org.bson.BsonObjectId
 import org.bson.BsonString
 import org.bson.codecs.configuration.RootCodecRegistry
+import org.bson.types.Document
+import org.bson.types.DocumentCodec
+import org.bson.types.DocumentCodecProvider
 import org.bson.types.ObjectId
-import org.mongodb.Document
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit

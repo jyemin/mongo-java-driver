@@ -16,18 +16,6 @@
 
 package com.mongodb;
 
-import com.mongodb.codecs.BooleanCodec;
-import com.mongodb.codecs.ByteArrayCodec;
-import com.mongodb.codecs.ByteCodec;
-import com.mongodb.codecs.DateCodec;
-import com.mongodb.codecs.DoubleCodec;
-import com.mongodb.codecs.FloatCodec;
-import com.mongodb.codecs.IntegerCodec;
-import com.mongodb.codecs.LongCodec;
-import com.mongodb.codecs.PatternCodec;
-import com.mongodb.codecs.ShortCodec;
-import com.mongodb.codecs.StringCodec;
-import com.mongodb.codecs.UuidCodec;
 import org.bson.BsonDbPointer;
 import org.bson.BsonType;
 import org.bson.BsonUndefined;
@@ -44,10 +32,22 @@ import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.BSONTimestamp;
 import org.bson.types.Binary;
+import org.bson.types.BooleanCodec;
+import org.bson.types.ByteArrayCodec;
+import org.bson.types.ByteCodec;
 import org.bson.types.Code;
+import org.bson.types.DateCodec;
+import org.bson.types.DoubleCodec;
+import org.bson.types.FloatCodec;
+import org.bson.types.IntegerCodec;
+import org.bson.types.LongCodec;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
+import org.bson.types.PatternCodec;
+import org.bson.types.ShortCodec;
+import org.bson.types.StringCodec;
+import org.bson.types.UuidCodec;
 
 import java.util.Date;
 import java.util.HashMap;

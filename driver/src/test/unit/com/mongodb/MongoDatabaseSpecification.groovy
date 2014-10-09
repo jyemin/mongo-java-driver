@@ -20,11 +20,11 @@ import com.mongodb.client.MongoCollectionOptions
 import com.mongodb.client.MongoDatabaseOptions
 import com.mongodb.client.model.CreateCollectionOptions
 import com.mongodb.client.test.Worker
-import com.mongodb.codecs.DocumentCodecProvider
 import com.mongodb.operation.CreateCollectionOperation
 import com.mongodb.operation.DropDatabaseOperation
 import com.mongodb.operation.GetCollectionNamesOperation
 import org.bson.codecs.configuration.RootCodecRegistry
+import org.bson.types.DocumentCodecProvider
 import spock.lang.Specification
 
 import static com.mongodb.ReadPreference.primary

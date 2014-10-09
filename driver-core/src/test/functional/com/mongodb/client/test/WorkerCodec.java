@@ -16,12 +16,12 @@
 
 package com.mongodb.client.test;
 
-import com.mongodb.codecs.CollectibleCodec;
 import org.bson.BsonObjectId;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
+import org.bson.types.CollectibleCodec;
 import org.bson.types.ObjectId;
 
 import java.util.Date;
