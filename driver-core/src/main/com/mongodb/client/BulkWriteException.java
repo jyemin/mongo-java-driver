@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.mongodb;
+package com.mongodb.client;
 
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.result.BulkWriteResult;
 
 import java.util.List;
 

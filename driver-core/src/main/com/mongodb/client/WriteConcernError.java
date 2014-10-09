@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.mongodb;
+package com.mongodb.client;
 
 import org.bson.BsonDocument;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * Represents an error for an item included in a bulk write operation, e.g. a duplicate key error
+ * An error representing a failure by the server to apply the requested write concern to the bulk operation.
  *
+ * @mongodb.driver.manual core/write-concern/  Write Concern
  * @since 3.0
  */
-public class BulkWriteError {
-    private final int index;
+public class WriteConcernError {
     private final int code;
     private final String message;
     private final BsonDocument details;
@@ -36,14 +36,12 @@ public class BulkWriteError {
      *
      * @param code    the error code
      * @param message the error message
-     * @param details details about the error
-     * @param index   the index of the item in the bulk write operation that had this error
+     * @param details any details
      */
-    public BulkWriteError(final int code, final String message, final BsonDocument details, final int index) {
+    public WriteConcernError(final int code, final String message, final BsonDocument details) {
         this.code = code;
         this.message = notNull("message", message);
         this.details = notNull("details", details);
-        this.index = index;
     }
 
     /**
@@ -73,15 +71,6 @@ public class BulkWriteError {
         return details;
     }
 
-    /**
-     * The index of the item in the bulk write operation with this error.
-     *
-     * @return the index
-     */
-    public int getIndex() {
-        return index;
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -91,12 +80,9 @@ public class BulkWriteError {
             return false;
         }
 
-        BulkWriteError that = (BulkWriteError) o;
+        WriteConcernError that = (WriteConcernError) o;
 
         if (code != that.code) {
-            return false;
-        }
-        if (index != that.index) {
             return false;
         }
         if (!details.equals(that.details)) {
@@ -111,10 +97,18 @@ public class BulkWriteError {
 
     @Override
     public int hashCode() {
-        int result = index;
-        result = 31 * result + code;
+        int result = code;
         result = 31 * result + message.hashCode();
         result = 31 * result + details.hashCode();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "BulkWriteConcernError{"
+               + "code=" + code
+               + ", message='" + message + '\''
+               + ", details=" + details
+               + '}';
     }
 }

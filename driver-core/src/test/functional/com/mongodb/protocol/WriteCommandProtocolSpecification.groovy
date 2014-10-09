@@ -19,6 +19,8 @@ package com.mongodb.protocol
 
 import category.Slow
 import com.mongodb.OperationFunctionalSpecification
+import com.mongodb.client.BulkWriteException
+import com.mongodb.client.result.BulkWriteUpsert
 import com.mongodb.operation.InsertRequest
 import com.mongodb.operation.UpdateRequest
 import com.mongodb.operation.WriteRequest
@@ -28,8 +30,6 @@ import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.codecs.BsonDocumentCodec
 import org.junit.experimental.categories.Category
-import org.mongodb.BulkWriteException
-import org.mongodb.BulkWriteUpsert
 import spock.lang.IgnoreIf
 
 import static com.mongodb.ClusterFixture.getCluster

@@ -21,6 +21,8 @@ import category.Slow
 import com.mongodb.ClusterFixture
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.WriteConcern
+import com.mongodb.client.BulkWriteException
+import com.mongodb.client.result.BulkWriteUpsert
 import com.mongodb.protocol.AcknowledgedBulkWriteResult
 import org.bson.BsonBinary
 import org.bson.BsonBoolean
@@ -31,8 +33,6 @@ import org.bson.types.Document
 import org.bson.types.DocumentCodec
 import org.bson.types.ObjectId
 import org.junit.experimental.categories.Category
-import org.mongodb.BulkWriteException
-import org.mongodb.BulkWriteUpsert
 import spock.lang.IgnoreIf
 
 import static ClusterFixture.getAsyncBinding

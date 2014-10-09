@@ -18,17 +18,17 @@ package com.mongodb.protocol;
 
 import com.mongodb.MongoInternalException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.BulkWriteError;
+import com.mongodb.client.BulkWriteException;
+import com.mongodb.client.WriteConcernError;
+import com.mongodb.client.result.BulkWriteResult;
+import com.mongodb.client.result.BulkWriteUpsert;
 import com.mongodb.operation.WriteRequest;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonNumber;
 import org.bson.BsonValue;
-import org.mongodb.BulkWriteError;
-import org.mongodb.BulkWriteException;
-import org.mongodb.BulkWriteResult;
-import org.mongodb.BulkWriteUpsert;
-import org.mongodb.WriteConcernError;
 
 import java.util.ArrayList;
 import java.util.Collections;

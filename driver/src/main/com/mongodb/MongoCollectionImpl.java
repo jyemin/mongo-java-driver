@@ -40,6 +40,7 @@ import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.result.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.operation.AggregateOperation;
@@ -80,7 +81,6 @@ import org.bson.codecs.Decoder;
 import org.bson.codecs.DecoderContext;
 import org.bson.types.CollectibleCodec;
 import org.bson.types.Document;
-import org.mongodb.BulkWriteResult;
 import org.mongodb.WriteResult;
 
 import java.util.ArrayList;

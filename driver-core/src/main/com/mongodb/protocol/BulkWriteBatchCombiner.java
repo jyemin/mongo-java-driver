@@ -18,11 +18,11 @@ package com.mongodb.protocol;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
-import org.mongodb.BulkWriteError;
-import org.mongodb.BulkWriteException;
-import org.mongodb.BulkWriteResult;
-import org.mongodb.BulkWriteUpsert;
-import org.mongodb.WriteConcernError;
+import com.mongodb.client.BulkWriteError;
+import com.mongodb.client.BulkWriteException;
+import com.mongodb.client.WriteConcernError;
+import com.mongodb.client.result.BulkWriteResult;
+import com.mongodb.client.result.BulkWriteUpsert;
 
 import java.util.ArrayList;
 import java.util.Comparator;
