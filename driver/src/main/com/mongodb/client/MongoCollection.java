@@ -35,10 +35,10 @@ import com.mongodb.client.model.RenameCollectionOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.result.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.types.Document;
-import org.mongodb.BulkWriteResult;
 
 import java.util.List;
 
@@ -266,7 +266,7 @@ public interface MongoCollection<T> {
      * Executes a mix of inserts, updates, replaces, and deletes.
      *
      * @param requests the writes to execute
-     * @throws com.mongodb.BulkWriteException
+     * @throws com.mongodb.client.BulkWriteException
      * @throws com.mongodb.MongoException
      * @return the result of the bulk write
      */
@@ -277,7 +277,7 @@ public interface MongoCollection<T> {
      *
      * @param requests the writes to execute
      * @param options the options to apply to the bulk write operation
-     * @throws com.mongodb.BulkWriteException
+     * @throws com.mongodb.client.BulkWriteException
      * @throws com.mongodb.MongoException
      * @return the result of the bulk write
      */

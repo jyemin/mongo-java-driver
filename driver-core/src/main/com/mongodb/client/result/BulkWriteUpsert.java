@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mongodb;
+package com.mongodb.client.result;
 
 import org.bson.BsonValue;
 
