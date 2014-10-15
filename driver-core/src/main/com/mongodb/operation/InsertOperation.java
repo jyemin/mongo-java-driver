@@ -18,7 +18,7 @@ package com.mongodb.operation;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.result.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.protocol.InsertCommandProtocol;
 import com.mongodb.protocol.InsertProtocol;
 import com.mongodb.protocol.WriteCommandProtocol;

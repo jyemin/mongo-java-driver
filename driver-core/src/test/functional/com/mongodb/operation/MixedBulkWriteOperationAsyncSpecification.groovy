@@ -21,8 +21,8 @@ import category.Slow
 import com.mongodb.ClusterFixture
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.WriteConcern
-import com.mongodb.client.BulkWriteException
-import com.mongodb.client.result.BulkWriteUpsert
+import com.mongodb.bulk.BulkWriteException
+import com.mongodb.bulk.BulkWriteUpsert
 import com.mongodb.protocol.AcknowledgedBulkWriteResult
 import org.bson.BsonBinary
 import org.bson.BsonBoolean

@@ -19,8 +19,8 @@ package com.mongodb.protocol
 
 import category.Slow
 import com.mongodb.OperationFunctionalSpecification
-import com.mongodb.client.BulkWriteException
-import com.mongodb.client.result.BulkWriteUpsert
+import com.mongodb.bulk.BulkWriteException
+import com.mongodb.bulk.BulkWriteUpsert
 import com.mongodb.operation.InsertRequest
 import com.mongodb.operation.UpdateRequest
 import com.mongodb.operation.WriteRequest

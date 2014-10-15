@@ -1969,7 +1969,7 @@ public class DBCollection {
                                                                                                                      getObjectCodec()),
                                                                                          ordered, writeConcern)),
                                             getObjectCodec());
-        } catch (com.mongodb.client.BulkWriteException e) {
+        } catch (com.mongodb.bulk.BulkWriteException e) {
             throw BulkWriteHelper.translateBulkWriteException(e, DBObjects.codec);
         }
     }

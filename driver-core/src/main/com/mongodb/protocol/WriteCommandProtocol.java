@@ -22,7 +22,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.async.MongoFuture;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.SingleResultFuture;
-import com.mongodb.client.result.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.connection.ByteBufferBsonOutput;
 import com.mongodb.connection.Connection;
 import com.mongodb.connection.ResponseBuffers;

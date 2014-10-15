@@ -25,11 +25,11 @@ import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.SingleResultFuture;
 import com.mongodb.binding.AsyncWriteBinding;
 import com.mongodb.binding.WriteBinding;
-import com.mongodb.client.BulkWriteError;
-import com.mongodb.client.BulkWriteException;
+import com.mongodb.bulk.BulkWriteError;
+import com.mongodb.bulk.BulkWriteException;
+import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.client.WriteConcernError;
-import com.mongodb.client.result.BulkWriteResult;
-import com.mongodb.client.result.BulkWriteUpsert;
 import com.mongodb.connection.Connection;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerVersion;
@@ -137,7 +137,7 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
      *
      * @param binding the WriteBinding        for the operation
      * @return the bulk write result.
-     * @throws com.mongodb.client.BulkWriteException if the server reported an error in the operation
+     * @throws com.mongodb.bulk.BulkWriteException if the server reported an error in the operation
      * @throws MongoException     for general failures
      */
     @Override
@@ -170,7 +170,7 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
      *
      * @param binding the AsyncWriteBinding   for the operation
      * @return the future bulk write result.
-     * @throws com.mongodb.client.BulkWriteException if the server reported an error in the operation
+     * @throws com.mongodb.bulk.BulkWriteException if the server reported an error in the operation
      * @throws MongoException     for general failures
      */
     @Override

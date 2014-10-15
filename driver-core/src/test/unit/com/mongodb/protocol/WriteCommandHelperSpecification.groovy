@@ -18,9 +18,9 @@ package com.mongodb.protocol
 
 import com.mongodb.MongoInternalException
 import com.mongodb.ServerAddress
-import com.mongodb.client.BulkWriteError
+import com.mongodb.bulk.BulkWriteError
+import com.mongodb.bulk.BulkWriteUpsert
 import com.mongodb.client.WriteConcernError
-import com.mongodb.client.result.BulkWriteUpsert
 import org.bson.BsonArray
 import org.bson.BsonDocument
 import org.bson.BsonInt32

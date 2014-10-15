@@ -16,6 +16,7 @@
 
 package com.mongodb;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCollectionOptions;
 import com.mongodb.client.MongoIterable;
@@ -40,7 +41,6 @@ import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
-import com.mongodb.client.result.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.operation.AggregateOperation;

@@ -19,6 +19,7 @@ package com.mongodb.client;
 import com.mongodb.MongoCursor;
 import com.mongodb.MongoNamespace;
 import com.mongodb.annotations.ThreadSafe;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.AggregateOptions;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.CountOptions;
@@ -35,7 +36,6 @@ import com.mongodb.client.model.RenameCollectionOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
-import com.mongodb.client.result.BulkWriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.types.Document;
@@ -266,7 +266,7 @@ public interface MongoCollection<T> {
      * Executes a mix of inserts, updates, replaces, and deletes.
      *
      * @param requests the writes to execute
-     * @throws com.mongodb.client.BulkWriteException
+     * @throws com.mongodb.bulk.BulkWriteException
      * @throws com.mongodb.MongoException
      * @return the result of the bulk write
      */
@@ -277,7 +277,7 @@ public interface MongoCollection<T> {
      *
      * @param requests the writes to execute
      * @param options the options to apply to the bulk write operation
-     * @throws com.mongodb.client.BulkWriteException
+     * @throws com.mongodb.bulk.BulkWriteException
      * @throws com.mongodb.MongoException
      * @return the result of the bulk write
      */
