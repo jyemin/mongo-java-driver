@@ -40,6 +40,12 @@ class OperationIterable<T> implements MongoIterable<T> {
         this.executor = executor;
     }
 
+    OperationIterable(final ReadPreference readPreference) {
+        this.operation = null;
+        this.readPreference = readPreference;
+        this.executor = null;
+    }
+
     @Override
     public MongoCursor<T> iterator() {
         return executor.execute(operation, readPreference);

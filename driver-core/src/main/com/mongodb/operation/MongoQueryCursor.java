@@ -173,6 +173,10 @@ class MongoQueryCursor<T> implements MongoCursor<T> {
     }
 
     public ServerAddress getServerAddress() {
+        if (closed) {
+            throw new IllegalStateException("Cursor has been closed");
+        }
+
         return currentResult.getAddress();
     }
 

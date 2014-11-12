@@ -24,6 +24,7 @@ import com.mongodb.connection.BufferProvider;
 import com.mongodb.operation.AggregateOperation;
 import com.mongodb.operation.AggregateToCollectionOperation;
 import com.mongodb.operation.BaseWriteOperation;
+import com.mongodb.operation.BatchCursor;
 import com.mongodb.operation.CountOperation;
 import com.mongodb.operation.CreateIndexOperation;
 import com.mongodb.operation.DeleteOperation;
@@ -690,8 +691,8 @@ public class DBCollection {
         if (query != null) {
             operation.filter(wrap(query));
         }
-        MongoCursor<DBObject> cursor = executor.execute(operation, readPreference);
-        return cursor.hasNext() ? cursor.next() : null;
+        BatchCursor<DBObject> cursor = executor.execute(operation, readPreference);
+        return cursor.hasNext() ? cursor.next().iterator().next() : null;
     }
 
     /**
