@@ -89,9 +89,7 @@ class QueryBatchCursor<T> implements BatchCursor<T> {
             return;
         }
         try {
-            if (serverCursor != null && !(limit >= count)) {
-                killCursor();
-            }
+            killCursor();
         } finally {
             connectionSource.release();
         }

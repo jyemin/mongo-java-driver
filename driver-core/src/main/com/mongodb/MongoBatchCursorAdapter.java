@@ -21,7 +21,7 @@ class MongoBatchCursorAdapter<T> implements MongoCursor<T> {
 
     @Override
     public void close() {
-        batchCursor.close();;
+        batchCursor.close();
     }
 
     @Override

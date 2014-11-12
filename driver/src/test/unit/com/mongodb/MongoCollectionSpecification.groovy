@@ -588,7 +588,7 @@ class MongoCollectionSpecification extends Specification {
 
     def 'aggregate should use AggregationOperation properly'() {
         given:
-        def cursor = Stub(MongoCursor)
+        def cursor = Stub(BatchCursor)
         def executor = new TestOperationExecutor([cursor])
         collection = new MongoCollectionImpl<Document>(namespace, Document, options, executor)
 
@@ -641,7 +641,7 @@ class MongoCollectionSpecification extends Specification {
 
     def 'mapReduce should use the MapReduceWithInlineResultsOperation properly'() {
         given:
-        def cursor = Stub(MongoCursor)
+        def cursor = Stub(BatchCursor)
         def executor = new TestOperationExecutor([cursor])
         collection = new MongoCollectionImpl<Document>(namespace, Document, options, executor)
 
@@ -666,7 +666,7 @@ class MongoCollectionSpecification extends Specification {
 
     def 'mapReduce with options should use the MapReduceWithInlineResultsOperation properly'() {
         given:
-        def cursor = Stub(MongoCursor)
+        def cursor = Stub(BatchCursor)
         def executor = new TestOperationExecutor([cursor])
         collection = new MongoCollectionImpl<Document>(namespace, Document, options, executor)
         def options = new MapReduceOptions()

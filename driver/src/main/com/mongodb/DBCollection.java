@@ -37,7 +37,7 @@ import com.mongodb.operation.FindAndUpdateOperation;
 import com.mongodb.operation.FindOperation;
 import com.mongodb.operation.InsertOperation;
 import com.mongodb.operation.ListIndexesOperation;
-import com.mongodb.operation.MapReduceCursor;
+import com.mongodb.operation.MapReduceBatchCursor;
 import com.mongodb.operation.MapReduceStatistics;
 import com.mongodb.operation.MapReduceToCollectionOperation;
 import com.mongodb.operation.MapReduceWithInlineResultsOperation;
@@ -1122,7 +1122,7 @@ public class DBCollection {
             if (command.getFinalize() != null) {
                 operation.finalizeFunction(new BsonJavaScript(command.getFinalize()));
             }
-            MapReduceCursor<DBObject> executionResult = executor.execute(operation, readPreference);
+            MapReduceBatchCursor<DBObject> executionResult = executor.execute(operation, readPreference);
             return new MapReduceOutput(command.toDBObject(), executionResult);
         } else {
             String action;
@@ -1283,8 +1283,8 @@ public class DBCollection {
                                                          .allowDiskUse(options.getAllowDiskUse())
                                                          .batchSize(options.getBatchSize())
                                                          .useCursor(options.getOutputMode() == CURSOR);
-            MongoCursor<DBObject> cursor = executor.execute(operation, readPreference);
-            return new MongoCursorAdapter(cursor);
+            BatchCursor<DBObject> cursor = executor.execute(operation, readPreference);
+            return new MongoCursorAdapter(new MongoBatchCursorAdapter<DBObject>(cursor));
         }
     }
 

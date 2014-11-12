@@ -201,21 +201,14 @@ final class FindFluentImpl<T> implements FindFluent<T> {
     }
 
     private final class FindOperationIterable extends OperationIterable<T> {
-        private final FindOperation<T> operation;
         private final ReadPreference readPreference;
         private final OperationExecutor executor;
 
         FindOperationIterable(final FindOperation<T> operation, final ReadPreference readPreference,
                               final OperationExecutor executor) {
-            super(readPreference);
-            this.operation = operation;
+            super(operation, readPreference, executor);
             this.readPreference = readPreference;
             this.executor = executor;
-        }
-
-        @Override
-        public MongoCursor<T> iterator() {
-            return new MongoBatchCursorAdapter<T>(executor.execute(operation, readPreference));
         }
 
         @Override
