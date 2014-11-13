@@ -307,6 +307,43 @@ class QueryCursorSpecification extends OperationFunctionalSpecification {
         i == 300
     }
 
+    def 'should respect batch size'() {
+        given:
+        def firstBatch = executeQuery(2)
+
+        when:
+        cursor = new QueryBatchCursor<Document>(getNamespace(), firstBatch, 0, 2, new DocumentCodec(), connectionSource)
+
+        then:
+        cursor.batchSize == 2
+
+        when:
+        def nextBatch = cursor.next()
+
+        then:
+        nextBatch.size() == 2
+
+        when:
+        nextBatch = cursor.next()
+
+        then:
+        nextBatch.size() == 2
+
+        when:
+        cursor.batchSize = 3
+        nextBatch = cursor.next()
+
+        then:
+        cursor.batchSize == 3
+        nextBatch.size() == 3
+
+        when:
+        nextBatch = cursor.next()
+
+        then:
+        nextBatch.size() == 3
+    }
+
     def 'test normal loop with get more'() {
         given:
         def firstBatch = executeQuery(2)

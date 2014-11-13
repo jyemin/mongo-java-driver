@@ -320,6 +320,15 @@ class DBCursorFunctionalSpecification extends FunctionalSpecification {
                     List<DBObject> next() { null }
 
                     @Override
+                    void setBatchSize(final int batchSize) {
+                    }
+
+                    @Override
+                    int getBatchSize() {
+                        0
+                    }
+
+                    @Override
                     void remove() { }
 
                     @Override

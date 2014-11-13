@@ -18,7 +18,7 @@ import static java.util.Arrays.asList;
 class QueryBatchCursor<T> implements BatchCursor<T> {
     private final MongoNamespace namespace;
     private final int limit;
-    private final int batchSize;
+    private int batchSize;
     private final Decoder<T> decoder;
     private final ConnectionSource connectionSource;
     private ServerCursor serverCursor;
@@ -76,6 +76,16 @@ class QueryBatchCursor<T> implements BatchCursor<T> {
         List<T> retVal = nextBatch;
         nextBatch = null;
         return retVal;
+    }
+
+    @Override
+    public void setBatchSize(final int batchSize) {
+        this.batchSize = batchSize;
+    }
+
+    @Override
+    public int getBatchSize() {
+        return batchSize;
     }
 
     @Override
