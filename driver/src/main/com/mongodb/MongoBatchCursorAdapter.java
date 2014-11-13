@@ -1,5 +1,6 @@
 package com.mongodb;
 
+import com.mongodb.client.MongoCursor;
 import com.mongodb.operation.BatchCursor;
 
 import java.util.List;
