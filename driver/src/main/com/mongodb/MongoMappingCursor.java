@@ -44,10 +44,11 @@ class MongoMappingCursor<T, U> implements MongoCursor<U> {
 
     @Override
     public U tryNext() {
-        if (hasNext()) {
-            return next();
-        } else {
+        T proxiedNext = proxied.tryNext();
+        if (proxiedNext == null) {
             return null;
+        } else {
+            return mapper.apply(proxiedNext);
         }
     }
 
