@@ -148,10 +148,10 @@ public class DBCollection {
         this(name, database, database.getExecutor());
     }
 
-    private static BasicDBList toDBList(final MongoCursor<DBObject> source) {
+    private static BasicDBList toDBList(final BatchCursor<DBObject> source) {
         BasicDBList dbList = new BasicDBList();
         while (source.hasNext()) {
-            dbList.add(source.next());
+            dbList.addAll(source.next());
         }
         return dbList;
     }
