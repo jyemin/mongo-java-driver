@@ -18,13 +18,15 @@ package com.mongodb;
 
 import com.mongodb.client.MongoCursor;
 
+import static com.mongodb.assertions.Assertions.notNull;
+
 class MongoMappingCursor<T, U> implements MongoCursor<U> {
     private final MongoCursor<T> proxied;
     private final Function<T, U> mapper;
 
     public MongoMappingCursor(final MongoCursor<T> proxied, final Function<T, U> mapper) {
-        this.proxied = proxied;
-        this.mapper = mapper;
+        this.proxied = notNull("proxied", proxied);
+        this.mapper = notNull("mapper", mapper);
     }
 
     @Override
