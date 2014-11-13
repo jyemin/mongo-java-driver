@@ -1336,12 +1336,12 @@ public class DBCollection {
                                                                                                             options.getNumCursors(),
                                                                                                             objectCodec)
                                                                   .batchSize(options.getBatchSize());
-        List<MongoCursor<DBObject>> mongoCursors = executor.execute(operation,
+        List<BatchCursor<DBObject>> mongoCursors = executor.execute(operation,
                                                                     options.getReadPreference() != null ? options.getReadPreference()
                                                                                                         : getReadPreference());
 
-        for (MongoCursor<DBObject> mongoCursor : mongoCursors) {
-            cursors.add(new MongoCursorAdapter(mongoCursor));
+        for (BatchCursor<DBObject> mongoCursor : mongoCursors) {
+            cursors.add(new MongoCursorAdapter(new MongoBatchCursorAdapter<DBObject>(mongoCursor)));
         }
         return cursors;
     }
