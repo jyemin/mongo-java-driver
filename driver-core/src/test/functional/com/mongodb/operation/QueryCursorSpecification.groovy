@@ -194,6 +194,36 @@ class QueryCursorSpecification extends OperationFunctionalSpecification {
         latch.await(5, TimeUnit.SECONDS)
     }
 
+    def 'test try next with tailable'() {
+        collectionHelper.create(collectionName, new CreateCollectionOptions().capped(true).sizeInBytes(1000))
+        collectionHelper.insertDocuments(new DocumentCodec(), new Document('_id', 1).append('ts', new BsonTimestamp(5, 0)))
+        def firstBatch = executeQueryProtocol(new BsonDocument('ts', new BsonDocument('$gte', new BsonTimestamp(5, 0))), 2, true, true);
+
+
+        when:
+        cursor = new QueryBatchCursor<Document>(getNamespace(), firstBatch, 0, 2, new DocumentCodec(), connectionSource)
+
+        then:
+        cursor.tryNext().iterator().next().get('_id') == 1
+        !cursor.tryNext()
+
+        when:
+        def latch = new CountDownLatch(1)
+        Thread.start {
+            latch.await(5, TimeUnit.SECONDS)
+            collectionHelper.insertDocuments(new DocumentCodec(), new Document('_id', 2).append('ts', new BsonTimestamp(6, 0)))
+        }
+
+        latch.countDown()
+        def nextBatch = cursor.tryNext()
+        while (nextBatch == null) {
+            nextBatch = cursor.tryNext()
+        }
+
+        then:
+        nextBatch.iterator().next().get('_id') == 2
+    }
+
     @SuppressWarnings('EmptyCatchBlock')
     @Category(Slow)
     def 'test tailable interrupt'() throws InterruptedException {
