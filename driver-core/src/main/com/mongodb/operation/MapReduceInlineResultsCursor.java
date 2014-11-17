@@ -36,7 +36,7 @@ class MapReduceInlineResultsCursor<T> extends QueryBatchCursor<T> implements Map
         this.statistics = statistics;
     }
 
-     @Override
+    @Override
     public MapReduceStatistics getStatistics() {
         return statistics;
     }
