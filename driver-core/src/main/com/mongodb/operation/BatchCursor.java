@@ -25,11 +25,15 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * An iterator over the batches provided by a MongoDB cursor.
  *
+ * MongoDB returns query results as batches, and this interface provideds an iterator over those batches.  The first call to
+ * the {@code next} method will return the first batch, and subsequent calls will trigger a  request to get the next batch
+ * of results.  Clients can control the batch size by setting the {@code batchSize} property between calls to {@code next}.
+
  * @since 3.0
  *
  * @param <T> The type of documents the cursor contains
+ * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#wire-op-get-more OP_GET_MORE
  */
 @NotThreadSafe
 public interface BatchCursor<T> extends Iterator<List<T>>, Closeable {
