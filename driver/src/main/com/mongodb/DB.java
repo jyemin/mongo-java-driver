@@ -340,7 +340,7 @@ public class DB {
     public CommandResult command(final DBObject command, final ReadPreference readPreference, final DBEncoder encoder) {
         try {
             return executeCommand(wrap(command, encoder), readPreference);
-        } catch (CommandFailureException ex) {
+        } catch (MongoCommandException ex) {
             return new CommandResult(ex.getResponse(), ex.getServerAddress());
         }
     }
@@ -480,7 +480,7 @@ public class DB {
         boolean userExists = false;
         try {
             userExists = executor.execute(new UserExistsOperation(getName(), userName), primary());
-        } catch (CommandFailureException e) {
+        } catch (MongoCommandException e) {
             if (e.getCode() != 13) {
                 throw e;
             }
