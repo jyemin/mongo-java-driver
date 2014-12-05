@@ -81,7 +81,7 @@ public class BulkWriteBatchCombiner {
     public void addResult(final BulkWriteResult result, final IndexMap indexMap) {
         insertedCount += result.getInsertedCount();
         matchedCount += result.getMatchedCount();
-        removedCount += result.getRemovedCount();
+        removedCount += result.getDeletedCount();
         if (result.isModifiedCountAvailable() && modifiedCount != null) {
             modifiedCount += result.getModifiedCount();
         } else {
