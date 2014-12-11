@@ -623,6 +623,10 @@ class MongoCollectionSpecification extends Specification {
 
     def 'should translate MongoBulkWriteException to MongoWriteConcernException'() {
         given:
+        def executor = new TestOperationExecutor([new MongoBulkWriteException(acknowledged(INSERT, 1, []), [],
+                                                                              new com.mongodb.bulk.WriteConcernError(42, 'oops',
+                                                                                                                     new BsonDocument()),
+                                                                              new ServerAddress())])
         def collection = new MongoCollectionImpl(namespace, Document, options, executor)
 
         when:
@@ -631,12 +635,6 @@ class MongoCollectionSpecification extends Specification {
         then:
         def e = thrown(MongoWriteConcernException)
         e.writeConcernError == new com.mongodb.bulk.WriteConcernError(42, 'oops', new BsonDocument())
-
-        where:
-        executor << new TestOperationExecutor([new MongoBulkWriteException(acknowledged(INSERT, 1, []), [],
-                                                                           new com.mongodb.bulk.WriteConcernError(42, 'oops', new
-                                                                                   BsonDocument()),
-                                                                           new ServerAddress())])
     }
 
     def 'should use FindOneAndDeleteOperation correctly'() {

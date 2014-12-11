@@ -474,10 +474,8 @@ class MongoCollectionSpecification extends Specification {
 
         where:
         writeConcern                | executor
-        WriteConcern.ACKNOWLEDGED   | new TestOperationExecutor([acknowledged(INSERT, 0, []),
-                                                                 acknowledged(INSERT, 0, [])])
-        WriteConcern.UNACKNOWLEDGED | new TestOperationExecutor([unacknowledged(),
-                                                                 unacknowledged()])
+        WriteConcern.ACKNOWLEDGED   | new TestOperationExecutor([acknowledged(INSERT, 0, []), acknowledged(INSERT, 0, [])])
+        WriteConcern.UNACKNOWLEDGED | new TestOperationExecutor([unacknowledged(), unacknowledged()])
     }
 
     def 'should handle exceptions in bulkWrite correctly'() {
@@ -562,11 +560,11 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(new MixedBulkWriteOperation(namespace,
                                                                   [new DeleteRequest(new BsonDocument('_id', new BsonInt32(1)))
-                                                                           . multi(false)],
+                                                                           .multi(false)],
                                                                   true, writeConcern))
+        result == expectedResult
 
         where:
         writeConcern                | executor                                                 | expectedResult
@@ -585,10 +583,10 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(new MixedBulkWriteOperation(namespace, [new DeleteRequest(new BsonDocument('_id', new BsonInt32(1)))
                                                                                       .multi(true)],
                                                                   true, writeConcern))
+        result == expectedResult
 
         where:
         writeConcern                | executor                                                 | expectedResult
@@ -608,11 +606,11 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(new MixedBulkWriteOperation(namespace, [new UpdateRequest(new BsonDocument('a', new BsonInt32(1)),
                                                                                                 new BsonDocument('a', new BsonInt32(10)),
                                                                                                 REPLACE)],
                                                                   true, writeConcern))
+        result == expectedResult
 
         where:
         writeConcern                | executor                                                        | expectedResult
@@ -640,8 +638,8 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(expectedOperation(false))
+        result == expectedResult
 
         when:
         futureResultCallback = new FutureResultCallback<UpdateResult>()
@@ -650,8 +648,8 @@ class MongoCollectionSpecification extends Specification {
         operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(expectedOperation(true))
+        result == expectedResult
 
         where:
         writeConcern                | executor                                                   | expectedResult
@@ -679,8 +677,8 @@ class MongoCollectionSpecification extends Specification {
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(expectedOperation(false))
+        result == expectedResult
 
         when:
         futureResultCallback = new FutureResultCallback<UpdateResult>()
@@ -689,8 +687,8 @@ class MongoCollectionSpecification extends Specification {
         operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
-        result.wasAcknowledged() == writeConcern.isAcknowledged()
         expect operation, isTheSameAs(expectedOperation(true))
+        result == expectedResult
 
         where:
         writeConcern                | executor                                                    | expectedResult
@@ -721,6 +719,9 @@ class MongoCollectionSpecification extends Specification {
 
     def 'should translate MongoBulkWriteException to MongoWriteConcernException'() {
         given:
+        def executor = new TestOperationExecutor([new MongoBulkWriteException(acknowledged(INSERT, 1, []), [],
+                                                                              new WriteConcernError(42, 'oops', new BsonDocument()),
+                                                                              new ServerAddress())])
         def collection = new MongoCollectionImpl(namespace, Document, options, executor)
         def futureResultCallback = new FutureResultCallback<Void>()
 
@@ -731,11 +732,6 @@ class MongoCollectionSpecification extends Specification {
         then:
         def e = thrown(MongoWriteConcernException)
         e.writeConcernError == new WriteConcernError(42, 'oops', new BsonDocument())
-
-        where:
-        executor << new TestOperationExecutor([new MongoBulkWriteException(acknowledged(INSERT, 1, []), [],
-                                                                           new WriteConcernError(42, 'oops', new BsonDocument()),
-                                                                           new ServerAddress())])
     }
 
     def 'should use FindOneAndDeleteOperation correctly'() {
