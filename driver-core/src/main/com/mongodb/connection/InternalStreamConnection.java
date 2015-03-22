@@ -89,7 +89,7 @@ class InternalStreamConnection implements InternalConnection {
         this.serverId = notNull("serverId", serverId);
         this.streamFactory = notNull("streamFactory", streamFactory);
         this.connectionInitializer = notNull("connectionInitializer", connectionInitializer);
-        this.connectionListener = notNull("connectionListener", connectionListener);
+        this.connectionListener = new ErrorHandlingConnectionListener(notNull("connectionListener", connectionListener));
         description = new ConnectionDescription(serverId);
     }
 
@@ -107,11 +107,7 @@ class InternalStreamConnection implements InternalConnection {
             description = connectionInitializer.initialize(this);
             opened.set(true);
 
-            try {
-                connectionListener.connectionOpened(new ConnectionEvent(getId()));
-            } catch (Throwable t) {
-                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", t);
-            }
+            connectionListener.connectionOpened(new ConnectionEvent(getId()));
             LOGGER.info(format("Opened connection [%s] to %s", getId(), serverId.getAddress()));
         } catch (Throwable t) {
             close();
@@ -144,11 +140,7 @@ class InternalStreamConnection implements InternalConnection {
                         } else {
                             description = result;
                             opened.set(true);
-                            try {
-                                connectionListener.connectionOpened(new ConnectionEvent(getId()));
-                            } catch (Throwable tr) {
-                                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", tr);
-                            }
+                            connectionListener.connectionOpened(new ConnectionEvent(getId()));
                             if (LOGGER.isInfoEnabled()) {
                                 LOGGER.info(format("Opened connection [%s] to %s", getId(), serverId.getAddress()));
                             }
@@ -174,11 +166,7 @@ class InternalStreamConnection implements InternalConnection {
             stream.close();
         }
         isClosed.set(true);
-        try {
-            connectionListener.connectionClosed(new ConnectionEvent(getId()));
-        } catch (Throwable t) {
-            LOGGER.warn("Exception when trying to signal connectionClosed to the connectionListener", t);
-        }
+        connectionListener.connectionClosed(new ConnectionEvent(getId()));
     }
 
     @Override
@@ -202,13 +190,7 @@ class InternalStreamConnection implements InternalConnection {
         writerLock.lock();
         try {
             stream.write(byteBuffers);
-            try {
-                connectionListener.messagesSent(new ConnectionMessagesSentEvent(getId(),
-                                                                                lastRequestId,
-                                                                                getTotalRemaining(byteBuffers)));
-            } catch (Throwable t) {
-                LOGGER.warn("Exception when trying to signal messagesSent to the connectionListener", t);
-            }
+            connectionListener.messagesSent(new ConnectionMessagesSentEvent(getId(), lastRequestId, getTotalRemaining(byteBuffers)));
         } catch (Exception e) {
             close();
             throw translateWriteException(e);
@@ -231,15 +213,9 @@ class InternalStreamConnection implements InternalConnection {
                     break;
                 }
                 ResponseBuffers responseBuffers = receiveResponseBuffers();
-                try {
-                    connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
-                                                                                          responseBuffers.getReplyHeader()
-                                                                                                         .getResponseTo(),
-                                                                                          responseBuffers.getReplyHeader()
-                                                                                                         .getMessageLength()));
-                } catch (Throwable t) {
-                    LOGGER.warn("Exception when trying to signal messageReceived to the connectionListener", t);
-                }
+                connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
+                                                                                      responseBuffers.getReplyHeader().getResponseTo(),
+                                                                                      responseBuffers.getReplyHeader().getMessageLength()));
                 messages.put(responseBuffers.getReplyHeader().getResponseTo(), new ReceiveMessageResponse(responseBuffers, null));
             } catch (Exception e) {
                 close();
@@ -308,12 +284,8 @@ class InternalStreamConnection implements InternalConnection {
                     writerLock.unlock();
                 }
 
-                try {
-                    connectionListener.messagesSent(new ConnectionMessagesSentEvent(getId(), request.getMessageId(),
-                                                                                    getTotalRemaining(request.getByteBuffers())));
-                } catch (Throwable t) {
-                    LOGGER.warn("Exception when trying to signal messagesSent to the connectionListener", t);
-                }
+                connectionListener.messagesSent(new ConnectionMessagesSentEvent(getId(), request.getMessageId(),
+                                                                                getTotalRemaining(request.getByteBuffers())));
                 request.getCallback().onResult(null, null);
 
                 if (nextMessage != null) {
@@ -541,13 +513,9 @@ class InternalStreamConnection implements InternalConnection {
                 return;
             }
 
-            try {
-                connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
-                                                                                      responseBuffers.getReplyHeader().getResponseTo(),
-                                                                                      responseBuffers.getReplyHeader().getMessageLength()));
-            } catch (Throwable t) {
-                LOGGER.warn("Exception when trying to signal messageReceived to the connectionListener", t);
-            }
+            connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
+                                                                                  responseBuffers.getReplyHeader().getResponseTo(),
+                                                                                  responseBuffers.getReplyHeader().getMessageLength()));
 
             try {
                 callback.onResult(responseBuffers, null);
@@ -648,6 +616,51 @@ class InternalStreamConnection implements InternalConnection {
 
         public boolean hasError() {
             return t != null;
+        }
+    }
+
+    private static class ErrorHandlingConnectionListener implements ConnectionListener {
+
+        private final ConnectionListener wrapped;
+
+        public ErrorHandlingConnectionListener(final ConnectionListener wrapped) {
+            this.wrapped = wrapped;
+        }
+
+        @Override
+        public void connectionOpened(final ConnectionEvent event) {
+            try {
+                wrapped.connectionOpened(event);
+            } catch (Throwable t) {
+                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", t);
+            }
+       }
+
+        @Override
+        public void connectionClosed(final ConnectionEvent event) {
+            try {
+                wrapped.connectionClosed(event);
+            } catch (Throwable t) {
+                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", t);
+            }
+        }
+
+        @Override
+        public void messagesSent(final ConnectionMessagesSentEvent event) {
+            try {
+                wrapped.messagesSent(event);
+            } catch (Throwable t) {
+                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", t);
+            }
+        }
+
+        @Override
+        public void messageReceived(final ConnectionMessageReceivedEvent event) {
+            try {
+                wrapped.messageReceived(event);
+            } catch (Throwable t) {
+                LOGGER.warn("Exception when trying to signal connectionOpened to the connectionListener", t);
+            }
         }
     }
 }
