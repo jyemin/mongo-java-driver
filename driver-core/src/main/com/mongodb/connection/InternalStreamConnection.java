@@ -38,12 +38,13 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedByInterruptException;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,10 +68,10 @@ class InternalStreamConnection implements InternalConnection {
     private final InternalConnectionInitializer connectionInitializer;
     private final ConnectionListener connectionListener;
 
-    private final LinkedList<SendMessageRequest> writeQueue = new LinkedList<SendMessageRequest>();
-    private final ConcurrentHashMap<Integer, SingleResultCallback<ResponseBuffers>> readQueue =
-        new ConcurrentHashMap<Integer, SingleResultCallback<ResponseBuffers>>();
-    private final ConcurrentMap<Integer, ResponseBuffers> messages = new ConcurrentHashMap<Integer, ResponseBuffers>();
+    private final Deque<SendMessageRequest> writeQueue = new ArrayDeque<SendMessageRequest>();
+    private final Map<Integer, SingleResultCallback<ResponseBuffers>> readQueue =
+    new HashMap<Integer, SingleResultCallback<ResponseBuffers>>();
+    private final Map<Integer, ResponseBuffers> messages = new ConcurrentHashMap<Integer, ResponseBuffers>();
 
     private final AtomicBoolean isClosed = new AtomicBoolean();
     private final AtomicBoolean opened = new AtomicBoolean();
@@ -370,13 +371,15 @@ class InternalStreamConnection implements InternalConnection {
     private class ResponseBuffersCallback implements SingleResultCallback<ResponseBuffers> {
         @Override
         public void onResult(final ResponseBuffers result, final Throwable t) {
-            if (t != null) {
-                failAllQueuedReads(t);
-            } else {
                 SingleResultCallback<ResponseBuffers> callback = null;
                 boolean mustRead = false;
                 readerLock.lock();
                 try {
+                    if (t != null) {
+                        failAllQueuedReads(t);
+                        return;
+                    }
+
                     if (LOGGER.isTraceEnabled()) {
                         LOGGER.trace(String.format("Read response to message %s on %s", result.getReplyHeader().getResponseTo(), getId()));
                     }
@@ -398,7 +401,6 @@ class InternalStreamConnection implements InternalConnection {
 
                 executeCallbackAndReceiveResponse(callback, result, mustRead);
             }
-        }
     }
 
     private ConnectionId getId() {
