@@ -70,7 +70,7 @@ class InternalStreamConnection implements InternalConnection {
     private final LinkedList<SendMessageRequest> writeQueue = new LinkedList<SendMessageRequest>();
     private final ConcurrentHashMap<Integer, SingleResultCallback<ResponseBuffers>> readQueue =
         new ConcurrentHashMap<Integer, SingleResultCallback<ResponseBuffers>>();
-    private final ConcurrentMap<Integer, ReceiveMessageResponse> messages = new ConcurrentHashMap<Integer, ReceiveMessageResponse>();
+    private final ConcurrentMap<Integer, ResponseBuffers> messages = new ConcurrentHashMap<Integer, ResponseBuffers>();
 
     private final AtomicBoolean isClosed = new AtomicBoolean();
     private final AtomicBoolean opened = new AtomicBoolean();
@@ -216,7 +216,7 @@ class InternalStreamConnection implements InternalConnection {
         readerLock.lock();
         try {
             ResponseBuffers responseBuffers = receiveResponseBuffers();
-            messages.put(responseBuffers.getReplyHeader().getResponseTo(), new ReceiveMessageResponse(responseBuffers, null));
+            messages.put(responseBuffers.getReplyHeader().getResponseTo(), responseBuffers);
         } catch (Throwable t) {
             exceptionThatPrecededStreamClosing = translateReadException(t);
             close();
@@ -234,16 +234,12 @@ class InternalStreamConnection implements InternalConnection {
                     throw new MongoSocketClosedException("Socket has been closed", getServerAddress());
                 }
             }
-            ReceiveMessageResponse myResponse = messages.get(responseTo);
+            ResponseBuffers myResponse = messages.get(responseTo);
             if (myResponse != null) {
                 connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
-                                                                                      myResponse.getResult()
-                                                                                                .getReplyHeader()
-                                                                                                .getResponseTo(),
-                                                                                      myResponse.getResult()
-                                                                                                .getReplyHeader()
-                                                                                                .getMessageLength()));
-                return myResponse.getResult();
+                                                                                      myResponse.getReplyHeader().getResponseTo(),
+                                                                                      myResponse.getReplyHeader().getMessageLength()));
+                return myResponse;
             }
 
             try {
@@ -333,7 +329,7 @@ class InternalStreamConnection implements InternalConnection {
             LOGGER.trace(format("Queuing read message: %s. ([%s])", responseTo, getId()));
         }
 
-        ReceiveMessageResponse response = null;
+        ResponseBuffers response = null;
         readerLock.lock();
         boolean mustRead = false;
         try {
@@ -351,7 +347,7 @@ class InternalStreamConnection implements InternalConnection {
             readerLock.unlock();
         }
 
-        executeCallbackAndReceiveResponse(callback, response == null ? null : response.getResult(), mustRead);
+        executeCallbackAndReceiveResponse(callback, response == null ? null : response, mustRead);
     }
 
     private void executeCallbackAndReceiveResponse(final SingleResultCallback<ResponseBuffers> callback, final ResponseBuffers result,
@@ -394,7 +390,7 @@ class InternalStreamConnection implements InternalConnection {
                     }
 
                     if (callback == null) {
-                        messages.put(result.getReplyHeader().getResponseTo(), new ReceiveMessageResponse(result, null));
+                        messages.put(result.getReplyHeader().getResponseTo(), result);
                     }
                 } finally {
                     readerLock.unlock();
@@ -616,28 +612,6 @@ class InternalStreamConnection implements InternalConnection {
         }
     }
 
-
-    private static class ReceiveMessageResponse {
-        private final ResponseBuffers result;
-        private final MongoException e;
-
-        public ReceiveMessageResponse(final ResponseBuffers result, final MongoException e) {
-            this.result = result;
-            this.e = e;
-        }
-
-        public ResponseBuffers getResult() {
-            return result;
-        }
-
-        public MongoException getError() {
-            return e;
-        }
-
-        public boolean hasError() {
-            return e != null;
-        }
-    }
 
     private static class ErrorHandlingConnectionListener implements ConnectionListener {
 
