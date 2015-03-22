@@ -44,7 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -77,6 +79,10 @@ class InternalStreamConnection implements InternalConnection {
 
     private boolean isWriting;
     private boolean isReading;
+
+    private final AtomicReference<CountDownLatch> readingPhase = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
+
+    private volatile MongoException exceptionThatPrecededStreamClosing;
 
     private volatile ConnectionDescription description;
     private volatile Stream stream;
@@ -201,39 +207,53 @@ class InternalStreamConnection implements InternalConnection {
 
     @Override
     public ResponseBuffers receiveMessage(final int responseTo) {
-        notNull("open", stream);
+        notNull("stream is open", stream);
         if (isClosed()) {
             throw new MongoSocketClosedException("Cannot read from a closed stream", getServerAddress());
         }
 
-        while (!messages.containsKey(responseTo)) {
-            try {
-                readerLock.lock();
-                if (messages.containsKey(responseTo)) {
-                    break;
+        CountDownLatch localLatch = new CountDownLatch(1);
+        readerLock.lock();
+        try {
+            ResponseBuffers responseBuffers = receiveResponseBuffers();
+            messages.put(responseBuffers.getReplyHeader().getResponseTo(), new ReceiveMessageResponse(responseBuffers, null));
+        } catch (Throwable t) {
+            exceptionThatPrecededStreamClosing = translateReadException(t);
+            close();
+        } finally {
+            readerLock.unlock();
+        }
+
+        readingPhase.getAndSet(localLatch).countDown();
+
+        while (true) {
+            if (isClosed()) {
+                if (exceptionThatPrecededStreamClosing != null) {
+                    throw exceptionThatPrecededStreamClosing;
+                } else {
+                    throw new MongoSocketClosedException("Socket has been closed", getServerAddress());
                 }
-                ResponseBuffers responseBuffers = receiveResponseBuffers();
+            }
+            ReceiveMessageResponse myResponse = messages.get(responseTo);
+            if (myResponse != null) {
                 connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
-                                                                                      responseBuffers.getReplyHeader().getResponseTo(),
-                                                                                      responseBuffers.getReplyHeader().getMessageLength()));
-                messages.put(responseBuffers.getReplyHeader().getResponseTo(), new ReceiveMessageResponse(responseBuffers, null));
-            } catch (Exception e) {
-                close();
-                messages.put(responseTo, new ReceiveMessageResponse(null, translateReadException(e)));
-            } finally {
-                readerLock.unlock();
+                                                                                      myResponse.getResult()
+                                                                                                .getReplyHeader()
+                                                                                                .getResponseTo(),
+                                                                                      myResponse.getResult()
+                                                                                                .getReplyHeader()
+                                                                                                .getMessageLength()));
+                return myResponse.getResult();
             }
-        }
-        ReceiveMessageResponse response = messages.remove(responseTo);
-        if (response.hasError()) {
-            Throwable t = response.getError();
-            if (t instanceof MongoException) {
-                throw (MongoException) t;
-            } else {
-                throw MongoException.fromThrowable(t);
+
+            try {
+                localLatch.await();
+            } catch (InterruptedException e) {
+                throw new MongoInterruptedException("Interrupted while reading from stream", e);
             }
+
+            localLatch = readingPhase.get();
         }
-        return response.getResult();
     }
 
     @Override
@@ -599,23 +619,23 @@ class InternalStreamConnection implements InternalConnection {
 
     private static class ReceiveMessageResponse {
         private final ResponseBuffers result;
-        private final Throwable t;
+        private final MongoException e;
 
-        public ReceiveMessageResponse(final ResponseBuffers result, final Throwable t) {
+        public ReceiveMessageResponse(final ResponseBuffers result, final MongoException e) {
             this.result = result;
-            this.t = t;
+            this.e = e;
         }
 
         public ResponseBuffers getResult() {
             return result;
         }
 
-        public Throwable getError() {
-            return t;
+        public MongoException getError() {
+            return e;
         }
 
         public boolean hasError() {
-            return t != null;
+            return e != null;
         }
     }
 
