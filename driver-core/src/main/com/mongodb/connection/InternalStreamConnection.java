@@ -68,15 +68,13 @@ class InternalStreamConnection implements InternalConnection {
     private final InternalConnectionInitializer connectionInitializer;
     private final ConnectionListener connectionListener;
 
+    private final Lock writerLock = new ReentrantLock(false);
+    private final Lock readerLock = new ReentrantLock(false);
+
     private final Deque<SendMessageRequest> writeQueue = new ArrayDeque<SendMessageRequest>();
     private final Map<Integer, SingleResultCallback<ResponseBuffers>> readQueue =
     new HashMap<Integer, SingleResultCallback<ResponseBuffers>>();
     private final Map<Integer, ResponseBuffers> messages = new ConcurrentHashMap<Integer, ResponseBuffers>();
-
-    private final AtomicBoolean isClosed = new AtomicBoolean();
-    private final AtomicBoolean opened = new AtomicBoolean();
-    private final Lock writerLock = new ReentrantLock(false);
-    private final Lock readerLock = new ReentrantLock(false);
 
     private boolean isWriting;
     private boolean isReading;
@@ -87,6 +85,9 @@ class InternalStreamConnection implements InternalConnection {
 
     private volatile ConnectionDescription description;
     private volatile Stream stream;
+
+    private final AtomicBoolean isClosed = new AtomicBoolean();
+    private final AtomicBoolean opened = new AtomicBoolean();
 
     static final Logger LOGGER = Loggers.getLogger("connection");
 
@@ -218,14 +219,14 @@ class InternalStreamConnection implements InternalConnection {
         try {
             ResponseBuffers responseBuffers = receiveResponseBuffers();
             messages.put(responseBuffers.getReplyHeader().getResponseTo(), responseBuffers);
+            readingPhase.getAndSet(localLatch).countDown();
         } catch (Throwable t) {
             exceptionThatPrecededStreamClosing = translateReadException(t);
             close();
+            readingPhase.getAndSet(localLatch).countDown();
         } finally {
             readerLock.unlock();
         }
-
-        readingPhase.getAndSet(localLatch).countDown();
 
         while (true) {
             if (isClosed()) {
@@ -235,7 +236,7 @@ class InternalStreamConnection implements InternalConnection {
                     throw new MongoSocketClosedException("Socket has been closed", getServerAddress());
                 }
             }
-            ResponseBuffers myResponse = messages.get(responseTo);
+            ResponseBuffers myResponse = messages.remove(responseTo);
             if (myResponse != null) {
                 connectionListener.messageReceived(new ConnectionMessageReceivedEvent(getId(),
                                                                                       myResponse.getReplyHeader().getResponseTo(),
@@ -334,7 +335,7 @@ class InternalStreamConnection implements InternalConnection {
         readerLock.lock();
         boolean mustRead = false;
         try {
-            response = messages.get(responseTo);
+            response = messages.remove(responseTo);
 
             if (response == null) {
                 readQueue.put(responseTo, callback);
@@ -348,7 +349,7 @@ class InternalStreamConnection implements InternalConnection {
             readerLock.unlock();
         }
 
-        executeCallbackAndReceiveResponse(callback, response == null ? null : response, mustRead);
+        executeCallbackAndReceiveResponse(callback, response, mustRead);
     }
 
     private void executeCallbackAndReceiveResponse(final SingleResultCallback<ResponseBuffers> callback, final ResponseBuffers result,
