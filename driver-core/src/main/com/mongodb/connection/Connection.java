@@ -33,7 +33,7 @@ import java.util.List;
 
 
 /**
- * A synchronous connection to a MongoDB server with blocking and non-blocking operations.
+ * A synchronous connection to a MongoDB server with blocking operations.
  *
  * <p> Implementations of this class are thread safe.  </p>
  *
