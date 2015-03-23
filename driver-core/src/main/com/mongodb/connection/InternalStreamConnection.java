@@ -313,8 +313,19 @@ class InternalStreamConnection implements InternalConnection {
 
             @Override
             public void failed(final Throwable t) {
-                close();
-                request.getCallback().onResult(null, translateWriteException(t));
+                writerLock.lock();
+                try {
+                    MongoException translatedWriteException = translateWriteException(t);
+                    request.getCallback().onResult(null, translatedWriteException);
+                    SendMessageRequest nextMessage;
+                    while ((nextMessage = writeQueue.poll()) != null) {
+                        nextMessage.callback.onResult(null, translatedWriteException);
+                    }
+                    isWriting = false;
+                    close();
+                } finally {
+                    writerLock.unlock();
+                }
             }
         });
     }

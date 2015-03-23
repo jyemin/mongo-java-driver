@@ -514,6 +514,49 @@ class InternalStreamConnectionSpecification extends Specification {
         thrown MongoSocketClosedException
     }
 
+    def 'should notify all asynchronous writers of an exception'() {
+        given:
+        int numberOfOperations = 3
+        ExecutorService streamPool = Executors.newFixedThreadPool(1)
+
+        def messages = (1..numberOfOperations).collect { helper.isMasterAsync() }
+        def headers = messages.collect { buffers, messageId, sndCallbck, rcvdCallbck -> helper.header(messageId) }
+
+        def streamLatch = new CountDownLatch(1)
+        stream.writeAsync(_, _) >> { List<ByteBuf> buffers, AsyncCompletionHandler<Void> callback ->
+            streamPool.submit {
+                streamLatch.await()
+                callback.failed(new IOException())
+            }
+        }
+
+        when:
+        def connection = getOpenedConnection()
+        def callbacks = []
+        (1..numberOfOperations).each { n ->
+            def (buffers, messageId, sndCallbck, rcvdCallbck) = messages.pop()
+            connection.sendMessageAsync(buffers, messageId, sndCallbck)
+            callbacks.add(sndCallbck)
+        }
+        streamLatch.countDown()
+
+        then:
+        expectException(callbacks.pop())
+        expectException(callbacks.pop())
+        expectException(callbacks.pop())
+
+        cleanup:
+        streamPool.shutdown()
+    }
+
+    private static boolean expectException(rcvdCallbck) {
+        try {
+            rcvdCallbck.get()
+            false
+        } catch (MongoSocketWriteException e) {
+            true
+        }
+    }
 
     @Category(Slow)
     def 'should have threadsafe connection pipelining'() {
@@ -604,6 +647,7 @@ class InternalStreamConnectionSpecification extends Specification {
 
         cleanup:
         pool.shutdown()
+        streamPool.shutdown()
     }
 
     class StreamHelper {
