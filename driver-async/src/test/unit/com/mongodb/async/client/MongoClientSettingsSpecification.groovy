@@ -169,10 +169,10 @@ class MongoClientSettingsSpecification extends Specification {
 
     def 'should only have the following methods in the builder'() {
         when:
-        // A regression test so that if anymore methods are added then the builder(final MongoClientOptions options) should be updated
+        // A regression test so that if anymore methods are added then the builder(final MongoClientSettings settings) should be updated
         def actual = MongoClientSettings.Builder.declaredFields.grep {  !it.synthetic } *.name.sort()
         def expected = ['clusterSettings', 'codecRegistry', 'connectionPoolSettings', 'credentialList', 'heartbeatSocketSettings',
-                        'readPreference', 'serverSettings', 'socketSettings', 'sslSettings', 'writeConcern']
+                        'readPreference', 'serverSettings', 'socketSettings', 'sslSettings', 'streamFactoryFactory', 'writeConcern']
 
         then:
         actual == expected
