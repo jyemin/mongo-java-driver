@@ -17,6 +17,7 @@
 package com.mongodb.connection;
 
 import com.mongodb.async.SingleResultCallback;
+import com.mongodb.event.CommandListener;
 
 /**
  * An interface for the execution of a MongoDB wire protocol conversation
@@ -39,4 +40,6 @@ interface Protocol<T> {
      * @param callback   the callback that is passed the result of the execution
      */
     void executeAsync(final InternalConnection connection, SingleResultCallback<T> callback);
+
+    void setCommandListener(CommandListener commandListener);
 }

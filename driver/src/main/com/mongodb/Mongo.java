@@ -32,6 +32,7 @@ import com.mongodb.connection.Connection;
 import com.mongodb.connection.DefaultClusterFactory;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.SocketStreamFactory;
+import com.mongodb.event.CommandListenerMulticaster;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.management.JMXConnectionPoolListener;
 import com.mongodb.operation.ListDatabasesOperation;
@@ -58,6 +59,7 @@ import static com.mongodb.ReadPreference.primary;
 import static com.mongodb.connection.ClusterConnectionMode.MULTIPLE;
 import static com.mongodb.connection.ClusterType.REPLICA_SET;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -89,7 +91,7 @@ public class Mongo {
     private final Cluster cluster;
     private final BufferProvider bufferProvider = new PowerOfTwoBufferPool();
 
-    private final ConcurrentLinkedQueue<ServerCursor> orphanedCursors = new ConcurrentLinkedQueue<ServerCursor>();
+    private final ConcurrentLinkedQueue<ServerCursorAndNamespace> orphanedCursors = new ConcurrentLinkedQueue<ServerCursorAndNamespace>();
     private final ExecutorService cursorCleaningService;
 
     /**
@@ -667,7 +669,8 @@ public class Mongo {
                                                                           options.getSslSettings(),
                                                                           options.getSocketFactory()),
                                                   credentialsList,
-                                                  null, new JMXConnectionPoolListener(), null);
+                                                  null, new JMXConnectionPoolListener(), null,
+                                                  new CommandListenerMulticaster(options.getCommandListeners()));
     }
 
     private static List<ServerAddress> createNewSeedList(final List<ServerAddress> seedList) {
@@ -714,8 +717,8 @@ public class Mongo {
         return new ClusterBinding(getCluster(), readPreference);
     }
 
-    void addOrphanedCursor(final ServerCursor serverCursor) {
-        orphanedCursors.add(serverCursor);
+    void addOrphanedCursor(final ServerCursor serverCursor, final MongoNamespace namespace) {
+        orphanedCursors.add(new ServerCursorAndNamespace(serverCursor, namespace));
     }
 
     OperationExecutor createOperationExecutor() {
@@ -762,15 +765,15 @@ public class Mongo {
     }
 
     private void cleanCursors() {
-        ServerCursor cur;
+        ServerCursorAndNamespace cur;
         while ((cur = orphanedCursors.poll()) != null) {
-            ReadWriteBinding binding = new SingleServerBinding(cluster, cur.getAddress());
+            ReadWriteBinding binding = new SingleServerBinding(cluster, cur.serverCursor.getAddress());
             try {
                 ConnectionSource source = binding.getReadConnectionSource();
                 try {
                     Connection connection = source.getConnection();
                     try {
-                        connection.killCursor(asList(cur.getId()));
+                        connection.killCursor(cur.namespace, singletonList(cur.serverCursor.getId()));
                     } finally {
                         connection.release();
                     }
@@ -788,6 +791,16 @@ public class Mongo {
             return ClusterConnectionMode.SINGLE;
         } else {
             return ClusterConnectionMode.MULTIPLE;
+        }
+    }
+
+    private static class ServerCursorAndNamespace {
+        private final ServerCursor serverCursor;
+        private final MongoNamespace namespace;
+
+        public ServerCursorAndNamespace(final ServerCursor serverCursor, final MongoNamespace namespace) {
+            this.serverCursor = serverCursor;
+            this.namespace = namespace;
         }
     }
 

@@ -363,9 +363,6 @@ public class WriteConcern implements Serializable {
      * @return The write concern as a Document, even if {@code w &lt;= 0}
      */
     public BsonDocument asDocument() {
-        if (!isAcknowledged()) {
-            throw new IllegalStateException("The write is unacknowledged, so no document can be created");
-        }
         BsonDocument document = new BsonDocument();
 
         addW(document);

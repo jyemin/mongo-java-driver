@@ -42,11 +42,16 @@ class KillCursorsMessage extends RequestMessage {
 
     @Override
     protected RequestMessage encodeMessageBody(final BsonOutput bsonOutput, final int messageStartPosition) {
+        return encodeMessageBodyWithMetadata(bsonOutput, messageStartPosition).getNextMessage();
+    }
+
+    @Override
+    protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput bsonOutput, final int messageStartPosition) {
         writeKillCursorsPrologue(cursors.size(), bsonOutput);
         for (final Long cur : cursors) {
             bsonOutput.writeInt64(cur);
         }
-        return null;
+        return new EncodingMetadata(null, bsonOutput.getPosition());
     }
 
     private void writeKillCursorsPrologue(final int numCursors, final BsonOutput bsonOutput) {

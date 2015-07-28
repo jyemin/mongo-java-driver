@@ -54,20 +54,31 @@ class InsertMessage extends RequestMessage {
         this.insertRequestList = insertRequestList;
     }
 
+    public List<InsertRequest> getInsertRequestList() {
+        return insertRequestList;
+    }
+
     @Override
     protected RequestMessage encodeMessageBody(final BsonOutput outputStream, final int messageStartPosition) {
+        return encodeMessageBodyWithMetadata(outputStream, messageStartPosition).getNextMessage();
+    }
+
+    @Override
+    protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput outputStream, final int messageStartPosition) {
         writeInsertPrologue(outputStream);
+        int firstDocumentPosition = outputStream.getPosition();
         for (int i = 0; i < insertRequestList.size(); i++) {
             BsonDocument document = insertRequestList.get(i).getDocument();
             int pos = outputStream.getPosition();
             addCollectibleDocument(document, outputStream, createValidator());
             if (outputStream.getPosition() - messageStartPosition > getSettings().getMaxMessageSize()) {
                 outputStream.truncateToPosition(pos);
-                return new InsertMessage(getCollectionName(), ordered, writeConcern,
-                                         insertRequestList.subList(i, insertRequestList.size()), getSettings());
+                return new EncodingMetadata(new InsertMessage(getCollectionName(), ordered, writeConcern,
+                                                          insertRequestList.subList(i, insertRequestList.size()), getSettings()),
+                                            firstDocumentPosition);
             }
         }
-        return null;
+        return new EncodingMetadata(null, firstDocumentPosition);
     }
 
     private FieldNameValidator createValidator() {

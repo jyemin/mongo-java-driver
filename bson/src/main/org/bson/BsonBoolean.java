@@ -16,15 +16,12 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * A representation of the BSON Boolean type.
  *
  * @since 3.0
  */
-public final class BsonBoolean extends BsonValue implements Comparable<BsonBoolean>, Serializable {
-    private static final long serialVersionUID = 2215506922933899945L;
+public final class BsonBoolean extends BsonValue implements Comparable<BsonBoolean> {
 
     private final boolean value;
 

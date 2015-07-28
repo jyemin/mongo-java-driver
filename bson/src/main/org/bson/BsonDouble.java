@@ -16,15 +16,12 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * A representation of the BSON Double type.
  *
  * @since 3.0
  */
-public class BsonDouble extends BsonNumber implements Comparable<BsonDouble>, Serializable {
-    private static final long serialVersionUID = 2215506922933899945L;
+public class BsonDouble extends BsonNumber implements Comparable<BsonDouble> {
 
     private final double value;
 

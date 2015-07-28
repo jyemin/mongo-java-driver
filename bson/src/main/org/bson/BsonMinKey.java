@@ -16,14 +16,10 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * Represent the minimum key value regardless of the key's type
  */
-public final class BsonMinKey extends BsonValue implements Serializable {
-
-    private static final long serialVersionUID = 4075901136671855684L;
+public final class BsonMinKey extends BsonValue {
 
     @Override
     public BsonType getBsonType() {

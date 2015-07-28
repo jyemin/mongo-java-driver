@@ -314,7 +314,7 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
                                                                 new ServerVersion(2, 6), ServerType.STANDALONE, 1000, 100000, 100000)
 
         1 * connection.query(getNamespace(), findOperation.filter,
-                             findOperation.projection, 0, 0, false, false, false, false, false, false, _) >>
+                             findOperation.projection, 0, 0, 0, false, false, false, false, false, false, _) >>
         new QueryResult(getNamespace(), [new BsonDocument('n', new BsonInt32(1))], 0, new ServerAddress())
 
         1 * connection.release()
@@ -346,7 +346,7 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
         1 * connection.query(getNamespace(),
                              new BsonDocument('$query', findOperation.filter).append('$explain', BsonBoolean.TRUE)
                                                                              .append('$orderby', findOperation.sort),
-                             findOperation.projection, -20, 0, false, false, false, false, false, false, _) >>
+                             findOperation.projection, 0, -20, 0, false, false, false, false, false, false, _) >>
         new QueryResult(getNamespace(), [new BsonDocument('n', new BsonInt32(1))], 0, new ServerAddress())
 
         1 * connection.release()

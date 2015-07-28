@@ -68,7 +68,7 @@ public class UserExistsOperation implements AsyncReadOperation<Boolean>, ReadOpe
                                                          transformer());
                 } else {
                     return transformQueryResult().apply(connection.query(new MongoNamespace(databaseName, "system.users"),
-                                                                         new BsonDocument("user", new BsonString(userName)), null, 1, 0,
+                                                                         new BsonDocument("user", new BsonString(userName)), null, 0, 1, 0,
                                                                          binding.getReadPreference().isSlaveOk(), false,
                                                                          false, false, false, false,
                                                                          new BsonDocumentCodec()));
@@ -90,7 +90,7 @@ public class UserExistsOperation implements AsyncReadOperation<Boolean>, ReadOpe
                         executeWrappedCommandProtocolAsync(databaseName, getCommand(), connection, transformer(), wrappedCallback);
                     } else {
                         connection.queryAsync(new MongoNamespace(databaseName, "system.users"),
-                                              new BsonDocument("user", new BsonString(userName)), null, 1, 0,
+                                              new BsonDocument("user", new BsonString(userName)), null, 0, 1, 0,
                                               binding.getReadPreference().isSlaveOk(), false,
                                               false, false, false, false,
                                               new BsonDocumentCodec(),

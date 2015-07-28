@@ -227,7 +227,7 @@ class QueryBatchCursor<T> implements BatchCursor<T> {
 
     private void killCursor(final Connection connection) {
         if (serverCursor != null) {
-            connection.killCursor(singletonList(serverCursor.getId()));
+            connection.killCursor(namespace, singletonList(serverCursor.getId()));
             serverCursor = null;
         }
     }

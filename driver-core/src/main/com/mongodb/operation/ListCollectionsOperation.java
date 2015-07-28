@@ -182,7 +182,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
                     }
                 } else {
                     return new ProjectingBatchCursor(new QueryBatchCursor<BsonDocument>(connection.query(getNamespace(),
-                            asQueryDocument(connection.getDescription(), binding.getReadPreference()), null, batchSize, 0,
+                            asQueryDocument(connection.getDescription(), binding.getReadPreference()), null, 0, 0, batchSize,
                             binding.getReadPreference().isSlaveOk(), false, false,  false, false, false, new BsonDocumentCodec()), 0,
                             batchSize, new BsonDocumentCodec(), source));
                 }
@@ -215,7 +215,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
                                 });
                     } else {
                         connection.queryAsync(getNamespace(), asQueryDocument(connection.getDescription(), binding.getReadPreference()),
-                                null, batchSize, 0, binding.getReadPreference().isSlaveOk(), false, false, false, false, false,
+                                null, 0, 0, batchSize, binding.getReadPreference().isSlaveOk(), false, false, false, false, false,
                                 new BsonDocumentCodec(), new SingleResultCallback<QueryResult<BsonDocument>>() {
                                     @Override
                                     public void onResult(final QueryResult<BsonDocument> result, final Throwable t) {

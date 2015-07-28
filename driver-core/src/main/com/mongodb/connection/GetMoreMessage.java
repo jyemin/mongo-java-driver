@@ -51,8 +51,13 @@ class GetMoreMessage extends RequestMessage {
 
     @Override
     protected RequestMessage encodeMessageBody(final BsonOutput bsonOutput, final int messageStartPosition) {
+        return encodeMessageBodyWithMetadata(bsonOutput, messageStartPosition).getNextMessage();
+    }
+
+    @Override
+    protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput bsonOutput, final int messageStartPosition) {
         writeGetMore(bsonOutput);
-        return null;
+        return new EncodingMetadata(null, bsonOutput.getPosition());
     }
 
     private void writeGetMore(final BsonOutput buffer) {

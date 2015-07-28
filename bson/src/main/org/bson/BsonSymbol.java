@@ -18,18 +18,14 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * Class to hold a BSON symbol object, which is an interned string in Ruby
  *
  * @since 3.0
  */
-public class BsonSymbol extends BsonValue implements Serializable {
+public class BsonSymbol extends BsonValue {
 
     private final String symbol;
-
-    private static final long serialVersionUID = 1326269319883146072L;
 
     /**
      * Creates a new instance.

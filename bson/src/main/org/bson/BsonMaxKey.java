@@ -16,14 +16,10 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * Represent the maximum key value regardless of the key's type
  */
-public final class BsonMaxKey extends BsonValue implements Serializable {
-
-    private static final long serialVersionUID = 5123414776151687185L;
+public final class BsonMaxKey extends BsonValue {
 
     @Override
     public BsonType getBsonType() {

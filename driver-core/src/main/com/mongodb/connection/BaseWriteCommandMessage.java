@@ -98,11 +98,17 @@ abstract class BaseWriteCommandMessage extends RequestMessage {
 
     @Override
     protected BaseWriteCommandMessage encodeMessageBody(final BsonOutput outputStream, final int messageStartPosition) {
+        return (BaseWriteCommandMessage) encodeMessageBodyWithMetadata(outputStream, messageStartPosition).getNextMessage();
+    }
+
+    @Override
+    protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput outputStream, final int messageStartPosition) {
         BaseWriteCommandMessage nextMessage = null;
 
         writeCommandHeader(outputStream);
 
         int commandStartPosition = outputStream.getPosition();
+        int firstDocumentStartPosition = outputStream.getPosition();
         BsonBinaryWriter writer = new BsonBinaryWriter(new BsonWriterSettings(),
                                                        new BsonBinaryWriterSettings(getSettings().getMaxDocumentSize() + HEADROOM),
                                                        outputStream, getFieldNameValidator());
@@ -114,7 +120,7 @@ abstract class BaseWriteCommandMessage extends RequestMessage {
         } finally {
             writer.close();
         }
-        return nextMessage;
+        return new EncodingMetadata(nextMessage, firstDocumentStartPosition);
     }
 
     /**

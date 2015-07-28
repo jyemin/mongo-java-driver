@@ -224,7 +224,13 @@ class DefaultServerConnectionSpecification extends Specification {
         connection.killCursor([5])
 
         then:
-        1 * executor.execute({ compare(new KillCursorProtocol([5]), it) }, internalConnection)
+        1 * executor.execute({ compare(new KillCursorProtocol(null, [5]), it) }, internalConnection)
+
+        when:
+        connection.killCursor(namespace, [5])
+
+        then:
+        1 * executor.execute({ compare(new KillCursorProtocol(namespace, [5]), it) }, internalConnection)
     }
 
     def 'should execute insert protocol asynchronously'() {
@@ -405,6 +411,12 @@ class DefaultServerConnectionSpecification extends Specification {
         connection.killCursorAsync([5], callback)
 
         then:
-        1 * executor.executeAsync({ compare(new KillCursorProtocol([5]), it) }, internalConnection, callback)
+        1 * executor.executeAsync({ compare(new KillCursorProtocol(null, [5]), it) }, internalConnection, callback)
+
+        when:
+        connection.killCursorAsync(namespace, [5], callback)
+
+        then:
+        1 * executor.executeAsync({ compare(new KillCursorProtocol(namespace, [5]), it) }, internalConnection, callback)
     }
 }

@@ -16,15 +16,12 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * A representation of the BSON DateTime type.
  *
  * @since 3.0
  */
-public class BsonDateTime extends BsonValue implements Comparable<BsonDateTime>, Serializable {
-    private static final long serialVersionUID = 2215506922933899945L;
+public class BsonDateTime extends BsonValue implements Comparable<BsonDateTime> {
 
     private final long value;
 

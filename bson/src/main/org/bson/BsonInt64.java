@@ -16,13 +16,10 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * A representation of the BSON Int64 type.
  */
-public final class BsonInt64 extends BsonNumber implements Comparable<BsonInt64>, Serializable {
-    private static final long serialVersionUID = 2215506922933899945L;
+public final class BsonInt64 extends BsonNumber implements Comparable<BsonInt64> {
 
     private final long value;
 

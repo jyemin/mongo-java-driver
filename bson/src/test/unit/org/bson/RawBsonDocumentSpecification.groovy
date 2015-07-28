@@ -20,6 +20,7 @@ import org.bson.codecs.BsonDocumentCodec
 import spock.lang.Specification
 
 import static java.util.Arrays.asList
+import static util.GroovyHelpers.areEqual
 
 class RawBsonDocumentSpecification extends Specification {
 
@@ -142,6 +143,43 @@ class RawBsonDocumentSpecification extends Specification {
 
     def 'should decode'() {
         rawDocument.decode(new BsonDocumentCodec()) == document
+    }
+
+    def 'hashCode should equal hash code of identical BsonDocument'() {
+        expect:
+        rawDocument.hashCode() == document.hashCode()
+    }
+
+    def 'equals should equal identical BsonDocument'() {
+        expect:
+        areEqual(rawDocument, document)
+        areEqual(document, rawDocument)
+        areEqual(rawDocument, rawDocument)
+        !areEqual(rawDocument, emptyRawDocument)
+    }
+
+    def 'clone should make a deep copy'() {
+        when:
+        RawBsonDocument cloned = rawDocument.clone()
+
+        then:
+        cloned == rawDocument
+        !cloned.getByteBuffer().array().is(rawDocument.getByteBuffer().array())
+    }
+
+    def 'should serialize and deserialize'() {
+        given:
+        def baos = new ByteArrayOutputStream()
+        def oos = new ObjectOutputStream(baos)
+
+        when:
+        oos.writeObject(rawDocument)
+        def bais = new ByteArrayInputStream(baos.toByteArray())
+        def ois = new ObjectInputStream(bais)
+        def deserializedDocument = ois.readObject()
+
+        then:
+        rawDocument == deserializedDocument
     }
 
     class TestEntry implements Map.Entry<String, BsonValue> {

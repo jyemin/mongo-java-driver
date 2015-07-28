@@ -50,7 +50,7 @@ public class SingleServerClusterTest {
                                                                               streamFactory,
                                                                               getCredentialList(),
                                                                               new NoOpConnectionListener(),
-                                                                              new NoOpConnectionPoolListener()),
+                                                                              new NoOpConnectionPoolListener(), null),
                                           new NoOpClusterListener());
     }
 

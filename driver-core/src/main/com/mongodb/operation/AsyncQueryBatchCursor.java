@@ -143,7 +143,7 @@ class AsyncQueryBatchCursor<T> implements AsyncBatchCursor<T> {
                 @Override
                 public void onResult(final AsyncConnection connection, final Throwable connectionException) {
                     if (connection != null) {
-                        connection.killCursorAsync(singletonList(localCursor.getId()), new SingleResultCallback<Void>() {
+                        connection.killCursorAsync(namespace, singletonList(localCursor.getId()), new SingleResultCallback<Void>() {
                             @Override
                             public void onResult(final Void result, final Throwable t) {
                                 connection.release();

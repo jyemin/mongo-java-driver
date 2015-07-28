@@ -18,8 +18,8 @@
 package com.mongodb.connection
 
 import category.Slow
-import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.MongoBulkWriteException
+import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.bulk.BulkWriteUpsert
 import com.mongodb.bulk.InsertRequest
 import com.mongodb.bulk.UpdateRequest
@@ -41,16 +41,16 @@ import static com.mongodb.WriteConcern.ACKNOWLEDGED
 @IgnoreIf({ !serverVersionAtLeast([2, 6, 0]) })
 class WriteCommandProtocolSpecification extends OperationFunctionalSpecification {
 
-    InternalStreamConnection connection;
+    static InternalStreamConnection connection;
 
-    def setup() {
+    def setupSpec() {
         connection = new InternalStreamConnectionFactory(new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings()),
                                                          getCredentialList(), new NoOpConnectionListener())
                 .create(new ServerId(new ClusterId(), getPrimary()))
         connection.open();
     }
 
-    def cleanup() {
+    def cleanupSpec() {
         connection?.close()
     }
 

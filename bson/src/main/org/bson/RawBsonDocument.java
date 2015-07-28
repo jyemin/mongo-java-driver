@@ -25,6 +25,9 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.io.BasicOutputBuffer;
 import org.bson.io.ByteBufferBsonInput;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collection;
@@ -39,9 +42,10 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
  *
  * @since 3.0
  */
-public class RawBsonDocument extends BsonDocument {
-    private static final long serialVersionUID = 5551249268878132972L;
-    private static CodecRegistry registry = fromProviders(new BsonValueCodecProvider());
+public final class RawBsonDocument extends BsonDocument {
+    private static final long serialVersionUID = 1L;
+
+    private static final CodecRegistry REGISTRY = fromProviders(new BsonValueCodecProvider());
 
     private final byte[] bytes;
 
@@ -247,16 +251,21 @@ public class RawBsonDocument extends BsonDocument {
 
     @Override
     public boolean equals(final Object o) {
-        return super.equals(o);
+        return toBsonDocument().equals(o);
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return toBsonDocument().hashCode();
+    }
+
+    @Override
+    public BsonDocument clone() {
+        return new RawBsonDocument(bytes.clone());
     }
 
     private BsonValue deserializeBsonValue(final BsonBinaryReader bsonReader) {
-        return registry.get(getClassForBsonType(bsonReader.getCurrentBsonType())).decode(bsonReader, DecoderContext.builder().build());
+        return REGISTRY.get(getClassForBsonType(bsonReader.getCurrentBsonType())).decode(bsonReader, DecoderContext.builder().build());
     }
 
     private BsonBinaryReader createReader() {
@@ -269,6 +278,30 @@ public class RawBsonDocument extends BsonDocument {
             return new BsonDocumentCodec().decode(bsonReader, DecoderContext.builder().build());
         } finally {
             bsonReader.close();
+        }
+    }
+
+    // see https://docs.oracle.com/javase/6/docs/platform/serialization/spec/output.html
+    private Object writeReplace() {
+        return new SerializationProxy(this.bytes);
+    }
+
+    // see https://docs.oracle.com/javase/6/docs/platform/serialization/spec/input.html
+    private void readObject(final ObjectInputStream stream) throws InvalidObjectException {
+        throw new InvalidObjectException("Proxy required");
+    }
+
+    private static class SerializationProxy implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final byte[] bytes;
+
+        public SerializationProxy(final byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        private Object readResolve() {
+            return new RawBsonDocument(bytes);
         }
     }
 }

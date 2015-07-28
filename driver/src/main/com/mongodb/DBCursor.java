@@ -814,7 +814,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
     private void initializeCursor(final FindOperation<DBObject> operation) {
         cursor = new MongoBatchCursorAdapter<DBObject>(executor.execute(operation, getReadPreferenceForCursor()));
         if (isCursorFinalizerEnabled() && cursor.getServerCursor() != null) {
-            optionalFinalizer = new OptionalFinalizer(collection.getDB().getMongo());
+            optionalFinalizer = new OptionalFinalizer(collection.getDB().getMongo(), collection.getNamespace());
         }
     }
 
@@ -900,9 +900,11 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
 
     private static class OptionalFinalizer {
         private final Mongo mongo;
+        private final MongoNamespace namespace;
         private volatile ServerCursor serverCursor;
 
-        private OptionalFinalizer(final Mongo mongo) {
+        private OptionalFinalizer(final Mongo mongo, final MongoNamespace namespace) {
+            this.namespace = notNull("namespace", namespace);
             this.mongo = notNull("mongo", mongo);
         }
 
@@ -913,7 +915,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
         @Override
         protected void finalize() {
             if (serverCursor != null) {
-                mongo.addOrphanedCursor(serverCursor);
+                mongo.addOrphanedCursor(serverCursor, namespace);
             }
         }
     }

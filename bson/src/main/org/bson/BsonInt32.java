@@ -16,15 +16,12 @@
 
 package org.bson;
 
-import java.io.Serializable;
-
 /**
  * A representation of the BSON Int32 type.
  *
  * @since 3.0
  */
-public final class BsonInt32 extends BsonNumber implements Comparable<BsonInt32>, Serializable {
-    private static final long serialVersionUID = 2215506922933899945L;
+public final class BsonInt32 extends BsonNumber implements Comparable<BsonInt32> {
 
     private final int value;
 

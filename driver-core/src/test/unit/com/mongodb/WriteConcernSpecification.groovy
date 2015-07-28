@@ -88,6 +88,7 @@ class WriteConcernSpecification extends Specification {
 
         where:
         wc                                | commandDocument
+        WriteConcern.UNACKNOWLEDGED       | new BsonDocument('w', new BsonInt32(0))
         WriteConcern.ACKNOWLEDGED         | new BsonDocument('w', new BsonInt32(1))
         WriteConcern.REPLICA_ACKNOWLEDGED | new BsonDocument('w', new BsonInt32(2))
         WriteConcern.JOURNALED            | new BsonDocument('w', new BsonInt32(1)).append('j', BsonBoolean.TRUE)

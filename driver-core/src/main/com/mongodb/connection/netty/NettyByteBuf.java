@@ -124,8 +124,19 @@ final class NettyByteBuf implements ByteBuf {
     }
 
     @Override
+    public byte get(final int index) {
+        return proxied.getByte(index);
+    }
+
+    @Override
     public ByteBuf get(final byte[] bytes) {
         proxied.readBytes(bytes);
+        return this;
+    }
+
+    @Override
+    public ByteBuf get(final int index, final byte[] bytes) {
+        proxied.getBytes(index, bytes);
         return this;
     }
 
@@ -136,8 +147,19 @@ final class NettyByteBuf implements ByteBuf {
     }
 
     @Override
+    public ByteBuf get(final int index, final byte[] bytes, final int offset, final int length) {
+        proxied.getBytes(index, bytes, offset, length);
+        return this;
+    }
+
+    @Override
     public long getLong() {
         return proxied.readLong();
+    }
+
+    @Override
+    public long getLong(final int index) {
+        return proxied.getLong(index);
     }
 
     @Override
@@ -146,8 +168,18 @@ final class NettyByteBuf implements ByteBuf {
     }
 
     @Override
+    public double getDouble(final int index) {
+        return proxied.getDouble(index);
+    }
+
+    @Override
     public int getInt() {
         return proxied.readInt();
+    }
+
+    @Override
+    public int getInt(final int index) {
+        return proxied.getInt(index);
     }
 
     @Override
@@ -161,7 +193,8 @@ final class NettyByteBuf implements ByteBuf {
 
     @Override
     public ByteBuf limit(final int newLimit) {
-        throw new UnsupportedOperationException("This method should be unused!");
+        proxied = proxied.slice(proxied.readerIndex(), newLimit);
+        return this;
     }
 
     @Override
