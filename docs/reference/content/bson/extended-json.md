@@ -19,7 +19,6 @@ mode.
 of BSON dates. See the 
 [Extended JSON specification](https://github.com/mongodb/specifications/blob/master/source/extended-json.rst) for a description of this 
 mode.
-default mode when writing JSON.
 - Shell Mode: a superset of JSON that the 
 [MongoDB shell](http://docs.mongodb.org/manual/tutorial/getting-started-with-the-mongo-shell/) can parse. 
 - Strict Mode: Legacy representation.  Though now deprecated, this is still the default mode when writing JSON in order to avoid breaking
