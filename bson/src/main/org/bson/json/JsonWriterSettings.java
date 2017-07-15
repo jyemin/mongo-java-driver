@@ -101,6 +101,9 @@ public class JsonWriterSettings extends BsonWriterSettings {
 
     /**
      * Create a builder for JsonWriterSettings, which are immutable.
+     * <p>
+     *     Defaults to {@link JsonMode#RELAXED}
+     * </p>
      *
      * @return a Builder instance
      * @since 3.5
@@ -111,9 +114,15 @@ public class JsonWriterSettings extends BsonWriterSettings {
 
     /**
      * Creates a new instance with default values for all properties.
+     * <p>
+     *     Defaults to {@link JsonMode#STRICT}
+     * </p>
+     *
+     * @deprecated Prefer {@link #builder()}, but note that the default output mode is different for that method
      */
+    @Deprecated
     public JsonWriterSettings() {
-        this(builder());
+        this(builder().outputMode(JsonMode.STRICT));
     }
 
     /**
@@ -540,7 +549,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
         private boolean indent;
         private String newLineCharacters = System.getProperty("line.separator");
         private String indentCharacters = "  ";
-        private JsonMode outputMode = JsonMode.STRICT;
+        private JsonMode outputMode = JsonMode.RELAXED;
         private Converter<BsonNull> nullConverter;
         private Converter<String> stringConverter;
         private Converter<Long> dateTimeConverter;
@@ -569,7 +578,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
         }
 
         /**
-         * Sets whether indentation is enabled.
+         * Sets whether indentation is enabled, which defaults to false.
          *
          * @param indent whether indentation is enabled
          * @return this
@@ -580,7 +589,8 @@ public class JsonWriterSettings extends BsonWriterSettings {
         }
 
         /**
-         * Sets the new line character string to use when indentation is enabled.
+         * Sets the new line character string to use when indentation is enabled, which defaults to
+         * {@code System.getProperty("line.separator")}.
          *
          * @param newLineCharacters the non-null new line character string
          * @return this
@@ -592,7 +602,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
         }
 
         /**
-         * Sets the indent character string to use when indentation is enabled.
+         * Sets the indent character string to use when indentation is enabled, which defaults to two spaces.
          *
          * @param indentCharacters the non-null indent character string
          * @return this
@@ -604,7 +614,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
         }
 
         /**
-         * Sets the output mode.
+         * Sets the output mode, which defaults to {@link JsonMode#RELAXED}.
          *
          * @param outputMode the non-null output mode
          * @return this
