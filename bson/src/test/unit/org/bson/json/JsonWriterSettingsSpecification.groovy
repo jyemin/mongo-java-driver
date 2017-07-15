@@ -28,6 +28,13 @@ class JsonWriterSettingsSpecification extends Specification {
         then:
         !settings.isIndent()
         settings.getOutputMode() == JsonMode.STRICT
+
+        when:
+        settings = JsonWriterSettings.builder().build();
+
+        then:
+        !settings.isIndent()
+        settings.getOutputMode() == JsonMode.RELAXED
     }
 
 
