@@ -268,6 +268,7 @@ public class Document implements Map<String, Object>, Serializable, Bson {
      * @return a JSON representation of this document
      * @throws org.bson.codecs.configuration.CodecConfigurationException if the document contains types not in the default registry
      */
+    @SuppressWarnings("deprecation")
     public String toJson() {
         return toJson(new JsonWriterSettings());
     }
@@ -294,6 +295,7 @@ public class Document implements Map<String, Object>, Serializable, Bson {
      * @return a JSON representation of this document
      * @throws org.bson.codecs.configuration.CodecConfigurationException if the registry does not contain a codec for the document values.
      */
+    @SuppressWarnings("deprecation")
     public String toJson(final Encoder<Document> encoder) {
         return toJson(new JsonWriterSettings(), encoder);
     }
