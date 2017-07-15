@@ -791,8 +791,11 @@ public class BsonDocument extends BsonValue implements Map<String, BsonValue>, C
     }
 
     /**
-     * Gets a JSON representation of this document using the default settings of {@code JsonWriterSettings}.
+     * Gets a JSON representation of this document using the {@link org.bson.json.JsonMode#STRICT} output mode, and otherwise the default
+     * settings of {@link JsonWriterSettings.Builder}.
+     *
      * @return a JSON representation of this document
+     * @see #toJson(JsonWriterSettings)
      * @see JsonWriterSettings
      */
     @SuppressWarnings("deprecation")
