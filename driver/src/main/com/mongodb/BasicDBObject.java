@@ -133,12 +133,13 @@ public class BasicDBObject extends BasicBSONObject implements DBObject, Bson {
     }
 
     /**
-     * Gets a JSON representation of this document
-     *
-     * <p>With the default {@link JsonWriterSettings} and {@link DBObjectCodec}.</p>
+     * Gets a JSON representation of this document using the {@link org.bson.json.JsonMode#STRICT} output mode, and otherwise the default
+     * settings of {@link JsonWriterSettings.Builder} and {@link DBObjectCodec}.
      *
      * @return a JSON representation of this document
      * @throws org.bson.codecs.configuration.CodecConfigurationException if the document contains types not in the default registry
+     * @see #toJson(JsonWriterSettings)
+     * @see JsonWriterSettings
      */
     @SuppressWarnings("deprecation")
     public String toJson() {
