@@ -31,10 +31,10 @@ com.sun.security.jgss.krb5.initiate {
 };
 EOF
 
-echo "Compiling java driver with jdk8"
+echo "Compiling java driver with jdk9"
 
 # We always compile with the latest version of java
-export JAVA_HOME="/opt/java/jdk8"
+export JAVA_HOME="/opt/java/jdk9"
 
 echo "Running tests with ${JDK}"
 ./gradlew -version

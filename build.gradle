@@ -113,7 +113,7 @@ configure(subprojects.findAll { it.name != 'util' }) {
 
         options.author = true
         options.version = true
-        options.links 'http://docs.oracle.com/javase/7/docs/api/'
+        options.links 'http://docs.oracle.com/javase/9/docs/api/'
         options.tagletPath single(project(':util').sourceSets.main.output.classesDirs)
         options.taglets 'ManualTaglet'
         options.taglets 'DochubTaglet'
@@ -304,7 +304,6 @@ configure(subprojects.findAll { it.name != 'util' && it.name != 'mongo-java-driv
 
 task docs(type: Javadoc) {
     source subprojects.grep({ it.name != 'util' }).collect {project -> project.sourceSets.main.allJava }
-//    options = subprojects.first().javadoc.options
     dependsOn = subprojects.first().javadoc.dependsOn
     excludes =  subprojects.first().javadoc.excludes
     classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})

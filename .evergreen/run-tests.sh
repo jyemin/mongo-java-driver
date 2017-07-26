@@ -17,7 +17,6 @@ AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 MONGODB_URI=${MONGODB_URI:-}
 JDK=${JDK:-jdk}
-JAVA_HOME="/opt/java/${JDK}"
 TOPOLOGY=${TOPOLOGY:-server}
 COMPRESSOR=${COMPRESSOR:-}
 
@@ -40,7 +39,7 @@ provision_ssl () {
     openssl pkcs12 -CAfile ${DRIVERS_TOOLS}/.evergreen/x509gen/ca.pem -export -in ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem -out client.pkc -password pass:bithere
   fi
   if [ ! -f mongo-truststore ]; then
-    echo "y" | ${JAVA_HOME}/bin/keytool -importcert -trustcacerts -file ${DRIVERS_TOOLS}/.evergreen/x509gen/ca.pem -keystore mongo-truststore -storepass hithere
+    echo "y" | /opt/java/${JDK}/bin/keytool -importcert -trustcacerts -file ${DRIVERS_TOOLS}/.evergreen/x509gen/ca.pem -keystore mongo-truststore -storepass hithere
   fi
 
   # We add extra gradle arguments for SSL
@@ -83,7 +82,7 @@ fi
 echo "Running $AUTH tests over $SSL for $TOPOLOGY and connecting to $MONGODB_URI"
 
 # We always compile with the latest version of java
-export JAVA_HOME="/opt/java/jdk8"
+export JAVA_HOME="/opt/java/jdk9"
 
 echo "Running tests with ${JDK}"
 ./gradlew -version
