@@ -16,7 +16,6 @@
 
 package com.mongodb.connection;
 
-import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.async.SingleResultCallback;
 import org.bson.ByteBuf;
 
