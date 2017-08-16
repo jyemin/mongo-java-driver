@@ -57,7 +57,7 @@ class InternalStreamConnectionSpecification extends Specification {
 
     def connectionDescription = new ConnectionDescription(connectionId, new ServerVersion(), ServerType.STANDALONE,
             getDefaultMaxWriteBatchSize(), getDefaultMaxDocumentSize(),
-            getDefaultMaxMessageSize())
+            getDefaultMaxMessageSize(), [])
     def stream = Mock(Stream) {
         openAsync(_) >> { it[0].completed(null) }
     }
@@ -70,7 +70,7 @@ class InternalStreamConnectionSpecification extends Specification {
     }
 
     def getConnection() {
-        new InternalStreamConnection(SERVER_ID, streamFactory, commandListener, initializer)
+        new InternalStreamConnection(SERVER_ID, streamFactory, [], commandListener, initializer)
     }
 
     def getOpenedConnection() {
@@ -124,7 +124,7 @@ class InternalStreamConnectionSpecification extends Specification {
         def failedInitializer = Mock(InternalConnectionInitializer) {
             initialize(_) >> { throw new MongoInternalException('Something went wrong') }
         }
-        def connection = new InternalStreamConnection(SERVER_ID, streamFactory, null, failedInitializer)
+        def connection = new InternalStreamConnection(SERVER_ID, streamFactory, [], null, failedInitializer)
 
         when:
         connection.open()
@@ -141,7 +141,7 @@ class InternalStreamConnectionSpecification extends Specification {
         def failedInitializer = Mock(InternalConnectionInitializer) {
             initializeAsync(_, _) >> { it[1].onResult(null, new MongoInternalException('Something went wrong')); }
         }
-        def connection = new InternalStreamConnection(SERVER_ID, streamFactory, null, failedInitializer)
+        def connection = new InternalStreamConnection(SERVER_ID, streamFactory, [], null, failedInitializer)
 
         when:
         def futureResultCallback = new FutureResultCallback<Void>()
@@ -181,7 +181,6 @@ class InternalStreamConnectionSpecification extends Specification {
         given:
         def (buffers1, messageId1, sndCallbck1, rcvdCallbck1) = helper.isMasterAsync()
         def (buffers2, messageId2, sndCallbck2, rcvdCallbck2) = helper.isMasterAsync()
-        def headers = helper.generateHeaders([messageId1, messageId2])
         int seen = 0
 
         stream.writeAsync(_, _) >> { List<ByteBuf> buffers, AsyncCompletionHandler<Void> callback ->
@@ -212,8 +211,7 @@ class InternalStreamConnectionSpecification extends Specification {
 
     def 'should close the stream when reading the message header throws an exception'() {
         given:
-        stream.read(36) >> { throw new IOException('Something went wrong') }
-        stream.read(74) >> helper.defaultBody()
+        stream.read(16) >> { throw new IOException('Something went wrong') }
 
         def connection = getOpenedConnection()
         def (buffers1, messageId1) = helper.isMaster()
@@ -311,26 +309,21 @@ class InternalStreamConnectionSpecification extends Specification {
 
     def 'should close the stream when reading the message body throws an exception'() {
         given:
-        def (buffers1, messageId1) = helper.isMaster()
-        def (buffers2, messageId2) = helper.isMaster()
-        def headers = helper.generateHeaders([messageId1, messageId2])
-
-        stream.read(36) >> { headers.pop() }
+        stream.read(16) >> helper.defaultMessageHeader(1)
+        stream.read(20) >> helper.defaultReplyHeader()
         stream.read(70) >> { throw new IOException('Something went wrong') }
 
         def connection = getOpenedConnection()
 
         when:
-        connection.sendMessage(buffers1, messageId1)
-        connection.sendMessage(buffers2, messageId2)
-        connection.receiveMessage(messageId1)
+        connection.receiveMessage(1)
 
         then:
         connection.isClosed()
         thrown MongoSocketReadException
 
         when:
-        connection.receiveMessage(messageId2)
+        connection.receiveMessage(1)
 
         then:
         thrown MongoSocketClosedException
@@ -379,7 +372,6 @@ class InternalStreamConnectionSpecification extends Specification {
         ExecutorService streamPool = Executors.newFixedThreadPool(1)
 
         def messages = (1..numberOfOperations).collect { helper.isMasterAsync() }
-        def headers = messages.collect { buffers, messageId, sndCallbck, rcvdCallbck -> helper.defaultHeader(messageId) }
 
         def streamLatch = new CountDownLatch(1)
         stream.writeAsync(_, _) >> { List<ByteBuf> buffers, AsyncCompletionHandler<Void> callback ->
@@ -414,7 +406,8 @@ class InternalStreamConnectionSpecification extends Specification {
         def pingCommandDocument = new BsonDocument('ping', new BsonInt32(1))
         def commandMessage = new SimpleCommandMessage('admin.$cmd', pingCommandDocument, true, MessageSettings.builder().build())
         stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
-        stream.read(36) >> helper.defaultHeader(commandMessage.getId())
+        stream.read(16) >> helper.defaultMessageHeader(commandMessage.getId())
+        stream.read(20) >> helper.defaultReplyHeader()
         stream.read(70) >> helper.defaultBody()
 
         when:
@@ -453,7 +446,7 @@ class InternalStreamConnectionSpecification extends Specification {
         def pingCommandDocument = new BsonDocument('ping', new BsonInt32(1))
         def commandMessage = new SimpleCommandMessage('admin.$cmd', pingCommandDocument, true, MessageSettings.builder().build())
         stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
-        stream.read(36) >> { throw new MongoSocketReadException('Failed to read', serverAddress) }
+        stream.read(16) >> { throw new MongoSocketReadException('Failed to read', serverAddress) }
 
         when:
         connection.sendAndReceive(commandMessage)
@@ -472,7 +465,8 @@ class InternalStreamConnectionSpecification extends Specification {
         def pingCommandDocument = new BsonDocument('ping', new BsonInt32(1))
         def commandMessage = new SimpleCommandMessage('admin.$cmd', pingCommandDocument, true, MessageSettings.builder().build())
         stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
-        stream.read(36) >> helper.defaultHeader(commandMessage.getId())
+        stream.read(16) >> helper.defaultMessageHeader(commandMessage.getId())
+        stream.read(20) >> helper.defaultReplyHeader()
         stream.read(70) >> { throw new MongoSocketReadException('Failed to read', serverAddress) }
 
         when:
@@ -493,7 +487,8 @@ class InternalStreamConnectionSpecification extends Specification {
         def commandMessage = new SimpleCommandMessage('admin.$cmd', pingCommandDocument, true, MessageSettings.builder().build())
         def response = '{ok : 0, errmsg : "failed"}'
         stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
-        stream.read(36) >> helper.header(commandMessage.getId(), response)
+        stream.read(16) >> helper.messageHeader(commandMessage.getId(), response)
+        stream.read(20) >> helper.replyHeader()
         stream.read(_) >> helper.body(response)
 
         when:
@@ -513,7 +508,8 @@ class InternalStreamConnectionSpecification extends Specification {
         def connection = getOpenedConnection()
         def commandMessage = new SimpleCommandMessage('admin.$cmd', securitySensitiveCommand, true, MessageSettings.builder().build())
         stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
-        stream.read(36) >> helper.defaultHeader(commandMessage.getId())
+        stream.read(16) >> helper.defaultMessageHeader(commandMessage.getId())
+        stream.read(20) >> helper.defaultReplyHeader()
         stream.read(_) >> helper.defaultBody()
 
         when:
@@ -540,6 +536,38 @@ class InternalStreamConnectionSpecification extends Specification {
         ]
     }
 
+    def 'should send failed event with elided exception in failed security-sensitive commands'() {
+        given:
+        def connection = getOpenedConnection()
+        def commandMessage = new SimpleCommandMessage('admin.$cmd', securitySensitiveCommand, primary(), messageSettings)
+        stream.getBuffer(1024) >> { new ByteBufNIO(ByteBuffer.wrap(new byte[1024])) }
+        stream.read(16) >> helper.defaultMessageHeader(commandMessage.getId())
+        stream.read(_) >> helper.reply('{ok : 0, errmsg : "failed"}')
+
+        when:
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec())
+
+        then:
+        thrown(MongoCommandException)
+        CommandFailedEvent failedEvent = commandListener.getEvents().get(1)
+        failedEvent.throwable.class == MongoCommandException
+        MongoCommandException e = failedEvent.throwable
+        e.response == new BsonDocument()
+
+        where:
+        securitySensitiveCommand << [
+                new BsonDocument('authenticate', new BsonInt32(1)),
+                new BsonDocument('saslStart', new BsonInt32(1)),
+                new BsonDocument('saslContinue', new BsonInt32(1)),
+                new BsonDocument('getnonce', new BsonInt32(1)),
+                new BsonDocument('createUser', new BsonInt32(1)),
+                new BsonDocument('updateUser', new BsonInt32(1)),
+                new BsonDocument('copydbgetnonce', new BsonInt32(1)),
+                new BsonDocument('copydbsaslstart', new BsonInt32(1)),
+                new BsonDocument('copydb', new BsonInt32(1))
+        ]
+    }
+
     def 'should send events for successful asynchronous command'() {
         given:
         def connection = getOpenedConnection()
@@ -551,8 +579,11 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.writeAsync(_, _) >> { buffers, handler ->
             handler.completed(null)
         }
-        stream.readAsync(36, _) >> { numBytes, handler ->
-            handler.completed(helper.defaultHeader(commandMessage.getId()))
+        stream.readAsync(16, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultMessageHeader(commandMessage.getId()))
+        }
+        stream.readAsync(20, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultReplyHeader())
         }
         stream.readAsync(70, _) >> { numBytes, handler ->
             handler.completed(helper.defaultBody())
@@ -605,7 +636,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.writeAsync(_, _) >> { buffers, handler ->
             handler.completed(null)
         }
-        stream.readAsync(36, _) >> { numBytes, handler ->
+        stream.readAsync(16, _) >> { numBytes, handler ->
             handler.failed(new MongoSocketReadException('Failed to read', serverAddress))
         }
 
@@ -632,8 +663,11 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.writeAsync(_, _) >> { buffers, handler ->
             handler.completed(null)
         }
-        stream.readAsync(36, _) >> { numBytes, handler ->
-            handler.completed(helper.defaultHeader(commandMessage.getId()))
+        stream.readAsync(16, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultMessageHeader(commandMessage.getId()))
+        }
+        stream.readAsync(20, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultReplyHeader())
         }
         stream.readAsync(70, _) >> { numBytes, handler ->
             handler.failed(new MongoSocketReadException('Failed to read', serverAddress))
@@ -663,8 +697,11 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.writeAsync(_, _) >> { buffers, handler ->
             handler.completed(null)
         }
-        stream.readAsync(36, _) >> { numBytes, handler ->
-            handler.completed(helper.header(commandMessage.getId(), response))
+        stream.readAsync(16, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultMessageHeader(commandMessage.getId()))
+        }
+        stream.readAsync(20, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultReplyHeader())
         }
         stream.readAsync(_, _) >> { numBytes, handler ->
             handler.completed(helper.body(response))
@@ -693,8 +730,11 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.writeAsync(_, _) >> { buffers, handler ->
             handler.completed(null)
         }
-        stream.readAsync(36, _) >> { numBytes, handler ->
-            handler.completed(helper.defaultHeader(commandMessage.getId()))
+        stream.readAsync(16, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultMessageHeader(commandMessage.getId()))
+        }
+        stream.readAsync(20, _) >> { numBytes, handler ->
+            handler.completed(helper.defaultReplyHeader())
         }
         stream.readAsync(70, _) >> { numBytes, handler ->
             handler.completed(helper.defaultBody())
@@ -722,13 +762,14 @@ class InternalStreamConnectionSpecification extends Specification {
                 new BsonDocument('copydbgetnonce', new BsonInt32(1)),
                 new BsonDocument('copydbsaslstart', new BsonInt32(1)),
                 new BsonDocument('copydb', new BsonInt32(1))
-        ]    }
+        ]
+    }
 
     private static boolean expectException(rcvdCallbck) {
         try {
             rcvdCallbck.get()
             false
-        } catch (MongoSocketWriteException e) {
+        } catch (MongoSocketWriteException) {
             true
         }
     }
