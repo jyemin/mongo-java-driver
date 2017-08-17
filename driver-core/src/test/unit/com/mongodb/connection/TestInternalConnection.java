@@ -139,21 +139,25 @@ class TestInternalConnection implements InternalConnection {
     }
 
     @Override
-    public ResponseBuffers sendAndReceive(final CommandMessage message) {
+    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder) {
         ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this);
         try {
             message.encode(bsonOutput);
             sendMessage(bsonOutput.getByteBuffers(), message.getId());
-            ResponseBuffers responseBuffers = receiveMessage(message.getId());
+        } finally {
+            bsonOutput.close();
+        }
+        ResponseBuffers responseBuffers = receiveMessage(message.getId());
+        try {
             boolean commandOk = isCommandOk(new BsonBinaryReader(new ByteBufferBsonInput(responseBuffers.getBodyByteBuffer())));
             responseBuffers.reset();
             if (!commandOk) {
                 throw getCommandFailureException(getResponseDocument(responseBuffers, message, new BsonDocumentCodec()),
                         description.getServerAddress());
             }
-            return responseBuffers;
+            return new ReplyMessage<T>(responseBuffers, decoder, message.getId()).getDocuments().get(0);
         } finally {
-            bsonOutput.close();
+            responseBuffers.close();
         }
     }
 
@@ -165,10 +169,11 @@ class TestInternalConnection implements InternalConnection {
     }
 
     @Override
-    public void sendAndReceiveAsync(final CommandMessage message, final SingleResultCallback<ResponseBuffers> callback) {
+    public <T> void sendAndReceiveAsync(final CommandMessage message, final Decoder<T> decoder,
+                                        final SingleResultCallback<T> callback) {
         try {
-            ResponseBuffers buffers = sendAndReceive(message);
-            callback.onResult(buffers, null);
+            T result = sendAndReceive(message, decoder);
+            callback.onResult(result, null);
         } catch (MongoException ex) {
             callback.onResult(null, ex);
         }
@@ -187,9 +192,9 @@ class TestInternalConnection implements InternalConnection {
         headerByteBuffer.putInt(header.getNumberReturned());
         headerByteBuffer.flip();
 
-        ByteBufferBsonInput headerInputBuffer = new ByteBufferBsonInput(new ByteBufNIO(headerByteBuffer));
-        MessageHeader messageHeader = new MessageHeader(headerInputBuffer, ConnectionDescription.getDefaultMaxMessageSize());
-        return new ReplyHeader(headerInputBuffer, messageHeader);    }
+        ByteBufNIO buffer = new ByteBufNIO(headerByteBuffer);
+        MessageHeader messageHeader = new MessageHeader(buffer, ConnectionDescription.getDefaultMaxMessageSize());
+        return new ReplyHeader(buffer, messageHeader);    }
 
     @Override
     public ResponseBuffers receiveMessage(final int responseTo) {

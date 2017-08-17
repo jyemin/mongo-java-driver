@@ -24,6 +24,7 @@ import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
 
 import static com.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
+import static com.mongodb.ReadPreference.primary;
 
 final class CommandHelper {
     static BsonDocument executeCommand(final String database, final BsonDocument command, final InternalConnection internalConnection) {
@@ -42,19 +43,18 @@ final class CommandHelper {
     static void executeCommandAsync(final String database, final BsonDocument command, final InternalConnection internalConnection,
                                     final SingleResultCallback<BsonDocument> callback) {
         final SimpleCommandMessage message =
-                new SimpleCommandMessage(new MongoNamespace(database, COMMAND_COLLECTION_NAME).getFullName(), command, false,
-                                                MessageSettings.builder().build());
+                new SimpleCommandMessage(new MongoNamespace(database, COMMAND_COLLECTION_NAME).getFullName(), command, primary(),
+                                                MessageSettings.builder()
+                                                        .serverVersion(internalConnection.getDescription().getServerVersion())
+                                                        .build());
 
-        internalConnection.sendAndReceiveAsync(message, new SingleResultCallback<ResponseBuffers>() {
+        internalConnection.sendAndReceiveAsync(message, new BsonDocumentCodec(), new SingleResultCallback<BsonDocument>() {
             @Override
-            public void onResult(final ResponseBuffers result, final Throwable t) {
+            public void onResult(final BsonDocument result, final Throwable t) {
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
-                    ReplyMessage<BsonDocument> replyMessage = new ReplyMessage<BsonDocument>(result, new BsonDocumentCodec(),
-                                                                                                    message.getId());
-                    BsonDocument reply = replyMessage.getDocuments().get(0);
-                    callback.onResult(reply, null);
+                    callback.onResult(result, null);
                 }
             }
         });
@@ -77,13 +77,16 @@ final class CommandHelper {
     private static BsonDocument sendAndReceive(final String database, final BsonDocument command,
                                                final InternalConnection internalConnection) {
         SimpleCommandMessage message = new SimpleCommandMessage(new MongoNamespace(database, COMMAND_COLLECTION_NAME).getFullName(),
-                                                                       command, false, MessageSettings.builder().build());
-        ResponseBuffers responseBuffers = internalConnection.sendAndReceive(message);
-        try {
-            return new ReplyMessage<BsonDocument>(responseBuffers, new BsonDocumentCodec(), message.getId()).getDocuments().get(0);
-        } finally {
-            responseBuffers.close();
-        }
+                                                                       command, primary(),
+                                                                       MessageSettings
+                                                                               .builder()
+                                                                               // Note: server version will be 0.0 at this point when called
+                                                                               // from InternalConnectionInitializer, which means OP_MSG
+                                                                               // will not be used
+                                                                               .serverVersion(internalConnection.getDescription()
+                                                                                                      .getServerVersion())
+                                                                               .build());
+        return internalConnection.sendAndReceive(message, new BsonDocumentCodec());
     }
 
     private CommandHelper() {

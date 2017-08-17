@@ -17,20 +17,24 @@
 
 package com.mongodb.connection;
 
-abstract class CommandMessage extends RequestMessage {
-    CommandMessage(final String collectionName, final OpCode opCode, final MessageSettings settings) {
-        super(collectionName, opCode, settings);
+enum OpCode {
+    OP_REPLY(1),
+    OP_UPDATE(2001),
+    OP_INSERT(2002),
+    OP_QUERY(2004),
+    OP_GETMORE(2005),
+    OP_DELETE(2006),
+    OP_KILL_CURSORS(2007),
+    OP_COMPRESSED(2012),
+    OP_MSG(2013);
+
+    OpCode(final int value) {
+        this.value = value;
     }
 
-    protected static OpCode getOpCode(final MessageSettings settings) {
-        return useOpMsg(settings) ? OpCode.OP_MSG : OpCode.OP_QUERY;
-    }
+    private final int value;
 
-    protected static boolean useOpMsg(final MessageSettings settings) {
-        return settings.getServerVersion().compareTo(new ServerVersion(3, 5)) >= 0;
-    }
-
-    protected boolean useOpMsg() {
-        return useOpMsg(getSettings());
+    public int getValue() {
+        return value;
     }
 }

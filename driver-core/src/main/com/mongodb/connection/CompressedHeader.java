@@ -17,10 +17,10 @@
 package com.mongodb.connection;
 
 import com.mongodb.MongoInternalException;
-import org.bson.io.BsonInput;
+import org.bson.ByteBuf;
 
 import static com.mongodb.connection.MessageHeader.MESSAGE_HEADER_LENGTH;
-import static com.mongodb.connection.RequestMessage.OpCode.OP_COMPRESSED;
+import static com.mongodb.connection.OpCode.OP_COMPRESSED;
 import static java.lang.String.format;
 
 // Contains the details of an OP_COMPRESSED reply from a MongoDB server.
@@ -40,7 +40,7 @@ class CompressedHeader {
     private final byte compressorId;
     private final MessageHeader messageHeader;
 
-    CompressedHeader(final BsonInput header, final MessageHeader messageHeader) {
+    CompressedHeader(final ByteBuf header, final MessageHeader messageHeader) {
         this.messageHeader = messageHeader;
 
         if (messageHeader.getOpCode() != OP_COMPRESSED.getValue()) {
@@ -53,9 +53,9 @@ class CompressedHeader {
                     messageHeader.getMessageLength(), COMPRESSED_HEADER_LENGTH));
         }
 
-        originalOpcode = header.readInt32();
-        uncompressedSize = header.readInt32();
-        compressorId = header.readByte();
+        originalOpcode = header.getInt();
+        uncompressedSize = header.getInt();
+        compressorId = header.get();
     }
 
     /**

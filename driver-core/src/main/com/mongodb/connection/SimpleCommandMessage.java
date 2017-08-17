@@ -16,10 +16,19 @@
 
 package com.mongodb.connection;
 
+import com.mongodb.MongoNamespace;
+import com.mongodb.ReadPreference;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import org.bson.BsonDocument;
+import org.bson.BsonElement;
+import org.bson.BsonString;
 import org.bson.FieldNameValidator;
 import org.bson.io.BsonOutput;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.mongodb.ReadPreference.primary;
 
 /**
  * A command message that uses OP_QUERY to send the command.
@@ -27,30 +36,55 @@ import org.bson.io.BsonOutput;
  * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query OP_QUERY
  */
 class SimpleCommandMessage extends CommandMessage {
-    private final boolean slaveOk;
+    private final ReadPreference readPreference;
     private final BsonDocument command;
     private final FieldNameValidator validator;
 
-    SimpleCommandMessage(final String collectionName, final BsonDocument command, final boolean slaveOk, final MessageSettings settings) {
-        this(collectionName, command, slaveOk, new NoOpFieldNameValidator(), settings);
+    SimpleCommandMessage(final String collectionName, final BsonDocument command, final ReadPreference readPreference,
+                         final MessageSettings settings) {
+        this(collectionName, command, readPreference, new NoOpFieldNameValidator(), settings);
     }
 
-    SimpleCommandMessage(final String collectionName, final BsonDocument command, final boolean slaveOk,
+    SimpleCommandMessage(final String collectionName, final BsonDocument command, final ReadPreference readPreference,
                          final FieldNameValidator validator, final MessageSettings settings) {
-        super(collectionName, OpCode.OP_QUERY, settings);
-        this.slaveOk = slaveOk;
+        super(collectionName, getOpCode(settings), settings);
+        this.readPreference = readPreference;
         this.command = command;
         this.validator = validator;
     }
 
     @Override
     protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput bsonOutput, final int messageStartPosition) {
-        bsonOutput.writeInt32(slaveOk ? 1 << 2 : 0);
-        bsonOutput.writeCString(getCollectionName());
-        bsonOutput.writeInt32(0);
-        bsonOutput.writeInt32(-1);
+        BsonDocument commandToEncode;
+        List<BsonElement> extraElements = null;
+        if (useOpMsg()) {
+            bsonOutput.writeInt32(0);  // flag bits
+            bsonOutput.writeByte(0);   // payload type
+
+            extraElements = new ArrayList<BsonElement>();
+            extraElements.add(new BsonElement("$db", new BsonString(new MongoNamespace(getCollectionName()).getDatabaseName())));
+            if (!isDefaultReadPreference()) {
+                extraElements.add(new BsonElement("$readPreference", readPreference.toDocument()));
+            }
+            commandToEncode = command;
+        } else {
+            bsonOutput.writeInt32(readPreference.isSlaveOk() ? 1 << 2 : 0);
+            bsonOutput.writeCString(getCollectionName());
+            bsonOutput.writeInt32(0);
+            bsonOutput.writeInt32(-1);
+            if (!isDefaultReadPreference()) {
+                commandToEncode = new BsonDocument("$query", command).append("$readPreference", readPreference.toDocument());
+            } else {
+                commandToEncode = command;
+            }
+        }
+
         int firstDocumentPosition = bsonOutput.getPosition();
-        addDocument(command, bsonOutput, validator);
+        addDocument(commandToEncode, bsonOutput, validator, extraElements);
         return new EncodingMetadata(null, firstDocumentPosition);
+    }
+
+    private boolean isDefaultReadPreference() {
+        return readPreference.equals(primary());
     }
 }

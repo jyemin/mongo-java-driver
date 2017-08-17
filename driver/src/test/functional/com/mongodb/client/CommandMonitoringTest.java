@@ -22,6 +22,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.ServerVersion;
 import com.mongodb.connection.TestCommandListener;
@@ -306,23 +307,41 @@ public class CommandMonitoringTest {
             String eventType = curExpectedEventDocument.keySet().iterator().next();
             BsonDocument eventDescriptionDocument = curExpectedEventDocument.getDocument(eventType);
             CommandEvent commandEvent;
+            String commandName = eventDescriptionDocument.getString("command_name").getValue();
             if (eventType.equals("command_started_event")) {
-                commandEvent = new CommandStartedEvent(1, null, databaseName,
-                                                       eventDescriptionDocument.getString("command_name").getValue(),
-                                                       eventDescriptionDocument.getDocument("command"));
+                BsonDocument commandDocument = eventDescriptionDocument.getDocument("command");
+                // Not clear whether these global fields should be included, but also not clear how to efficiently exclude them
+                if (serverVersionAtLeast(3, 5)) {
+                    if (!isUnacknowledgedWrite()) {
+                        commandDocument.put("$db", new BsonString(databaseName));
+                    }
+                    BsonDocument operation = definition.getDocument("operation");
+                    if (operation.containsKey("read_preference")) {
+                        commandDocument.put("$readPreference", operation.getDocument("read_preference"));
+                    }
+                }
+                commandEvent = new CommandStartedEvent(1, null, databaseName, commandName, commandDocument);
             } else if (eventType.equals("command_succeeded_event")) {
                 BsonDocument replyDocument = eventDescriptionDocument.get("reply").asDocument();
-                commandEvent = new CommandSucceededEvent(1, null, eventDescriptionDocument.getString("command_name").getValue(),
-                                                         replyDocument, 1);
+                commandEvent = new CommandSucceededEvent(1, null, commandName, replyDocument, 1);
 
             } else if (eventType.equals("command_failed_event")) {
-                commandEvent = new CommandFailedEvent(1, null, eventDescriptionDocument.getString("command_name").getValue(), 1, null);
+                commandEvent = new CommandFailedEvent(1, null, commandName, 1, null);
             } else {
                 throw new UnsupportedOperationException("Unsupported command event type: " + eventType);
             }
             expectedEvents.add(commandEvent);
         }
         return expectedEvents;
+    }
+
+    private boolean isUnacknowledgedWrite() {
+        BsonDocument arguments = definition.getDocument("operation").getDocument("arguments");
+        if (arguments.containsKey("writeConcern")) {
+            WriteConcern writeConcern = new WriteConcern(arguments.getDocument("writeConcern").getInt32("w").intValue());
+            return !writeConcern.isAcknowledged();
+        }
+        return false;
     }
 
 
