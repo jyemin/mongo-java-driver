@@ -17,33 +17,28 @@
 package com.mongodb;
 
 import com.mongodb.client.ChangeStreamIterable;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.FullDocument;
+import com.mongodb.operation.BatchCursor;
 import com.mongodb.operation.ChangeStreamOperation;
+import com.mongodb.operation.ReadOperation;
 import org.bson.BsonDocument;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-final class ChangeStreamIterableImpl<TResult> implements ChangeStreamIterable<TResult> {
+final class ChangeStreamIterableImpl<TResult> extends MongoIterableImpl<TResult> implements ChangeStreamIterable<TResult> {
     private final MongoNamespace namespace;
-    private final ReadPreference readPreference;
-    private final ReadConcern readConcern;
     private final CodecRegistry codecRegistry;
-    private final OperationExecutor executor;
     private final List<? extends Bson> pipeline;
     private final Class<TResult> resultClass;
 
-    private Integer batchSize;
     private FullDocument fullDocument = FullDocument.DEFAULT;
     private Bson resumeToken;
     private long maxAwaitTimeMS;
@@ -53,11 +48,9 @@ final class ChangeStreamIterableImpl<TResult> implements ChangeStreamIterable<TR
     ChangeStreamIterableImpl(final MongoNamespace namespace, final CodecRegistry codecRegistry, final ReadPreference readPreference,
                              final ReadConcern readConcern, final OperationExecutor executor, final List<? extends Bson> pipeline,
                              final Class<TResult> resultClass) {
+        super(executor, readConcern, readPreference);
         this.namespace = notNull("namespace", namespace);
         this.codecRegistry = notNull("codecRegistry", codecRegistry);
-        this.readPreference = notNull("readPreference", readPreference);
-        this.readConcern = notNull("readConcern", readConcern);
-        this.executor = notNull("executor", executor);
         this.pipeline = notNull("pipeline", pipeline);
         this.resultClass = notNull("resultClass", resultClass);
     }
@@ -77,7 +70,7 @@ final class ChangeStreamIterableImpl<TResult> implements ChangeStreamIterable<TR
 
     @Override
     public ChangeStreamIterable<TResult> batchSize(final int batchSize) {
-        this.batchSize = notNull("batchSize", batchSize);
+        super.batchSize(batchSize);
         return this;
     }
 
@@ -94,48 +87,24 @@ final class ChangeStreamIterableImpl<TResult> implements ChangeStreamIterable<TR
         return this;
     }
 
-    @Override
-    public MongoCursor<TResult> iterator() {
-        return execute().iterator();
-    }
 
     @Override
-    public TResult first() {
-        return execute().first();
-    }
-
-    @Override
-    public <U> MongoIterable<U> map(final Function<TResult, U> mapper) {
-        return execute().map(mapper);
-    }
-
-    @Override
-    public void forEach(final Block<? super TResult> block) {
-        execute().forEach(block);
-    }
-
-    @Override
-    public <A extends Collection<? super TResult>> A into(final A target) {
-        return execute().into(target);
-    }
-
-    private MongoIterable<TResult> execute() {
+    ReadOperation<BatchCursor<TResult>> asReadOperation() {
         List<BsonDocument> aggregateList = createBsonDocumentList(pipeline);
 
         ChangeStreamOperation<TResult> changeStreamOperation = new ChangeStreamOperation<TResult>(namespace, fullDocument, aggregateList,
-                codecRegistry.get(resultClass))
-                .maxAwaitTime(maxAwaitTimeMS, MILLISECONDS)
-                .batchSize(batchSize)
-                .readConcern(readConcern)
-                .collation(collation);
+                                                                                                         codecRegistry.get(resultClass))
+                                                                       .maxAwaitTime(maxAwaitTimeMS, MILLISECONDS)
+                                                                       .batchSize(getBatchSize())
+                                                                       .readConcern(getReadConcern())
+                                                                       .collation(collation);
 
         if (resumeToken != null) {
             changeStreamOperation.resumeAfter(resumeToken.toBsonDocument(BsonDocument.class, codecRegistry));
         }
 
-        return new OperationIterable<TResult>(changeStreamOperation, readPreference, executor);
+        return changeStreamOperation;
     }
-
 
     private List<BsonDocument> createBsonDocumentList(final List<? extends Bson> pipeline) {
         List<BsonDocument> aggregateList = new ArrayList<BsonDocument>(pipeline.size());
