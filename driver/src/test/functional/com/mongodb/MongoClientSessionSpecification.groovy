@@ -55,6 +55,55 @@ class MongoClientSessionSpecification extends FunctionalSpecification {
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 5) })
+    def 'methods that use the session should throw if the session is closed'() {
+        given:
+        def options = ClientSessionOptions.builder().build()
+        def clientSession = Fixture.getMongoClient().startSession(options)
+        clientSession.close()
+
+        when:
+        clientSession.getServerSession()
+
+        then:
+        thrown(IllegalStateException)
+
+        when:
+        clientSession.advanceOperationTime(new BsonTimestamp(42, 0))
+
+        then:
+        thrown(IllegalStateException)
+
+        when:
+        clientSession.advanceClusterTime(new BsonDocument())
+
+        then:
+        thrown(IllegalStateException)
+
+        when:
+        clientSession.getMongoClient()
+
+        then:
+        thrown(IllegalStateException)
+    }
+
+    @IgnoreIf({ !serverVersionAtLeast(3, 5) })
+    def 'informational methods should not throw if the session is closed'() {
+        given:
+        def options = ClientSessionOptions.builder().build()
+        def clientSession = Fixture.getMongoClient().startSession(options)
+        clientSession.close()
+
+        when:
+        clientSession.getOptions()
+        clientSession.isCausallyConsistent()
+        clientSession.getClusterTime()
+        clientSession.getOperationTime()
+
+        then:
+        true
+    }
+
+    @IgnoreIf({ !serverVersionAtLeast(3, 5) })
     def 'should apply causally consistent session option to client session'() {
         when:
         def clientSession = Fixture.getMongoClient().startSession(ClientSessionOptions.builder()

@@ -868,6 +868,7 @@ public class Mongo {
         private final ClientSessionOptions options;
         private BsonDocument clusterTime;
         private BsonTimestamp operationTime;
+        private volatile boolean closed;
 
         ClientSessionImpl(final Mongo mongo, final ClientSessionOptions options) {
             this.mongo = mongo;
@@ -875,6 +876,7 @@ public class Mongo {
             this.options = options;
             clusterTime = options.getInitialClusterTime();
             operationTime = options.getInitialOperationTime();
+            closed = false;
         }
 
         @Override
@@ -888,16 +890,8 @@ public class Mongo {
         }
 
         @Override
-        public MongoClient getMongoClient() {
-            if (mongo instanceof MongoClient) {
-                return (MongoClient) mongo;
-            }
-            return null;
-        }
-
-        @Override
-        public ServerSession getServerSession() {
-            return serverSession;
+        public BsonDocument getClusterTime() {
+            return clusterTime;
         }
 
         @Override
@@ -906,17 +900,29 @@ public class Mongo {
         }
 
         @Override
+        public MongoClient getMongoClient() {
+            isTrue("open", !closed);
+            if (mongo instanceof MongoClient) {
+                return (MongoClient) mongo;
+            }
+            return null;
+        }
+
+        @Override
+        public ServerSession getServerSession() {
+            isTrue("open", !closed);
+            return serverSession;
+        }
+
+        @Override
         public void advanceOperationTime(final BsonTimestamp operationTime) {
+            isTrue("open", !closed);
             this.operationTime = operationTime; // TODO: ensure it's advancing
         }
 
         @Override
-        public BsonDocument getClusterTime() {
-            return clusterTime;
-        }
-
-        @Override
         public void advanceClusterTime(final BsonDocument clusterTime) {
+            isTrue("open", !closed);
             if (this.clusterTime == null
                         || clusterTime.getTimestamp(CLUSTER_TIME_KEY).compareTo(this.clusterTime.getTimestamp(CLUSTER_TIME_KEY)) > 0) {
                 this.clusterTime = clusterTime;
@@ -925,7 +931,10 @@ public class Mongo {
 
         @Override
         public void close() {
-            mongo.serverSessionPool.release(serverSession);
+            if (!closed) {
+                closed = true;
+                mongo.serverSessionPool.release(serverSession);
+            }
         }
     }
 
