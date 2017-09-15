@@ -26,6 +26,7 @@ import java.io.Closeable;
 /**
  * A client session.
  *
+ * @mongodb.server.release 3.6
  * @since 3.6
  */
 @NotThreadSafe
