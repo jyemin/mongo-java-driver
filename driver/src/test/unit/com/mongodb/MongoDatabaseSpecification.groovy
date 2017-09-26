@@ -41,6 +41,7 @@ import static com.mongodb.CustomMatchers.isTheSameAs
 import static com.mongodb.ReadPreference.primary
 import static com.mongodb.ReadPreference.primaryPreferred
 import static com.mongodb.ReadPreference.secondary
+import static com.mongodb.TestHelper.execute
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
@@ -135,14 +136,6 @@ class MongoDatabaseSpecification extends Specification {
         then:
         database.getReadConcern() == newReadConcern
         expect database, isTheSameAs(new MongoDatabaseImpl(name, codecRegistry, readPreference, writeConcern, newReadConcern, executor))
-    }
-
-    def <T> T execute(final Closure<T> method, final ClientSession session, ... restOfArgs) {
-        if (session == null) {
-            method.call(restOfArgs)
-        }  else {
-            method.call([session, *restOfArgs] as Object[])
-        }
     }
 
     def 'should be able to executeCommand correctly'() {
