@@ -388,8 +388,9 @@ public interface MongoCollection<TDocument> {
      * @param resultClass the class to decode each document into
      * @param <TResult>   the target document type of the iterable.
      * @return an iterable containing the result of the aggregation operation
+     * @since 3.6
+     * @mongodb.server.release 3.6
      * @mongodb.driver.manual aggregation/ Aggregation
-     * @mongodb.server.release 2.2
      */
     <TResult> AggregateIterable<TResult> aggregate(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass);
 
