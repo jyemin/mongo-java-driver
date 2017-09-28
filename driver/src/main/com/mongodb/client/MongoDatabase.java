@@ -153,7 +153,7 @@ public interface MongoDatabase {
      * Executes the given command in the context of the current database with a read preference of {@link ReadPreference#primary()}.
      *
      * @param command     the command to be run
-     * @param resultClass the default class to cast any documents returned from the database into.
+     * @param resultClass the class to decode each document into
      * @param <TResult> the type of the class to use instead of {@code Document}.
      * @return the command result
      */
@@ -164,7 +164,7 @@ public interface MongoDatabase {
      *
      * @param command        the command to be run
      * @param readPreference the {@link ReadPreference} to be used when executing the command
-     * @param resultClass    the default class to cast any documents returned from the database into.
+     * @param resultClass    the class to decode each document into
      * @param <TResult>      the type of the class to use instead of {@code Document}.
      * @return the command result
      */
@@ -198,7 +198,7 @@ public interface MongoDatabase {
      *
      * @param clientSession the client session with which to associate this operation
      * @param command     the command to be run
-     * @param resultClass the default class to cast any documents returned from the database into.
+     * @param resultClass the class to decode each document into
      * @param <TResult> the type of the class to use instead of {@code Document}.
      * @return the command result
      * @since 3.6
@@ -209,10 +209,10 @@ public interface MongoDatabase {
     /**
      * Executes the given command in the context of the current database with the given read preference.
      *
-     * @param clientSession the client session with which to associate this operation
+     * @param clientSession  the client session with which to associate this operation
      * @param command        the command to be run
      * @param readPreference the {@link ReadPreference} to be used when executing the command
-     * @param resultClass    the default class to cast any documents returned from the database into.
+     * @param resultClass    the class to decode each document into
      * @param <TResult>      the type of the class to use instead of {@code Document}.
      * @return the command result
      * @since 3.6

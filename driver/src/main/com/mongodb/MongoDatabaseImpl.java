@@ -188,6 +188,7 @@ class MongoDatabaseImpl implements MongoDatabase {
     }
 
     private MongoIterable<String> executeListCollectionNames(final ClientSession clientSession) {
+        notNull("clientSession", clientSession);
         return executeListCollections(clientSession, BsonDocument.class)
                        .map(new Function<BsonDocument, String>() {
                            @Override
@@ -214,6 +215,7 @@ class MongoDatabaseImpl implements MongoDatabase {
 
     @Override
     public <TResult> ListCollectionsIterable<TResult> listCollections(final ClientSession clientSession, final Class<TResult> resultClass) {
+        notNull("clientSession", clientSession);
         return executeListCollections(clientSession, resultClass);
     }
 
@@ -241,6 +243,7 @@ class MongoDatabaseImpl implements MongoDatabase {
     @Override
     public void createCollection(final ClientSession clientSession, final String collectionName,
                                  final CreateCollectionOptions createCollectionOptions) {
+        notNull("clientSession", clientSession);
         executeCreateCollection(clientSession, collectionName, createCollectionOptions);
     }
 
@@ -298,6 +301,7 @@ class MongoDatabaseImpl implements MongoDatabase {
 
     private void executeCreateView(final ClientSession clientSession, final String viewName, final String viewOn,
                                    final List<? extends Bson> pipeline, final CreateViewOptions createViewOptions) {
+        notNull("clientSession", clientSession);
         notNull("createViewOptions", createViewOptions);
         executor.execute(new CreateViewOperation(name, viewName, viewOn, createBsonDocumentList(pipeline), writeConcern)
                                  .collation(createViewOptions.getCollation()),
