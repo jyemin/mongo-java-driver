@@ -35,7 +35,7 @@ final class ListIndexesIterableImpl<TResult> extends MongoIterableImpl<TResult> 
 
     ListIndexesIterableImpl(final ClientSession clientSession, final MongoNamespace namespace, final Class<TResult> resultClass,
                             final CodecRegistry codecRegistry, final ReadPreference readPreference, final OperationExecutor executor) {
-        super(clientSession, executor, ReadConcern.DEFAULT, readPreference); // TODO: ReadConcern?
+        super(clientSession, executor, ReadConcern.DEFAULT, readPreference);
         this.namespace = notNull("namespace", namespace);
         this.resultClass = notNull("resultClass", resultClass);
         this.codecRegistry = notNull("codecRegistry", codecRegistry);

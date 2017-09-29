@@ -229,6 +229,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     @Override
     public <TResult> DistinctIterable<TResult> distinct(final ClientSession clientSession, final String fieldName, final Bson filter,
                                                         final Class<TResult> resultClass) {
+        notNull("clientSession", clientSession);
         return executeDistinct(clientSession, fieldName, filter, resultClass);
     }
 
@@ -402,7 +403,6 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public BulkWriteResult bulkWrite(final List<? extends WriteModel<? extends TDocument>> requests, final BulkWriteOptions options) {
         return executeBulkWrite(null, requests, options);
     }
@@ -805,6 +805,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     @Override
     public List<String> createIndexes(final ClientSession clientSession, final List<IndexModel> indexes) {
+        notNull("clientSession", clientSession);
         return executeCreateIndexes(clientSession, indexes);
     }
 
@@ -879,11 +880,13 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     @Override
     public void dropIndex(final ClientSession clientSession, final String indexName) {
+        notNull("clientSession", clientSession);
         executeDropIndex(clientSession, indexName);
     }
 
     @Override
     public void dropIndex(final ClientSession clientSession, final Bson keys) {
+        notNull("clientSession", clientSession);
         executeDropIndex(clientSession, keys);
     }
 
@@ -894,6 +897,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     @Override
     public void dropIndexes(final ClientSession clientSession) {
+        notNull("clientSession", clientSession);
         executeDropIndex(clientSession, "*");
     }
 
