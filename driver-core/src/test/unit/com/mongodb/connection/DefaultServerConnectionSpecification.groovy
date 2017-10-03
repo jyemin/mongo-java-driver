@@ -129,7 +129,7 @@ class DefaultServerConnectionSpecification extends Specification {
         def updates = asList(new UpdateRequest(new BsonDocument(), new BsonDocument(), WriteRequest.Type.REPLACE))
         def executor = Mock(ProtocolExecutor) {
             1 * execute({
-                compare(new UpdateCommandProtocol(namespace, true, UNACKNOWLEDGED, null, updates), it) },
+                compare(new UpdateCommandProtocol(namespace, true, ACKNOWLEDGED, null, updates), it) },
                     internalConnection, NoOpSessionContext.INSTANCE) >> {
                 BulkWriteResult.unacknowledged()
             }
@@ -147,7 +147,7 @@ class DefaultServerConnectionSpecification extends Specification {
         given:
         def deletes = asList(new DeleteRequest(new BsonDocument()))
         def executor = Mock(ProtocolExecutor) {
-            1 * execute({ compare(new DeleteCommandProtocol(namespace, true, UNACKNOWLEDGED, deletes), it) },
+            1 * execute({ compare(new DeleteCommandProtocol(namespace, true, ACKNOWLEDGED, deletes), it) },
                     internalConnection, NoOpSessionContext.INSTANCE) >> {
                 BulkWriteResult.unacknowledged()
             }
