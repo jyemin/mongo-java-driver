@@ -917,7 +917,6 @@ implements Deque<E>, java.io.Serializable {
          *
          * @return true if the element was successfully removed by this call, false if the element had already been removed by a concurrent
          * removal
-         * @implSpec
          * @throws IllegalStateException if the {@code next} method has not
          *         yet been called, or the {@code remove} method has already
          *         been called after the last call to the {@code next}

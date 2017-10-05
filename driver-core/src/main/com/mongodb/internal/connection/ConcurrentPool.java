@@ -153,14 +153,16 @@ public class ConcurrentPool<T> implements Pool<T> {
         for (RemovalReportingIterator<T> iter = available.iterator(); iter.hasNext();) {
             T cur = iter.next();
             Prune shouldPrune = itemFactory.shouldPrune(cur);
+
+            if (shouldPrune == Prune.STOP) {
+                break;
+            }
+
             if (shouldPrune == Prune.YES) {
                 boolean removed = iter.reportingRemove();
                 if (removed) {
                     close(cur);
                 }
-            }
-            if (shouldPrune == Prune.STOP) {
-                break;
             }
         }
     }
