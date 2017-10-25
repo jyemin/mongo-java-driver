@@ -284,11 +284,15 @@ public final class ClusterFixture {
     }
 
     public static SslSettings getSslSettings() {
+        return getSslSettingsBuilder().build();
+    }
+
+    public static SslSettings.Builder getSslSettingsBuilder() {
         SslSettings.Builder builder = SslSettings.builder().applyConnectionString(getConnectionString());
         if (System.getProperty("java.version").startsWith("1.6.")) {
             builder.invalidHostNameAllowed(true);
         }
-        return builder.build();
+        return builder;
     }
 
     @SuppressWarnings("deprecation")

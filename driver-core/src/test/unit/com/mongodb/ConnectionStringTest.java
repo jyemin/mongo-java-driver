@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package com.mongodb.client;
+package com.mongodb;
 
-import com.mongodb.AuthenticationMechanism;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoCredential;
 import junit.framework.TestCase;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -35,6 +32,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assume.assumeFalse;
 
 // See https://github.com/mongodb/specifications/tree/master/source/crud/tests
 @RunWith(Parameterized.class)
@@ -55,6 +54,9 @@ public class ConnectionStringTest extends TestCase {
     @Test
     public void shouldPassAllOutcomes() {
         if (filename.equals("invalid-uris.json")) {
+            // See JAVA-2645
+            assumeFalse(description.equals("Username containing unescaped slash with password"));
+            assumeFalse(description.equals("Username with password containing an unescaped slash"));
             testInvalidUris();
         } else if (filename.equals("valid-auth.json")) {
             testValidAuth();

@@ -19,6 +19,11 @@ package com.mongodb
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import javax.naming.NamingEnumeration
+import javax.naming.directory.Attribute
+import javax.naming.directory.Attributes
+import javax.naming.directory.DirContext
+
 import static com.mongodb.MongoCompressor.LEVEL
 import static com.mongodb.MongoCompressor.createZlibCompressor
 import static com.mongodb.MongoCredential.createCredential
@@ -76,6 +81,73 @@ class ConnectionStringSpecification extends Specification {
                            'host3:9/bar')                | 3   | ['10.0.0.1:7',
                                                                 '[::1]:8',
                                                                 'host3:9']          | 'bar'    | null       | 'user'   | 'pass' as char[]
+    }
+
+    def 'should throw exception if mongod+srv host contains a port'() {
+        when:
+        new ConnectionString('mongodb+srv://host1:27017')
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def 'should throw exception if mongod+srv contains multiple hosts'() {
+        when:
+        new ConnectionString('mongodb+srv://host1,host2')
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def 'should apply directory resolution'() {
+        given:
+        def connectionString = new ConnectionString('mongodb+srv://user:pass@host1/db1.coll1' +
+                '?sslInvalidHostNameAllowed=true&serverSelectionTimeoutMS=25000')
+        def srvAttribute = Mock(Attribute) {
+            1 * getAll() >> {
+                Mock(NamingEnumeration) {
+                    3 * hasMore() >>> [true, true, false]
+                    2 * next() >>> ['10 20 27018 host2', '20 20 27019 host3']
+                }
+            }
+        }
+        def txtAttribute = Mock(Attribute) {
+            1 * getAll() >> {
+                Mock(NamingEnumeration) {
+                    3 * hasMore() >>> [true, true, false]
+                    2 * next() >>> ['ssl=true&serverSelectionTimeoutMS=25000',
+                                    'authSource=authdb&authMechanism=SCRAM-SHA-1']
+                }
+            }
+        }
+        def srvAttibutes = Mock(Attributes) {
+            1 * get('SRV') >> srvAttribute
+        }
+        def txtAttributes = Mock(Attributes) {
+            1 * get('TXT') >> txtAttribute
+        }
+        def dirContext = Mock(DirContext) {
+            1 * getAttributes('_mongodb._tcp.host1', ['SRV'].toArray(new String[1])) >> srvAttibutes
+            1 * getAttributes('host1', ['TXT'].toArray(new String[1])) >> txtAttributes
+        }
+
+        expect:
+        connectionString.requiresDirectoryResolution()
+
+        when:
+        def resolvedConnectionString = connectionString.applyDirectoryResolution(dirContext)
+
+        then:
+        !resolvedConnectionString.requiresDirectoryResolution()
+        resolvedConnectionString.connectionString == connectionString.connectionString
+        resolvedConnectionString.database == 'db1'
+        resolvedConnectionString.collection == 'coll1'
+
+        resolvedConnectionString.hosts == ['host2:27018', 'host3:27019']
+        resolvedConnectionString.sslInvalidHostnameAllowed
+        resolvedConnectionString.serverSelectionTimeout == 25000
+        resolvedConnectionString.sslEnabled
+        resolvedConnectionString.credentialList == [createScramSha1Credential('user', 'authdb', 'pass'.toCharArray())]
     }
 
     def 'should correctly parse different write concerns'() {

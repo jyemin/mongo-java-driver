@@ -47,9 +47,13 @@ import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.InitialDirContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -699,6 +703,10 @@ public class Mongo {
     }
 
     private static Cluster createCluster(final MongoClientURI mongoURI, final MongoDriverInformation mongoDriverInformation) {
+        if (mongoURI.requiresDirectoryResolution()) {
+            MongoClientURI resolvedMongoURI = mongoURI.applyDirectoryResolution(createDnsDirContext());
+            return createCluster(resolvedMongoURI, mongoDriverInformation);
+        }
 
         List<MongoCredential> credentialList = mongoURI.getCredentials() != null
                                                ? singletonList(mongoURI.getCredentials())
@@ -714,6 +722,16 @@ public class Mongo {
                 seedList.add(new ServerAddress(host));
             }
             return createCluster(seedList, credentialList, mongoURI.getOptions(), mongoDriverInformation);
+        }
+    }
+
+    private static InitialDirContext createDnsDirContext() {
+        Hashtable<String, String> envProps = new Hashtable<String, String>();
+        envProps.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+        try {
+            return new InitialDirContext(envProps);
+        } catch (NamingException e) {
+            throw new MongoClientException("Unable to create JNDI context for resolving SRV records", e);
         }
     }
 

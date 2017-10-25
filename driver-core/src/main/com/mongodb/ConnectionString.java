@@ -19,6 +19,11 @@ package com.mongodb;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -57,7 +62,27 @@ import static java.util.Collections.singletonList;
  * are separated by "&amp;". For backwards compatibility, ";" is accepted as a separator in addition to "&amp;",
  * but should be considered as deprecated.</li>
  * </ul>
- *
+ * <p>An alternative format, using the mongodb+srv protocol, is:
+ * <pre>
+ *   mongodb+srv://[username:password@]host[/[database][?options]]
+ * </pre>
+ * <ul>
+ * <li>{@code mongodb+srv://} is a required prefix for this format.</li>
+ * <li>{@code username:password@} are optional.  If given, the driver will attempt to login to a database after
+ * connecting to a database server.  For some authentication mechanisms, only the username is specified and the password is not,
+ * in which case the ":" after the username is left off as well</li>
+ * <li>{@code host} is the only required part of the URI.  It identifies a single host name for which SRV records are looked up
+ * from a Domain Name Server after prefixing the host name with {@code "_mongodb._tcp"}.  The host/port for each SRV record becomes the
+ * seed list used to connect, as if each one were provided as host/port pair in a URI using the normal mongodb protocol.</li>
+ * <li>{@code /database} is the name of the database to login to and thus is only relevant if the
+ * {@code username:password@} syntax is used. If not specified the "admin" database will be used by default.</li>
+ * <li>{@code ?options} are connection options. Note that if {@code database} is absent there is still a {@code /}
+ * required between the last host and the {@code ?} introducing the options. Options are name=value pairs and the pairs
+ * are separated by "&amp;". For backwards compatibility, ";" is accepted as a separator in addition to "&amp;",
+ * but should be considered as deprecated. Additionally with the mongodb+srv protocol, TXT records are looked up from a Domain Name
+ * Server for the given host, and the text value of each one is prepended to any options on the URI itself.  Because the last specified
+ * value for any option wins, that means that options provided on the URI will override any that are provided via TXT records.</li>
+ * </ul>
  * <p>The following options are supported (case insensitive):</p>
  *
  * <p>Server Selection Configuration:</p>
@@ -194,16 +219,22 @@ import static java.util.Collections.singletonList;
  */
 public class ConnectionString {
 
-    private static final String PREFIX = "mongodb://";
+    private static final String MONGODB_PREFIX = "mongodb://";
+    private static final String MONGODB_SRV_PREFIX = "mongodb+srv://";
     private static final String UTF_8 = "UTF-8";
 
     private static final Logger LOGGER = Loggers.getLogger("uri");
 
+    private final boolean requiresDirectoryResolution;
     private final MongoCredential credentials;
     private final List<String> hosts;
     private final String database;
     private final String collection;
     private final String connectionString;
+
+    private final String userName;
+    private final char[] password;
+    private final String queryParameters;
 
     private ReadPreference readPreference;
     private WriteConcern writeConcern;
@@ -235,15 +266,24 @@ public class ConnectionString {
      */
     public ConnectionString(final String connectionString) {
         this.connectionString = connectionString;
-        if (!connectionString.startsWith(PREFIX)) {
+        final boolean isMongoDBProtocol = connectionString.startsWith(MONGODB_PREFIX);
+        final boolean isSRVProtocol = connectionString.startsWith(MONGODB_SRV_PREFIX);
+        if (!isMongoDBProtocol && !isSRVProtocol) {
             throw new IllegalArgumentException(format("The connection string is invalid. "
-                    + "Connection strings must start with '%s'", PREFIX));
+                    + "Connection strings must start with either '%s' or '%s", MONGODB_PREFIX, MONGODB_SRV_PREFIX));
         }
 
-        String unprocessedConnectionString = connectionString.substring(PREFIX.length());
+        String unprocessedConnectionString;
+        if (isMongoDBProtocol) {
+            this.requiresDirectoryResolution = false;
+            unprocessedConnectionString = connectionString.substring(MONGODB_PREFIX.length());
+        } else {
+            this.requiresDirectoryResolution = true;
+            unprocessedConnectionString = connectionString.substring(MONGODB_SRV_PREFIX.length());
+        }
 
         // Split out the user and host information
-        String userAndHostInformation = null;
+        String userAndHostInformation;
         int idx = unprocessedConnectionString.lastIndexOf("/");
         if (idx == -1) {
             if (unprocessedConnectionString.contains("?")) {
@@ -257,8 +297,8 @@ public class ConnectionString {
         }
 
         // Split the user and host information
-        String userInfo = null;
-        String hostIdentifier = null;
+        String userInfo;
+        String hostIdentifier;
         String userName = null;
         char[] password = null;
         idx = userAndHostInformation.lastIndexOf("@");
@@ -283,9 +323,11 @@ public class ConnectionString {
 
         // Validate the hosts
         hosts = Collections.unmodifiableList(parseHosts(asList(hostIdentifier.split(","))));
+        this.userName = userName;
+        this.password = password;
 
         // Process the authDB section
-        String nsPart = null;
+        String nsPart;
         idx = unprocessedConnectionString.indexOf("?");
         if (idx == -1) {
             nsPart = unprocessedConnectionString;
@@ -309,7 +351,26 @@ public class ConnectionString {
             collection = null;
         }
 
-        Map<String, List<String>> optionsMap = parseOptions(unprocessedConnectionString);
+        queryParameters = unprocessedConnectionString;
+        Map<String, List<String>> optionsMap = parseOptions(queryParameters);
+        translateOptions(optionsMap);
+        credentials = createCredentials(optionsMap, userName, password);
+        warnOnUnsupportedOptions(optionsMap);
+    }
+
+    private ConnectionString(final ConnectionString unresolvedConnectionString, final List<String> resolvedHosts,
+                             final String additionalQueryParameters) {
+        this.requiresDirectoryResolution = false;
+        this.connectionString = unresolvedConnectionString.connectionString;
+        this.hosts = resolvedHosts;
+        this.userName = unresolvedConnectionString.userName;
+        this.password = unresolvedConnectionString.password;
+        this.queryParameters = unresolvedConnectionString.queryParameters;
+        this.database = unresolvedConnectionString.database;
+        this.collection = unresolvedConnectionString.collection;
+        String separator = additionalQueryParameters.length() > 0 && queryParameters.length() > 0 ? "&" : "";
+        String completeQueryParameters = additionalQueryParameters + separator + queryParameters;
+        Map<String, List<String>> optionsMap = parseOptions(completeQueryParameters);
         translateOptions(optionsMap);
         credentials = createCredentials(optionsMap, userName, password);
         warnOnUnsupportedOptions(optionsMap);
@@ -775,6 +836,10 @@ public class ConnectionString {
             }
             hosts.add(host);
         }
+        if (requiresDirectoryResolution && hosts.size() > 1) {
+            throw new IllegalArgumentException("The mongodb+srv protocol requires a single host name but this connection string has more "
+                    + "than one: " + connectionString);
+        }
         Collections.sort(hosts);
         return hosts;
     }
@@ -792,6 +857,10 @@ public class ConnectionString {
         if (invalidPort) {
             throw new IllegalArgumentException(format("The connection string contains an invalid host '%s'. "
                     + "The port '%s' is not a valid, it must be an integer between 0 and 65535", host, port));
+        }
+        if (requiresDirectoryResolution) {
+            throw new IllegalArgumentException("A connection string using the mongodb+srv protocol can not"
+                    + "contain a host name that specifies a port");
         }
     }
 
@@ -817,6 +886,85 @@ public class ConnectionString {
     }
 
     // ---------------------------------
+
+    /**
+     * Applies directory resolution in order to resolve SRV and TXT DNS records when the protocol is {@code mongodb+srv}.
+     *
+     * <p>
+     * Ordinarily, applications will not need to call this method directly.
+     * </p>
+
+     * @param dirContext the directory context to use for resolving SRV and TXT records.
+     * @return a new MongoClientURI with directory resolution applied
+     * @see #requiresDirectoryResolution()
+     * @since 3.6
+     */
+    public ConnectionString applyDirectoryResolution(final DirContext dirContext) {
+        if (!requiresDirectoryResolution()) {
+            return this;
+        }
+
+        if (getHosts().size() != 1) {
+            throw new MongoClientException("A connection string with type mongodb+srv can contain only a single host");
+        }
+        String host = getHosts().get(0);
+        List<String> hosts = new ArrayList<String>();
+        try {
+            Attributes attributes = dirContext.getAttributes("_mongodb._tcp." + host, new String[]{"SRV"});
+            Attribute attribute = attributes.get("SRV");
+            if (attribute == null) {
+                throw new MongoClientException("No SRV record available for host " + host);
+            }
+            NamingEnumeration<?> srvRecordEnumeration = attribute.getAll();
+            while (srvRecordEnumeration.hasMore()) {
+                String srvRecord = (String) srvRecordEnumeration.next();
+                String[] split = srvRecord.split(" ");
+                String resolvedHost = split[3].endsWith(".") ? split[3].substring(0, split[3].length() - 1) : split[3];
+                hosts.add(resolvedHost + ":" + split[2]);
+            }
+        } catch (NamingException e) {
+            throw new MongoClientException("Unable to look up SRV record for host " + host, e);
+        }
+
+        String additionalQueryParameters = "";
+        try {
+            Attributes attributes = dirContext.getAttributes(host, new String[]{"TXT"});
+            Attribute attribute = attributes.get("TXT");
+            if (attribute != null) {
+                StringBuilder additionalQueryParametersBuilder = new StringBuilder();
+                NamingEnumeration<?> txtRecordEnumeration = attribute.getAll();
+                while (txtRecordEnumeration.hasMore()) {
+                    String txtRecord = (String) txtRecordEnumeration.next();
+                    if (!additionalQueryParametersBuilder.toString().isEmpty()) {
+                        additionalQueryParametersBuilder.append('&');
+                    }
+                    additionalQueryParametersBuilder.append(txtRecord);
+                }
+                additionalQueryParameters = additionalQueryParametersBuilder.toString();
+            }
+        } catch (NamingException e) {
+            throw new MongoClientException("Unable to look up SRV record for host " + host, e);
+        }
+
+        return new ConnectionString(this, hosts, additionalQueryParameters);
+    }
+
+
+    /**
+     * Returns true if the URI requires directory resolution in order to resolve SRV and TXT DNS records, i.e if the
+     * protocol is {@code mongodb+srv}.
+     *
+     * <p>
+     * Ordinarily, applications will not need to call this method directly.
+     * </p>
+     *
+     * @return true if resolution is required
+     * @see #applyDirectoryResolution(DirContext)
+     * @since 3.6
+     */
+    public boolean requiresDirectoryResolution() {
+        return requiresDirectoryResolution;
+    }
 
     /**
      * Gets the username

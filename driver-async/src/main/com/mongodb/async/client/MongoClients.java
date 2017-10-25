@@ -19,6 +19,7 @@ package com.mongodb.async.client;
 import com.mongodb.ConnectionString;
 import com.mongodb.DBRefCodecProvider;
 import com.mongodb.DocumentToDBRefTransformer;
+import com.mongodb.MongoClientException;
 import com.mongodb.client.MongoDriverInformation;
 import com.mongodb.client.gridfs.codecs.GridFSFileCodecProvider;
 import com.mongodb.client.model.geojson.codecs.GeoJsonCodecProvider;
@@ -38,7 +39,11 @@ import org.bson.codecs.MapCodecProvider;
 import org.bson.codecs.ValueCodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.InitialDirContext;
 import java.io.Closeable;
+import java.util.Hashtable;
 
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
 import static java.util.Arrays.asList;
@@ -135,21 +140,82 @@ public final class MongoClients {
      * @see MongoClients#create(ConnectionString)
      */
     public static MongoClient create(final ConnectionString connectionString, final MongoDriverInformation mongoDriverInformation) {
+        return create(connectionString, mongoDriverInformation, ClusterSettings.builder(), ConnectionPoolSettings.builder(),
+                ServerSettings.builder(), SslSettings.builder(), SocketSettings.builder());
+    }
+
+    /**
+     * Create a new client with the given connection string.
+     *
+     * <p>Note: Intended for driver and library authors to associate extra driver metadata with the connections.</p>
+     *
+     * @param connectionString               a non-null connection string
+     * @param clusterSettingsBuilder         a non-null builder for cluster settings
+     * @param connectionPoolSettingsBuilder  a non-null builder for connection pool  settings
+     * @param serverSettingsBuilder          a non-null builder for server settings
+     * @param sslSettingsBuilder             a non-null builder for SSL settings
+     * @param socketSettingsBuilder          a non-null builder for socket settings
+     * @return the client
+     * @throws IllegalArgumentException if the connection string's stream type is not one of "netty" or "nio2"
+     * @see MongoClients#create(ConnectionString)
+     * @since 3.6
+     */
+    public static MongoClient create(final ConnectionString connectionString,
+                                     final ClusterSettings.Builder clusterSettingsBuilder,
+                                     final ConnectionPoolSettings.Builder connectionPoolSettingsBuilder,
+                                     final ServerSettings.Builder serverSettingsBuilder,
+                                     final SslSettings.Builder sslSettingsBuilder,
+                                     final SocketSettings.Builder socketSettingsBuilder) {
+        return create(connectionString, null, clusterSettingsBuilder, connectionPoolSettingsBuilder, serverSettingsBuilder,
+                sslSettingsBuilder, socketSettingsBuilder);
+    }
+
+    /**
+     * Create a new client with the given connection string.
+     *
+     * <p>Note: Intended for driver and library authors to associate extra driver metadata with the connections.</p>
+     *
+     * @param connectionString               a non-null connection string
+     * @param mongoDriverInformation         any driver information to associate with the MongoClient
+     * @param clusterSettingsBuilder         a non-null builder for cluster settings
+     * @param connectionPoolSettingsBuilder  a non-null builder for connection pool  settings
+     * @param serverSettingsBuilder          a non-null builder for server settings
+     * @param sslSettingsBuilder             a non-null builder for SSL settings
+     * @param socketSettingsBuilder          a non-null builder for socket settings
+     * @return the client
+     * @throws IllegalArgumentException if the connection string's stream type is not one of "netty" or "nio2"
+     * @see MongoClients#create(ConnectionString)
+     * @since 3.6
+     */
+    public static MongoClient create(final ConnectionString connectionString,
+                                     final MongoDriverInformation mongoDriverInformation,
+                                     final ClusterSettings.Builder clusterSettingsBuilder,
+                                     final ConnectionPoolSettings.Builder connectionPoolSettingsBuilder,
+                                     final ServerSettings.Builder serverSettingsBuilder,
+                                     final SslSettings.Builder sslSettingsBuilder,
+                                     final SocketSettings.Builder socketSettingsBuilder) {
+
+        if (connectionString.requiresDirectoryResolution()) {
+            return create(connectionString.applyDirectoryResolution(createDnsDirContext()),
+                    mongoDriverInformation, clusterSettingsBuilder, connectionPoolSettingsBuilder, serverSettingsBuilder,
+                    sslSettingsBuilder, socketSettingsBuilder);
+        }
+
         MongoClientSettings.Builder builder = MongoClientSettings.builder()
-                .clusterSettings(ClusterSettings.builder()
+                .clusterSettings(clusterSettingsBuilder
                         .applyConnectionString(connectionString)
                         .build())
-                .connectionPoolSettings(ConnectionPoolSettings.builder()
+                .connectionPoolSettings(connectionPoolSettingsBuilder
                         .applyConnectionString(connectionString)
                         .build())
-                .serverSettings(ServerSettings.builder()
+                .serverSettings(serverSettingsBuilder
                         .applyConnectionString(connectionString)
                         .build())
                 .credentialList(connectionString.getCredentialList())
-                .sslSettings(SslSettings.builder()
+                .sslSettings(sslSettingsBuilder
                         .applyConnectionString(connectionString)
                         .build())
-                .socketSettings(SocketSettings.builder()
+                .socketSettings(socketSettingsBuilder
                         .applyConnectionString(connectionString)
                         .build());
 
@@ -249,6 +315,16 @@ public final class MongoClients {
             return requestedStreamType;
         } else {
             return System.getProperty("org.mongodb.async.type", "nio2");
+        }
+    }
+
+    private static InitialDirContext createDnsDirContext() {
+        Hashtable<String, String> envProps = new Hashtable<String, String>();
+        envProps.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+        try {
+            return new InitialDirContext(envProps);
+        } catch (NamingException e) {
+            throw new MongoClientException("Unable to create JNDI context for resolving SRV records", e);
         }
     }
 

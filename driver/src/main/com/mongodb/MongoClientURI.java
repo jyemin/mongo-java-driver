@@ -16,6 +16,7 @@
 
 package com.mongodb;
 
+import javax.naming.directory.DirContext;
 import java.util.List;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -41,6 +42,27 @@ import static com.mongodb.assertions.Assertions.notNull;
  * required between the last host and the {@code ?} introducing the options. Options are name=value pairs and the pairs
  * are separated by "&amp;". For backwards compatibility, ";" is accepted as a separator in addition to "&amp;",
  * but should be considered as deprecated.</li>
+ * </ul>
+ * <p>An alternative format, using the mongodb+srv protocol, is:
+ * <pre>
+ *   mongodb+srv://[username:password@]host[/[database][?options]]
+ * </pre>
+ * <ul>
+ * <li>{@code mongodb+srv://} is a required prefix for this format.</li>
+ * <li>{@code username:password@} are optional.  If given, the driver will attempt to login to a database after
+ * connecting to a database server.  For some authentication mechanisms, only the username is specified and the password is not,
+ * in which case the ":" after the username is left off as well</li>
+ * <li>{@code host} is the only required part of the URI.  It identifies a single host name for which SRV records are looked up
+ * from a Domain Name Server after prefixing the host name with {@code "_mongodb._tcp"}.  The host/port for each SRV record becomes the
+ * seed list used to connect, as if each one were provided as host/port pair in a URI using the normal mongodb protocol.</li>
+ * <li>{@code /database} is the name of the database to login to and thus is only relevant if the
+ * {@code username:password@} syntax is used. If not specified the "admin" database will be used by default.</li>
+ * <li>{@code ?options} are connection options. Note that if {@code database} is absent there is still a {@code /}
+ * required between the last host and the {@code ?} introducing the options. Options are name=value pairs and the pairs
+ * are separated by "&amp;". For backwards compatibility, ";" is accepted as a separator in addition to "&amp;",
+ * but should be considered as deprecated. Additionally with the mongodb+srv protocol, TXT records are looked up from a Domain Name
+ * Server for the given host, and the text value of each one is prepended to any options on the URI itself.  Because the last specified
+ * value for any option wins, that means that options provided on the URI will override any that are provided via TXT records.</li>
  * </ul>
  * <p>The following options are supported (case insensitive):</p>
  *
@@ -68,6 +90,8 @@ import static com.mongodb.assertions.Assertions.notNull;
  * <li>{@code sslInvalidHostNameAllowed=true|false}: Whether to allow invalid host names for SSL connections.</li>
  * <li>{@code connectTimeoutMS=ms}: How long a connection can take to be opened before timing out.</li>
  * <li>{@code socketTimeoutMS=ms}: How long a send or receive on a socket can take before timing out.</li>
+ * <li>{@code maxIdleTimeMS=ms}: Maximum idle time of a pooled connection. A connection that exceeds this limit will be closed</li>
+ * <li>{@code maxLifeTimeMS=ms}: Maximum life time of a pooled connection. A connection that exceeds this limit will be closed</li>
  * </ul>
  *
  * <p>Connection pool configuration:</p>
@@ -204,12 +228,47 @@ public class MongoClientURI {
      * @since 2.11.0
      */
     public MongoClientURI(final String uri, final MongoClientOptions.Builder builder) {
-        this.builder = notNull("builder", builder);
-        proxied = new ConnectionString(uri);
+        this(new ConnectionString(uri), builder);
     }
 
+    private MongoClientURI(final ConnectionString connectionString, final MongoClientOptions.Builder builder) {
+        this.builder = notNull("builder", builder);
+        proxied = connectionString;
+    }
 
     // ---------------------------------
+
+    /**
+     * Returns true if the URI requires directory resolution in order to resolve SRV and TXT DNS records, i.e if the
+     * protocol is {@code mongodb+srv}.
+     *
+     * <p>
+     * Ordinarily, applications will not need to call this method directly.
+     * </p>
+     *
+     * @return true if resolution is required
+     * @see #applyDirectoryResolution(DirContext)
+     * @since 3.6
+     */
+    public boolean requiresDirectoryResolution() {
+        return proxied.requiresDirectoryResolution();
+    }
+
+    /**
+     * Applies directory resolution in order to resolve SRV and TXT DNS records when the protocol is {@code mongodb+srv}.
+     *
+     * <p>
+     * Ordinarily, applications will not need to call this method directly.
+     * </p>
+
+     * @param dirContext the directory context to use for resolving SRV and TXT records.
+     * @return a new MongoClientURI with directory resolution applied
+     * @see #requiresDirectoryResolution()
+     * @since 3.6
+     */
+    public MongoClientURI applyDirectoryResolution(final DirContext dirContext) {
+        return new MongoClientURI(proxied.applyDirectoryResolution(dirContext), builder);
+    }
 
     /**
      * Gets the username
