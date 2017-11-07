@@ -815,7 +815,7 @@ public class ConnectionString {
                 }
                 int idx = host.indexOf("]:");
                 if (idx != -1) {
-                    validatePort(host, host.substring(idx + 2), isSRVProtocol);
+                    validatePort(host, host.substring(idx + 2));
                 }
             } else {
                 int colonCount = countOccurrences(host, ":");
@@ -824,7 +824,12 @@ public class ConnectionString {
                             + "Reserved characters such as ':' must be escaped according RFC 2396. "
                             + "Any IPv6 address literal must be enclosed in '[' and ']' according to RFC 2732.", host));
                 } else if (colonCount == 1) {
-                    validatePort(host, host.substring(host.indexOf(":") + 1), isSRVProtocol);
+                    if (isSRVProtocol) {
+                        throw new IllegalArgumentException("A connection string using the mongodb+srv protocol can not"
+                                + "contain a host name that specifies a port");
+                    }
+
+                    validatePort(host, host.substring(host.indexOf(":") + 1));
                 }
             }
             hosts.add(host);
@@ -837,7 +842,7 @@ public class ConnectionString {
         return hosts;
     }
 
-    private void validatePort(final String host, final String port, final boolean isSRVProtocol) {
+    private void validatePort(final String host, final String port) {
         boolean invalidPort = false;
         try {
             int portInt = Integer.parseInt(port);
@@ -850,10 +855,6 @@ public class ConnectionString {
         if (invalidPort) {
             throw new IllegalArgumentException(format("The connection string contains an invalid host '%s'. "
                     + "The port '%s' is not a valid, it must be an integer between 0 and 65535", host, port));
-        }
-        if (isSRVProtocol) {
-            throw new IllegalArgumentException("A connection string using the mongodb+srv protocol can not"
-                    + "contain a host name that specifies a port");
         }
     }
 
