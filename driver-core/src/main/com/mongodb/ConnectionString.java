@@ -344,12 +344,14 @@ public class ConnectionString {
             collection = null;
         }
 
-        String additionalQueryParameters = isSRVProtocol ? resolveAdditionalQueryParametersFromTxtRecords(unresolvedHosts.get(0)) : "";
-        String queryParameters = combineQueryParameters(unprocessedConnectionString, additionalQueryParameters);
-        Map<String, List<String>> optionsMap = parseOptions(queryParameters);
-        translateOptions(optionsMap);
-        credential = createCredentials(optionsMap, userName, password);
-        warnOnUnsupportedOptions(optionsMap);
+        String txtRecordsQueryParameters = isSRVProtocol ? resolveAdditionalQueryParametersFromTxtRecords(unresolvedHosts.get(0)) : "";
+        String connectionStringQueryParamenters = unprocessedConnectionString;
+
+        Map<String, List<String>> connectionStringOptionsMap = parseOptions(connectionStringQueryParamenters);
+        Map<String, List<String>> txtRecordsOptionsMap = parseOptions(txtRecordsQueryParameters);
+        translateOptions(combineOptionsMaps(txtRecordsOptionsMap, connectionStringOptionsMap));
+        credential = createCredentials(connectionStringOptionsMap, userName, password);
+        warnOnUnsupportedOptions(connectionStringOptionsMap);
     }
 
     private static final Set<String> GENERAL_OPTIONS_KEYS = new HashSet<String>();
@@ -407,11 +409,17 @@ public class ConnectionString {
         ALL_KEYS.addAll(COMPRESSOR_KEYS);
     }
 
-
-    private String combineQueryParameters(final String unprocessedConnectionString, final String additionalQueryParameters) {
-        String separator = additionalQueryParameters.length() > 0 && unprocessedConnectionString.length() > 0 ? "&" : "";
-        return additionalQueryParameters + separator + unprocessedConnectionString;
+    // Any options contained in the connection string completely replace the corresponding options specified in TXT records,
+    // even for options which multiple values, e.g. readPreferenceTags
+    private Map<String, List<String>> combineOptionsMaps(final Map<String, List<String>> txtRecordsOptionsMap,
+                                                         final Map<String, List<String>> connectionStringOptionsMap) {
+        Map<String, List<String>> combinedOptionsMaps = new HashMap<String, List<String>>(txtRecordsOptionsMap);
+        for (Map.Entry<String, List<String>> entry : connectionStringOptionsMap.entrySet()) {
+            combinedOptionsMaps.put(entry.getKey(), entry.getValue());
+        }
+        return combinedOptionsMaps;
     }
+
 
     private void warnOnUnsupportedOptions(final Map<String, List<String>> optionsMap) {
         for (final String key : optionsMap.keySet()) {

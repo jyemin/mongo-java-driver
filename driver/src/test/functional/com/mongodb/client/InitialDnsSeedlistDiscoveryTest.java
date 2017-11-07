@@ -22,6 +22,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import org.bson.BsonArray;
+import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -55,23 +56,27 @@ public class InitialDnsSeedlistDiscoveryTest {
     private final String uri;
     private final List<String> seeds;
     private final List<ServerAddress> hosts;
+    private final boolean isError;
     private final BsonDocument options;
 
     public InitialDnsSeedlistDiscoveryTest(final String filename, final String uri, final List<String> seeds,
-                                           final List<ServerAddress> hosts, final BsonDocument options) {
+                                           final List<ServerAddress> hosts, final boolean isError, final BsonDocument options) {
         this.filename = filename;
         this.uri = uri;
         this.seeds = seeds;
         this.hosts = hosts;
+        this.isError = isError;
         this.options = options;
     }
 
     @Test
     public void shouldResolve() {
-        if (seeds.isEmpty()) {
+        if (isError) {
             try {
                 new MongoClientURI(this.uri);
                 fail();
+            } catch (IllegalArgumentException e) {
+               // all good
             } catch (MongoClientException e) {
                 assertEquals(NameNotFoundException.class, e.getCause().getClass());
             }
@@ -141,6 +146,7 @@ public class InitialDnsSeedlistDiscoveryTest {
                     testDocument.getString("uri").getValue(),
                     toStringList(testDocument.getArray("seeds")),
                     toServerAddressList(testDocument.getArray("hosts")),
+                    testDocument.getBoolean("error", BsonBoolean.FALSE).getValue(),
                     testDocument.getDocument("options", new BsonDocument())
             });
 
