@@ -42,6 +42,7 @@ import com.mongodb.operation.FsyncUnlockOperation;
 import com.mongodb.operation.ListDatabasesOperation;
 import com.mongodb.operation.ReadOperation;
 import com.mongodb.operation.WriteOperation;
+import com.mongodb.selector.CompositeServerSelector;
 import com.mongodb.selector.LatencyMinimizingServerSelector;
 import com.mongodb.selector.ServerSelector;
 import org.bson.BsonBoolean;
@@ -49,6 +50,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -756,13 +758,24 @@ public class Mongo {
                 .mode(clusterConnectionMode)
                 .requiredReplicaSetName(options.getRequiredReplicaSetName())
                 .serverSelectionTimeout(options.getServerSelectionTimeout(), MILLISECONDS)
-                .serverSelector(new LatencyMinimizingServerSelector(options.getLocalThreshold(), MILLISECONDS))
+                .serverSelector(getServerSelector(options))
                 .description(options.getDescription())
                 .maxWaitQueueSize(options.getConnectionPoolSettings().getMaxWaitQueueSize());
         for (ClusterListener clusterListener: options.getClusterListeners()) {
             builder.addClusterListener(clusterListener);
         }
         return builder.build();
+    }
+
+    private static ServerSelector getServerSelector(final MongoClientOptions options) {
+        LatencyMinimizingServerSelector latencyMinimizingServerSelector =
+                new LatencyMinimizingServerSelector(options.getLocalThreshold(), MILLISECONDS);
+
+        if (options.getServerSelector() == null) {
+            return latencyMinimizingServerSelector;
+        }
+
+        return new CompositeServerSelector(Arrays.asList(options.getServerSelector(), latencyMinimizingServerSelector));
     }
 
     Cluster getCluster() {
