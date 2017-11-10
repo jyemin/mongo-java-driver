@@ -53,6 +53,8 @@ class MongoClientSettingsSpecification extends Specification {
         options.serverSettings == ServerSettings.builder().build()
         options.streamFactoryFactory == null
         options.compressorList == []
+        options.credentialList == []
+        options.credential == null
     }
 
     @SuppressWarnings('UnnecessaryObjectReferences')
@@ -97,6 +99,11 @@ class MongoClientSettingsSpecification extends Specification {
 
         when:
         builder.writeConcern(null)
+        then:
+        thrown(IllegalArgumentException)
+
+        when:
+        builder.credential(null)
         then:
         thrown(IllegalArgumentException)
 
@@ -169,6 +176,7 @@ class MongoClientSettingsSpecification extends Specification {
         options.serverSettings == serverSettings
         options.codecRegistry == codecRegistry
         options.credentialList == credentialList
+        options.credential == credentialList.get(0)
         options.connectionPoolSettings == connectionPoolSettings
         options.clusterSettings == clusterSettings
         options.streamFactoryFactory == streamFactoryFactory
