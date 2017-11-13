@@ -272,11 +272,7 @@ public class MongoClientURI {
      * @return the credentials
      */
     public MongoCredential getCredentials() {
-        if (proxied.getCredentialList().isEmpty()) {
-            return null;
-        } else {
-            return proxied.getCredentialList().get(0);
-        }
+        return proxied.getCredential();
     }
 
     /**

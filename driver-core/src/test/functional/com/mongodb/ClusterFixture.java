@@ -257,6 +257,7 @@ public final class ClusterFixture {
         return asyncCluster;
     }
 
+    @SuppressWarnings("deprecation")
     public static Cluster createCluster(final StreamFactory streamFactory) {
         return new DefaultClusterFactory().createCluster(ClusterSettings.builder().applyConnectionString(getConnectionString()).build(),
                                                   ServerSettings.builder().build(),
@@ -301,6 +302,7 @@ public final class ClusterFixture {
         return serverDescriptions.get(0).getAddress();
     }
 
+    @SuppressWarnings("deprecation")
     public static List<MongoCredential> getCredentialList() {
         return getConnectionString().getCredentialList();
     }
@@ -319,7 +321,7 @@ public final class ClusterFixture {
     }
 
     public static boolean isAuthenticated() {
-        return !getConnectionString().getCredentialList().isEmpty();
+        return getConnectionString().getCredential() != null;
     }
 
     public static void enableMaxTimeFailPoint() {
