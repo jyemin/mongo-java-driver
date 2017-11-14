@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import static org.gradle.util.CollectionUtils.single
+import org.gradle.internal.jvm.Jvm
 
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -110,7 +112,7 @@ configure(subprojects.findAll { it.name != 'util' }) {
 
         options.author = true
         options.version = true
-        options.links 'http://docs.oracle.com/javase/7/docs/api/'
+        options.links 'http://docs.oracle.com/javase/9/docs/api/'
         options.tagletPath single(project(':util').sourceSets.main.output.classesDirs)
         options.taglets 'ManualTaglet'
         options.taglets 'ServerReleaseTaglet'
@@ -165,7 +167,9 @@ def getGitVersion() {
 
 configure(subprojects.findAll { it.name != 'util' && it.name != 'mongo-java-driver' }) {
     apply plugin: 'checkstyle'
-    apply plugin: 'findbugs'
+    if (Jvm.current().javaVersion != JavaVersion.VERSION_1_9) {
+        apply plugin: 'findbugs'
+    }
     apply plugin: 'jacoco'
     apply plugin: 'groovy'
     apply plugin: 'codenarc'
@@ -266,12 +270,14 @@ configure(subprojects.findAll { it.name != 'util' && it.name != 'mongo-java-driv
         configProperties.checkstyleConfigDir = configDir
     }
 
-    findbugs {
-        excludeFilter = new File(configDir, 'findbugs-exclude.xml')
-        sourceSets = [sourceSets.main]
-        toolVersion = '3.0.1'
+    if (Jvm.current().javaVersion != JavaVersion.VERSION_1_9) {
+        findbugs {
+            excludeFilter = new File(configDir, 'findbugs-exclude.xml')
+            sourceSets = [sourceSets.main]
+            toolVersion = '3.0.1'
+        }
     }
-
+    
     codenarc {
         toolVersion = '0.24'
         reportFormat = project.buildingWith('xmlReports.enabled') ? 'xml' : 'html'
@@ -300,7 +306,6 @@ configure(subprojects.findAll { it.name != 'util' && it.name != 'mongo-java-driv
 
 task docs(type: Javadoc) {
     source subprojects.grep({ it.name != 'util' }).collect {project -> project.sourceSets.main.allJava }
-//    options = subprojects.first().javadoc.options
     dependsOn = subprojects.first().javadoc.dependsOn
     excludes =  subprojects.first().javadoc.excludes
     classpath = files(subprojects.collect {project -> project.sourceSets.main.compileClasspath})

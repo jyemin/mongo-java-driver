@@ -9,16 +9,16 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #                               "jdk5", "jdk6", "jdk7", "jdk8"
 
 JDK=${JDK:-jdk}
-JAVA_HOME="/opt/java/${JDK}"
 
 ############################################
 #            Main Program                  #
 ############################################
 
 echo "Running PLAIN authentication tests"
+echo "Compiling java driver with jdk9"
 
 # We always compile with the latest version of java
-export JAVA_HOME="/opt/java/jdk8"
+export JAVA_HOME="/opt/java/jdk9"
 
 echo "Running tests with ${JDK}"
 ./gradlew -version
