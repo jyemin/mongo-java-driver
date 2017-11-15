@@ -76,7 +76,10 @@ public final class DnsResolver {
                 StringBuilder additionalQueryParametersBuilder = new StringBuilder();
                 NamingEnumeration<?> txtRecordEnumeration = attribute.getAll();
                 while (txtRecordEnumeration.hasMore()) {
-                    String txtRecord = (String) txtRecordEnumeration.next();
+                    // Remove all space characters, as the DNS resolver for TXT records inserts a space character
+                    // between each character-string in a single TXT record.  That whitespace is spurious in
+                    // this context and must be removed
+                    String txtRecord = ((String) txtRecordEnumeration.next()).replaceAll("\\s", "");
                     if (!additionalQueryParametersBuilder.toString().isEmpty()) {
                         additionalQueryParametersBuilder.append('&');
                     }

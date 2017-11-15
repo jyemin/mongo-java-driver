@@ -349,9 +349,10 @@ public class ConnectionString {
 
         Map<String, List<String>> connectionStringOptionsMap = parseOptions(connectionStringQueryParamenters);
         Map<String, List<String>> txtRecordsOptionsMap = parseOptions(txtRecordsQueryParameters);
-        translateOptions(combineOptionsMaps(txtRecordsOptionsMap, connectionStringOptionsMap));
-        credential = createCredentials(connectionStringOptionsMap, userName, password);
-        warnOnUnsupportedOptions(connectionStringOptionsMap);
+        Map<String, List<String>> combinedOptionsMaps = combineOptionsMaps(txtRecordsOptionsMap, connectionStringOptionsMap);
+        translateOptions(combinedOptionsMaps);
+        credential = createCredentials(combinedOptionsMaps, userName, password);
+        warnOnUnsupportedOptions(combinedOptionsMaps);
     }
 
     private static final Set<String> GENERAL_OPTIONS_KEYS = new HashSet<String>();
