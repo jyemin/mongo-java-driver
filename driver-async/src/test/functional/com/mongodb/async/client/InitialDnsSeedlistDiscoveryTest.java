@@ -19,6 +19,9 @@ package com.mongodb.async.client;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientException;
 import com.mongodb.ServerAddress;
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
+import com.mongodb.TaggableReadPreference;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ServerDescription;
@@ -100,6 +103,11 @@ public class InitialDnsSeedlistDiscoveryTest {
                     assertEquals(entry.getValue().asString().getValue(), connectionString.getRequiredReplicaSetName());
                 } else if (entry.getKey().equals("socketTimeoutMS")) {
                     assertEquals(entry.getValue().asNumber().intValue(), (int) connectionString.getSocketTimeout());
+                } else if (entry.getKey().equals("readPreference")) {
+                    assertEquals(entry.getValue().asString().getValue(), connectionString.getReadPreference().getName());
+                } else if (entry.getKey().equals("readPreferenceTags")) {
+                    assertEquals(asTagSetList(entry.getValue().asArray()),
+                            ((TaggableReadPreference) connectionString.getReadPreference()).getTagSetList());
                 } else {
                     throw new UnsupportedOperationException("No support configured yet for " + entry.getKey());
                 }
@@ -107,6 +115,19 @@ public class InitialDnsSeedlistDiscoveryTest {
         }
     }
 
+    private List<TagSet> asTagSetList(final BsonArray bsonArray) {
+        List<TagSet> retVal = new ArrayList<TagSet>(bsonArray.size());
+        for (BsonValue cur : bsonArray) {
+            BsonDocument curDocument = cur.asDocument();
+            List<Tag> tagList = new ArrayList<Tag>(curDocument.size());
+            for (Map.Entry<String, BsonValue> curEntry : curDocument.entrySet()) {
+                tagList.add(new Tag(curEntry.getKey(), curEntry.getValue().asString().getValue()));
+            }
+            retVal.add(new TagSet(tagList));
+        }
+        return retVal;
+    }
+    
     @Test
     public void shouldDiscover() throws InterruptedException {
         if (seeds.isEmpty()) {
