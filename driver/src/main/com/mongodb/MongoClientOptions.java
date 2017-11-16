@@ -18,7 +18,6 @@ package com.mongodb;
 
 import com.mongodb.annotations.Immutable;
 import com.mongodb.annotations.NotThreadSafe;
-import com.mongodb.connection.ClusterDescription;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
@@ -1352,32 +1351,13 @@ public class MongoClientOptions {
         }
 
         /**
-         * Sets the server selector.
-         *
-         * <p>The server selector augments the normal server selection rules applied by the driver when determining
-         * which server to send an operation to.  At the point that it's called by the driver, the
-         * {@link com.mongodb.connection.ClusterDescription} which is passed to it contains a list of
-         * {@link com.mongodb.connection.ServerDescription} instances which satisfy either the configured {@link ReadPreference} for any
-         * read operation or ones that can take writes (e.g. a standalone, mongos, or replica set primary).</p>
-         * <p>The server selector can then filter the {@code ServerDescription} list using whatever criteria that is required by the
-         * application.</p>
-         * <p>After this selector executes, two additional selectors are applied by the driver:</p>
-         * <ul>
-         * <li>select from within the latency window</li>
-         * <li>select a random server from those remaining</li>
-         * </ul>
-         * <p>To skip the latency window selector, an application can:</p>
-         * <ul>
-         * <li>configure the local threshold to a sufficiently high value so that it doesn't exclude any servers</li>
-         * <li>return a list containing a single server from this selector (which will also make the random member selector a no-op)</li>
-         * </ul>
+         * Sets a server selector that augments the normal server selection rules applied by the driver when determining
+         * which server to send an operation to.  See {@link #getServerSelector()} for further details.
          *
          * @param serverSelector the server selector
          * @return this
          * @since 3.6
-         * @see ReadPreference
-         * @see ClusterDescription#getServerDescriptions()
-         * @see #getLocalThreshold()
+         * @see #getServerSelector()
          */
         public Builder serverSelector(final ServerSelector serverSelector) {
             this.serverSelector = serverSelector;
