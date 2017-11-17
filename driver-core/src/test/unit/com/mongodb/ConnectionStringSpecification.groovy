@@ -78,6 +78,22 @@ class ConnectionStringSpecification extends Specification {
                                                                 'host3:9']          | 'bar'    | null       | 'user'   | 'pass' as char[]
     }
 
+    def 'should throw exception if mongod+srv host contains a port'() {
+        when:
+        new ConnectionString('mongodb+srv://host1:27017')
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def 'should throw exception if mongod+srv contains multiple hosts'() {
+        when:
+        new ConnectionString('mongodb+srv://host1,host2')
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
     def 'should correctly parse different write concerns'() {
         expect:
         uri.getWriteConcern() == writeConcern
