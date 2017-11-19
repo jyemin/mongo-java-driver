@@ -34,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import util.JsonPoweredTestHelper;
 
-import javax.naming.NameNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -81,7 +80,7 @@ public class InitialDnsSeedlistDiscoveryTest {
             } catch (IllegalArgumentException e) {
                // all good
             } catch (MongoClientException e) {
-                assertEquals(NameNotFoundException.class, e.getCause().getClass());
+                // all good
             }
         } else {
             MongoClientURI uri = new MongoClientURI(this.uri);

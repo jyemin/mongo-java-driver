@@ -39,7 +39,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import util.JsonPoweredTestHelper;
 
-import javax.naming.NameNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -88,7 +87,7 @@ public class InitialDnsSeedlistDiscoveryTest {
             } catch (IllegalArgumentException e) {
                 // all good
             } catch (MongoClientException e) {
-                assertEquals(NameNotFoundException.class, e.getCause().getClass());
+                // all good
             }
         } else {
             ConnectionString connectionString = new ConnectionString(this.uri);
@@ -127,7 +126,7 @@ public class InitialDnsSeedlistDiscoveryTest {
         }
         return retVal;
     }
-    
+
     @Test
     public void shouldDiscover() throws InterruptedException {
         if (seeds.isEmpty()) {
