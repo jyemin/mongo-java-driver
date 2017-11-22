@@ -473,4 +473,25 @@ class ConnectionStringSpecification extends Specification {
                            + 'authMechanism=SCRAM-SHA-1')            | new ConnectionString('mongodb://ross:123@localhost/?'
                                                                                           + 'authMechanism=GSSAPI')
     }
+
+    // these next two tests are functionally part of the initial-dns-seedlist-discovery specification tests, but since those
+    // tests require that the driver connects to an actual replica set, it isn't possible to create specification tests
+    // with URIs containing user names, since connection to a replica set that doesn't have that user defined would fail.
+    // So to ensure there is proper test coverage of an authSource property specified in a TXT record, adding those tests here.
+
+    def 'should use authSource from TXT record'() {
+        given:
+        def uri = new ConnectionString('mongodb+srv://bob:pwd@test5.test.build.10gen.cc/')
+
+        expect:
+        uri.credential == createCredential('bob', 'thisDB', 'pwd'.toCharArray())
+    }
+
+    def 'should override authSource from TXT record with authSource from connectionString'() {
+        given:
+        def uri = new ConnectionString('mongodb+srv://bob:pwd@test5.test.build.10gen.cc/?authSource=otherDB')
+
+        expect:
+        uri.credential == createCredential('bob', 'otherDB', 'pwd'.toCharArray())
+    }
 }
