@@ -21,9 +21,6 @@ import com.mongodb.MongoClientException;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
-import com.mongodb.Tag;
-import com.mongodb.TagSet;
-import com.mongodb.TaggableReadPreference;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
@@ -73,9 +70,14 @@ public class InitialDnsSeedlistDiscoveryTest {
 
     @Test
     public void shouldResolve() {
+        MongoClientOptions.Builder builder = MongoClientOptions.builder();
+        if (System.getProperty("java.version").startsWith("1.6.")) {
+            builder.sslInvalidHostNameAllowed(true);
+        }
+
         if (isError) {
             try {
-                new MongoClientURI(this.uri);
+                new MongoClientURI(this.uri, builder);
                 fail();
             } catch (IllegalArgumentException e) {
                // all good
@@ -83,24 +85,22 @@ public class InitialDnsSeedlistDiscoveryTest {
                 // all good
             }
         } else {
-            MongoClientURI uri = new MongoClientURI(this.uri);
+            MongoClientURI uri = new MongoClientURI(this.uri, builder);
 
             assertEquals(seeds.size(), uri.getHosts().size());
             assertTrue(uri.getHosts().containsAll(seeds));
 
             MongoClientOptions mongoClientOptions = uri.getOptions();
             for (Map.Entry<String, BsonValue> entry : options.entrySet()) {
-                if (entry.getKey().equals("connectTimeoutMS")) {
-                    assertEquals(entry.getValue().asNumber().intValue(), mongoClientOptions.getConnectTimeout());
-                } else if (entry.getKey().equals("replicaSet")) {
+                if (entry.getKey().equals("replicaSet")) {
                     assertEquals(entry.getValue().asString().getValue(), mongoClientOptions.getRequiredReplicaSetName());
-                } else if (entry.getKey().equals("socketTimeoutMS")) {
-                    assertEquals(entry.getValue().asNumber().intValue(), mongoClientOptions.getSocketTimeout());
-                } else if (entry.getKey().equals("readPreference")) {
-                    assertEquals(entry.getValue().asString().getValue(), mongoClientOptions.getReadPreference().getName());
-                } else if (entry.getKey().equals("readPreferenceTags")) {
-                    assertEquals(asTagSetList(entry.getValue().asArray()),
-                            ((TaggableReadPreference) mongoClientOptions.getReadPreference()).getTagSetList());
+                } else if (entry.getKey().equals("ssl")) {
+                    assertEquals(entry.getValue().asBoolean().getValue(), mongoClientOptions.isSslEnabled());
+                } else if (entry.getKey().equals("authSource")) {
+                    // ignoring authSource for now, because without at least a userName also in the connection string,
+                    // the authSource is ignored.  If the test gets this far, at least we know that a TXT record
+                    // containing in authSource doesn't blow up.  We just don't test that it's actually used.
+                    assertTrue(true);
                 } else {
                     throw new UnsupportedOperationException("No support configured yet for " + entry.getKey());
                 }
@@ -108,52 +108,41 @@ public class InitialDnsSeedlistDiscoveryTest {
         }
     }
 
-    private List<TagSet> asTagSetList(final BsonArray bsonArray) {
-        List<TagSet> retVal = new ArrayList<TagSet>(bsonArray.size());
-        for (BsonValue cur : bsonArray) {
-            BsonDocument curDocument = cur.asDocument();
-            List<Tag> tagList = new ArrayList<Tag>(curDocument.size());
-            for (Map.Entry<String, BsonValue> curEntry : curDocument.entrySet()) {
-                tagList.add(new Tag(curEntry.getKey(), curEntry.getValue().asString().getValue()));
-            }
-            retVal.add(new TagSet(tagList));
-        }
-        return retVal;
-    }
-
     @Test
     public void shouldDiscover() throws InterruptedException {
         if (seeds.isEmpty()) {
             return;
         }
-        assumeTrue(isDiscoverableReplicaSet());
+        MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder()
+                .sslInvalidHostNameAllowed(getSslSettings().isInvalidHostNameAllowed());
 
-        MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder();
+        MongoClientURI uri = new MongoClientURI(this.uri, optionsBuilder);
 
-        optionsBuilder.sslEnabled(getSslSettings().isEnabled());
-        optionsBuilder.sslInvalidHostNameAllowed(getSslSettings().isInvalidHostNameAllowed());
+        assumeTrue(isDiscoverableReplicaSet() && getSslSettings().isEnabled() == uri.getOptions().isSslEnabled());
 
-        MongoClient client = new MongoClient(new MongoClientURI(uri, optionsBuilder));
-        long startTime = System.currentTimeMillis();
-        long currentTime = startTime;
-        boolean hostsMatch = false;
-        while (currentTime < startTime + TimeUnit.SECONDS.toMillis(5)) {
+        MongoClient client = new MongoClient(uri);
+        try {
+            long startTime = System.currentTimeMillis();
+            long currentTime = startTime;
+            boolean hostsMatch = false;
+            while (currentTime < startTime + TimeUnit.SECONDS.toMillis(5)) {
 
-            List<ServerAddress> currentAddresses = client.getServerAddressList();
-            if (currentAddresses.size() == hosts.size() && currentAddresses.containsAll(hosts)) {
-                hostsMatch = true;
-                break;
+                List<ServerAddress> currentAddresses = client.getServerAddressList();
+                if (currentAddresses.size() == hosts.size() && currentAddresses.containsAll(hosts)) {
+                    hostsMatch = true;
+                    break;
+                }
+
+                Thread.sleep(100);
+                currentTime = System.currentTimeMillis();
             }
 
-            Thread.sleep(100);
-            currentTime = System.currentTimeMillis();
+            assertTrue(hostsMatch);
+
+            assertTrue(client.getDatabase("admin").runCommand(new Document("ping", 1)).containsKey("ok"));
+        } finally {
+            client.close();
         }
-
-        assertTrue(hostsMatch);
-
-        assertTrue(client.getDatabase("admin").runCommand(new Document("ping", 1)).containsKey("ok"));
-
-        client.close();
     }
 
     @Parameterized.Parameters(name = "{0}")

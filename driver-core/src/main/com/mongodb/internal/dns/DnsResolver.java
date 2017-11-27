@@ -100,19 +100,18 @@ public final class DnsResolver {
             Attributes attributes = dirContext.getAttributes(host, new String[]{"TXT"});
             Attribute attribute = attributes.get("TXT");
             if (attribute != null) {
-                StringBuilder additionalQueryParametersBuilder = new StringBuilder();
                 NamingEnumeration<?> txtRecordEnumeration = attribute.getAll();
-                while (txtRecordEnumeration.hasMore()) {
+                if (txtRecordEnumeration.hasMore()) {
                     // Remove all space characters, as the DNS resolver for TXT records inserts a space character
                     // between each character-string in a single TXT record.  That whitespace is spurious in
                     // this context and must be removed
-                    String txtRecord = ((String) txtRecordEnumeration.next()).replaceAll("\\s", "");
-                    if (!additionalQueryParametersBuilder.toString().isEmpty()) {
-                        additionalQueryParametersBuilder.append('&');
+                    additionalQueryParameters = ((String) txtRecordEnumeration.next()).replaceAll("\\s", "");
+
+                    if (txtRecordEnumeration.hasMore()) {
+                        throw new MongoConfigurationException(format("Multiple TXT records found for host '%s'.  Only one is permitted",
+                                host));
                     }
-                    additionalQueryParametersBuilder.append(txtRecord);
                 }
-                additionalQueryParameters = additionalQueryParametersBuilder.toString();
             }
         } catch (NamingException e) {
             throw new MongoConfigurationException("Unable to look up TXT record for host " + host, e);

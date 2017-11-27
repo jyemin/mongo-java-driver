@@ -221,6 +221,7 @@ public class ConnectionString {
 
     private static final String MONGODB_PREFIX = "mongodb://";
     private static final String MONGODB_SRV_PREFIX = "mongodb+srv://";
+    private static final Set<String> ALLOWED_OPTIONS_IN_TXT_RECORD = new HashSet<String>(asList("authsource", "replicaset"));
     private static final String UTF_8 = "UTF-8";
 
     private static final Logger LOGGER = Loggers.getLogger("uri");
@@ -349,7 +350,14 @@ public class ConnectionString {
 
         Map<String, List<String>> connectionStringOptionsMap = parseOptions(connectionStringQueryParamenters);
         Map<String, List<String>> txtRecordsOptionsMap = parseOptions(txtRecordsQueryParameters);
+        if (!ALLOWED_OPTIONS_IN_TXT_RECORD.containsAll(txtRecordsOptionsMap.keySet())) {
+            throw new MongoConfigurationException(format("A TXT record is only permitted to contain the keys %s, but the TXT record for "
+            + "'%s' contains the keys %s", ALLOWED_OPTIONS_IN_TXT_RECORD, unresolvedHosts.get(0), txtRecordsOptionsMap.keySet()));
+        }
         Map<String, List<String>> combinedOptionsMaps = combineOptionsMaps(txtRecordsOptionsMap, connectionStringOptionsMap);
+        if (isSRVProtocol && !combinedOptionsMaps.containsKey("ssl")) {
+            combinedOptionsMaps.put("ssl", singletonList("true"));
+        }
         translateOptions(combinedOptionsMaps);
         credential = createCredentials(combinedOptionsMaps, userName, password);
         warnOnUnsupportedOptions(combinedOptionsMaps);
@@ -455,10 +463,10 @@ public class ConnectionString {
                 connectTimeout = parseInteger(value, "connecttimeoutms");
             } else if (key.equals("sockettimeoutms")) {
                 socketTimeout = parseInteger(value, "sockettimeoutms");
-            } else if (key.equals("sslinvalidhostnameallowed") && parseBoolean(value, "sslinvalidhostnameallowed")) {
-                sslInvalidHostnameAllowed = true;
-            } else if (key.equals("ssl") && parseBoolean(value, "ssl")) {
-                sslEnabled = true;
+            } else if (key.equals("sslinvalidhostnameallowed")) {
+                sslInvalidHostnameAllowed = parseBoolean(value, "sslinvalidhostnameallowed");
+            } else if (key.equals("ssl")) {
+                sslEnabled = parseBoolean(value, "ssl");
             } else if (key.equals("streamtype")) {
                 streamType = value;
             } else if (key.equals("replicaset")) {
@@ -473,8 +481,8 @@ public class ConnectionString {
                 heartbeatFrequency = parseInteger(value, "heartbeatfrequencyms");
             } else if (key.equals("appname")) {
                 applicationName = value;
-            } else if (key.equals("retrywrites") && parseBoolean(value, "retrywrites")) {
-                retryWrites = true;
+            } else if (key.equals("retrywrites")) {
+                retryWrites = parseBoolean(value, "retrywrites");
             }
         }
 

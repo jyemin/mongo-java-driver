@@ -19,12 +19,10 @@ package com.mongodb.async.client;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientException;
 import com.mongodb.ServerAddress;
-import com.mongodb.Tag;
-import com.mongodb.TagSet;
-import com.mongodb.TaggableReadPreference;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.connection.SslSettings;
 import com.mongodb.event.ClusterClosedEvent;
 import com.mongodb.event.ClusterDescriptionChangedEvent;
 import com.mongodb.event.ClusterListener;
@@ -96,17 +94,15 @@ public class InitialDnsSeedlistDiscoveryTest {
             assertTrue(connectionString.getHosts().containsAll(seeds));
 
             for (Map.Entry<String, BsonValue> entry : options.entrySet()) {
-                if (entry.getKey().equals("connectTimeoutMS")) {
-                    assertEquals(entry.getValue().asNumber().intValue(), (int) connectionString.getConnectTimeout());
-                } else if (entry.getKey().equals("replicaSet")) {
+                if (entry.getKey().equals("replicaSet")) {
                     assertEquals(entry.getValue().asString().getValue(), connectionString.getRequiredReplicaSetName());
-                } else if (entry.getKey().equals("socketTimeoutMS")) {
-                    assertEquals(entry.getValue().asNumber().intValue(), (int) connectionString.getSocketTimeout());
-                } else if (entry.getKey().equals("readPreference")) {
-                    assertEquals(entry.getValue().asString().getValue(), connectionString.getReadPreference().getName());
-                } else if (entry.getKey().equals("readPreferenceTags")) {
-                    assertEquals(asTagSetList(entry.getValue().asArray()),
-                            ((TaggableReadPreference) connectionString.getReadPreference()).getTagSetList());
+                } else if (entry.getKey().equals("ssl")) {
+                    assertEquals(entry.getValue().asBoolean().getValue(), connectionString.getSslEnabled());
+                } else if (entry.getKey().equals("authSource")) {
+                    // ignoring authSource for now, because without at least a userName also in the connection string,
+                    // the authSource is ignored.  If the test gets this far, at least we know that a TXT record
+                    // containing in authSource doesn't blow up.  We just don't test that it's actually used.
+                    assertTrue(true);
                 } else {
                     throw new UnsupportedOperationException("No support configured yet for " + entry.getKey());
                 }
@@ -114,29 +110,18 @@ public class InitialDnsSeedlistDiscoveryTest {
         }
     }
 
-    private List<TagSet> asTagSetList(final BsonArray bsonArray) {
-        List<TagSet> retVal = new ArrayList<TagSet>(bsonArray.size());
-        for (BsonValue cur : bsonArray) {
-            BsonDocument curDocument = cur.asDocument();
-            List<Tag> tagList = new ArrayList<Tag>(curDocument.size());
-            for (Map.Entry<String, BsonValue> curEntry : curDocument.entrySet()) {
-                tagList.add(new Tag(curEntry.getKey(), curEntry.getValue().asString().getValue()));
-            }
-            retVal.add(new TagSet(tagList));
-        }
-        return retVal;
-    }
-
     @Test
     public void shouldDiscover() throws InterruptedException {
         if (seeds.isEmpty()) {
             return;
         }
-        assumeTrue(isDiscoverableReplicaSet());
-
         final CountDownLatch latch = new CountDownLatch(1);
 
         ConnectionString connectionString = new ConnectionString(uri);
+
+        SslSettings sslSettings = getSslSettings(connectionString);
+
+        assumeTrue(isDiscoverableReplicaSet() && getSslSettings().isEnabled() == sslSettings.isEnabled());
 
         MongoClientSettings settings = MongoClientSettings
                 .builder()
@@ -165,26 +150,28 @@ public class InitialDnsSeedlistDiscoveryTest {
 
                             }
                         }).build())
-                .sslSettings(getSslSettings())
+                .sslSettings(sslSettings)
                 .build();
 
         MongoClient client = MongoClients.create(settings);
 
-        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        try {
+            assertTrue(latch.await(5, TimeUnit.SECONDS));
 
-        final CountDownLatch pingLatch = new CountDownLatch(1);
-        client.getDatabase("admin").runCommand(new Document("ping", 1), new SingleResultCallback<Document>() {
-            @Override
-            public void onResult(final Document result, final Throwable t) {
-                if (t == null) {
-                    pingLatch.countDown();
+            final CountDownLatch pingLatch = new CountDownLatch(1);
+            client.getDatabase("admin").runCommand(new Document("ping", 1), new SingleResultCallback<Document>() {
+                @Override
+                public void onResult(final Document result, final Throwable t) {
+                    if (t == null) {
+                        pingLatch.countDown();
+                    }
                 }
-            }
-        });
+            });
 
-        assertTrue(pingLatch.await(5, TimeUnit.SECONDS));
-
-        client.close();
+            assertTrue(pingLatch.await(5, TimeUnit.SECONDS));
+        } finally {
+            client.close();
+        }
     }
 
     @Parameterized.Parameters(name = "{0}")
