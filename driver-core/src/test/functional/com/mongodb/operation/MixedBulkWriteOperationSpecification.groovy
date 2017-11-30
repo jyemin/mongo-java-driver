@@ -64,6 +64,7 @@ import static com.mongodb.client.model.Filters.gte
 import static com.mongodb.connection.ServerType.REPLICA_SET_PRIMARY
 import static com.mongodb.connection.ServerType.STANDALONE
 
+@SuppressWarnings('ClassSize')  // Shut up Codenarc
 class MixedBulkWriteOperationSpecification extends OperationFunctionalSpecification {
 
     def 'should throw IllegalArgumentException for empty list of requests'() {
@@ -997,6 +998,37 @@ class MixedBulkWriteOperationSpecification extends OperationFunctionalSpecificat
 
         where:
         async << [true, false]
+    }
+
+    @IgnoreIf({ !serverVersionAtLeast(3, 6) })
+    def 'should not request retryable write for multi updates or deletes'() {
+        given:
+        def operation = new MixedBulkWriteOperation(getNamespace(),
+                writes, true, ACKNOWLEDGED, true)
+
+        when:
+        executeWithSession(operation, async)
+
+        then:
+        noExceptionThrown()
+
+        where:
+        [async, writes] << [
+                [true, false],
+                [
+                        [
+                                new DeleteRequest(new BsonDocument()).multi(true),
+                                new InsertRequest(new BsonDocument())
+                        ]
+                ],
+                [
+                        [
+                                new UpdateRequest(new BsonDocument('_id', new BsonInt32(1)),
+                                        new BsonDocument('_id', new BsonInt32(1)), UPDATE).multi(true),
+                                new InsertRequest(new BsonDocument())
+                        ]
+                ]
+        ].combinations()
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 6) })
