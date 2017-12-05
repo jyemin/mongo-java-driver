@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014 MongoDB, Inc.
+ * Copyright 20017 MongoDB, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,69 +14,66 @@
  * limitations under the License.
  */
 
-import com.sun.javadoc.Tag;
-import com.sun.tools.doclets.Taglet;
+
+import com.sun.source.doctree.DocTree;
+import jdk.javadoc.doclet.Taglet;
+
+import javax.lang.model.element.Element;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class DocTaglet implements Taglet {
 
-    public boolean inConstructor() {
-        return true;
-    }
-
-    public boolean inField() {
-        return true;
-    }
-
-    public boolean inMethod() {
-        return true;
-    }
-
-    public boolean inOverview() {
-        return true;
-    }
-
-    public boolean inPackage() {
-        return true;
-    }
-
-    public boolean inType() {
-        return true;
+    @Override
+    public Set<Location> getAllowedLocations() {
+        return new HashSet<Location>(Arrays.asList(
+                Location.CONSTRUCTOR,
+                Location.METHOD,
+                Location.FIELD,
+                Location.OVERVIEW,
+                Location.PACKAGE,
+                Location.TYPE));
     }
 
     public boolean isInlineTag() {
         return false;
     }
 
-    public String toString(final Tag[] tags) {
-        if (tags.length == 0) {
-            return null;
+    @Override
+    public String toString(final List<? extends DocTree> docTreeList, final Element ignored) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("<dl>\n");
+        buf.append(String.format("   <dt><span class=\"strong\">%s</span></dt>\n", getHeader()));
+        for (DocTree t : docTreeList) {
+            buf.append("   <dd>").append(genLink(t.toString())).append("</dd>\n");
         }
-
-        StringBuilder buf = new StringBuilder(String.format("\n<dl><dt><span class=\"strong\">%s</span></dt>\n", getHeader()));
-        for (Tag t : tags) {
-            buf.append("   <dd>").append(genLink(t.text())).append("</dd>\n");
-        }
+        buf.append("</dl>\n");
         return buf.toString();
     }
 
     protected abstract String getHeader();
 
-    public String toString(final Tag tag) {
-        return toString(new Tag[]{tag});
-    }
+    protected abstract String getBaseDocURI();
 
-    protected String genLink(final String text) {
-        String relativePath = text;
-        String display = text;
+    // Generate link from strings like:
+    //    @mongodb.server.release 3.6
+    //    @mongodb.driver.manual reference/mongodb-extended-json/ MongoDB Extended JSON
+    private String genLink(final String text) {
+        String relativePath;
+        String display;
 
         int firstSpace = text.indexOf(' ');
-        if (firstSpace != -1) {
-            relativePath = text.substring(0, firstSpace);
-            display = text.substring(firstSpace, text.length()).trim();
+        int secondSpace = text.indexOf(' ', firstSpace + 1);
+        if (secondSpace != -1 && secondSpace != firstSpace) {
+            relativePath = text.substring(firstSpace, secondSpace).trim();
+            display = text.substring(secondSpace, text.length()).trim();
+        } else {
+            relativePath = text.substring(firstSpace).trim();
+            display = relativePath;
         }
 
         return String.format("<a href='%s%s'>%s</a>", getBaseDocURI(), relativePath, display);
     }
-
-    protected abstract String getBaseDocURI();
 }
