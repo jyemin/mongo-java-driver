@@ -681,8 +681,10 @@ class InternalStreamConnection implements InternalConnection {
 
                 BsonDocument commandDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(commandName))
                                                                ? new BsonDocument() : commandDocument;
-                sendCommandStartedEvent(message, new MongoNamespace(message.getCollectionName()).getDatabaseName(), commandName,
-                        commandDocumentForEvent, getDescription(), commandListener);
+                if (commandListener != null && opened()) {
+                    sendCommandStartedEvent(message, new MongoNamespace(message.getCollectionName()).getDatabaseName(), commandName,
+                            commandDocumentForEvent, getDescription(), commandListener);
+                }
             }
         }
 
