@@ -237,12 +237,12 @@ class InternalStreamConnection implements InternalConnection {
 
     @Override
     public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
-        CommandEventSender commandEventSender = new CommandEventSender(message);
-
         ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this);
+        CommandEventSender commandEventSender = new CommandEventSender(message, bsonOutput);
+
         try {
             message.encode(bsonOutput, sessionContext);
-            commandEventSender.sendStartedEvent(bsonOutput);
+            commandEventSender.sendStartedEvent();
         } catch (RuntimeException e) {
             bsonOutput.close();
             throw e;
@@ -318,8 +318,8 @@ class InternalStreamConnection implements InternalConnection {
 
         try {
             message.encode(bsonOutput, sessionContext);
-            CommandEventSender commandEventSender = new CommandEventSender(message);
-            commandEventSender.sendStartedEvent(bsonOutput);
+            CommandEventSender commandEventSender = new CommandEventSender(message, bsonOutput);
+            commandEventSender.sendStartedEvent();
 
             if (sendCompressor == null || SECURITY_SENSITIVE_COMMANDS.contains(commandEventSender.getCommandName())) {
                 sendCommandMessageAsync(message.getId(), decoder, sessionContext, callback, bsonOutput, commandEventSender,
@@ -657,61 +657,82 @@ class InternalStreamConnection implements InternalConnection {
     private class CommandEventSender {
         private final long startTimeNanos;
         private final CommandMessage message;
-        private String commandName;
+        private final CommandDocumentHandler commandDocumentHandler;
 
-        CommandEventSender(final CommandMessage message) {
+        CommandEventSender(final CommandMessage message, final ByteBufferBsonOutput bsonOutput) {
             this.startTimeNanos = System.nanoTime();
             this.message = message;
+            this.commandDocumentHandler = new CommandDocumentHandler(bsonOutput);
         }
 
-        // Call after sendStartedEvent. Returns null unless there's either a command listener or a sendCompress configured.  Otherwise,
-        // there's no need to compute the command name
-        public String getCommandName() {
-            if (commandName == null) {
-                throw new MongoInternalException("Attempting to use the command name when it has not been determined");
-            }
-            return commandName;
-        }
-
-        public void sendStartedEvent(final ByteBufferBsonOutput bsonOutput) {
-            if ((commandListener != null || sendCompressor != null) && opened()) {
-
-                BsonDocument commandDocument = message.getCommandDocument(bsonOutput);
-                commandName = commandDocument.getFirstKey();
-
-                BsonDocument commandDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(commandName))
-                                                               ? new BsonDocument() : commandDocument;
-                if (commandListener != null && opened()) {
-                    sendCommandStartedEvent(message, new MongoNamespace(message.getCollectionName()).getDatabaseName(), commandName,
-                            commandDocumentForEvent, getDescription(), commandListener);
-                }
+        public void sendStartedEvent() {
+            if (commandListener != null && opened()) {
+                BsonDocument commandDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(commandDocumentHandler.getCommandName()))
+                        ? new BsonDocument() : commandDocumentHandler.getCommandDocument();
+                sendCommandStartedEvent(message, new MongoNamespace(message.getCollectionName()).getDatabaseName(),
+                        commandDocumentHandler.getCommandName(), commandDocumentForEvent, getDescription(), commandListener);
             }
         }
 
         public void sendFailedEvent(final Throwable t) {
             if (commandListener != null && opened()) {
                 Throwable commandEventException = t;
-                if (t instanceof MongoCommandException && (SECURITY_SENSITIVE_COMMANDS.contains(commandName))) {
+                if (t instanceof MongoCommandException && (SECURITY_SENSITIVE_COMMANDS.contains(commandDocumentHandler.getCommandName()))) {
                     commandEventException = new MongoCommandException(new BsonDocument(), description.getServerAddress());
                 }
-                sendCommandFailedEvent(message, commandName, description, startTimeNanos, commandEventException, commandListener);
+                sendCommandFailedEvent(message, commandDocumentHandler.getCommandName(), description, startTimeNanos, commandEventException,
+                        commandListener);
             }
         }
 
         public void sendSucceededEvent(final ResponseBuffers responseBuffers) {
             if (commandListener != null && opened()) {
-                BsonDocument responseDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(commandName))
+                BsonDocument responseDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(commandDocumentHandler.getCommandName()))
                                                                 ? new BsonDocument()
                                                                 : getResponseDocument(responseBuffers, message.getId(),
                         new RawBsonDocumentCodec());
-                sendCommandSucceededEvent(message, commandName, responseDocumentForEvent, description, startTimeNanos, commandListener);
+                sendCommandSucceededEvent(message, commandDocumentHandler.getCommandName(), responseDocumentForEvent, description,
+                        startTimeNanos, commandListener);
             }
         }
 
         public void sendSucceededEventForOneWayCommand() {
             if (commandListener != null && opened()) {
                 BsonDocument responseDocumentForEvent = new BsonDocument("ok", new BsonInt32(1));
-                sendCommandSucceededEvent(message, commandName, responseDocumentForEvent, description, startTimeNanos, commandListener);
+                sendCommandSucceededEvent(message, commandDocumentHandler.getCommandName(), responseDocumentForEvent, description,
+                        startTimeNanos, commandListener);
+            }
+        }
+
+        public String getCommandName() {
+            return commandDocumentHandler.getCommandName();
+        }
+
+        // Handle lazy initialization of the command document and command name.
+        // The containing class does have access to the private members of this class, but the intention is that the containing class
+        // will only access the fields via the associated properties, so that the lazy intitialization can be performed
+        private final class CommandDocumentHandler {
+            private final ByteBufferBsonOutput bsonOutput;
+            private BsonDocument commandDocument;
+            private String commandName;
+
+            private CommandDocumentHandler(final ByteBufferBsonOutput bsonOutput) {
+                this.bsonOutput = bsonOutput;
+            }
+
+
+            public String getCommandName() {
+                if (commandName == null) {
+                    commandName = getCommandDocument().getFirstKey();
+                }
+                return commandName;
+            }
+
+            private BsonDocument getCommandDocument() {
+                if (commandDocument == null) {
+                    commandDocument = message.getCommandDocument(bsonOutput);
+                }
+                return commandDocument;
             }
         }
     }
