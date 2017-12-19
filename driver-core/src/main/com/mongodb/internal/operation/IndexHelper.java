@@ -1,11 +1,11 @@
 /*
- * Copyright 2015 MongoDB, Inc.
+ * Copyright 2017 MongoDB, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-package com.mongodb.operation;
+package com.mongodb.internal.operation;
 
 import org.bson.BsonDocument;
 import org.bson.BsonNumber;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 
-final class IndexHelper {
+/**
+ * This class is NOT part of the public API. It may change at any time without notification.
+ */
+public final class IndexHelper {
 
     /**
      * Convenience method to generate an index name from the set of fields it is over.
      *
      * @return a string representation of this index's fields
      */
-    static String generateIndexName(final BsonDocument index) {
+    public static String generateIndexName(final BsonDocument index) {
         StringBuilder indexName = new StringBuilder();
         for (final String keyNames : index.keySet()) {
             if (indexName.length() != 0) {

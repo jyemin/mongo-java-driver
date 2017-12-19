@@ -16,10 +16,11 @@
 package com.mongodb;
 
 import com.mongodb.client.ListDatabasesIterable;
+import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.operation.BatchCursor;
-import com.mongodb.operation.ListDatabasesOperation;
 import com.mongodb.operation.ReadOperation;
 import com.mongodb.session.ClientSession;
+import org.bson.BsonDocument;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
@@ -30,8 +31,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 final class ListDatabasesIterableImpl<TResult> extends MongoIterableImpl<TResult> implements ListDatabasesIterable<TResult> {
+    private final SyncOperations<BsonDocument> operations;
     private final Class<TResult> resultClass;
-    private final CodecRegistry codecRegistry;
 
     private long maxTimeMS;
     private Bson filter;
@@ -40,8 +41,8 @@ final class ListDatabasesIterableImpl<TResult> extends MongoIterableImpl<TResult
     ListDatabasesIterableImpl(final ClientSession clientSession, final Class<TResult> resultClass, final CodecRegistry codecRegistry,
                               final ReadPreference readPreference, final OperationExecutor executor) {
         super(clientSession, executor, ReadConcern.DEFAULT, readPreference); // TODO: read concern?
+        this.operations = new SyncOperations<BsonDocument>(BsonDocument.class, readPreference, codecRegistry, ReadConcern.DEFAULT);
         this.resultClass = notNull("clazz", resultClass);
-        this.codecRegistry = notNull("codecRegistry", codecRegistry);
     }
 
     @Override
@@ -71,7 +72,6 @@ final class ListDatabasesIterableImpl<TResult> extends MongoIterableImpl<TResult
 
     @Override
     ReadOperation<BatchCursor<TResult>> asReadOperation() {
-        return new ListDatabasesOperation<TResult>(codecRegistry.get(resultClass)).maxTime(maxTimeMS, MILLISECONDS)
-                .filter(toBsonDocumentOrNull(filter, codecRegistry)).nameOnly(nameOnly);
+        return operations.listDatabases(resultClass, filter, nameOnly, maxTimeMS);
     }
 }
