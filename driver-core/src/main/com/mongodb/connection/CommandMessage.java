@@ -113,6 +113,7 @@ final class CommandMessage extends RequestMessage {
     protected EncodingMetadata encodeMessageBodyWithMetadata(final BsonOutput bsonOutput, final SessionContext sessionContext) {
         int commandStartPosition;
         if (useOpMsg()) {
+            int startPosition = bsonOutput.getPosition() - MESSAGE_PROLOGUE_LENGTH;
             int flagPosition = bsonOutput.getPosition();
             bsonOutput.writeInt32(0);   // flag bits
             bsonOutput.writeByte(0);    // payload type
@@ -126,7 +127,7 @@ final class CommandMessage extends RequestMessage {
                 bsonOutput.writeInt32(0);         // size
                 bsonOutput.writeCString(payload.getPayloadName());
                 writePayload(new BsonBinaryWriter(bsonOutput, payloadFieldNameValidator), bsonOutput, getSettings(),
-                        commandStartPosition, payload);
+                        startPosition, payload);
 
                 int payloadLength = bsonOutput.getPosition() - payloadPosition;
                 bsonOutput.writeInt32(payloadPosition, payloadLength);
