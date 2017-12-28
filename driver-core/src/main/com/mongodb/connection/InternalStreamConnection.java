@@ -22,7 +22,6 @@ import com.mongodb.MongoCompressor;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoInterruptedException;
-import com.mongodb.MongoNamespace;
 import com.mongodb.MongoSocketClosedException;
 import com.mongodb.MongoSocketReadException;
 import com.mongodb.MongoSocketReadTimeoutException;
@@ -37,6 +36,7 @@ import com.mongodb.session.SessionContext;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
+import org.bson.BsonValue;
 import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.Decoder;
@@ -270,8 +270,8 @@ class InternalStreamConnection implements InternalConnection {
                 sendMessage(bsonOutput.getByteBuffers(), message.getId());
             } else {
                 CompressedMessage compressedMessage = new CompressedMessage(message.getOpCode(), bsonOutput.getByteBuffers(),
-                                                                                   sendCompressor,
-                                                                                   getMessageSettings(description));
+                        sendCompressor,
+                        getMessageSettings(description));
                 ByteBufferBsonOutput compressedBsonOutput = new ByteBufferBsonOutput(this);
                 compressedMessage.encode(compressedBsonOutput, sessionContext);
                 try {
@@ -328,8 +328,8 @@ class InternalStreamConnection implements InternalConnection {
                         message.isResponseExpected());
             } else {
                 CompressedMessage compressedMessage = new CompressedMessage(message.getOpCode(), bsonOutput.getByteBuffers(),
-                                                                                   sendCompressor,
-                                                                                   getMessageSettings(description));
+                        sendCompressor,
+                        getMessageSettings(description));
                 compressedMessage.encode(compressedBsonOutput, sessionContext);
                 bsonOutput.close();
                 sendCommandMessageAsync(message.getId(), decoder, sessionContext, callback, compressedBsonOutput, commandEventSender,
@@ -656,6 +656,8 @@ class InternalStreamConnection implements InternalConnection {
         }
     }
 
+    private static final Logger COMMAND_LOGGER = Loggers.getLogger("protocol.command");
+
     private class CommandEventSender {
         private final long startTimeNanos;
         private final CommandMessage message;
@@ -668,42 +670,106 @@ class InternalStreamConnection implements InternalConnection {
         }
 
         public void sendStartedEvent() {
-            if (commandListener != null && opened()) {
+            if (sendRequired()) {
                 BsonDocument commandDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(lazyCommandDocument.getName()))
                         ? new BsonDocument() : lazyCommandDocument.getDocument();
-                sendCommandStartedEvent(message, new MongoNamespace(message.getCollectionName()).getDatabaseName(),
-                        lazyCommandDocument.getName(), commandDocumentForEvent, getDescription(), commandListener);
+
+                if (loggingRequired()) {
+                    COMMAND_LOGGER.debug(
+                            format("Sending command {%s : %s, ...} with request id %d to database %s on connection [%s] to server %s",
+                                    lazyCommandDocument.getName(), lazyCommandDocument.getFirstValue(), message.getId(),
+                                    message.getNamespace().getDatabaseName(), description.getConnectionId(),
+                                    description.getServerAddress()));
+                }
+
+                if (eventRequired()) {
+                    sendCommandStartedEvent(message, message.getNamespace().getDatabaseName(),
+                            lazyCommandDocument.getName(), commandDocumentForEvent, getDescription(), commandListener);
+                }
             }
         }
 
         public void sendFailedEvent(final Throwable t) {
-            if (commandListener != null && opened()) {
+            if (sendRequired()) {
                 Throwable commandEventException = t;
                 if (t instanceof MongoCommandException && (SECURITY_SENSITIVE_COMMANDS.contains(lazyCommandDocument.getName()))) {
                     commandEventException = new MongoCommandException(new BsonDocument(), description.getServerAddress());
                 }
-                sendCommandFailedEvent(message, lazyCommandDocument.getName(), description, startTimeNanos, commandEventException,
-                        commandListener);
+                long elapsedTimeNanos = System.nanoTime() - startTimeNanos;
+
+                if (loggingRequired()) {
+                    COMMAND_LOGGER.debug(
+                            format("Execution of command with request id %d failed to complete successfully in %.2f ms on connection [%s] "
+                                            + "to server %s",
+                                    message.getId(), nanosToMillis(elapsedTimeNanos), description.getConnectionId(),
+                                    description.getServerAddress()),
+                            commandEventException);
+                }
+
+                if (eventRequired()) {
+                    sendCommandFailedEvent(message, lazyCommandDocument.getName(), description, elapsedTimeNanos, commandEventException,
+                            commandListener);
+                }
             }
         }
 
         public void sendSucceededEvent(final ResponseBuffers responseBuffers) {
-            if (commandListener != null && opened()) {
+            if (sendRequired()) {
                 BsonDocument responseDocumentForEvent = (SECURITY_SENSITIVE_COMMANDS.contains(lazyCommandDocument.getName()))
                         ? new BsonDocument()
                         : getResponseDocument(responseBuffers, message.getId(),
                         new RawBsonDocumentCodec());
-                sendCommandSucceededEvent(message, lazyCommandDocument.getName(), responseDocumentForEvent, description,
-                        startTimeNanos, commandListener);
+                long elapsedTimeNanos = System.nanoTime() - startTimeNanos;
+
+                if (loggingRequired()) {
+                    COMMAND_LOGGER.debug(
+                            format("Execution of command with request id %d completed successfully in %.2f ms on connection [%s] "
+                                            + "to server %s",
+                                    message.getId(), nanosToMillis(elapsedTimeNanos), description.getConnectionId(),
+                                    description.getServerAddress()));
+                }
+
+                if (eventRequired()) {
+                    sendCommandSucceededEvent(message, lazyCommandDocument.getName(), responseDocumentForEvent, description,
+                            elapsedTimeNanos, commandListener);
+                }
             }
         }
 
         public void sendSucceededEventForOneWayCommand() {
-            if (commandListener != null && opened()) {
+            if (sendRequired()) {
                 BsonDocument responseDocumentForEvent = new BsonDocument("ok", new BsonInt32(1));
-                sendCommandSucceededEvent(message, lazyCommandDocument.getName(), responseDocumentForEvent, description,
-                        startTimeNanos, commandListener);
+                long elapsedTimeNanos = System.nanoTime() - startTimeNanos;
+
+                if (loggingRequired()) {
+                    COMMAND_LOGGER.debug(
+                            format("Execution of one-way command with request id %d completed successfully in %.2f ms on connection [%s] "
+                                            + "to server %s",
+                                    message.getId(), nanosToMillis(elapsedTimeNanos), description.getConnectionId(),
+                                    description.getServerAddress()));
+                }
+
+                if (eventRequired()) {
+                    sendCommandSucceededEvent(message, lazyCommandDocument.getName(), responseDocumentForEvent, description,
+                            elapsedTimeNanos, commandListener);
+                }
             }
+        }
+
+        private boolean sendRequired() {
+            return (eventRequired() || loggingRequired()) && opened();
+        }
+
+        private boolean loggingRequired() {
+            return COMMAND_LOGGER.isDebugEnabled();
+        }
+
+        private boolean eventRequired() {
+            return commandListener != null;
+        }
+
+        private double nanosToMillis(final long elapsedTimeNanos) {
+            return elapsedTimeNanos / 1000000.0;
         }
     }
 
@@ -714,6 +780,7 @@ class InternalStreamConnection implements InternalConnection {
         private final ByteBufferBsonOutput bsonOutput;
         private BsonDocument commandDocument;
         private String commandName;
+        private BsonValue firstValue;
 
         private LazyCommandDocument(final CommandMessage commandMessage, final ByteBufferBsonOutput bsonOutput) {
             this.commandMessage = commandMessage;
@@ -725,6 +792,13 @@ class InternalStreamConnection implements InternalConnection {
                 commandName = getDocument().getFirstKey();
             }
             return commandName;
+        }
+
+        public BsonValue getFirstValue() {
+            if (firstValue == null) {
+                firstValue = getDocument().getFirstValue();
+            }
+            return firstValue;
         }
 
         private BsonDocument getDocument() {

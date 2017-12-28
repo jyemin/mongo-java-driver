@@ -266,6 +266,22 @@ class RawBsonDocumentSpecification extends Specification {
         thrown(NoSuchElementException)
     }
 
+    def 'should get first value'() {
+        expect:
+        document.getFirstValue() == new BsonInt32(1)
+
+        where:
+        rawDocument << createRawDocumentVariants()
+    }
+
+    def 'getFirstValue should throw NoSuchElementException if the document is empty'() {
+        when:
+        emptyRawDocument.getFirstValue()
+
+        then:
+        thrown(NoSuchElementException)
+    }
+
     def 'toJson should return equivalent JSON'() {
         expect:
         new RawBsonDocumentCodec().decode(new JsonReader(rawDocument.toJson()), DecoderContext.builder().build()) == document
