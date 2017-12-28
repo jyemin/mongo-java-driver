@@ -260,6 +260,22 @@ public final class RawBsonDocument extends BsonDocument {
     }
 
     @Override
+    public BsonValue getFirstValue() {
+        BsonBinaryReader bsonReader = createReader();
+        try {
+            bsonReader.readStartDocument();
+            try {
+                bsonReader.skipName();
+                return deserializeBsonValue(bsonReader);
+            } catch (BsonInvalidOperationException e) {
+                throw new NoSuchElementException();
+            }
+        } finally {
+            bsonReader.close();
+        }
+    }
+
+    @Override
     public boolean containsKey(final Object key) {
         if (key == null) {
             throw new IllegalArgumentException("key can not be null");

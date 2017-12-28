@@ -343,6 +343,25 @@ class BsonDocumentSpecification extends Specification {
         thrown(NoSuchElementException)
     }
 
+    def 'should get first value'() {
+        given:
+        def document = new BsonDocument('i', new BsonInt32(2))
+
+        expect:
+        document.getFirstValue() == document.get('i')
+    }
+
+    def 'getFirstValue should throw NoSuchElementException if the document is empty'() {
+        given:
+        def document = new BsonDocument()
+
+        when:
+        document.getFirstValue()
+
+        then:
+        thrown(NoSuchElementException)
+    }
+
     def 'should serialize and deserialize'() {
         given:
         def document = new BsonDocument('d', new BsonDocument().append('i2', new BsonInt32(1)))
