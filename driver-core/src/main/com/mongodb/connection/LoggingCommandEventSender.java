@@ -64,7 +64,7 @@ class LoggingCommandEventSender implements CommandEventSender {
     public void sendStartedEvent() {
         if (loggingRequired()) {
             logger.debug(
-                    format("Sending command '%s ...' with request id %d to database %s on connection [%s] to server %s",
+                    format("Sending command '%s' with request id %d to database %s on connection [%s] to server %s",
                             getTruncatedJsonCommand(), message.getId(),
                             message.getNamespace().getDatabaseName(), description.getConnectionId(), description.getServerAddress()));
         }
@@ -90,6 +90,10 @@ class LoggingCommandEventSender implements CommandEventSender {
                     JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).maxLength(MAX_COMMAND_DOCUMENT_LENGTH_TO_LOG).build());
 
             jsonWriter.pipe(bsonReader);
+
+            if (jsonWriter.isTruncated()) {
+                writer.append(" ...");
+            }
 
             return writer.toString();
         } finally {

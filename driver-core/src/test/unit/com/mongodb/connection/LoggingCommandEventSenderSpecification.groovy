@@ -27,6 +27,7 @@ import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
 import com.mongodb.internal.connection.NoOpSessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
+import org.bson.BsonBinary
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonString
@@ -98,7 +99,7 @@ class LoggingCommandEventSenderSpecification extends Specification {
 
         then:
         1 * logger.debug {
-            it == "Sending command \'{ \"ping\" : 1, \"\$db\" : \"test\" } ...\' with request id ${message.getId()} to database test " +
+            it == "Sending command \'{ \"ping\" : 1, \"\$db\" : \"test\" }\' with request id ${message.getId()} to database test " +
                     "on connection [connectionId{localValue:${connectionDescription.connectionId.localValue}}] " +
                     'to server 127.0.0.1:27017'
         }
@@ -120,5 +121,32 @@ class LoggingCommandEventSenderSpecification extends Specification {
 
         where:
         commandListener << [null, Stub(CommandListener)]
+    }
+
+    def 'should log large command with ellipses'() {
+        given:
+        def connectionDescription = new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress()))
+        def namespace = new MongoNamespace('test.driver')
+        def messageSettings = MessageSettings.builder().serverVersion(new ServerVersion(3, 6)).build()
+        def commandDocument = new BsonDocument('fake', new BsonBinary(new byte[2048]))
+        def message = new CommandMessage(namespace, commandDocument, new NoOpFieldNameValidator(), ReadPreference.primary(),
+                messageSettings)
+        def bsonOutput = new ByteBufferBsonOutput(new SimpleBufferProvider())
+        message.encode(bsonOutput, NoOpSessionContext.INSTANCE)
+        def logger = Mock(Logger) {
+            isDebugEnabled() >> true
+        }
+        def sender = new LoggingCommandEventSender([] as Set, connectionDescription, null, message, bsonOutput, logger)
+
+        when:
+        sender.sendStartedEvent()
+
+        then:
+        1 * logger.debug {
+            it == "Sending command \'{ \"fake\" : { \"\$binary\" : { \"base64\" : \"${'A' * 961} ...\' " +
+                    "with request id ${message.getId()} to database test " +
+                    "on connection [connectionId{localValue:${connectionDescription.connectionId.localValue}}] " +
+                    'to server 127.0.0.1:27017'
+        }
     }
 }
