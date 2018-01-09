@@ -240,7 +240,9 @@ mongodb://username%40MYREALM.com@myserver/?authMechanism=GSSAPI&authMechanismPro
 ```
 
 {{% note %}}
-There are limitations when authenticating from a Windows client. For details, see
+On Windows, Oracle's JRE uses [LSA](https://msdn.microsoft.com/en-us/library/windows/desktop/aa378326.aspx) rather than 
+[SSPI](https://msdn.microsoft.com/en-us/library/windows/desktop/aa380493.aspx) in its implementation of GSSAPI, which limits
+interoperability with Windows Active Directory and in particular the ability to implement single sign-on. 
 
 - [JDK-8054026](https://bugs.openjdk.java.net/browse/JDK-8054026) 
 - [JDK-6722928](https://bugs.openjdk.java.net/browse/JDK-6722928) 
