@@ -17,10 +17,11 @@
 package com.mongodb;
 
 import com.mongodb.client.ListCollectionsIterable;
+import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.operation.BatchCursor;
-import com.mongodb.operation.ListCollectionsOperation;
 import com.mongodb.operation.ReadOperation;
 import com.mongodb.session.ClientSession;
+import org.bson.BsonDocument;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
@@ -30,9 +31,9 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class ListCollectionsIterableImpl<TResult> extends MongoIterableImpl<TResult> implements ListCollectionsIterable<TResult> {
+    private final SyncOperations<BsonDocument> operations;
     private final String databaseName;
     private final Class<TResult> resultClass;
-    private final CodecRegistry codecRegistry;
 
     private Bson filter;
     private long maxTimeMS;
@@ -40,9 +41,9 @@ final class ListCollectionsIterableImpl<TResult> extends MongoIterableImpl<TResu
     ListCollectionsIterableImpl(final ClientSession clientSession, final String databaseName, final Class<TResult> resultClass,
                                 final CodecRegistry codecRegistry, final ReadPreference readPreference, final OperationExecutor executor) {
         super(clientSession, executor, ReadConcern.DEFAULT, readPreference); // TODO: read concern?
+        this.operations = new SyncOperations<BsonDocument>(BsonDocument.class, readPreference, codecRegistry, ReadConcern.DEFAULT);
         this.databaseName = notNull("databaseName", databaseName);
         this.resultClass = notNull("resultClass", resultClass);
-        this.codecRegistry = notNull("codecRegistry", codecRegistry);
     }
 
     @Override
@@ -67,9 +68,6 @@ final class ListCollectionsIterableImpl<TResult> extends MongoIterableImpl<TResu
 
     @Override
     ReadOperation<BatchCursor<TResult>> asReadOperation() {
-        return new ListCollectionsOperation<TResult>(databaseName, codecRegistry.get(resultClass))
-                       .filter(toBsonDocumentOrNull(filter, codecRegistry))
-                       .batchSize(getBatchSize() == null ? 0 : getBatchSize())
-                       .maxTime(maxTimeMS, MILLISECONDS);
+        return operations.listCollections(databaseName, resultClass, filter, getBatchSize(), maxTimeMS);
     }
 }

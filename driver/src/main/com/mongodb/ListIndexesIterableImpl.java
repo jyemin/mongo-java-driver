@@ -17,10 +17,11 @@
 package com.mongodb;
 
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.operation.BatchCursor;
-import com.mongodb.operation.ListIndexesOperation;
 import com.mongodb.operation.ReadOperation;
 import com.mongodb.session.ClientSession;
+import org.bson.BsonDocument;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.concurrent.TimeUnit;
@@ -29,17 +30,16 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class ListIndexesIterableImpl<TResult> extends MongoIterableImpl<TResult> implements ListIndexesIterable<TResult> {
-    private final MongoNamespace namespace;
+    private final SyncOperations<BsonDocument> operations;
     private final Class<TResult> resultClass;
-    private final CodecRegistry codecRegistry;
     private long maxTimeMS;
 
     ListIndexesIterableImpl(final ClientSession clientSession, final MongoNamespace namespace, final Class<TResult> resultClass,
                             final CodecRegistry codecRegistry, final ReadPreference readPreference, final OperationExecutor executor) {
         super(clientSession, executor, ReadConcern.DEFAULT, readPreference);
-        this.namespace = notNull("namespace", namespace);
+        this.operations = new SyncOperations<BsonDocument>(namespace, BsonDocument.class, readPreference, codecRegistry,
+                ReadConcern.DEFAULT);
         this.resultClass = notNull("resultClass", resultClass);
-        this.codecRegistry = notNull("codecRegistry", codecRegistry);
     }
 
     @Override
@@ -57,8 +57,6 @@ final class ListIndexesIterableImpl<TResult> extends MongoIterableImpl<TResult> 
 
     @Override
     ReadOperation<BatchCursor<TResult>> asReadOperation() {
-        return new ListIndexesOperation<TResult>(namespace, codecRegistry.get(resultClass))
-                       .batchSize(getBatchSize() == null ? 0 : getBatchSize())
-                       .maxTime(maxTimeMS, MILLISECONDS);
+        return operations.listIndexes(resultClass, getBatchSize(), maxTimeMS);
     }
 }
