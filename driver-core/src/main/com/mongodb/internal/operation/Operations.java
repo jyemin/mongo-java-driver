@@ -95,8 +95,8 @@ final class Operations<TDocument> {
     private final ReadConcern readConcern;
 
     Operations(final MongoNamespace namespace, final Class<TDocument> documentClass, final ReadPreference readPreference,
-                      final CodecRegistry codecRegistry, final WriteConcern writeConcern, final boolean retryWrites,
-                      final ReadConcern readConcern) {
+               final CodecRegistry codecRegistry, final WriteConcern writeConcern, final boolean retryWrites,
+               final ReadConcern readConcern) {
         this.namespace = namespace;
         this.documentClass = documentClass;
         this.readPreference = readPreference;
