@@ -58,7 +58,6 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -816,22 +815,10 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
-                    callback.onResult(getIndexNames(indexes), null);
+                    callback.onResult(IndexHelper.getIndexNames(indexes, codecRegistry), null);
                 }
             }
         });
-    }
-
-    private List<String> getIndexNames(final List<IndexModel> indexes) {
-        List<String> indexNames = new ArrayList<String>(indexes.size());
-        for (IndexModel index : indexes) {
-            if (index.getOptions().getName() != null) {
-                indexNames.add(index.getOptions().getName());
-            } else {
-                indexNames.add(IndexHelper.generateIndexName(toBsonDocument(index.getKeys())));
-            }
-        }
-        return indexNames;
     }
 
     @Override
@@ -1013,9 +1000,5 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
         } else {
             return UpdateResult.unacknowledged();
         }
-    }
-
-    private BsonDocument toBsonDocument(final Bson document) {
-        return document == null ? null : document.toBsonDocument(documentClass, codecRegistry);
     }
 }

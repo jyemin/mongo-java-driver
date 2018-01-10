@@ -48,13 +48,13 @@ import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.InsertOneOptions;
-import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.client.model.RenameCollectionOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.internal.operation.IndexHelper;
+import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.operation.RenameCollectionOperation;
 import com.mongodb.operation.WriteOperation;
 import com.mongodb.session.ClientSession;
@@ -64,7 +64,6 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -720,19 +719,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private List<String> executeCreateIndexes(final ClientSession clientSession, final List<IndexModel> indexes,
                                               final CreateIndexOptions createIndexOptions) {
         executor.execute(operations.createIndexes(indexes, createIndexOptions), clientSession);
-        return getIndexNames(indexes);
-    }
-
-    private List<String> getIndexNames(final List<IndexModel> indexes) {
-        List<String> indexNames = new ArrayList<String>(indexes.size());
-        for (IndexModel index : indexes) {
-            if (index.getOptions().getName() != null) {
-                indexNames.add(index.getOptions().getName());
-            } else {
-                indexNames.add(IndexHelper.generateIndexName(toBsonDocument(index.getKeys())));
-            }
-        }
-        return indexNames;
+        return IndexHelper.getIndexNames(indexes, codecRegistry);
     }
 
     @Override
@@ -924,7 +911,4 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
         }
     }
 
-    private BsonDocument toBsonDocument(final Bson bson) {
-        return bson == null ? null : bson.toBsonDocument(documentClass, codecRegistry);
-    }
 }
