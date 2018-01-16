@@ -34,7 +34,8 @@ sourceSets {
             srcDirs = ["$rootDir/driver-legacy/src/main",
                        "$rootDir/driver/src/main",
                        "$rootDir/driver-core/src/main",
-                       "$rootDir/bson/src/main"]
+                       "$rootDir/bson/src/main",
+                       "$rootDir/bson/src/main-legacy"]
         }
     }
 }

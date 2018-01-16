@@ -27,6 +27,15 @@ clirr {
     failOnErrors = true
 }
 
+sourceSets {
+    main {
+        java.srcDirs += ['src/main-legacy']
+    }
+    test {
+        groovy.srcDirs += ['src/test/unit-legacy']
+    }
+}
+
 jar {
     manifest {
         instruction 'Automatic-Module-Name', 'org.mongodb.bson'
