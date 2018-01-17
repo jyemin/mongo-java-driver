@@ -322,11 +322,6 @@ public class BSONTest {
     }
 
     @Test
-    public void testGetEncoder() {
-        assertEquals(BasicBSONEncoder.class, new BasicBSONObject().getEncoder().getClass());
-    }
-
-    @Test
     public void testToInt() {
         assertEquals(1, BSON.toInt(Boolean.TRUE));
         assertEquals(0, BSON.toInt(Boolean.FALSE));

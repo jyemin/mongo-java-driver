@@ -369,12 +369,7 @@ public class BasicBSONObject extends LinkedHashMap<String, Object> implements BS
         return getEncoder().encode(this);
     }
 
-    /**
-     * Creates a {@code BSONEncoder} to use for encoding instances of this class.
-     *
-     * @return the BSONEncoder to use to encode instances of this class
-     */
-    protected BSONEncoder getEncoder() {
+    private BSONEncoder getEncoder() {
         return new BasicBSONEncoder();
     }
 
