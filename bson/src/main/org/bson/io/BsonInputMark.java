@@ -21,7 +21,7 @@ package org.bson.io;
  *
  * @see BsonInput#getMark(int)
  *
- * @since 3.5
+ * @since 3.7
  */
 public interface BsonInputMark {
     /**
