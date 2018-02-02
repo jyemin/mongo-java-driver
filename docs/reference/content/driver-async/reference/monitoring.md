@@ -33,6 +33,15 @@ application has multiple `MongoClient` instances connected to the same MongoDB s
 - `waitQueueSize`: the current size of the wait queue for a connection from this pool
 - `checkedOutCount`: the current count of connections that are currently in use
 
+JMX connection pool monitoring is disabled by default. To enable it, an application adds a
+`com.mongodb.management.JMXConnectionPoolListener` instance as a `ConnectionPoolListener` via `MongoClientSettings`:
+
+```java
+MongoClientSettings settings =
+        MongoClientSettings.builder()
+        .applyToConnectionPoolSettings(builder -> builder.addConnectionPoolListener(new JMXConnectionPoolListener()))
+        .build();
+```
 # Command Monitoring
 
 The driver implements the
