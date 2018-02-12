@@ -123,7 +123,7 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         nextBatch()
 
         then:
-        getReferenceCountAfterTimeout(connection, 1)
+        getReferenceCountAfterTimeout(connection, 1) == 1
         getReferenceCountAfterTimeout(connectionSource, 1) == 1
     }
 
