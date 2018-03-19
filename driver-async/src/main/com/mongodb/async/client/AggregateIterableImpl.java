@@ -104,7 +104,7 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
 
     @Override
     @Deprecated
-    public AggregateIterable<TResult> useCursor(final Boolean useCursor) {
+    public AggregateIterable<TResult> useCursor(@Nullable final Boolean useCursor) {
         this.useCursor = useCursor;
         return this;
     }

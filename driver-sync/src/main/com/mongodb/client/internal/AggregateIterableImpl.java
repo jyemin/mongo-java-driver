@@ -114,13 +114,13 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
     }
 
     @Override
-    public AggregateIterable<TResult> bypassDocumentValidation(final Boolean bypassDocumentValidation) {
+    public AggregateIterable<TResult> bypassDocumentValidation(@Nullable final Boolean bypassDocumentValidation) {
         this.bypassDocumentValidation = bypassDocumentValidation;
         return this;
     }
 
     @Override
-    public AggregateIterable<TResult> collation(final Collation collation) {
+    public AggregateIterable<TResult> collation(@Nullable final Collation collation) {
         this.collation = collation;
         return this;
     }
