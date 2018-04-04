@@ -163,18 +163,20 @@ for the driver to make use of the newest TLS protocols, Java runtime environment
 updates:
 
 * Java 7
-  - TSL 1.1 was first enabled by default in
+  - Starting with
     [Update 131](http://www.oracle.com/technetwork/java/javaseproducts/documentation/javase7supportreleasenotes-1601161.html#R170_131),
-    released October 8, 2016.
-  - TLS 1.1 was first enabled via `jdk.tls.client.protocols` system property in
+    released October 8, 2016, TSL 1.1 and TLS 1.2 are enabled by default.
+  - Starting with
     [Update 95](http://www.oracle.com/technetwork/java/javaseproducts/documentation/javase7supportreleasenotes-1601161.html#R170_95),
-    released January 19, 2016.
+    released January 19, 2016, TLS 1.1 and TLS 1.2 can be enabled by applications via the `jdk.tls.client.protocols` system property.
 
 * Java 6
-  - TSL 1.1 was first enabled by default in
-    [Update 141](http://www.oracle.com/technetwork/java/javase/documentation/overview-156328.html#R160_141), released on January 17, 2017.
-  - TLS 1.1 was first enabled via `jdk.tls.client.protocols` system property in
-    [Update 115 b32](http://www.oracle.com/technetwork/java/javase/documentation/overview-156328.html#6u115-b32), released July 19, 2016.
+  - Starting with
+    [Update 141](http://www.oracle.com/technetwork/java/javase/documentation/overview-156328.html#R160_141), released on January 17, 2017,
+    TSL 1.1 and TLS 1.2 are enabled by default.
+  - Starting with
+    [Update 115 b32](http://www.oracle.com/technetwork/java/javase/documentation/overview-156328.html#6u115-b32), released July 19, 2016,
+    TLS 1.1 and TLS 1.2 can be enabled by applications via the `jdk.tls.client.protocols` system property.
 
 Note that these updates are only available from Oracle via its Java SE commercial support program.  Java 7 Update 131
 is available via [OpenJDK](http://openjdk.java.net/install/).
