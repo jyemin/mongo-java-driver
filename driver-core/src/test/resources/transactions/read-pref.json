@@ -82,7 +82,7 @@
             "session": "session0"
           },
           "result": {
-            "errorContains": "transaction readPreference changed"
+            "errorContains": "read preference in a transaction must be primary"
           }
         },
         {
@@ -130,7 +130,7 @@
             "session": "session0"
           },
           "result": {
-            "errorContains": "transaction readPreference changed"
+            "errorContains": "read preference in a transaction must be primary"
           }
         },
         {

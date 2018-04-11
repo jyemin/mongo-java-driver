@@ -17,6 +17,7 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.MongoClientException;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -169,6 +170,9 @@ public class MongoClientDelegate {
                                              @Nullable final ClientSession session, final boolean ownsSession) {
             ReadWriteBinding readWriteBinding = new ClusterBinding(cluster, readPreference, readConcern);
             if (session != null) {
+                if (session.hasActiveTransaction() && !readPreference.equals(primary())) {
+                    throw new MongoClientException("Read preference in a transaction must be primary");
+                }
                 readWriteBinding = new ClientSessionBinding(session, ownsSession, readWriteBinding);
             }
             return readWriteBinding;

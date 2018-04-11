@@ -16,7 +16,6 @@
 
 package com.mongodb.internal.session;
 
-import com.mongodb.ReadPreference;
 import com.mongodb.session.ClientSession;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.session.ServerSession;
@@ -34,7 +33,6 @@ public class BaseClientSessionImpl implements ClientSession {
     private final ClientSessionOptions options;
     private BsonDocument clusterTime;
     private BsonTimestamp operationTime;
-    private ReadPreference transactionReadPreference;
     private volatile boolean closed;
 
     public BaseClientSessionImpl(final ServerSessionPool serverSessionPool, final Object originator, final ClientSessionOptions options) {
@@ -64,16 +62,6 @@ public class BaseClientSessionImpl implements ClientSession {
     @Override
     public BsonDocument getClusterTime() {
         return clusterTime;
-    }
-
-    @Override
-    public ReadPreference getTransactionReadPreference() {
-        return transactionReadPreference;
-    }
-
-    @Override
-    public void setTransactionReadPreference(final ReadPreference readPreference) {
-        this.transactionReadPreference = readPreference;
     }
 
     @Override

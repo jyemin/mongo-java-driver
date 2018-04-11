@@ -116,7 +116,6 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
     private void cleanupTransaction() {
         inTransaction = false;
         transactionOptions = null;
-        setTransactionReadPreference(null);
         if (getOptions().getAutoStartTransaction()) {
             startTransaction(getOptions().getDefaultTransactionOptions());
         }
@@ -124,7 +123,6 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
     }
 
     private ReadPreference getTransactionReadPreferenceOrPrimary() {
-        ReadPreference readPreference = getTransactionReadPreference();
-        return readPreference == null ? ReadPreference.primary() : readPreference;
+        return ReadPreference.primary();
     }
 }

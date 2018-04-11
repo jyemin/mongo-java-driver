@@ -16,7 +16,6 @@
 
 package com.mongodb.client.internal;
 
-import com.mongodb.MongoClientException;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.binding.ConnectionSource;
@@ -75,16 +74,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
 
     @Override
     public ConnectionSource getReadConnectionSource() {
-        if (session.hasActiveTransaction()) {
-            ReadPreference transactionReadPreference = session.getTransactionReadPreference();
-            if (transactionReadPreference != null && !transactionReadPreference.equals(wrapped.getReadPreference())) {
-                throw new MongoClientException("Transaction readPreference changed");
-            }
-        }
         ConnectionSource readConnectionSource = wrapped.getReadConnectionSource();
-        if (session.hasActiveTransaction()) {
-            session.setTransactionReadPreference(wrapped.getReadPreference());
-        }
         return new SessionBindingConnectionSource(readConnectionSource);
     }
 
@@ -95,16 +85,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
 
     @Override
     public ConnectionSource getWriteConnectionSource() {
-        if (session.hasActiveTransaction()) {
-            ReadPreference transactionReadPreference = session.getTransactionReadPreference();
-            if (transactionReadPreference != null && !transactionReadPreference.equals(ReadPreference.primary())) {
-                throw new MongoClientException("Transaction readPreference changed");
-            }
-        }
-        final ConnectionSource writeConnectionSource = wrapped.getWriteConnectionSource();
-        if (session.hasActiveTransaction()) {
-            session.setTransactionReadPreference(ReadPreference.primary());
-        }
+        ConnectionSource writeConnectionSource = wrapped.getWriteConnectionSource();
         return new SessionBindingConnectionSource(writeConnectionSource);
     }
 

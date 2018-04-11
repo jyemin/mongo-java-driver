@@ -17,7 +17,6 @@
 package com.mongodb.session;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.ReadPreference;
 import com.mongodb.annotations.NotThreadSafe;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -88,23 +87,6 @@ public interface ClientSession extends Closeable {
      * @return the latest cluster time seen by this session
      */
     BsonDocument getClusterTime();
-
-    /**
-     * Gets the read preference associated with this transaction.
-     *
-     * @return the read preference, which may be null if no operations have been executed within the transaction
-     * @since 3.8
-     */
-    ReadPreference getTransactionReadPreference();
-
-    /**
-     * Sets the read preference associated with this transaction. The read preference should only be set once per transaction,
-     * and is cleared at the end of the transaction.
-     *
-     * @param readPreference the read preference, which may not be null
-     * @since 3.8
-     */
-    void setTransactionReadPreference(ReadPreference readPreference);
 
     @Override
     void close();
