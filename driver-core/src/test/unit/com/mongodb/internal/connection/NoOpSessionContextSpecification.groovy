@@ -58,9 +58,9 @@ class NoOpSessionContextSpecification extends Specification {
         thrown(UnsupportedOperationException)
     }
 
-    def 'should provide given read concern'() {
+    def 'should provide given read concern for ReadConcernAwareNoOpSessionContext'() {
         given:
-        def sessionContext = new NoOpSessionContext(ReadConcern.MAJORITY)
+        def sessionContext = new ReadConcernAwareNoOpSessionContext(ReadConcern.MAJORITY)
 
         expect:
         sessionContext.readConcern == ReadConcern.MAJORITY

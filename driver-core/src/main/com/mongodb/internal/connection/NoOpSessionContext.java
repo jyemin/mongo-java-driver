@@ -21,30 +21,17 @@ import com.mongodb.session.SessionContext;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 
-import static com.mongodb.assertions.Assertions.notNull;
-
 /**
  * A SessionContext implementation that does nothing and reports that it has no session.
  *
  * <p>This class should not be considered a part of the public API.</p>
  */
-public final class NoOpSessionContext implements SessionContext {
-
-    private final ReadConcern readConcern;
+public class NoOpSessionContext implements SessionContext {
 
     /**
      * A singleton instance of a NoOpSessionContext
      */
-    public static final NoOpSessionContext INSTANCE = new NoOpSessionContext(ReadConcern.DEFAULT);  // TODO: deprecate this
-
-    /**
-     * Construct an instance.
-     *
-     * @param readConcern the read concern
-     */
-    public NoOpSessionContext(final ReadConcern readConcern) {
-        this.readConcern = notNull("readConcern", readConcern);
-    }
+    public static final NoOpSessionContext INSTANCE = new NoOpSessionContext();
 
     @Override
     public boolean hasSession() {
@@ -101,6 +88,6 @@ public final class NoOpSessionContext implements SessionContext {
 
     @Override
     public ReadConcern getReadConcern() {
-        return readConcern;
+        return ReadConcern.DEFAULT;
     }
 }
