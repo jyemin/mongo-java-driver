@@ -63,20 +63,13 @@ import static com.mongodb.client.CommandMonitoringTestHelper.getExpectedEvents;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 // See https://github.com/mongodb/specifications/tree/master/source/transactions/tests
 @RunWith(Parameterized.class)
 public class TransactionsTest {
-
-    private static final Map<String, Integer> ERROR_NAME_TO_CODE_MAP;
-
-    static {
-        ERROR_NAME_TO_CODE_MAP = new HashMap<String, Integer>();
-        ERROR_NAME_TO_CODE_MAP.put("WriteConflict", 112);
-        // ERROR_NAME_TO_CODE_MAP.putAll(DuplicateKey);
-    }
 
     private final String filename;
     private final String description;
@@ -179,7 +172,7 @@ public class TransactionsTest {
             for (BsonValue cur : definition.getArray("operations")) {
                 BsonDocument operation = cur.asDocument();
                 String operationName = operation.getString("name").getValue();
-                BsonValue expectedResult = operation.get("result", null);
+                BsonValue expectedResult = operation.get("result", new BsonDocument());
                 ClientSession clientSession = operation.getDocument("arguments").containsKey("session")
                         ? sessionsMap.get(operation.getDocument("arguments").getString("session").getValue()) : null;
                 BsonDocument sessionIdentifier = (clientSession == null) ? null : clientSession.getServerSession().getIdentifier();
@@ -202,19 +195,17 @@ public class TransactionsTest {
 
                         assertEquals("Expected operation result differs from actual", expectedResult, actualResult);
                     }
+                    assertFalse(String.format("Expected error '%s' but none thrown", getErrorContainsField(expectedResult)),
+                            hasErrorContainsField(expectedResult));
+                    assertFalse(String.format("Expected error code '%s' but none thrown", getErrorCodeNameField(expectedResult)),
+                            hasErrorCodeNameField(expectedResult));
                 } catch (RuntimeException e) {
-                    if (expectedResult == null) {
-                        throw e;
-                    }
-                    if (!expectedResult.isDocument()) {
-                        throw e;
-                    }
-                    if (expectedResult.asDocument().containsKey("errorContains")) {
-                        String expectedError = expectedResult.asDocument().getString("errorContains").getValue();
+                    if (hasErrorContainsField(expectedResult)) {
+                        String expectedError = getErrorContainsField(expectedResult);
                         assertTrue(String.format("Expected '%s' but got '%s'", expectedError, e.getMessage()),
                                 e.getMessage().toLowerCase().contains(expectedError.toLowerCase()));
-                    } else if (expectedResult.asDocument().containsKey("errorCodeName") || !(e instanceof MongoCommandException)) {
-                        String expectedErrorCodeName = expectedResult.asDocument().getString("errorCodeName").getValue();
+                    } else if (hasErrorCodeNameField(expectedResult) || (e instanceof MongoCommandException)) {
+                        String expectedErrorCodeName = getErrorCodeNameField(expectedResult);
                         MongoCommandException commandException = (MongoCommandException) e;
                         assertEquals(commandException.getResponse().getString("codeName", new BsonString("")).getValue(),
                                 expectedErrorCodeName);
@@ -242,6 +233,34 @@ public class TransactionsTest {
             List<BsonDocument> collectionData = collectionHelper.find(new BsonDocumentCodec());
             assertEquals(expectedOutcome.getDocument("collection").getArray("data").getValues(), collectionData);
         }
+    }
+
+    private String getErrorContainsField(final BsonValue expectedResult) {
+        return getErrorField(expectedResult, "errorContains");
+    }
+
+    private String getErrorCodeNameField(final BsonValue expectedResult) {
+        return getErrorField(expectedResult, "errorCodeName");
+    }
+
+    private String getErrorField(final BsonValue expectedResult, final String key) {
+        if (hasErrorField(expectedResult, key)) {
+            return expectedResult.asDocument().getString(key).getValue();
+        } else {
+            return "";
+        }
+    }
+
+    private boolean hasErrorContainsField(final BsonValue expectedResult) {
+        return hasErrorField(expectedResult, "errorContains");
+    }
+
+    private boolean hasErrorCodeNameField( final BsonValue expectedResult) {
+        return hasErrorField(expectedResult, "errorCodeName");
+    }
+
+    private boolean hasErrorField(final BsonValue expectedResult, final String key) {
+        return expectedResult.isDocument() && expectedResult.asDocument().containsKey(key);
     }
 
     private ClientSession nonNullClientSession(@Nullable final ClientSession clientSession) {
