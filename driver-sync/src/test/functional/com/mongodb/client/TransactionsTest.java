@@ -255,7 +255,7 @@ public class TransactionsTest {
         return hasErrorField(expectedResult, "errorContains");
     }
 
-    private boolean hasErrorCodeNameField( final BsonValue expectedResult) {
+    private boolean hasErrorCodeNameField(final BsonValue expectedResult) {
         return hasErrorField(expectedResult, "errorCodeName");
     }
 
