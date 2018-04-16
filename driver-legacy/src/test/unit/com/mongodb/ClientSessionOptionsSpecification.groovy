@@ -26,18 +26,26 @@ class ClientSessionOptionsSpecification extends Specification {
 
         then:
         options.isCausallyConsistent() == null
+        !options.autoStartTransaction
+        options.defaultTransactionOptions == TransactionOptions.builder().build()
     }
 
     def 'should apply options set in builder'() {
         when:
         def options = ClientSessionOptions.builder()
                 .causallyConsistent(causallyConsistent)
+                .autoStartTransaction(autoStartTransaction)
+                .defaultTransactionOptions(transactionOptions)
                 .build()
 
         then:
         options.isCausallyConsistent() == causallyConsistent
+        options.autoStartTransaction == autoStartTransaction
+        options.defaultTransactionOptions == transactionOptions
 
         where:
         causallyConsistent << [true, false]
+        autoStartTransaction << [true, false]
+        transactionOptions << [TransactionOptions.builder().build(), TransactionOptions.builder().readConcern(ReadConcern.LOCAL).build()]
     }
 }

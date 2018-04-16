@@ -89,7 +89,6 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
                 .batchSize(5)
                 .collation(defaultCollation)
                 .maxAwaitTime(15, MILLISECONDS)
-                .readConcern(ReadConcern.MAJORITY)
 
         def expectedCommand = new BsonDocument('aggregate', new BsonString(namespace.getCollectionName()))
                 .append('collation', defaultCollation.asDocument())
@@ -97,8 +96,8 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
                 .append('pipeline', new BsonArray([changeStream, *pipeline]))
                 .append('readConcern', new BsonDocument('level', new BsonString('majority')))
 
-            then:
-        testOperation(operation, [3, 6, 0], expectedCommand, async, cursorResult)
+        then:
+        testOperation(operation, [3, 6, 0], ReadConcern.MAJORITY, expectedCommand, async, cursorResult)
 
         where:
         async << [true, false]

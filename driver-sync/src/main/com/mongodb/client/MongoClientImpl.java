@@ -33,7 +33,6 @@ import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
 import com.mongodb.lang.Nullable;
-import com.mongodb.session.ClientSession;
 import org.bson.BsonDocument;
 import org.bson.Document;
 
@@ -95,6 +94,11 @@ final class MongoClientImpl implements MongoClient {
     public <T> ListDatabasesIterable<T> listDatabases(final ClientSession clientSession, final Class<T> clazz) {
         notNull("clientSession", clientSession);
         return createListDatabasesIterable(clientSession, clazz);
+    }
+
+    @Override
+    public ClientSession startSession() {
+        return startSession(ClientSessionOptions.builder().build());
     }
 
     @Override
