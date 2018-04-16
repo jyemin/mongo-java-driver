@@ -23,6 +23,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoDriverInformation;
 import com.mongodb.ReadPreference;
+import com.mongodb.TransactionOptions;
 import com.mongodb.client.internal.ListDatabasesIterableImpl;
 import com.mongodb.client.internal.MongoClientDelegate;
 import com.mongodb.client.internal.MongoDatabaseImpl;
@@ -98,12 +99,19 @@ final class MongoClientImpl implements MongoClient {
 
     @Override
     public ClientSession startSession() {
-        return startSession(ClientSessionOptions.builder().build());
+        return startSession(ClientSessionOptions
+                .builder()
+                .defaultTransactionOptions(TransactionOptions.builder()
+                        .readConcern(settings.getReadConcern())
+                        .writeConcern(settings.getWriteConcern())
+                        .build())
+                .build());
     }
 
     @Override
     public ClientSession startSession(final ClientSessionOptions options) {
-        ClientSession clientSession = delegate.createClientSession(notNull("options", options));
+        ClientSession clientSession = delegate.createClientSession(notNull("options", options),
+                settings.getReadConcern(), settings.getWriteConcern());
         if (clientSession == null) {
             throw new MongoClientException("Sessions are not supported by the MongoDB cluster to which this client is connected");
         }

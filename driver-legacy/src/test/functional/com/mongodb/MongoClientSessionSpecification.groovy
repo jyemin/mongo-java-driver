@@ -68,7 +68,12 @@ class MongoClientSessionSpecification extends FunctionalSpecification {
         expect:
         clientSession.getOriginator() == getMongoClient()
         clientSession.isCausallyConsistent()
-        clientSession.getOptions() == ClientSessionOptions.builder().build()
+        clientSession.getOptions() == ClientSessionOptions.builder()
+                .defaultTransactionOptions(TransactionOptions.builder()
+                .readConcern(ReadConcern.DEFAULT)
+                .writeConcern(WriteConcern.ACKNOWLEDGED)
+                .build())
+                .build()
         clientSession.getClusterTime() == null
         clientSession.getOperationTime() == null
         clientSession.getServerSession() != null

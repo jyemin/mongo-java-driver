@@ -17,15 +17,19 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.MongoInternalException;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
 import com.mongodb.internal.session.BaseClientSessionImpl;
 import com.mongodb.internal.session.ServerSessionPool;
+import com.mongodb.lang.Nullable;
 import com.mongodb.operation.AbortTransactionOperation;
 import com.mongodb.operation.CommitTransactionOperation;
 
 import static com.mongodb.assertions.Assertions.isTrue;
+import static com.mongodb.assertions.Assertions.notNull;
 
 final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
@@ -55,16 +59,30 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
 
     @Override
     public void startTransaction() {
-        startTransaction(TransactionOptions.builder().build());
+        startTransactionInternal(null);
     }
 
     @Override
     public void startTransaction(final TransactionOptions transactionOptions) {
+        notNull("transactionOptions", transactionOptions);
+        startTransactionInternal(transactionOptions);
+    }
+
+    private void startTransactionInternal(@Nullable final TransactionOptions transactionOptions) {
         if (inTransaction) {
             throw new IllegalStateException("Transaction already in progress");
         }
         inTransaction = true;
-        this.transactionOptions = transactionOptions;
+        if (transactionOptions == null) {
+            this.transactionOptions = getOptions().getDefaultTransactionOptions();
+        } else {
+            TransactionOptions.Builder newOptionsBuilder = TransactionOptions.builder();
+            newOptionsBuilder.writeConcern(transactionOptions.getWriteConcern() == null
+                    ? getOptions().getDefaultTransactionOptions().getWriteConcern() : transactionOptions.getWriteConcern());
+            newOptionsBuilder.readConcern(transactionOptions.getReadConcern() == null
+                    ? getOptions().getDefaultTransactionOptions().getReadConcern() : transactionOptions.getReadConcern());
+            this.transactionOptions = newOptionsBuilder.build();
+        }
     }
 
     @Override
@@ -74,8 +92,12 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         }
         try {
             if (getServerSession().getStatementId() > 0) {
+                ReadConcern readConcern = transactionOptions.getReadConcern();
+                if (readConcern == null) {
+                    throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
+                }
                 delegate.getOperationExecutor().execute(new CommitTransactionOperation(transactionOptions.getWriteConcern()),
-                        getTransactionReadPreferenceOrPrimary(), transactionOptions.getReadConcern(), this);
+                        getTransactionReadPreferenceOrPrimary(), readConcern, this);
             }
         } finally {
             cleanupTransaction();
@@ -89,8 +111,12 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         }
         try {
             if (getServerSession().getStatementId() > 0) {
+                ReadConcern readConcern = transactionOptions.getReadConcern();
+                if (readConcern == null) {
+                    throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
+                }
                 delegate.getOperationExecutor().execute(new AbortTransactionOperation(transactionOptions.getWriteConcern()),
-                        getTransactionReadPreferenceOrPrimary(), transactionOptions.getReadConcern(), this);
+                        getTransactionReadPreferenceOrPrimary(), readConcern, this);
             }
         } catch (Exception e) {
             // ignore errors

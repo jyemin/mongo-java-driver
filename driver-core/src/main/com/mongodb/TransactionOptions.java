@@ -17,9 +17,9 @@
 package com.mongodb;
 
 import com.mongodb.annotations.Immutable;
+import com.mongodb.lang.Nullable;
 
 import static com.mongodb.assertions.Assertions.isTrueArgument;
-import static com.mongodb.assertions.Assertions.notNull;
 
 /**
  * Options to apply to transactions.
@@ -39,6 +39,7 @@ public final class TransactionOptions {
      *
      * @return the read concern, which defaults to {@link ReadConcern#SNAPSHOT}
      */
+    @Nullable
     public ReadConcern getReadConcern() {
         return readConcern;
     }
@@ -48,6 +49,7 @@ public final class TransactionOptions {
      *
      * @return the write concern, which defaults to {@link WriteConcern#ACKNOWLEDGED}
      */
+    @Nullable
     public WriteConcern getWriteConcern() {
         return writeConcern;
     }
@@ -100,8 +102,8 @@ public final class TransactionOptions {
      * The builder for transaction options
      */
     public static final class Builder {
-        private ReadConcern readConcern = ReadConcern.SNAPSHOT;
-        private WriteConcern writeConcern = WriteConcern.ACKNOWLEDGED;
+        private ReadConcern readConcern;
+        private WriteConcern writeConcern;
 
         /**
          * Sets the read concern.
@@ -109,8 +111,8 @@ public final class TransactionOptions {
          * @param readConcern the read concern
          * @return this
          */
-        public Builder readConcern(final ReadConcern readConcern) {
-            this.readConcern = notNull("readConcern", readConcern);
+        public Builder readConcern(@Nullable final ReadConcern readConcern) {
+            this.readConcern = readConcern;
             return this;
         }
 
@@ -120,9 +122,9 @@ public final class TransactionOptions {
          * @param writeConcern the write concern, which must be acknowledged
          * @return this
          */
-        public Builder writeConcern(final WriteConcern writeConcern) {
-            this.writeConcern = notNull("writeConcern", writeConcern);
-            isTrueArgument("acknowleded write concern", writeConcern.isAcknowledged());
+        public Builder writeConcern(@Nullable final WriteConcern writeConcern) {
+            this.writeConcern = writeConcern;
+            isTrueArgument("acknowledged write concern", writeConcern != null && writeConcern.isAcknowledged());
             return this;
         }
 

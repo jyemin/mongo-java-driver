@@ -24,8 +24,8 @@ class TransactionOptionsSpecification extends Specification {
         def options = TransactionOptions.builder().build()
 
         then:
-        options.getReadConcern() == ReadConcern.SNAPSHOT
-        options.getWriteConcern() == WriteConcern.ACKNOWLEDGED
+        options.getReadConcern() == null
+        options.getWriteConcern() == null
     }
 
     def 'should apply options set in builder'() {

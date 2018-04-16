@@ -22,10 +22,13 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
 import com.mongodb.binding.ClusterBinding;
 import com.mongodb.binding.ReadBinding;
 import com.mongodb.binding.ReadWriteBinding;
 import com.mongodb.binding.WriteBinding;
+import com.mongodb.client.ClientSession;
 import com.mongodb.connection.Cluster;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterDescription;
@@ -35,13 +38,13 @@ import com.mongodb.lang.Nullable;
 import com.mongodb.operation.ReadOperation;
 import com.mongodb.operation.WriteOperation;
 import com.mongodb.selector.ServerSelector;
-import com.mongodb.client.ClientSession;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.mongodb.ReadPreference.primary;
 import static com.mongodb.assertions.Assertions.isTrue;
+import static com.mongodb.assertions.Assertions.notNull;
 
 /**
  * This class is not part of the public API and may be removed or changed at any time.
@@ -71,12 +74,28 @@ public class MongoClientDelegate {
     }
 
     @Nullable
-    public ClientSession createClientSession(final ClientSessionOptions options) {
+    public ClientSession createClientSession(final ClientSessionOptions options, final ReadConcern readConcern,
+                                             final WriteConcern writeConcern) {
+        notNull("readConcern", readConcern);
+        notNull("writeConcern", writeConcern);
+        ClientSessionOptions.Builder newOptionsBuilder = ClientSessionOptions.builder();
+        Boolean causallyConsistent = options.isCausallyConsistent();
+        if (causallyConsistent != null) {
+            newOptionsBuilder.causallyConsistent(causallyConsistent);
+        }
+        newOptionsBuilder.autoStartTransaction(options.getAutoStartTransaction());
+        newOptionsBuilder.defaultTransactionOptions(TransactionOptions.builder()
+                .readConcern(options.getDefaultTransactionOptions().getReadConcern() == null
+                        ? readConcern : options.getDefaultTransactionOptions().getReadConcern())
+                .writeConcern(options.getDefaultTransactionOptions().getWriteConcern() == null
+                        ? writeConcern : options.getDefaultTransactionOptions().getWriteConcern())
+                .build());
+
         if (credentialList.size() > 1) {
             return null;
         }
         if (getConnectedClusterDescription().getLogicalSessionTimeoutMinutes() != null) {
-            return new ClientSessionImpl(serverSessionPool, originator, options, this);
+            return new ClientSessionImpl(serverSessionPool, originator, newOptionsBuilder.build(), this);
         } else {
             return null;
         }
@@ -185,7 +204,8 @@ public class MongoClientDelegate {
                 isTrue("ClientSession from same MongoClient", clientSessionFromOperation.getOriginator() == originator);
                 session = clientSessionFromOperation;
             } else {
-                session = createClientSession(ClientSessionOptions.builder().causallyConsistent(false).build());
+                session = createClientSession(ClientSessionOptions.builder().causallyConsistent(false).build(), ReadConcern.DEFAULT,
+                        WriteConcern.ACKNOWLEDGED);
             }
             return session;
         }
