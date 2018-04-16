@@ -68,12 +68,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             throw new IllegalStateException("Transaction already in progress");
         }
         inTransaction = true;
-        TransactionOptions.Builder newOptionsBuilder = TransactionOptions.builder();
-        newOptionsBuilder.writeConcern(transactionOptions.getWriteConcern() == null
-                ? getOptions().getDefaultTransactionOptions().getWriteConcern() : transactionOptions.getWriteConcern());
-        newOptionsBuilder.readConcern(transactionOptions.getReadConcern() == null
-                ? getOptions().getDefaultTransactionOptions().getReadConcern() : transactionOptions.getReadConcern());
-        this.transactionOptions = newOptionsBuilder.build();
+        this.transactionOptions = TransactionOptions.merge(transactionOptions, getOptions().getDefaultTransactionOptions());
     }
 
     @Override

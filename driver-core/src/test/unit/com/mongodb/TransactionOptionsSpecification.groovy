@@ -39,4 +39,17 @@ class TransactionOptionsSpecification extends Specification {
         options.readConcern == ReadConcern.LOCAL
         options.writeConcern == WriteConcern.JOURNALED
     }
+
+    def 'should merge'() {
+        given:
+        def first = TransactionOptions.builder().build();
+        def second = TransactionOptions.builder().readConcern(ReadConcern.MAJORITY).writeConcern(WriteConcern.MAJORITY).build()
+        def third = TransactionOptions.builder().readConcern(ReadConcern.LOCAL).writeConcern(WriteConcern.W2).build()
+
+        expect:
+        TransactionOptions.merge(first, second) == second
+        TransactionOptions.merge(second, first) == second
+        TransactionOptions.merge(second, third) == second
+        TransactionOptions.merge(third, second) == third
+    }
 }

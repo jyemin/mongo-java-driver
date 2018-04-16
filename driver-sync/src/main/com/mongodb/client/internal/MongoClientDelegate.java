@@ -78,24 +78,22 @@ public class MongoClientDelegate {
                                              final WriteConcern writeConcern) {
         notNull("readConcern", readConcern);
         notNull("writeConcern", writeConcern);
-        ClientSessionOptions.Builder newOptionsBuilder = ClientSessionOptions.builder();
-        Boolean causallyConsistent = options.isCausallyConsistent();
-        if (causallyConsistent != null) {
-            newOptionsBuilder.causallyConsistent(causallyConsistent);
-        }
-        newOptionsBuilder.autoStartTransaction(options.getAutoStartTransaction());
-        newOptionsBuilder.defaultTransactionOptions(TransactionOptions.builder()
-                .readConcern(options.getDefaultTransactionOptions().getReadConcern() == null
-                        ? readConcern : options.getDefaultTransactionOptions().getReadConcern())
-                .writeConcern(options.getDefaultTransactionOptions().getWriteConcern() == null
-                        ? writeConcern : options.getDefaultTransactionOptions().getWriteConcern())
-                .build());
 
         if (credentialList.size() > 1) {
             return null;
         }
+
         if (getConnectedClusterDescription().getLogicalSessionTimeoutMinutes() != null) {
-            return new ClientSessionImpl(serverSessionPool, originator, newOptionsBuilder.build(), this);
+            ClientSessionOptions mergedOptions = ClientSessionOptions.builder(options)
+                    .defaultTransactionOptions(
+                            TransactionOptions.merge(
+                                    options.getDefaultTransactionOptions(),
+                                    TransactionOptions.builder()
+                                            .readConcern(readConcern)
+                                            .writeConcern(writeConcern)
+                                            .build()))
+                    .build();
+            return new ClientSessionImpl(serverSessionPool, originator, mergedOptions, this);
         } else {
             return null;
         }

@@ -48,4 +48,20 @@ class ClientSessionOptionsSpecification extends Specification {
         autoStartTransaction << [true, false]
         transactionOptions << [TransactionOptions.builder().build(), TransactionOptions.builder().readConcern(ReadConcern.LOCAL).build()]
     }
+
+    def 'should apply options to builder'() {
+        expect:
+        ClientSessionOptions.builder(baseOptions).build() == baseOptions
+
+        where:
+        baseOptions << [ClientSessionOptions.builder().build(),
+                        ClientSessionOptions.builder()
+                                .causallyConsistent(true)
+                                .autoStartTransaction(false)
+                                .defaultTransactionOptions(TransactionOptions.builder()
+                                .writeConcern(WriteConcern.MAJORITY)
+                                .readConcern(ReadConcern
+                                .MAJORITY).build())
+                                .build()]
+    }
 }

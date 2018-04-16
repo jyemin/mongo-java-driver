@@ -124,6 +124,21 @@ public final class ClientSessionOptions {
     }
 
     /**
+     * Gets an instance of a builder initialized with the given options
+     *
+     * @param options the options with which to initialize the builder
+     * @return a builder instance
+     * @since 3.8
+     */
+    public static Builder builder(final ClientSessionOptions options) {
+        Builder builder = new Builder();
+        builder.causallyConsistent = options.isCausallyConsistent();
+        builder.autoStartTransaction = options.getAutoStartTransaction();
+        builder.defaultTransactionOptions = options.getDefaultTransactionOptions();
+        return builder;
+    }
+
+    /**
      * A builder for instances of {@code ClientSession}
      */
     @NotThreadSafe

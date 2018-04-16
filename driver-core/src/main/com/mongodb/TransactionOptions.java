@@ -63,6 +63,22 @@ public final class TransactionOptions {
         return new Builder();
     }
 
+    /**
+     * Merge the two provided transaction options, with the first taking precedence over the second.
+     *
+     * @param options the transaction options, which take precedence for any property that is non-null
+     * @param defaultOptions the default transaction options
+     * @return the merged transaction optoins
+     */
+    public static TransactionOptions merge(final TransactionOptions options, final TransactionOptions defaultOptions) {
+        return TransactionOptions.builder()
+                .writeConcern(options.getWriteConcern() == null
+                        ? defaultOptions.getWriteConcern() : options.getWriteConcern())
+                .readConcern(options.getReadConcern() == null
+                        ? defaultOptions.getReadConcern() : options.getReadConcern())
+                .build();
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
