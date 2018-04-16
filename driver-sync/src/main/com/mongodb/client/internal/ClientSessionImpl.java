@@ -24,7 +24,6 @@ import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
 import com.mongodb.internal.session.BaseClientSessionImpl;
 import com.mongodb.internal.session.ServerSessionPool;
-import com.mongodb.lang.Nullable;
 import com.mongodb.operation.AbortTransactionOperation;
 import com.mongodb.operation.CommitTransactionOperation;
 
@@ -59,30 +58,22 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
 
     @Override
     public void startTransaction() {
-        startTransactionInternal(null);
+        startTransaction(TransactionOptions.builder().build());
     }
 
     @Override
     public void startTransaction(final TransactionOptions transactionOptions) {
         notNull("transactionOptions", transactionOptions);
-        startTransactionInternal(transactionOptions);
-    }
-
-    private void startTransactionInternal(@Nullable final TransactionOptions transactionOptions) {
         if (inTransaction) {
             throw new IllegalStateException("Transaction already in progress");
         }
         inTransaction = true;
-        if (transactionOptions == null) {
-            this.transactionOptions = getOptions().getDefaultTransactionOptions();
-        } else {
-            TransactionOptions.Builder newOptionsBuilder = TransactionOptions.builder();
-            newOptionsBuilder.writeConcern(transactionOptions.getWriteConcern() == null
-                    ? getOptions().getDefaultTransactionOptions().getWriteConcern() : transactionOptions.getWriteConcern());
-            newOptionsBuilder.readConcern(transactionOptions.getReadConcern() == null
-                    ? getOptions().getDefaultTransactionOptions().getReadConcern() : transactionOptions.getReadConcern());
-            this.transactionOptions = newOptionsBuilder.build();
-        }
+        TransactionOptions.Builder newOptionsBuilder = TransactionOptions.builder();
+        newOptionsBuilder.writeConcern(transactionOptions.getWriteConcern() == null
+                ? getOptions().getDefaultTransactionOptions().getWriteConcern() : transactionOptions.getWriteConcern());
+        newOptionsBuilder.readConcern(transactionOptions.getReadConcern() == null
+                ? getOptions().getDefaultTransactionOptions().getReadConcern() : transactionOptions.getReadConcern());
+        this.transactionOptions = newOptionsBuilder.build();
     }
 
     @Override
