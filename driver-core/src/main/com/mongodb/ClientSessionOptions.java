@@ -131,6 +131,7 @@ public final class ClientSessionOptions {
      * @since 3.8
      */
     public static Builder builder(final ClientSessionOptions options) {
+        notNull("options", options);
         Builder builder = new Builder();
         builder.causallyConsistent = options.isCausallyConsistent();
         builder.autoStartTransaction = options.getAutoStartTransaction();

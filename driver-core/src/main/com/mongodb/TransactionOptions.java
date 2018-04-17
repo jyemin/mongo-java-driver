@@ -20,6 +20,7 @@ import com.mongodb.annotations.Immutable;
 import com.mongodb.lang.Nullable;
 
 import static com.mongodb.assertions.Assertions.isTrueArgument;
+import static com.mongodb.assertions.Assertions.notNull;
 
 /**
  * Options to apply to transactions.
@@ -68,9 +69,11 @@ public final class TransactionOptions {
      *
      * @param options the transaction options, which take precedence for any property that is non-null
      * @param defaultOptions the default transaction options
-     * @return the merged transaction optoins
+     * @return the merged transaction options
      */
     public static TransactionOptions merge(final TransactionOptions options, final TransactionOptions defaultOptions) {
+        notNull("options", options);
+        notNull("defaultOptions", defaultOptions);
         return TransactionOptions.builder()
                 .writeConcern(options.getWriteConcern() == null
                         ? defaultOptions.getWriteConcern() : options.getWriteConcern())
