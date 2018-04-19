@@ -7,14 +7,20 @@ title = "Upgrade Considerations"
   pre = "<i class='fa fa-level-up'></i>"
 +++
 
-## Upgrading from 3.6.x
+## Upgrading from 3.7.x
 
-The 3.7 release is binary and source compatible with the 3.5 release, except for methods that have been added to interfaces that
+The 3.8 driver introduces a small but significant breaking change to the existing API for any application that already depends on session
+support (introduced in the 3.6 release to support causal consistency): the type of ClientSession changes from
+`com.mongodb.session.ClientSession` to `com.mongodb.client.ClientSession`.  This is both source and binary incompatible with the 3.7
+release.  This change was required in order to introduce support in the driver for transactions that works in both the synchronous and the
+asynchronous drivers.
+
+Otherwise, the 3.8 release is binary and source compatible with the 3.7 release, except for methods that have been added to interfaces that
 have been marked as unstable, and changes to classes or interfaces that have been marked as internal or annotated as Beta.
 
 ## Upgrading from 2.x
 
-You must upgrade first to 3.0 driver.  See the Upgrade guide in the 3.0 driver reference documentation.
+See the Upgrade guide in the 3.0 driver reference documentation for breaking changes in 3.0.
 
 ### System Requirements
 
@@ -30,21 +36,23 @@ its implementation.  See [Async]({{< ref "driver-async/index.md" >}}) for detail
 
 The following table specifies the compatibility of the MongoDB Java driver for use with a specific version of MongoDB.
 
-|Java Driver Version|MongoDB 2.6|MongoDB 3.0 |MongoDB 3.2|MongoDB 3.4|MongoDB 3.6|
-|-------------------|-----------|------------|-----------|-----------|-----------|
-|Version 3.7        |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |
-|Version 3.6        |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |
-|Version 3.5        |  ✓  |  ✓  |  ✓  |  ✓  |     |
-|Version 3.4        |  ✓  |  ✓  |  ✓  |  ✓  |     |
-|Version 3.3        |  ✓  |  ✓  |  ✓  |     |     |
-|Version 3.2        |  ✓  |  ✓  |  ✓  |     |     |
-|Version 3.1        |  ✓  |  ✓  |     |     |     |
-|Version 3.0        |  ✓  |  ✓  |     |     |     |
+|Java Driver Version|MongoDB 2.6|MongoDB 3.0 |MongoDB 3.2|MongoDB 3.4|MongoDB 3.6|MongoDB 4.0|
+|-------------------|-----------|------------|-----------|-----------|-----------|-----------|
+|Version 3.8        |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |
+|Version 3.7        |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |     |
+|Version 3.6        |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |     |
+|Version 3.5        |  ✓  |  ✓  |  ✓  |  ✓  |     |     |
+|Version 3.4        |  ✓  |  ✓  |  ✓  |  ✓  |     |     |
+|Version 3.3        |  ✓  |  ✓  |  ✓  |     |     |     |
+|Version 3.2        |  ✓  |  ✓  |  ✓  |     |     |     |
+|Version 3.1        |  ✓  |  ✓  |     |     |     |     |
+|Version 3.0        |  ✓  |  ✓  |     |     |     |     |
 
 The following table specifies the compatibility of the MongoDB Java driver for use with a specific version of Java.
 
 |Java Driver Version|Java 5 | Java 6 | Java 7 | Java 8 |
 |-------------------|-------|--------|--------|--------|
+|Version 3.8        |     | ✓ | ✓ | ✓ |
 |Version 3.7        |     | ✓ | ✓ | ✓ |
 |Version 3.6        |     | ✓ | ✓ | ✓ |
 |Version 3.5        |     | ✓ | ✓ | ✓ |
