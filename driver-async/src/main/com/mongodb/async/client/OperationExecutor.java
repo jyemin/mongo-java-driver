@@ -48,7 +48,6 @@ interface OperationExecutor {
      * @param session the session to associate this operation with
      * @param callback the callback to be called when the operation has been executed
      * @param <T> the operations result type.
-     * @since 3.6
      */
     <T> void execute(AsyncReadOperation<T> operation, ReadPreference readPreference, ReadConcern readConcern,
                      @Nullable ClientSession session, SingleResultCallback<T> callback);
@@ -71,7 +70,6 @@ interface OperationExecutor {
      * @param readConcern the read concern
      * @param callback the callback to be called when the operation has been executed
      * @param <T> the operations result type.
-     * @since 3.6
      */
     <T> void execute(AsyncWriteOperation<T> operation, ReadConcern readConcern, @Nullable ClientSession session,
                      SingleResultCallback<T> callback);

@@ -38,7 +38,7 @@ class ClientSessionBinding implements AsyncReadWriteBinding {
         this.wrapped = notNull("wrapped", wrapped);
         this.ownsSession = ownsSession;
         this.session = notNull("session", session);
-        this.sessionContext = new SyncClientSessionContext(session);
+        this.sessionContext = new AsyncClientSessionContext(session);
     }
 
     @Override
@@ -142,11 +142,11 @@ class ClientSessionBinding implements AsyncReadWriteBinding {
         }
     }
 
-    private final class SyncClientSessionContext extends ClientSessionContext implements SessionContext {
+    private final class AsyncClientSessionContext extends ClientSessionContext implements SessionContext {
 
         private final ClientSession clientSession;
 
-        SyncClientSessionContext(final ClientSession clientSession) {
+        AsyncClientSessionContext(final ClientSession clientSession) {
             super(clientSession);
             this.clientSession = clientSession;
         }
