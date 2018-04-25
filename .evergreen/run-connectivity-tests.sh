@@ -10,7 +10,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #       Pass as many MongoDB URIS as arguments to this script as required
 
 JDK=${JDK:-jdk}
-JAVA_HOME="/opt/java/${JDK}"
 
 ############################################
 #            Main Program                  #
@@ -22,7 +21,6 @@ echo "Running connectivity tests with ${JDK}"
 export JAVA_HOME="/opt/java/jdk8"
 
 ./gradlew -version
-./gradlew --info driver-sync:testClasses
 
 for MONGODB_URI in $@; do
     ./gradlew -PjdkHome=/opt/java/${JDK} -Dorg.mongodb.test.uri=${MONGODB_URI} --stacktrace --info -Dtest.single=ConnectivityTest --rerun-tasks driver-sync:test
