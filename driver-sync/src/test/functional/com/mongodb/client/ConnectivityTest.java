@@ -21,15 +21,16 @@ import org.junit.Test;
 
 public class ConnectivityTest {
 
+    // the test succeeds if no exception is thrown, and fail otherwise
     @Test
     public void testConnectivity() {
         MongoClient client = MongoClients.create(Fixture.getMongoClientSettings());
 
         try {
-            // test basic connectivity
+            // test that a command that doesn't require auth completes normally
             client.getDatabase("admin").runCommand(new Document("ismaster", 1));
 
-            // test authenticated connectivity
+            // test that a command that requires auth completes normally
             client.getDatabase("test").getCollection("test").count();
         } finally {
             client.close();
