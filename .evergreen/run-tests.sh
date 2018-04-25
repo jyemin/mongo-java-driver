@@ -27,6 +27,10 @@ else
   export ASYNC_TYPE="-Dorg.mongodb.async.type=nio2"
 fi
 
+# We always compile with the latest version of java
+export JAVA_HOME="/opt/java/jdk8"
+
+
 ############################################
 #            Functions                     #
 ############################################
@@ -80,9 +84,6 @@ if [ "$SSL" != "nossl" ]; then
    provision_ssl
 fi
 echo "Running $AUTH tests over $SSL for $TOPOLOGY and connecting to $MONGODB_URI"
-
-# We always compile with the latest version of java
-export JAVA_HOME="/opt/java/jdk8"
 
 echo "Running tests with ${JDK}"
 ./gradlew -version
