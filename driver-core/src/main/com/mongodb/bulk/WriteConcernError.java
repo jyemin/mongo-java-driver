@@ -113,6 +113,9 @@ public class WriteConcernError {
         if (code != that.code) {
             return false;
         }
+        if (!codeName.equals(that.codeName)) {
+            return false;
+        }
         if (!details.equals(that.details)) {
             return false;
         }
@@ -126,6 +129,7 @@ public class WriteConcernError {
     @Override
     public int hashCode() {
         int result = code;
+        result = 31 * result + codeName.hashCode();
         result = 31 * result + message.hashCode();
         result = 31 * result + details.hashCode();
         return result;
@@ -133,8 +137,9 @@ public class WriteConcernError {
 
     @Override
     public String toString() {
-        return "BulkWriteConcernError{"
+        return "WriteConcernError{"
                + "code=" + code
+               + ", codeName='" + codeName + '\''
                + ", message='" + message + '\''
                + ", details=" + details
                + '}';
