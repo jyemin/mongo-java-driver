@@ -60,6 +60,17 @@ public class MongoCommandException extends MongoServerException {
     }
 
     /**
+     * Gets the name associated with the error code.
+     *
+     * @return the error code name, which may be the empty string
+     * @since 3.8
+     * @mongodb.server.release 3.4
+     */
+    public String getErrorCodeName() {
+        return response.getString("codeName", new BsonString("")).getValue();
+    }
+
+    /**
      * Gets the error message associated with the command failure.
      *
      * @return the error message

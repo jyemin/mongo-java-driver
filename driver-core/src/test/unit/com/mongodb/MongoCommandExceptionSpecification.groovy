@@ -44,4 +44,11 @@ class MongoCommandExceptionSpecification extends Specification {
                 .getErrorCode() == -1
     }
 
+    def 'should extract error code name'() {
+        expect:
+        new MongoCommandException(new BsonDocument('ok', BsonBoolean.FALSE).append('code', new BsonInt32(26))
+                .append('codeName', new BsonString('TimeoutError')), new ServerAddress()).getErrorCodeName() == 'TimeoutError'
+        new MongoCommandException(new BsonDocument('ok', BsonBoolean.FALSE), new ServerAddress()).getErrorCodeName() == ''
+    }
+
 }

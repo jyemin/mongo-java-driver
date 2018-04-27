@@ -28,8 +28,25 @@ import static com.mongodb.assertions.Assertions.notNull;
  */
 public class WriteConcernError {
     private final int code;
+    private final String codeName;
     private final String message;
     private final BsonDocument details;
+
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param code    the error code
+     * @param codeName the error code name
+     * @param message the error message
+     * @param details any details
+     */
+    public WriteConcernError(final int code, final String codeName, final String message, final BsonDocument details) {
+        this.code = code;
+        this.codeName = notNull("codeName", codeName);
+        this.message = notNull("message", message);
+        this.details = notNull("details", details);
+    }
 
     /**
      * Constructs a new instance.
@@ -37,11 +54,11 @@ public class WriteConcernError {
      * @param code    the error code
      * @param message the error message
      * @param details any details
+     * @deprecated
      */
+    @Deprecated
     public WriteConcernError(final int code, final String message, final BsonDocument details) {
-        this.code = code;
-        this.message = notNull("message", message);
-        this.details = notNull("details", details);
+        this(code, "", message, details);
     }
 
     /**
@@ -51,6 +68,17 @@ public class WriteConcernError {
      */
     public int getCode() {
         return code;
+    }
+
+    /**
+     * Gets the name associated with the error code.
+     *
+     * @return the error code name, which may be the empty string
+     * @since 3.8
+     * @mongodb.server.release 3.4
+     */
+    public String getCodeName() {
+        return codeName;
     }
 
     /**
