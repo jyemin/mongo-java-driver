@@ -170,9 +170,9 @@ public final class TransactionOptions {
         }
 
         /**
-         * Sets the write concern.
+         * Sets the read preference.
          *
-         * @param readPreference the write concern, which must be acknowledged
+         * @param readPreference the read preference, which currently must be primary. This restriction may be relaxed in future versions.
          * @return this
          */
         public Builder readPreference(@Nullable final ReadPreference readPreference) {
