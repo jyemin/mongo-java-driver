@@ -18,6 +18,7 @@ package com.mongodb.async.client;
 
 import com.mongodb.ClusterFixture;
 import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.connection.TestCommandListener;
 import com.mongodb.event.CommandEvent;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.ClusterFixture.isStandalone;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.async.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.CommandMonitoringTestHelper.assertEventsEquality;
@@ -73,11 +75,14 @@ public class ReadConcernTest {
 
         List<CommandEvent> events = commandListener.getCommandStartedEvents();
 
-        final BsonDocument commandDocument = new BsonDocument("count", new BsonString("test"))
+        BsonDocument commandDocument = new BsonDocument("count", new BsonString("test"))
                 .append("readConcern", ReadConcern.LOCAL.asDocument())
                 .append("query", new BsonDocument());
         if (serverVersionAtLeast(3, 6)) {
             commandDocument.put("$db", new BsonString(getDefaultDatabaseName()));
+        }
+        if (isStandalone() && serverVersionAtLeast(3, 6)) {
+            commandDocument.put("$readPreference", ReadPreference.primaryPreferred().toDocument());
         }
         assertEventsEquality(Arrays.<CommandEvent>asList(new CommandStartedEvent(1, null, getDefaultDatabaseName(),
                         "count", commandDocument)), events,
