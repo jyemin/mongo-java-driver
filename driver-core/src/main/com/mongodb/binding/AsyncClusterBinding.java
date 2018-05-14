@@ -125,7 +125,7 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
         public SessionContext getSessionContext() {
             return new ReadConcernAwareNoOpSessionContext(readConcern);
         }
-        
+
         @Override
         public void getConnection(final SingleResultCallback<AsyncConnection> callback) {
             server.getConnectionAsync(callback);
