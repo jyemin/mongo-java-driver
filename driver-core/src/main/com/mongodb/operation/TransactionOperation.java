@@ -27,7 +27,6 @@ import com.mongodb.operation.OperationHelper.CallableWithConnection;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 
-import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.operation.CommandOperationHelper.executeWrappedCommandProtocol;
@@ -65,7 +64,6 @@ public abstract class TransactionOperation implements WriteOperation<Void>, Asyn
 
     @Override
     public Void execute(final WriteBinding binding) {
-        isTrue("in transaction", binding.getSessionContext().hasActiveTransaction());
         return withConnection(binding, new CallableWithConnection<Void>() {
             @Override
             public Void call(final Connection connection) {
@@ -77,7 +75,6 @@ public abstract class TransactionOperation implements WriteOperation<Void>, Asyn
 
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final SingleResultCallback<Void> callback) {
-        isTrue("in transaction", binding.getSessionContext().hasActiveTransaction());
         withConnection(binding, new AsyncCallableWithConnection() {
             @Override
             public void call(final AsyncConnection connection, final Throwable t) {
