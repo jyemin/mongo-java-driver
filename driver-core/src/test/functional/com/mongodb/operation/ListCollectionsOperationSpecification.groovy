@@ -172,6 +172,48 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         !names.contains(collectionName)
     }
 
+    def 'should get all fields when nameOnly is not requested'() {
+        given:
+        def operation = new ListCollectionsOperation(databaseName, new DocumentCodec())
+        getCollectionHelper().create('collection4', new CreateCollectionOptions())
+
+        when:
+        def cursor = operation.execute(getBinding())
+        def collection = cursor.next()[0]
+
+        then:
+        collection.size() > 2
+    }
+
+    @IgnoreIf({ !serverVersionAtLeast(4, 0) })
+    def 'should only get collection names when nameOnly is requested'() {
+        given:
+        def operation = new ListCollectionsOperation(databaseName, new DocumentCodec())
+                .nameOnly(true)
+        getCollectionHelper().create('collection5', new CreateCollectionOptions())
+
+        when:
+        def cursor = operation.execute(getBinding())
+        def collection = cursor.next()[0]
+
+        then:
+        collection.size() == 2
+    }
+
+    @IgnoreIf({ serverVersionAtLeast(4, 0) })
+    def 'should only all field names when nameOnly is requested on server versions that do not support nameOnly'() {
+        given:
+        def operation = new ListCollectionsOperation(databaseName, new DocumentCodec())
+                .nameOnly(true)
+        getCollectionHelper().create('collection6', new CreateCollectionOptions())
+
+        when:
+        def cursor = operation.execute(getBinding())
+        def collection = cursor.next()[0]
+
+        then:
+        collection.size() > 2
+    }
 
     @Category(Async)
     def 'should return collection names if a collection exists asynchronously'() {
