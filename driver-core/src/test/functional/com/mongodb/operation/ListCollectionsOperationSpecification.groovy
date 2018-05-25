@@ -172,6 +172,7 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         !names.contains(collectionName)
     }
 
+    @IgnoreIf({ !serverVersionAtLeast(3, 4) || serverVersionAtLeast(4, 0) })
     def 'should get all fields when nameOnly is not requested'() {
         given:
         def operation = new ListCollectionsOperation(databaseName, new DocumentCodec())
@@ -200,8 +201,8 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         collection.size() == 2
     }
 
-    @IgnoreIf({ serverVersionAtLeast(4, 0) })
-    def 'should only all field names when nameOnly is requested on server versions that do not support nameOnly'() {
+    @IgnoreIf({ !serverVersionAtLeast(3, 4) || serverVersionAtLeast(4, 0) })
+    def 'should only get all field names when nameOnly is requested on server versions that do not support nameOnly'() {
         given:
         def operation = new ListCollectionsOperation(databaseName, new DocumentCodec())
                 .nameOnly(true)
