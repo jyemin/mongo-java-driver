@@ -37,7 +37,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
     private final OperationExecutor executor;
     private TransactionState transactionState = TransactionState.NONE;
-    private boolean messageSent;
+    private boolean messageSentInCurrentTransaction;
     private boolean commitInProgress;
 
     private TransactionOptions transactionOptions;
@@ -55,9 +55,16 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
     @Override
     public boolean notifyMessageSent() {
-        boolean firstMessage = !messageSent;
-        messageSent = true;
-        return firstMessage;
+        if (hasActiveTransaction()) {
+            boolean firstMessageInCurrentTransaction = !messageSentInCurrentTransaction;
+            messageSentInCurrentTransaction = true;
+            return firstMessageInCurrentTransaction;
+        } else {
+            if (transactionState == TransactionState.DONE || transactionState == TransactionState.ABORTED) {
+                cleanupTransaction(TransactionState.NONE);
+            }
+            return false;
+        }
     }
 
     @Override
@@ -94,7 +101,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
         if (transactionState == TransactionState.NONE) {
             throw new IllegalStateException("There is no transaction started");
         }
-        if (!messageSent) {
+        if (!messageSentInCurrentTransaction) {
             cleanupTransaction(TransactionState.DONE);
             callback.onResult(null, null);
         } else {
@@ -127,7 +134,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
         if (transactionState == TransactionState.NONE) {
             throw new IllegalStateException("There is no transaction started");
         }
-        if (!messageSent) {
+        if (!messageSentInCurrentTransaction) {
             cleanupTransaction(TransactionState.ABORTED);
             callback.onResult(null, null);
         } else {
@@ -163,7 +170,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
     }
 
     private void cleanupTransaction(final TransactionState nextState) {
-        messageSent = false;
+        messageSentInCurrentTransaction = false;
         transactionOptions = null;
         transactionState = nextState;
     }

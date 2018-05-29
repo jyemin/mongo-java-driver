@@ -37,7 +37,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
 
     private final MongoClientDelegate delegate;
     private TransactionState transactionState = TransactionState.NONE;
-    private boolean messageSent;
+    private boolean messageSentInCurrentTransaction;
     private boolean commitInProgress;
     private TransactionOptions transactionOptions;
 
@@ -54,9 +54,16 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
 
     @Override
     public boolean notifyMessageSent() {
-        boolean firstMessage = !messageSent;
-        messageSent = true;
-        return firstMessage;
+        if (hasActiveTransaction()) {
+            boolean firstMessageInCurrentTransaction = !messageSentInCurrentTransaction;
+            messageSentInCurrentTransaction = true;
+            return firstMessageInCurrentTransaction;
+        } else {
+            if (transactionState == TransactionState.DONE || transactionState == TransactionState.ABORTED) {
+                cleanupTransaction(TransactionState.NONE);
+            }
+            return false;
+        }
     }
 
     @Override
@@ -94,7 +101,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             throw new IllegalStateException("There is no transaction started");
         }
         try {
-            if (messageSent) {
+            if (messageSentInCurrentTransaction) {
                 ReadConcern readConcern = transactionOptions.getReadConcern();
                 if (readConcern == null) {
                     throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
@@ -121,7 +128,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             throw new IllegalStateException("There is no transaction started");
         }
         try {
-            if (messageSent) {
+            if (messageSentInCurrentTransaction) {
                 ReadConcern readConcern = transactionOptions.getReadConcern();
                 if (readConcern == null) {
                     throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
@@ -148,7 +155,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
     }
 
     private void cleanupTransaction(final TransactionState nextState) {
-        messageSent = false;
+        messageSentInCurrentTransaction = false;
         transactionOptions = null;
         transactionState = nextState;
     }
