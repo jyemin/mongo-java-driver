@@ -32,7 +32,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
     private enum TransactionState {
-        NONE, IN, DONE, ABORTED
+        NONE, IN, COMMITTED, ABORTED
     }
 
     private final OperationExecutor executor;
@@ -50,7 +50,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
     @Override
     public boolean hasActiveTransaction() {
-        return transactionState == TransactionState.IN || (transactionState == TransactionState.DONE && commitInProgress);
+        return transactionState == TransactionState.IN || (transactionState == TransactionState.COMMITTED && commitInProgress);
     }
 
     @Override
@@ -60,7 +60,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
             messageSentInCurrentTransaction = true;
             return firstMessageInCurrentTransaction;
         } else {
-            if (transactionState == TransactionState.DONE || transactionState == TransactionState.ABORTED) {
+            if (transactionState == TransactionState.COMMITTED || transactionState == TransactionState.ABORTED) {
                 cleanupTransaction(TransactionState.NONE);
             }
             return false;
@@ -69,7 +69,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
 
     @Override
     public TransactionOptions getTransactionOptions() {
-        isTrue("in transaction", transactionState == TransactionState.IN || transactionState == TransactionState.DONE);
+        isTrue("in transaction", transactionState == TransactionState.IN || transactionState == TransactionState.COMMITTED);
         return transactionOptions;
     }
 
@@ -84,7 +84,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
         if (transactionState == TransactionState.IN) {
             throw new IllegalStateException("Transaction already in progress");
         }
-        if (transactionState == TransactionState.DONE) {
+        if (transactionState == TransactionState.COMMITTED) {
             cleanupTransaction(TransactionState.IN);
         } else {
             transactionState = TransactionState.IN;
@@ -102,7 +102,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
             throw new IllegalStateException("There is no transaction started");
         }
         if (!messageSentInCurrentTransaction) {
-            cleanupTransaction(TransactionState.DONE);
+            cleanupTransaction(TransactionState.COMMITTED);
             callback.onResult(null, null);
         } else {
             ReadConcern readConcern = transactionOptions.getReadConcern();
@@ -116,7 +116,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
                         @Override
                         public void onResult(final Void result, final Throwable t) {
                             commitInProgress = false;
-                            transactionState = TransactionState.DONE;
+                            transactionState = TransactionState.COMMITTED;
                             callback.onResult(result, t);
                         }
                     });
@@ -128,7 +128,7 @@ class ClientSessionImpl extends BaseClientSessionImpl implements ClientSession {
         if (transactionState == TransactionState.ABORTED) {
             throw new IllegalStateException("Cannot call abortTransaction twice");
         }
-        if (transactionState == TransactionState.DONE) {
+        if (transactionState == TransactionState.COMMITTED) {
             throw new IllegalStateException("Cannot call abortTransaction after calling commitTransaction");
         }
         if (transactionState == TransactionState.NONE) {
