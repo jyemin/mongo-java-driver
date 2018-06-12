@@ -26,7 +26,6 @@ import org.bson.BsonInt32;
 
 import static com.mongodb.internal.operation.WriteConcernHelper.createWriteConcernError;
 import static com.mongodb.internal.operation.WriteConcernHelper.hasWriteConcernError;
-import static com.mongodb.internal.operation.WriteConcernHelper.throwOnSpecialException;
 
 final class FindAndModifyHelper {
 
@@ -36,11 +35,9 @@ final class FindAndModifyHelper {
             @Override
             public T apply(final BsonDocument result, final ServerAddress serverAddress) {
                 if (hasWriteConcernError(result)) {
-                    throwOnSpecialException(result, serverAddress);
-                    throw new MongoWriteConcernException(createWriteConcernError(result.getDocument("writeConcernError")),
-                                                         createWriteConcernResult(result.getDocument("lastErrorObject",
-                                                                                                     new BsonDocument())),
-                                                         serverAddress);
+                    throw new MongoWriteConcernException(
+                            createWriteConcernError(result.getDocument("writeConcernError")),
+                            createWriteConcernResult(result.getDocument("lastErrorObject", new BsonDocument())), serverAddress);
                 }
 
                 if (!result.isDocument("value")) {

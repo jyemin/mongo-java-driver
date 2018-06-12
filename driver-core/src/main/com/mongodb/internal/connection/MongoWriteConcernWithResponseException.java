@@ -20,11 +20,18 @@ import com.mongodb.MongoException;
 
 public class MongoWriteConcernWithResponseException extends MongoException {
     private static final long serialVersionUID = 1707360842648550287L;
+    private final MongoException cause;
     private final Object response;
 
     public MongoWriteConcernWithResponseException(final MongoException exception, final Object response) {
-        super(exception.getMessage());
+        super(exception.getCode(), exception.getMessage(), exception);
+        this.cause = exception;
         this.response = response;
+    }
+
+    @Override
+    public MongoException getCause() {
+        return cause;
     }
 
     public Object getResponse() {

@@ -453,7 +453,7 @@ final class CommandOperationHelper {
                             commandResultDecoder, binding.getSessionContext()), connection.getDescription().getServerAddress());
                 } catch (MongoException e) {
                     exception = e;
-                    if (!shouldAttemptToRetry(command, exception, binding.getSessionContext())) {
+                    if (!shouldAttemptToRetry(command, e)) {
                         throw exception;
                     }
                 } finally {
@@ -472,6 +472,8 @@ final class CommandOperationHelper {
                             return transformer.apply(connection.command(database, originalCommand, fieldNameValidator,
                                     readPreference, commandResultDecoder, binding.getSessionContext()),
                                     connection.getDescription().getServerAddress());
+                        } catch (MongoException e) {
+                            throw originalException;
                         } finally {
                             connection.release();
                         }
@@ -542,7 +544,7 @@ final class CommandOperationHelper {
             }
 
             private void checkRetryableException(final Throwable originalError, final SingleResultCallback<R> releasingCallback) {
-                if (!shouldAttemptToRetry(command, originalError, binding.getSessionContext())) {
+                if (!shouldAttemptToRetry(command, originalError)) {
                     releasingCallback.onResult(null, originalError);
                 } else {
                     oldConnection.release();
@@ -564,7 +566,7 @@ final class CommandOperationHelper {
                                     commandResultDecoder, binding.getSessionContext(),
                                     new TransformingResultCallback<T, R>(transformer,
                                             connection.getDescription().getServerAddress(),
-                                            releasingCallback(callback, source, connection)));
+                                            originalError, releasingCallback(callback, source, connection)));
                         }
                     }
                 });
@@ -574,16 +576,17 @@ final class CommandOperationHelper {
 
     static class TransformingResultCallback<T, R> implements SingleResultCallback<T> {
         private final CommandTransformer<T, R> transformer;
+        private final ServerAddress serverAddress;
+        private final Throwable originalError;
         private final SingleResultCallback<R> callback;
 
         TransformingResultCallback(final CommandTransformer<T, R> transformer, final ServerAddress serverAddress,
-                                          final SingleResultCallback<R> callback) {
+                                   final Throwable originalError, final SingleResultCallback<R> callback) {
             this.transformer = transformer;
-            this.callback = callback;
             this.serverAddress = serverAddress;
+            this.originalError = originalError;
+            this.callback = callback;
         }
-
-        private final ServerAddress serverAddress;
 
         @Override
         public void onResult(final T result, final Throwable t) {
@@ -594,17 +597,18 @@ final class CommandOperationHelper {
                     R transformedResult = transformer.apply(result, serverAddress);
                     callback.onResult(transformedResult, null);
                 } catch (Throwable transformError) {
-                    callback.onResult(null, transformError);
+                    callback.onResult(null, originalError);
                 }
             }
         }
     }
 
     private static final List<Integer> RETRYABLE_ERROR_CODES = asList(6, 7, 89, 91, 189, 9001, 13436, 13435, 11602, 11600, 10107);
-    private static boolean isRetryableException(final Throwable t) {
+    static boolean isRetryableException(final Throwable t) {
         if (!(t instanceof MongoException)) {
             return false;
         }
+
         if (t instanceof MongoSocketException || t instanceof MongoNotPrimaryException || t instanceof MongoNodeIsRecoveringException) {
             return true;
         }
@@ -696,14 +700,15 @@ final class CommandOperationHelper {
         }
     }
 
-    private static boolean shouldAttemptToRetry(@Nullable final BsonDocument command, final Throwable exception,
-                                                final SessionContext sessionContext) {
-        return shouldAttemptToRetry(command != null && command.containsKey("txnNumber"), exception, sessionContext);
+    private static boolean shouldAttemptToRetry(@Nullable final BsonDocument command, final Throwable exception) {
+        return shouldAttemptToRetry(command != null
+                        && (command.containsKey("txnNumber")
+                        || command.getFirstKey().equals("commitTransaction") || command.getFirstKey().equals("abortTransaction")),
+                exception);
     }
 
-    static boolean shouldAttemptToRetry(final boolean retryWritesEnabled, final Throwable exception,
-                                        final SessionContext sessionContext) {
-        return retryWritesEnabled && isRetryableException(exception) && !sessionContext.hasActiveTransaction();
+    static boolean shouldAttemptToRetry(final boolean retryWritesEnabled, final Throwable exception) {
+        return retryWritesEnabled && isRetryableException(exception);
     }
 
     private CommandOperationHelper() {
