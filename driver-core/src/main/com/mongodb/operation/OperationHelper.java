@@ -323,7 +323,7 @@ final class OperationHelper {
 
     static <T> SingleResultCallback<T> releasingCallback(final SingleResultCallback<T> wrapped, final AsyncConnectionSource source) {
         return new ReferenceCountedReleasingWrappedCallback<T>(wrapped, singletonList(source));
-    }
+    }                               
 
     static <T> SingleResultCallback<T> releasingCallback(final SingleResultCallback<T> wrapped, final AsyncConnection connection) {
         return new ReferenceCountedReleasingWrappedCallback<T>(wrapped, singletonList(connection));
