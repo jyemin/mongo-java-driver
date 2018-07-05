@@ -16,6 +16,7 @@
 
 apply plugin: 'idea'
 apply plugin: 'osgi'
+apply plugin: 'de.fuerstenau.buildconfig'
 
 archivesBaseName = 'mongo-java-driver'
 
@@ -41,6 +42,14 @@ sourceSets {
 }
 
 // copied from driver-core
+buildConfig {
+    appName = 'mongo-java-driver'
+    version = getGitVersion()
+
+    clsName = 'MongoDriverVersion'
+    packageName = 'com.mongodb.internal.build'
+}
+
 jar {
     manifest {
         instruction 'Build-Version', getGitVersion()

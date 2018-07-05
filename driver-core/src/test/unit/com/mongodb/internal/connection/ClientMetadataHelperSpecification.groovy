@@ -149,7 +149,7 @@ class ClientMetadataHelperSpecification extends Specification {
     }
 
     static BsonDocument createExpectedClientMetadataDocument(String appName) {
-        String driverVersion = 'unknown'
+        String driverVersion = ClientMetadataHelper.getDriverVersion()
         def expectedDriverDocument = new BsonDocument('name', new BsonString('mongo-java-driver'))
                 .append('version', new BsonString(driverVersion))
         def expectedOperatingSystemDocument = new BsonDocument('type',

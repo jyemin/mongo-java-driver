@@ -16,6 +16,7 @@
 
 apply plugin: 'osgi'
 apply plugin: 'org.kordamp.gradle.clirr'
+apply plugin: 'de.fuerstenau.buildconfig'
 
 def configDir = new File(rootDir, 'config')
 archivesBaseName = 'mongodb-driver-core'
@@ -36,6 +37,14 @@ dependencies {
     compile "org.xerial.snappy:snappy-java:$snappyVersion", optional
 
     testCompile project(':bson').sourceSets.test.output
+}
+
+buildConfig {
+    appName = 'mongo-java-driver'
+    version = getGitVersion()
+
+    clsName = 'MongoDriverVersion'
+    packageName = 'com.mongodb.internal.build'
 }
 
 jar {
