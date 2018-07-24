@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 
 public abstract class Benchmark {
 
+    protected static final int NUM_INTERNAL_ITERATIONS = 10000;
     static final String TEST_DATA_SYSTEM_PROPERTY_NAME = "org.mongodb.benchmarks.data";
 
     public void setUp() throws Exception {
@@ -62,7 +63,6 @@ public abstract class Benchmark {
     }
 
     private String getResourceRoot() {
-        // TODO: remove default
         return System.getProperty(TEST_DATA_SYSTEM_PROPERTY_NAME);
     }
 }

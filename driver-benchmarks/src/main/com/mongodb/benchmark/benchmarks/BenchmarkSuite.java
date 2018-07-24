@@ -17,16 +17,13 @@
 
 package com.mongodb.benchmark.benchmarks;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.benchmark.framework.Benchmark;
 import com.mongodb.benchmark.framework.BenchmarkResult;
 import com.mongodb.benchmark.framework.BenchmarkResultWriter;
 import com.mongodb.benchmark.framework.BenchmarkRunner;
 import com.mongodb.benchmark.framework.EvergreenBenchmarkResultWriter;
-import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.Codec;
-import org.bson.conversions.Bson;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,92 +33,72 @@ import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class BenchmarkSuite {
 
-    public static final int NUM_WARMUP_ITERATIONS = 1;
-    public static final int NUM_ITERATIONS = 100;
+    private static final int NUM_WARMUP_ITERATIONS = 1;
+    private static final int NUM_ITERATIONS = 100;
+    private static final int MIN_TIME_SECONDS = 60;
+    private static final int MAX_TIME_SECONDS = 300;
+
+    private static final Class DOCUMENT_CLASS = Document.class;
+    private static final IdRemover<Document> ID_REMOVER = new IdRemover<Document>() {
+        public void removeId(final Document document) {
+            document.remove("_id");
+        }
+    };
+    private static final Codec<Document> DOCUMENT_CODEC = getDefaultCodecRegistry().get(DOCUMENT_CLASS);
 
     private static final List<BenchmarkResultWriter> WRITERS = Arrays.<BenchmarkResultWriter>asList(
             new EvergreenBenchmarkResultWriter());
 
     public static void main(String[] args) throws Exception {
-        Class clazz;
-        if (args.length > 0) {
-            clazz = Class.forName(args[0]);
-        } else {
-            clazz = Document.class;
-        }
-
-        runBenchmarks(clazz, getDefaultCodecRegistry().get(clazz), createIdRemover(clazz));
+        runBenchmarks();
 
         for (BenchmarkResultWriter writer : WRITERS) {
             writer.close();
         }
     }
 
-    private static <T extends Bson> void runBenchmarks(final Class<T> clazz, final Codec<T> codec, final IdRemover<T> idRemover)
+    private static void runBenchmarks()
             throws Exception {
 
-        runBenchmark(new BsonEncodeDocumentBenchmark<T>("Flat", "extended_bson/flat_bson.json", codec));
-        runBenchmark(new BsonEncodeDocumentBenchmark<T>("Deep", "extended_bson/deep_bson.json", codec));
-        runBenchmark(new BsonEncodeDocumentBenchmark<T>("Full", "extended_bson/full_bson.json", codec));
+        runBenchmark(new BsonEncodingBenchmark<Document>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
+        runBenchmark(new BsonEncodingBenchmark<Document>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
+        runBenchmark(new BsonEncodingBenchmark<Document>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
 
-        runBenchmark(new BsonDecodeDocumentBenchmark<T>("Flat", "extended_bson/flat_bson.json", codec));
-        runBenchmark(new BsonDecodeDocumentBenchmark<T>("Deep", "extended_bson/deep_bson.json", codec));
-        runBenchmark(new BsonDecodeDocumentBenchmark<T>("Full", "extended_bson/full_bson.json", codec));
+        runBenchmark(new BsonDecodingBenchmark<Document>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
+        runBenchmark(new BsonDecodingBenchmark<Document>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
+        runBenchmark(new BsonDecodingBenchmark<Document>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
 
-        runBenchmark(new RunCommandBenchmark<T>(codec));
-        runBenchmark(new FindOneBenchmark<T>("single_and_multi_document/tweet.json", clazz));
+        runBenchmark(new RunCommandBenchmark<Document>(DOCUMENT_CODEC));
+        runBenchmark(new FindOneBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
 
-        runBenchmark(new InsertOneBenchmark<T>("Small", "./single_and_multi_document/small_doc.json", 10000, clazz, idRemover));
-        runBenchmark(new InsertOneBenchmark<T>("Large", "./single_and_multi_document/large_doc.json", 10, clazz, idRemover));
+        runBenchmark(new InsertOneBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10000,
+                DOCUMENT_CLASS, ID_REMOVER));
+        runBenchmark(new InsertOneBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
+                DOCUMENT_CLASS, ID_REMOVER));
 
-        runBenchmark(new FindManyBenchmark<T>("single_and_multi_document/tweet.json", clazz));
-        runBenchmark(new InsertManyBenchmark<T>("Small", "./single_and_multi_document/small_doc.json", 10000, clazz));
-        runBenchmark(new InsertManyBenchmark<T>("Large", "./single_and_multi_document/large_doc.json", 10, clazz));
+        runBenchmark(new FindManyBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
+        runBenchmark(new InsertManyBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10000,
+                DOCUMENT_CLASS));
+        runBenchmark(new InsertManyBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
+                DOCUMENT_CLASS));
 
         runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
         runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
 
-        runBenchmark(new ImportBenchmark());
-        runBenchmark(new ExportBenchmark());
-        runBenchmark(new GridFSImportBenchmark());
-        runBenchmark(new GridFSExportBenchmark());
+        runBenchmark(new MultiFileImportBenchmark());
+        runBenchmark(new MultiFileExportBenchmark());
+        runBenchmark(new GridFSMultiFileUploadBenchmark());
+        runBenchmark(new GridFSMultFileDownloadBenchmark());
     }
 
     private static void runBenchmark(final Benchmark benchmark) throws Exception {
         long startTime = System.currentTimeMillis();
-        BenchmarkResult benchmarkResult = new BenchmarkRunner(benchmark, NUM_WARMUP_ITERATIONS, NUM_ITERATIONS, 60, 300 ).run();
+        BenchmarkResult benchmarkResult = new BenchmarkRunner(benchmark, NUM_WARMUP_ITERATIONS, NUM_ITERATIONS, MIN_TIME_SECONDS,
+                MAX_TIME_SECONDS).run();
         long endTime = System.currentTimeMillis();
         System.out.println(benchmarkResult.getName() + ": " + (endTime - startTime) / 1000.0);
         for (BenchmarkResultWriter writer : WRITERS) {
             writer.write(benchmarkResult);
         }
-    }
-
-    private static <T> IdRemover<T> createIdRemover(Class<T> clazz) {
-        if (clazz.equals(BsonDocument.class)) {
-            return (IdRemover<T>) new IdRemover<BsonDocument>() {
-                public void removeId(final BsonDocument document) {
-                    document.remove("_id");
-                }
-            };
-        }
-
-        if (clazz.equals(Document.class)) {
-            return (IdRemover<T>) new IdRemover<Document>() {
-                public void removeId(final Document document) {
-                    document.remove("_id");
-                }
-            };
-        }
-
-        if (clazz.equals(BasicDBObject.class)) {
-            return (IdRemover<T>) new IdRemover<BasicDBObject>() {
-                public void removeId(final BasicDBObject document) {
-                    document.remove("_id");
-                }
-            };
-        }
-
-        throw new UnsupportedOperationException("Pick a different class");
     }
 }

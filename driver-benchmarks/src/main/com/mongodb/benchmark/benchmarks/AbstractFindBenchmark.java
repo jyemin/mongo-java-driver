@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,8 +17,6 @@
 
 package com.mongodb.benchmark.benchmarks;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.BsonDocument;
@@ -32,8 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractFindBenchmark<T> extends AbstractMongoBenchmark {
-    public static final int NUM_INTERNAL_ITERATIONS = 10000;
-
     protected MongoCollection<T> collection;
 
     private final String name;
@@ -55,36 +51,29 @@ public abstract class AbstractFindBenchmark<T> extends AbstractMongoBenchmark {
 
     public void setUp() throws Exception {
         super.setUp();
-        MongoDatabase database = client.getDatabase("perftest");
-        collection = database.getCollection("corpus", clazz);
-        MongoClient setUpClient = MongoClients.create();
-        try {
-            byte[] bytes = readAllBytesFromRelativePath(resourcePath);
+        collection = client.getDatabase(DATABASE_NAME).getCollection(COLLECTION_NAME, clazz);
+        byte[] bytes = readAllBytesFromRelativePath(resourcePath);
 
-            fileLength = bytes.length;
+        fileLength = bytes.length;
 
-            MongoDatabase setUpDatabase = setUpClient.getDatabase("perftest");
-            setUpDatabase.drop();
+        MongoDatabase setUpDatabase = client.getDatabase(DATABASE_NAME);
+        setUpDatabase.drop();
 
-            insertCopiesOfDocument(setUpDatabase.getCollection("corpus", BsonDocument.class),
-                    new BsonDocumentCodec().decode(new JsonReader(new String(bytes, StandardCharsets.UTF_8)),
-                            DecoderContext.builder().build()),
-                    NUM_INTERNAL_ITERATIONS);
-        } finally {
-            setUpClient.close();
-        }
+        insertCopiesOfDocument(setUpDatabase.getCollection(COLLECTION_NAME, BsonDocument.class),
+                new BsonDocumentCodec().decode(new JsonReader(new String(bytes, StandardCharsets.UTF_8)),
+                        DecoderContext.builder().build())
+        );
     }
 
     @Override
     public int getBytesPerRun() {
-       return fileLength * NUM_INTERNAL_ITERATIONS;
+        return fileLength * NUM_INTERNAL_ITERATIONS;
     }
 
     private void insertCopiesOfDocument(final MongoCollection<BsonDocument> collection,
-                                              final BsonDocument document,
-                                              final int numCopiesToInsert) {
-        List<BsonDocument> documents = new ArrayList<BsonDocument>(numCopiesToInsert);
-        for (int i = 0; i < numCopiesToInsert; i++) {
+                                        final BsonDocument document) {
+        List<BsonDocument> documents = new ArrayList<BsonDocument>(NUM_INTERNAL_ITERATIONS);
+        for (int i = 0; i < NUM_INTERNAL_ITERATIONS; i++) {
             BsonDocument copy = document.clone();
             copy.put("_id", new BsonInt32(i));
             documents.add(copy);

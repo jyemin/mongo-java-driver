@@ -28,8 +28,6 @@ import org.bson.json.JsonReader;
 
 public class RunCommandBenchmark<T extends Bson> extends AbstractMongoBenchmark {
 
-    public static final int NUM_INTERNAL_ITERATIONS = 10000;
-
     private MongoDatabase database;
     private final Codec<T> codec;
     private final T command;

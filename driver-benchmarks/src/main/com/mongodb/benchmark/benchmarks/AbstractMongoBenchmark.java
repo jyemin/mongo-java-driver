@@ -23,6 +23,9 @@ import com.mongodb.client.MongoClients;
 
 public abstract class AbstractMongoBenchmark extends Benchmark {
 
+    protected static final String DATABASE_NAME = "perftest";
+    protected static final String COLLECTION_NAME = "corpus";
+
     protected MongoClient client;
 
     public void setUp() throws Exception {

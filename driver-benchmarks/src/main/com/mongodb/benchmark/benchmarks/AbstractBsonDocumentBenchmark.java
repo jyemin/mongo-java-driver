@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractBsonDocumentBenchmark<T> extends Benchmark {
-    public static final int NUM_INTERNAL_ITERATIONS = 10000;
 
     protected final PowerOfTwoBufferPool bufferPool = new PowerOfTwoBufferPool();
     protected final Codec<T> codec;

@@ -48,7 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class ExportBenchmark extends AbstractMongoBenchmark {
+public class MultiFileExportBenchmark extends AbstractMongoBenchmark {
     private MongoDatabase database;
 
     private MongoCollection<RawBsonDocument> collection;
@@ -66,8 +66,8 @@ public class ExportBenchmark extends AbstractMongoBenchmark {
     public void setUp() throws Exception {
         super.setUp();
 
-        database = client.getDatabase("perftest");
-        collection = database.getCollection("corpus", RawBsonDocument.class);
+        database = client.getDatabase(DATABASE_NAME);
+        collection = database.getCollection(COLLECTION_NAME, RawBsonDocument.class);
 
         database.drop();
 
@@ -178,7 +178,7 @@ public class ExportBenchmark extends AbstractMongoBenchmark {
                                 document.put("fileId", new BsonInt32(fileId));
                                 documents.add(document);
                             }
-                            database.getCollection("corpus", BsonDocument.class).insertMany(documents,
+                            database.getCollection(COLLECTION_NAME, BsonDocument.class).insertMany(documents,
                                     new InsertManyOptions().ordered(false));
                             latch.countDown();
                         } catch (IOException e) {
@@ -201,7 +201,7 @@ public class ExportBenchmark extends AbstractMongoBenchmark {
     }
 
     public static void main(String[] args) throws Exception {
-        BenchmarkResult benchmarkResult = new BenchmarkRunner(new ExportBenchmark(), 0, 1).run();
+        BenchmarkResult benchmarkResult = new BenchmarkRunner(new MultiFileExportBenchmark(), 0, 1).run();
         new TextBasedBenchmarkResultWriter(System.out).write(benchmarkResult);
     }
 }

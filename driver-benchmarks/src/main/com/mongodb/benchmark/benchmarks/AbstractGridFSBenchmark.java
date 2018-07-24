@@ -34,7 +34,7 @@ public abstract class AbstractGridFSBenchmark extends AbstractMongoBenchmark {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        database = client.getDatabase("perftest");
+        database = client.getDatabase(DATABASE_NAME);
         bucket = GridFSBuckets.create(database);
         fileBytes = readAllBytesFromRelativePath(resourcePath);
         database.drop();

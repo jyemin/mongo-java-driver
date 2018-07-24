@@ -23,6 +23,7 @@ import com.mongodb.benchmark.framework.TextBasedBenchmarkResultWriter;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,7 +34,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class GridFSExportBenchmark extends AbstractMongoBenchmark {
+public class GridFSMultFileDownloadBenchmark extends AbstractMongoBenchmark {
+    private static final Integer ONE_MB = 1000000;
     private GridFSBucket bucket;
 
     private ExecutorService gridFSService;
@@ -43,13 +45,13 @@ public class GridFSExportBenchmark extends AbstractMongoBenchmark {
 
     @Override
     public String getName() {
-        return "GridFS multi-file upload";
+        return "GridFS multi-file download";
     }
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        MongoDatabase database = client.getDatabase("perftest");
+        MongoDatabase database = client.getDatabase(DATABASE_NAME);
         bucket = GridFSBuckets.create(database);
 
         database.drop();
@@ -106,7 +108,7 @@ public class GridFSExportBenchmark extends AbstractMongoBenchmark {
             @Override
             public void run() {
                 final UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream(5242880);
-                bucket.downloadToStream(GridFSExportBenchmark.this.getFileName(fileId), outputStream);
+                bucket.downloadToStream(GridFSMultFileDownloadBenchmark.this.getFileName(fileId), outputStream);
                 fileService.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -139,9 +141,10 @@ public class GridFSExportBenchmark extends AbstractMongoBenchmark {
             @Override
             public void run() {
                 try {
-                    String fileName = GridFSExportBenchmark.this.getFileName(fileId);
+                    String fileName = GridFSMultFileDownloadBenchmark.this.getFileName(fileId);
                     String resourcePath = "parallel/gridfs_multi/" + fileName;
-                    bucket.uploadFromStream(fileName, streamFromRelativePath(resourcePath));
+                    bucket.uploadFromStream(fileName, streamFromRelativePath(resourcePath),
+                            new GridFSUploadOptions().chunkSizeBytes(ONE_MB));
                     latch.countDown();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -160,7 +163,7 @@ public class GridFSExportBenchmark extends AbstractMongoBenchmark {
     }
 
     public static void main(String[] args) throws Exception {
-        BenchmarkResult benchmarkResult = new BenchmarkRunner(new GridFSExportBenchmark(), 20, 100).run();
+        BenchmarkResult benchmarkResult = new BenchmarkRunner(new GridFSMultFileDownloadBenchmark(), 20, 100).run();
         new TextBasedBenchmarkResultWriter(System.out, false, true).write(benchmarkResult);
     }
 

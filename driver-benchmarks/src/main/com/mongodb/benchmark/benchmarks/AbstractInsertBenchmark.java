@@ -45,9 +45,9 @@ public abstract class AbstractInsertBenchmark<T> extends AbstractMongoBenchmark 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        MongoDatabase database = client.getDatabase("perftest");
+        MongoDatabase database = client.getDatabase(DATABASE_NAME);
 
-        collection = database.getCollection("corpus", clazz);
+        collection = database.getCollection(COLLECTION_NAME, clazz);
 
         database.drop();
         bytes = readAllBytesFromRelativePath(resourcePath);

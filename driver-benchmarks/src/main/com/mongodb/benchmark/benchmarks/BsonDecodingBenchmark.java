@@ -23,9 +23,9 @@ import org.bson.codecs.DecoderContext;
 
 import java.nio.ByteBuffer;
 
-public class BsonDecodeDocumentBenchmark<T> extends AbstractBsonDocumentBenchmark<T> {
+public class BsonDecodingBenchmark<T> extends AbstractBsonDocumentBenchmark<T> {
 
-    public BsonDecodeDocumentBenchmark(final String name, final String resourcePath, final Codec<T> codec) {
+    public BsonDecodingBenchmark(final String name, final String resourcePath, final Codec<T> codec) {
         super(name + " BSON Decoding", resourcePath, codec);
     }
 

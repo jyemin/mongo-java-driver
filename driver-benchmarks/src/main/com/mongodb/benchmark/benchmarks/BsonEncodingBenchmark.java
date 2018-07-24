@@ -22,8 +22,8 @@ import org.bson.BsonBinaryWriter;
 import org.bson.codecs.Codec;
 import org.bson.codecs.EncoderContext;
 
-public class BsonEncodeDocumentBenchmark<T> extends AbstractBsonDocumentBenchmark<T> {
-    public BsonEncodeDocumentBenchmark(final String name, final String resourcePath, final Codec<T> codec) {
+public class BsonEncodingBenchmark<T> extends AbstractBsonDocumentBenchmark<T> {
+    public BsonEncodingBenchmark(final String name, final String resourcePath, final Codec<T> codec) {
         super(name + " BSON Encoding", resourcePath, codec);
     }
 
