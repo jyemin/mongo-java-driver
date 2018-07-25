@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class GridFSMultFileDownloadBenchmark extends AbstractMongoBenchmark {
+public class GridFSMultiFileDownloadBenchmark extends AbstractMongoBenchmark {
     private static final int GRIDFS_READING_THREAD_POOL_SIZE = 16;
     private static final int FILE_WRITING_THREAD_POOL_SIZE = 1;
     private static final int ONE_MB = 1000000;
@@ -111,7 +111,7 @@ public class GridFSMultFileDownloadBenchmark extends AbstractMongoBenchmark {
             @Override
             public void run() {
                 final UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream(5242880);
-                bucket.downloadToStream(GridFSMultFileDownloadBenchmark.this.getFileName(fileId), outputStream);
+                bucket.downloadToStream(GridFSMultiFileDownloadBenchmark.this.getFileName(fileId), outputStream);
                 fileService.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -144,7 +144,7 @@ public class GridFSMultFileDownloadBenchmark extends AbstractMongoBenchmark {
             @Override
             public void run() {
                 try {
-                    String fileName = GridFSMultFileDownloadBenchmark.this.getFileName(fileId);
+                    String fileName = GridFSMultiFileDownloadBenchmark.this.getFileName(fileId);
                     String resourcePath = "parallel/gridfs_multi/" + fileName;
                     bucket.uploadFromStream(fileName, streamFromRelativePath(resourcePath),
                             new GridFSUploadOptions().chunkSizeBytes(ONE_MB));
@@ -166,7 +166,7 @@ public class GridFSMultFileDownloadBenchmark extends AbstractMongoBenchmark {
     }
 
     public static void main(String[] args) throws Exception {
-        BenchmarkResult benchmarkResult = new BenchmarkRunner(new GridFSMultFileDownloadBenchmark(), 20, 100).run();
+        BenchmarkResult benchmarkResult = new BenchmarkRunner(new GridFSMultiFileDownloadBenchmark(), 20, 100).run();
         new TextBasedBenchmarkResultWriter(System.out, false, true).write(benchmarkResult);
     }
 

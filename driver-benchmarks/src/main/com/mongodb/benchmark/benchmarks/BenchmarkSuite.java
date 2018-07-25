@@ -88,7 +88,7 @@ public class BenchmarkSuite {
         runBenchmark(new MultiFileImportBenchmark());
         runBenchmark(new MultiFileExportBenchmark());
         runBenchmark(new GridFSMultiFileUploadBenchmark());
-        runBenchmark(new GridFSMultFileDownloadBenchmark());
+        runBenchmark(new GridFSMultiFileDownloadBenchmark());
     }
 
     private static void runBenchmark(final Benchmark benchmark) throws Exception {
