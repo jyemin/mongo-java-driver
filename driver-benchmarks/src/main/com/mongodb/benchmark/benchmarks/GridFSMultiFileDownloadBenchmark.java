@@ -35,9 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GridFSMultiFileDownloadBenchmark extends AbstractMongoBenchmark {
-    private static final int GRIDFS_READING_THREAD_POOL_SIZE = 16;
-    private static final int FILE_WRITING_THREAD_POOL_SIZE = 1;
-    private static final int ONE_MB = 1000000;
 
     private GridFSBucket bucket;
 

@@ -23,8 +23,17 @@ import com.mongodb.client.MongoClients;
 
 public abstract class AbstractMongoBenchmark extends Benchmark {
 
+    protected static final int GRIDFS_READING_THREAD_POOL_SIZE = 8;
+    protected static final int MONGODB_READING_THREAD_POOL_SIZE = 8;
+    protected static final int MONGODB_WRITING_THREAD_POOL_SIZE = 8;
+    protected static final int FILE_WRITING_THREAD_POOL_SIZE = 2;
+    protected static final int FILE_READING_THREAD_POOL_SIZE = 4;
+
+    protected static final int ONE_MB = 1000000;
+
     protected static final String DATABASE_NAME = "perftest";
     protected static final String COLLECTION_NAME = "corpus";
+
 
     protected MongoClient client;
 

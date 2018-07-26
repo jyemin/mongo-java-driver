@@ -33,8 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GridFSMultiFileUploadBenchmark extends AbstractMongoBenchmark {
-    private static final int FILE_READING_THREAD_POOL_SIZE = 24;
-    private static final int ONE_MB = 1000000;
 
     private MongoDatabase database;
     private GridFSBucket bucket;

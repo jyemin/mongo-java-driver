@@ -49,9 +49,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MultiFileExportBenchmark extends AbstractMongoBenchmark {
-    private static final int MONGODB_READING_THREAD_POOL_SIZE = 2;
-    private static final int FILE_WRITING_THREAD_POOL_SIZE = 8;
-    private static final int FILE_READING_THREAD_POOL_SIZE = 4;
 
     private MongoDatabase database;
 

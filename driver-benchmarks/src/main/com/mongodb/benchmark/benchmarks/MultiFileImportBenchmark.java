@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MultiFileImportBenchmark extends AbstractMongoBenchmark {
-    private static final int THREAD_POOL_SIZE = 4;
     private MongoDatabase database;
 
     private MongoCollection<RawBsonDocument> collection;
@@ -55,8 +54,8 @@ public class MultiFileImportBenchmark extends AbstractMongoBenchmark {
 
         database.drop();
 
-        fileReadingService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-        documentWritingService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        fileReadingService = Executors.newFixedThreadPool(FILE_READING_THREAD_POOL_SIZE);
+        documentWritingService = Executors.newFixedThreadPool(MONGODB_WRITING_THREAD_POOL_SIZE);
     }
 
     @Override
