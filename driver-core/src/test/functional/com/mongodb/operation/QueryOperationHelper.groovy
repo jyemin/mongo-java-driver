@@ -20,12 +20,7 @@ import org.bson.BsonDocument
 
 class QueryOperationHelper {
     static BsonDocument sanitizeExplainResult(BsonDocument document) {
-        document.remove('ok')
-        document.remove('millis')
-        document.remove('executionStats')
-        document.remove('serverInfo')
-        document.remove('executionTimeMillis')
-        document
+        new BsonDocument('queryPlanner', document.get('queryPlanner'))
     }
 
     static BsonDocument getKeyPattern(BsonDocument explainPlan) {
