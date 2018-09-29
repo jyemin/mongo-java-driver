@@ -83,7 +83,8 @@ import static java.util.Collections.singletonList;
  * @see MongoClientURI
  * @since 2.10.0
  */
-public class MongoClient extends Mongo implements Closeable {
+@SuppressWarnings("deprecation")
+public class MongoClient extends com.mongodb.Mongo implements Closeable {
 
     /**
      * Gets the default codec registry.  It includes the following providers:
