@@ -24,7 +24,7 @@ import com.mongodb.ReadPreference;
  * @since 3.0
  * @deprecated there is no replacement for this interface
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public interface OperationExecutor {
     /**
      * Execute the read operation with the given read preference.

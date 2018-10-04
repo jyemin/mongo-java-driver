@@ -229,7 +229,7 @@ public class ClusterDescription {
      * @return the set of server descriptions
      * @deprecated Use {@link #getServerDescriptions()} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public Set<ServerDescription> getAll() {
         Set<ServerDescription> serverDescriptionSet = new TreeSet<ServerDescription>(new Comparator<ServerDescription>() {
             @Override
@@ -256,7 +256,7 @@ public class ClusterDescription {
      * @return the ServerDescription for this server
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public ServerDescription getByServerAddress(final ServerAddress serverAddress) {
         for (final ServerDescription cur : serverDescriptions) {
             if (cur.isOk() && cur.getAddress().equals(serverAddress)) {
@@ -273,7 +273,7 @@ public class ClusterDescription {
      * @return a list of servers that can act as primaries
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getPrimaries() {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {
@@ -288,7 +288,7 @@ public class ClusterDescription {
      * @return a List of ServerDescriptions of all the secondaries this cluster is currently aware of
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getSecondaries() {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {
@@ -304,7 +304,7 @@ public class ClusterDescription {
      * @return a List of ServerDescriptions of all the secondaries this cluster that match all of the given tags
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getSecondaries(final TagSet tagSet) {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {
@@ -319,7 +319,7 @@ public class ClusterDescription {
      * @return a List of ServerDescriptions for all servers that have a status of OK
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getAny() {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {
@@ -334,7 +334,7 @@ public class ClusterDescription {
      * @return a list of ServerDescriptions for all primary and secondary servers
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getAnyPrimaryOrSecondary() {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {
@@ -350,7 +350,7 @@ public class ClusterDescription {
      * @return a list of ServerDescriptions for all primary and secondary servers that contain all of the given tags
      * @deprecated Replace with a filter on ServerDescription in the caller
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public List<ServerDescription> getAnyPrimaryOrSecondary(final TagSet tagSet) {
         return getServersByPredicate(new Predicate() {
             public boolean apply(final ServerDescription serverDescription) {

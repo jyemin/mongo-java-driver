@@ -97,7 +97,7 @@ public interface AsyncConnection extends ReferenceCounted {
      * @deprecated Prefer {@link #commandAsync(String, BsonDocument, FieldNameValidator, ReadPreference, Decoder, SessionContext,
      * SingleResultCallback)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     <T> void commandAsync(String database, BsonDocument command, boolean slaveOk, FieldNameValidator fieldNameValidator,
                           Decoder<T> commandResultDecoder, SingleResultCallback<T> callback);
 
@@ -158,7 +158,7 @@ public interface AsyncConnection extends ReferenceCounted {
      * @deprecated Replaced by {@link #queryAsync(MongoNamespace, BsonDocument, BsonDocument, int, int, int, boolean, boolean, boolean,
      * boolean, boolean, boolean, Decoder, SingleResultCallback)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     <T> void queryAsync(MongoNamespace namespace, BsonDocument queryDocument, BsonDocument fields,
                         int numberToReturn, int skip, boolean slaveOk, boolean tailableCursor, boolean awaitData, boolean noCursorTimeout,
                         boolean partial, boolean oplogReplay, Decoder<T> resultDecoder, SingleResultCallback<QueryResult<T>> callback);
@@ -208,7 +208,7 @@ public interface AsyncConnection extends ReferenceCounted {
      * @param callback the callback that is called once the cursors have been killed
      * @deprecated Replaced by {@link #killCursorAsync(MongoNamespace, List, SingleResultCallback)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     void killCursorAsync(List<Long> cursors, SingleResultCallback<Void> callback);
 
     /**

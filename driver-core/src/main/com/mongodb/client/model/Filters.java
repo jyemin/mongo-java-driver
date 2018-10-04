@@ -436,7 +436,7 @@ public final class Filters {
      * @mongodb.driver.manual reference/operator/query/text $text
      * @deprecated use {@link Filters#text(String, TextSearchOptions)}
      */
-    @Deprecated
+    @Deprecated(since = "3.2", forRemoval = true)
     public static Bson text(final String search, final String language) {
         notNull("search", search);
         return text(search, new TextSearchOptions().language(language));

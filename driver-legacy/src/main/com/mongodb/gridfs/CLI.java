@@ -32,7 +32,7 @@ import java.security.MessageDigest;
  * @deprecated there is no replacement for this class
  */
 @SuppressWarnings("removal")
-@Deprecated
+@Deprecated(since = "3.9", forRemoval = true)
 public class CLI {
 
     private static String host = "127.0.0.1";

@@ -51,7 +51,7 @@ import static java.util.Collections.singletonList;
  * @deprecated use {@link com.mongodb.MongoClientSettings} instead
  */
 @Immutable
-@Deprecated
+@Deprecated(since = "3.7", forRemoval = true)
 public final class MongoClientSettings {
     private final com.mongodb.MongoClientSettings wrapped;
     private final SocketSettings heartbeatSocketSettings;
@@ -199,7 +199,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getClusterSettings()
          * @deprecated Prefer {@link Builder#applyToClusterSettings(Block)}
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder clusterSettings(final ClusterSettings clusterSettings) {
             wrappedBuilder.applyToClusterSettings(new Block<ClusterSettings.Builder>() {
                 @Override
@@ -218,7 +218,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getSocketSettings()
          * @deprecated Prefer {@link Builder#applyToSocketSettings(Block)}
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder socketSettings(final SocketSettings socketSettings) {
             wrappedBuilder.applyToSocketSettings(new Block<SocketSettings.Builder>() {
                 @Override
@@ -237,7 +237,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getHeartbeatSocketSettings()
          * @deprecated configuring heartbeatSocketSettings will be removed in the future.
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder heartbeatSocketSettings(final SocketSettings heartbeatSocketSettings) {
             if (heartbeatSocketSettingsBuilder == null) {
                 heartbeatSocketSettingsBuilder = SocketSettings.builder();
@@ -254,7 +254,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getConnectionPoolSettings() ()
          * @deprecated Prefer {@link Builder#applyToConnectionPoolSettings(Block)}
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder connectionPoolSettings(final ConnectionPoolSettings connectionPoolSettings) {
             wrappedBuilder.applyToConnectionPoolSettings(new Block<ConnectionPoolSettings.Builder>() {
                 @Override
@@ -273,7 +273,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getServerSettings() ()
          * @deprecated Prefer {@link Builder#applyToServerSettings(Block)}
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder serverSettings(final ServerSettings serverSettings) {
             wrappedBuilder.applyToServerSettings(new Block<ServerSettings.Builder>() {
                 @Override
@@ -292,7 +292,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getSslSettings() ()
          * @deprecated Prefer {@link Builder#applyToSslSettings(Block)}
          */
-        @Deprecated
+        @Deprecated(since = "3.7", forRemoval = true)
         public Builder sslSettings(final SslSettings sslSettings) {
             wrappedBuilder.applyToSslSettings(new Block<SslSettings.Builder>() {
                 @Override
@@ -363,7 +363,7 @@ public final class MongoClientSettings {
          * @see MongoClientSettings#getCredentialList()
          * @deprecated Prefer {@link #credential(MongoCredential)}
          */
-        @Deprecated
+        @Deprecated(since = "3.6", forRemoval = true)
         public Builder credentialList(final List<MongoCredential> credentialList) {
             this.credentialList = Collections.unmodifiableList(notNull("credentialList", credentialList));
             if (!credentialList.isEmpty()) {
@@ -482,7 +482,7 @@ public final class MongoClientSettings {
      * @return the credential list
      * @deprecated Prefer {@link #getCredential()}
      */
-    @Deprecated
+    @Deprecated(since = "3.6", forRemoval = true)
     public List<MongoCredential> getCredentialList() {
         return credentialList;
     }

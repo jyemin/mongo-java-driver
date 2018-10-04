@@ -723,7 +723,7 @@ public interface GridFSBucket {
      * @deprecated use {@link #openDownloadStream(String)} instead.
      * @return the stream
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     GridFSDownloadStream openDownloadStreamByName(String filename);
 
     /**
@@ -735,8 +735,8 @@ public interface GridFSBucket {
      * @deprecated use {@link #openDownloadStream(String, GridFSDownloadOptions)} instead.
      * @return the stream
      */
-    @Deprecated
-    @SuppressWarnings("deprecation")
+    @Deprecated(since = "3.3", forRemoval = true)
+    @SuppressWarnings("removal")
     GridFSDownloadStream openDownloadStreamByName(String filename, com.mongodb.client.gridfs.model.GridFSDownloadByNameOptions options);
 
     /**
@@ -747,7 +747,7 @@ public interface GridFSBucket {
      * @param destination the destination stream
      * @deprecated use {@link #downloadToStream(String, OutputStream)} instead.
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     void downloadToStreamByName(String filename, OutputStream destination);
 
     /**
@@ -759,8 +759,8 @@ public interface GridFSBucket {
      * @param options the download options
      * @deprecated use {@link #downloadToStream(String, OutputStream, GridFSDownloadOptions)} instead.
      */
-    @Deprecated
-    @SuppressWarnings("deprecation")
+    @Deprecated(since = "3.3", forRemoval = true)
+    @SuppressWarnings("removal")
     void downloadToStreamByName(String filename, OutputStream destination,
                                 com.mongodb.client.gridfs.model.GridFSDownloadByNameOptions options);
 

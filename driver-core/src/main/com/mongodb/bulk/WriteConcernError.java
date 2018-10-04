@@ -56,7 +56,7 @@ public class WriteConcernError {
      * @param details any details
      * @deprecated
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public WriteConcernError(final int code, final String message, final BsonDocument details) {
         this(code, "", message, details);
     }

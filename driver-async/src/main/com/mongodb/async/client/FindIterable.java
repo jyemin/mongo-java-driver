@@ -95,7 +95,7 @@ public interface FindIterable<T> extends MongoIterable<T> {
      * @mongodb.driver.manual reference/operator/query-modifier/ Query Modifiers
      * @deprecated use the individual setters instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     FindIterable<T> modifiers(@Nullable Bson modifiers);
 
     /**
@@ -215,7 +215,7 @@ public interface FindIterable<T> extends MongoIterable<T> {
      * @since 3.5
      * @deprecated Deprecated as of MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     FindIterable<T> maxScan(long maxScan);
 
     /**
@@ -246,6 +246,6 @@ public interface FindIterable<T> extends MongoIterable<T> {
      * @since 3.5
      * @deprecated Deprecated in MongoDB 3.6 release and removed in MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     FindIterable<T> snapshot(boolean snapshot);
 }

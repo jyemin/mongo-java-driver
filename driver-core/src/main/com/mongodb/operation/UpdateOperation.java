@@ -43,7 +43,7 @@ public class UpdateOperation extends BaseWriteOperation {
      * @param updates       the update requests.
      * @deprecated          use {@link #UpdateOperation(MongoNamespace, boolean, WriteConcern, boolean, List)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public UpdateOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
                            final List<UpdateRequest> updates) {
         this(namespace, ordered, writeConcern, false, updates);

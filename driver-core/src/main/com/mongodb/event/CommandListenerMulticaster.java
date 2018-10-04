@@ -28,7 +28,8 @@ import java.util.List;
  * @deprecated register multiple command listeners in the settings
  */
 @Immutable
-@Deprecated
+@Deprecated(since = "3.3", forRemoval = true)
+@SuppressWarnings("removal")
 public class CommandListenerMulticaster implements CommandListener {
 
     private final CommandEventMulticaster wrapped;

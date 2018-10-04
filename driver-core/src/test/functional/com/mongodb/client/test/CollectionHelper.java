@@ -131,7 +131,7 @@ public final class CollectionHelper<T> {
         create(collectionName, options, WriteConcern.ACKNOWLEDGED);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void create(final String collectionName, final CreateCollectionOptions options, final WriteConcern writeConcern) {
         drop(namespace, writeConcern);
         CreateCollectionOperation operation = new CreateCollectionOperation(namespace.getDatabaseName(), collectionName, writeConcern)

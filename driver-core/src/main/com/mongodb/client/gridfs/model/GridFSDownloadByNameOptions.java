@@ -24,7 +24,7 @@ package com.mongodb.client.gridfs.model;
  * @since 3.1
  * @deprecated use {@link GridFSDownloadOptions} instead.
  */
-@Deprecated
+@Deprecated(since = "3.3", forRemoval = true)
 public final class GridFSDownloadByNameOptions {
     private int revision;
 

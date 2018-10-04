@@ -65,7 +65,7 @@ public class LazyDBObject extends LazyBSONObject implements DBObject {
      *
      * @return JSON serialization
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public String toString() {
         return com.mongodb.util.JSON.serialize(this);
     }

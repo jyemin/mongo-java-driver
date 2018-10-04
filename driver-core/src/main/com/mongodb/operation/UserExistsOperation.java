@@ -43,7 +43,7 @@ import static com.mongodb.operation.OperationHelper.withConnection;
  * @since 3.0
  * @deprecated use {@link CommandWriteOperation} directly or the mongod shell helpers.
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class UserExistsOperation implements AsyncReadOperation<Boolean>, ReadOperation<Boolean> {
     private final String databaseName;
     private final String userName;

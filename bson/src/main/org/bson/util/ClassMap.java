@@ -40,7 +40,7 @@ import java.util.Map;
  * @param <T> the type of the value in this map
  * @deprecated there is no replacement for this class
  */
-@Deprecated
+@Deprecated(since = "3.9", forRemoval = true)
 public class ClassMap<T> {
     /**
      * Helper method that walks superclass and interface graph, superclasses first, then interfaces, to compute an ancestry list. Super

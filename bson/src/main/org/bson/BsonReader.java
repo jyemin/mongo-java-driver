@@ -388,7 +388,7 @@ public interface BsonReader extends Closeable {
      * The previous mark must be cleared before creating a new one
      * @deprecated Use {@link #getMark()} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     void mark();
 
     /**

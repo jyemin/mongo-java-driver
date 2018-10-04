@@ -43,7 +43,7 @@ public class DeleteOperation extends BaseWriteOperation {
      * @param deleteRequests the remove requests.
      * @deprecated           use {@link #DeleteOperation(MongoNamespace, boolean, WriteConcern, boolean, List)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public DeleteOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
                            final List<DeleteRequest> deleteRequests) {
         this(namespace, ordered, writeConcern, false, deleteRequests);

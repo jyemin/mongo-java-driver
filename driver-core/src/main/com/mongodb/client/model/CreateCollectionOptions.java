@@ -44,7 +44,7 @@ public class CreateCollectionOptions {
      * @return true if auto-index is enabled
      * @deprecated this option was deprecated in MongoDB 3.2 and removed in MongodB 4.0
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public boolean isAutoIndex() {
         return autoIndex;
     }
@@ -56,7 +56,7 @@ public class CreateCollectionOptions {
      * @return this
      * @deprecated this option was deprecated in MongoDB 3.2 and removed in MongodB 4.0
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public CreateCollectionOptions autoIndex(final boolean autoIndex) {
         this.autoIndex = autoIndex;
         return this;
@@ -131,7 +131,7 @@ public class CreateCollectionOptions {
      * @mongodb.server.release 2.6
      * @deprecated As of MongoDB 3.0, power of 2 sizes is ignored by the MongoDB server
      */
-    @Deprecated
+    @Deprecated(since = "3.4", forRemoval = true)
     @Nullable
     public Boolean isUsePowerOf2Sizes() {
         return usePowerOf2Sizes;
@@ -146,7 +146,7 @@ public class CreateCollectionOptions {
      * @mongodb.server.release 2.6
      * @deprecated As of MongoDB 3.0, power of 2 sizes is ignored by the MongoDB server
      */
-    @Deprecated
+    @Deprecated(since = "3.4", forRemoval = true)
     public CreateCollectionOptions usePowerOf2Sizes(@Nullable final Boolean usePowerOf2Sizes) {
         this.usePowerOf2Sizes = usePowerOf2Sizes;
         return this;

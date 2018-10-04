@@ -27,8 +27,8 @@ import java.util.regex.Pattern;
  * @see org.bson.Transformer
  * @deprecated there is no replacement for this class
  */
-@Deprecated
-@SuppressWarnings("deprecation")
+@Deprecated(since = "3.9", forRemoval = true)
+@SuppressWarnings("removal")
 public class BSON {
 
     public static final byte EOO = 0;

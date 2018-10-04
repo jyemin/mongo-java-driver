@@ -62,7 +62,7 @@ public class LazyDBList extends LazyBSONList implements DBObject {
      *
      * @return JSON serialization
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public String toString() {
         return com.mongodb.util.JSON.serialize(this);
     }

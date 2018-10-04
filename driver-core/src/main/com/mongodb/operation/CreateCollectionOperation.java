@@ -204,7 +204,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
      * @mongodb.server.release 2.6
      * @deprecated As of MongoDB 3.0, power of 2 sizes is ignored by the MongoDB server
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Boolean isUsePowerOf2Sizes() {
         return usePowerOf2Sizes;
     }
@@ -220,7 +220,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
      * @mongodb.server.release 2.6
      * @deprecated As of MongoDB 3.0, power of 2 sizes is ignored by the MongoDB server
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public CreateCollectionOperation usePowerOf2Sizes(final Boolean usePowerOf2Sizes) {
         this.usePowerOf2Sizes = usePowerOf2Sizes;
         return this;

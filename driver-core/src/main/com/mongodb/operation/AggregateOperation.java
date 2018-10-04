@@ -172,7 +172,7 @@ public class AggregateOperation<T> implements AsyncReadOperation<AsyncBatchCurso
      * that support it (&gt;= 2.6).  The driver will ignore this as of MongoDB 3.6, which does not support inline results for the aggregate
      * command.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Boolean getUseCursor() {
         return wrapped.getUseCursor();
     }
@@ -188,7 +188,7 @@ public class AggregateOperation<T> implements AsyncReadOperation<AsyncBatchCurso
      * that support it (&gt;= 2.6).  The driver will ignore this as of MongoDB 3.6, which does not support inline results for the aggregate
      * command.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public AggregateOperation<T> useCursor(final Boolean useCursor) {
         wrapped.useCursor(useCursor);
         return this;

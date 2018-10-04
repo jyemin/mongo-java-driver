@@ -61,7 +61,7 @@ public final class ChangeStreamDocument<TDocument> {
      * @deprecated Prefer {@link #ChangeStreamDocument(BsonDocument, MongoNamespace, Object, BsonDocument, BsonTimestamp, OperationType,
      *                                                 UpdateDescription)}
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public ChangeStreamDocument(final BsonDocument resumeToken,
                                 final MongoNamespace namespace,
                                 final TDocument fullDocument,
@@ -82,7 +82,7 @@ public final class ChangeStreamDocument<TDocument> {
      * @param operationType the operation type
      * @param updateDescription the update description
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public ChangeStreamDocument(final BsonDocument resumeToken,
                                 final MongoNamespace namespace,
                                 final TDocument fullDocument,

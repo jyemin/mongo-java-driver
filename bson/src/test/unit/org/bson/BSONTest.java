@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("removal")
 public class BSONTest {
 
     @Before

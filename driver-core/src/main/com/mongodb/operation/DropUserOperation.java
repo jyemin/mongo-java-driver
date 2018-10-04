@@ -47,7 +47,7 @@ import static com.mongodb.operation.CommandOperationHelper.writeConcernErrorTran
  * @since 3.0
  * @deprecated use {@link CommandWriteOperation} directly or the mongod shell helpers.
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class DropUserOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final String databaseName;
     private final String userName;

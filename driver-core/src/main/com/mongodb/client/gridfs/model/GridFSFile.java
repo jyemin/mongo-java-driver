@@ -153,7 +153,7 @@ public final class GridFSFile {
      * @return the hash of the contents of the stored file or null if hashing the contents was disabled.
      * @deprecated file hashing is deprecated and may be removed in the future.
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     @Nullable
     public String getMD5() {
         return md5;
@@ -175,7 +175,7 @@ public final class GridFSFile {
      * @return the extra elements document or null
      * @deprecated any extra information should be stored in the metadata document instead.
      */
-    @Deprecated
+    @Deprecated(since = "3.1", forRemoval = true)
     @Nullable
     public Document getExtraElements() {
         return extraElements;
@@ -187,7 +187,7 @@ public final class GridFSFile {
      * @return the content type of the file
      * @deprecated content type information should be stored the metadata document instead.
      */
-    @Deprecated
+    @Deprecated(since = "3.1", forRemoval = true)
     public String getContentType() {
         if (extraElements != null && extraElements.containsKey("contentType")) {
             return extraElements.getString("contentType");
@@ -202,7 +202,7 @@ public final class GridFSFile {
      * @return the aliases of the file
      * @deprecated any aliases should be stored in the metadata document instead.
      */
-    @Deprecated
+    @Deprecated(since = "3.1", forRemoval = true)
     @SuppressWarnings("unchecked")
     public List<String> getAliases() {
         if (extraElements != null && extraElements.containsKey("aliases")) {

@@ -65,7 +65,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
      * @param indexName the name of the index to be dropped.
      * @deprecated Prefer {@link #DropIndexOperation(MongoNamespace, String, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public DropIndexOperation(final MongoNamespace namespace, final String indexName) {
         this(namespace, indexName, null);
     }
@@ -77,7 +77,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
      * @param keys      the keys of the index to be dropped
      * @deprecated Prefer {@link #DropIndexOperation(MongoNamespace, BsonDocument, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public DropIndexOperation(final MongoNamespace namespace, final BsonDocument keys) {
         this(namespace, keys, null);
     }

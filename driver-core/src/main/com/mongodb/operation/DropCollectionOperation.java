@@ -58,7 +58,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
      * @param namespace the database and collection namespace for the operation.
      * @deprecated Prefer {@link #DropCollectionOperation(MongoNamespace, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public DropCollectionOperation(final MongoNamespace namespace) {
         this(namespace, null);
     }

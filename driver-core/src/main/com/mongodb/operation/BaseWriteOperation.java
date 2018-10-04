@@ -64,7 +64,7 @@ public abstract class BaseWriteOperation implements AsyncWriteOperation<WriteCon
      * @param writeConcern the write concern for the operation.
      * @deprecated         use {@link #BaseWriteOperation(MongoNamespace, boolean, WriteConcern, boolean)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public BaseWriteOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern) {
         this(namespace, ordered, writeConcern, false);
     }

@@ -134,7 +134,7 @@ final class Operations<TDocument> {
         return createFindOperation(findNamespace, filter, resultClass, options);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     private <TResult> FindOperation<TResult> createFindOperation(final MongoNamespace findNamespace, final Bson filter,
                                                                  final Class<TResult> resultClass, final FindOptions options) {
         return new FindOperation<TResult>(findNamespace, codecRegistry.get(resultClass))
@@ -173,7 +173,7 @@ final class Operations<TDocument> {
 
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     <TResult> AggregateOperation<TResult> aggregate(final List<? extends Bson> pipeline, final Class<TResult> resultClass,
                                                            final long maxTimeMS, final long maxAwaitTimeMS, final Integer batchSize,
                                                            final Collation collation,

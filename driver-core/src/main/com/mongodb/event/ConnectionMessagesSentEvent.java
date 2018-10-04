@@ -27,7 +27,7 @@ import static org.bson.assertions.Assertions.notNull;
  * @deprecated - No longer used
  */
 @Beta
-@Deprecated
+@Deprecated(since = "3.5", forRemoval = true)
 public final class ConnectionMessagesSentEvent {
     private final ConnectionId connectionId;
     private final int requestId;

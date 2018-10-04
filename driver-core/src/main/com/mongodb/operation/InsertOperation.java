@@ -43,7 +43,7 @@ public class InsertOperation extends BaseWriteOperation {
      * @param insertRequests    the list of inserts.
      * @deprecated              use {@link #InsertOperation(MongoNamespace, boolean, WriteConcern, boolean, List)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public InsertOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
                            final List<InsertRequest> insertRequests) {
         this(namespace, ordered, writeConcern, false, insertRequests);

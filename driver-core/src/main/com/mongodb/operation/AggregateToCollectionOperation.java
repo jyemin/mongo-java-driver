@@ -77,7 +77,7 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
      * @param pipeline the aggregation pipeline.
      * @deprecated Prefer {@link #AggregateToCollectionOperation(MongoNamespace, List, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public AggregateToCollectionOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline) {
         this(namespace, pipeline, null);
     }

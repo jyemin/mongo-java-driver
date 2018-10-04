@@ -44,7 +44,7 @@ public class ReplicaSetStatus {
      *
      * @return the name of the replica set.
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @Nullable
     public String getName() {
         List<ServerDescription> any = getClusterDescription().getAnyPrimaryOrSecondary();
@@ -57,7 +57,7 @@ public class ReplicaSetStatus {
      * @return master or null if don't have one
      * @throws MongoException if there's a failure
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @Nullable
     public ServerAddress getMaster() {
         List<ServerDescription> primaries = getClusterDescription().getPrimaries();
@@ -82,7 +82,7 @@ public class ReplicaSetStatus {
      * @return the maximum size, or 0 if not obtained from servers yet.
      * @throws MongoException if there's a failure
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public int getMaxBsonObjectSize() {
         List<ServerDescription> primaries = getClusterDescription().getPrimaries();
         return primaries.isEmpty() ? ServerDescription.getDefaultMaxDocumentSize() : primaries.get(0).getMaxDocumentSize();

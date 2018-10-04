@@ -68,7 +68,7 @@ public final class AsynchronousSocketChannelStream implements Stream {
         handler.getOpen();
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @Override
     public void openAsync(final AsyncCompletionHandler<Void> handler) {
         isTrue("unopened", channel == null);

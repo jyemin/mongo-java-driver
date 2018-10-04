@@ -37,6 +37,7 @@ import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
  *
  * @since 3.0
  */
+@SuppressWarnings("removal")
 public final class MongoClients {
 
     /**
@@ -55,7 +56,7 @@ public final class MongoClients {
      * @return the client
      * @deprecated use {@link #create(com.mongodb.MongoClientSettings)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     public static MongoClient create(final MongoClientSettings settings) {
         return create(settings, null);
     }
@@ -110,7 +111,7 @@ public final class MongoClients {
      * @since 3.4
      * @deprecated use {@link #create(com.mongodb.MongoClientSettings, MongoDriverInformation)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     public static MongoClient create(final MongoClientSettings settings, @Nullable final MongoDriverInformation mongoDriverInformation) {
         return create(settings, mongoDriverInformation, null);
     }

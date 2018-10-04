@@ -101,7 +101,7 @@ public class BasicBSONObject extends LinkedHashMap<String, Object> implements BS
         return super.containsKey(field);
     }
 
-    @Deprecated
+    @SuppressWarnings("deprecation")
     @Override
     public boolean containsKey(final String key) {
         return containsField(key);

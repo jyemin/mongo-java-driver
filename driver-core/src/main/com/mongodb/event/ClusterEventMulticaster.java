@@ -34,7 +34,7 @@ import static java.util.Collections.unmodifiableList;
  * @since 3.3
  * @deprecated register multiple cluster listeners instead
  */
-@Deprecated
+@Deprecated(since = "3.5", forRemoval = true)
 @Immutable
 public final class ClusterEventMulticaster implements ClusterListener {
     private static final Logger LOGGER = Loggers.getLogger("cluster.event");

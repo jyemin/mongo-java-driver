@@ -24,7 +24,7 @@ package com.mongodb.client.model;
  * @since 3.0
  * @deprecated this is an unused class and there should be no reason to use it
  */
-@Deprecated
+@Deprecated(since = "3.1", forRemoval = true)
 public class ParallelCollectionScanOptions {
     private int batchSize;
 

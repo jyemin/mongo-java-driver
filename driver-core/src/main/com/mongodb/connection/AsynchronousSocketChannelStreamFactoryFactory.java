@@ -33,7 +33,7 @@ public class AsynchronousSocketChannelStreamFactoryFactory implements StreamFact
      * @deprecated Use {@link AsynchronousSocketChannelStreamFactoryFactory#builder()} instead to construct the
      * {@code AsynchronousSocketChannelStreamFactoryFactory}.
      */
-    @Deprecated
+    @Deprecated(since = "3.6", forRemoval = true)
     public AsynchronousSocketChannelStreamFactoryFactory() {
         this(builder());
     }

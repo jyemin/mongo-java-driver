@@ -51,7 +51,7 @@ public final class ReplaceOneModel<T> extends WriteModel<T> {
      * @param options     the options to apply
      * @deprecated use {@link #ReplaceOneModel(Bson, Object, ReplaceOptions)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     public ReplaceOneModel(final Bson filter, final T replacement, final UpdateOptions options) {
         this(filter, replacement, createReplaceOptions(options));
     }
@@ -94,7 +94,7 @@ public final class ReplaceOneModel<T> extends WriteModel<T> {
      * @return the update options
      * @deprecated use {@link #getReplaceOptions()} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     public UpdateOptions getOptions() {
         return new UpdateOptions()
                 .bypassDocumentValidation(options.getBypassDocumentValidation())

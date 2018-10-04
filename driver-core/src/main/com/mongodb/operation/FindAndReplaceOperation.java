@@ -70,7 +70,7 @@ public class FindAndReplaceOperation<T> extends BaseFindAndModifyOperation<T> {
      * @param replacement the document that will replace the found document.
      * @deprecated use {@link #FindAndReplaceOperation(MongoNamespace, WriteConcern, boolean, Decoder, BsonDocument)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindAndReplaceOperation(final MongoNamespace namespace, final Decoder<T> decoder, final BsonDocument replacement) {
         this(namespace, WriteConcern.ACKNOWLEDGED, false, decoder, replacement);
     }
@@ -85,7 +85,7 @@ public class FindAndReplaceOperation<T> extends BaseFindAndModifyOperation<T> {
      * @since 3.2
      * @deprecated use {@link #FindAndReplaceOperation(MongoNamespace, WriteConcern, boolean, Decoder, BsonDocument)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindAndReplaceOperation(final MongoNamespace namespace, final WriteConcern writeConcern, final Decoder<T> decoder,
                                    final BsonDocument replacement) {
         this(namespace, writeConcern, false, decoder, replacement);

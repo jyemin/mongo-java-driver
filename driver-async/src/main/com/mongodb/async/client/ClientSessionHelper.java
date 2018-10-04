@@ -52,7 +52,7 @@ class ClientSessionHelper {
         }
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     void createClientSession(final ClientSessionOptions options, final OperationExecutor executor,
                              final SingleResultCallback<ClientSession>
             callback) {
@@ -87,6 +87,7 @@ class ClientSessionHelper {
         }
     }
 
+    @SuppressWarnings("removal")
     private ClientSession createClientSession(final ClientSessionOptions options, final OperationExecutor executor) {
         ClientSessionOptions mergedOptions = ClientSessionOptions.builder(options)
                 .defaultTransactionOptions(

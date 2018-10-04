@@ -122,7 +122,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      *
      * @deprecated Prefer {@link #builder()}, but note that the default output mode is different for that method
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings() {
         this(builder().outputMode(JsonMode.STRICT));
     }
@@ -133,7 +133,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      * @param outputMode the output mode
      * @deprecated Use the {@link Builder} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings(final JsonMode outputMode) {
         this(builder().outputMode(outputMode));
     }
@@ -144,7 +144,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      * @param indent whether indent mode is enabled
      * @deprecated Use the {@link Builder} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings(final boolean indent) {
         this(builder().indent(indent));
     }
@@ -156,7 +156,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      * @param indent     whether indent mode is enabled
      * @deprecated Use the {@link Builder} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings(final JsonMode outputMode, final boolean indent) {
         this(builder().outputMode(outputMode).indent(indent));
     }
@@ -169,7 +169,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      * @param indentCharacters the indent characters
      * @deprecated Use the {@link Builder} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings(final JsonMode outputMode, final String indentCharacters) {
         this(builder().outputMode(outputMode).indent(true).indentCharacters(indentCharacters));
     }
@@ -182,7 +182,7 @@ public class JsonWriterSettings extends BsonWriterSettings {
      * @param newLineCharacters the new line character(s) to use
      * @deprecated Use the {@link Builder} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     public JsonWriterSettings(final JsonMode outputMode, final String indentCharacters, final String newLineCharacters) {
         this(builder().outputMode(outputMode).indent(true).indentCharacters(indentCharacters).newLineCharacters(newLineCharacters));
     }

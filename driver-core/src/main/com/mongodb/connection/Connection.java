@@ -96,7 +96,7 @@ public interface Connection extends ReferenceCounted {
      * @return the command result
      * @deprecated Prefer {@link #command(String, BsonDocument, FieldNameValidator, ReadPreference, Decoder, SessionContext)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     <T> T command(String database, BsonDocument command, boolean slaveOk, FieldNameValidator fieldNameValidator,
                   Decoder<T> commandResultDecoder);
 
@@ -156,7 +156,7 @@ public interface Connection extends ReferenceCounted {
      * @deprecated Replaced by {@link #query(MongoNamespace, BsonDocument, BsonDocument, int, int, int, boolean, boolean, boolean,
      * boolean, boolean, boolean, Decoder)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     <T> QueryResult<T> query(MongoNamespace namespace, BsonDocument queryDocument, BsonDocument fields,
                              int numberToReturn, int skip,
                              boolean slaveOk, boolean tailableCursor, boolean awaitData, boolean noCursorTimeout,
@@ -208,7 +208,7 @@ public interface Connection extends ReferenceCounted {
      * @param cursors the cursors
      * @deprecated Replaced by {@link #killCursor(MongoNamespace, List)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     void killCursor(List<Long> cursors);
 
     /**

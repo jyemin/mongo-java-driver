@@ -59,7 +59,7 @@ public class FindAndDeleteOperation<T> extends BaseFindAndModifyOperation<T> {
      * @param decoder   the decoder for the result documents.
      * @deprecated      use {@link #FindAndDeleteOperation(MongoNamespace, WriteConcern, boolean, Decoder)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindAndDeleteOperation(final MongoNamespace namespace, final Decoder<T> decoder) {
         this(namespace, WriteConcern.ACKNOWLEDGED, false, decoder);
     }
@@ -73,7 +73,7 @@ public class FindAndDeleteOperation<T> extends BaseFindAndModifyOperation<T> {
      * @since 3.2
      * @deprecated         use {@link #FindAndDeleteOperation(MongoNamespace, WriteConcern, boolean, Decoder)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindAndDeleteOperation(final MongoNamespace namespace, final WriteConcern writeConcern, final Decoder<T> decoder) {
         this(namespace, writeConcern, false, decoder);
     }

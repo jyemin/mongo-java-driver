@@ -222,7 +222,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
      * @mongodb.driver.manual reference/operator/query-modifier/ Query Modifiers
      * @deprecated use the individual setters instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindOperation<T> modifiers(final BsonDocument modifiers) {
         this.modifiers = modifiers;
         return this;
@@ -590,7 +590,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
      * @since 3.5
      * @deprecated Deprecated as of MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public long getMaxScan() {
         return maxScan;
     }
@@ -605,7 +605,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
      * @since 3.5
      * @deprecated Deprecated as of MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindOperation<T> maxScan(final long maxScan) {
         this.maxScan = maxScan;
         return this;
@@ -669,7 +669,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
      * @since 3.5
      * @deprecated Deprecated in MongoDB 3.6 release and removed in MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public boolean isSnapshot() {
         return snapshot;
     }
@@ -684,7 +684,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
      * @since 3.5
      * @deprecated Deprecated in MongoDB 3.6 release and removed in MongoDB 4.0 release
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public FindOperation<T> snapshot(final boolean snapshot) {
         this.snapshot = snapshot;
         return this;

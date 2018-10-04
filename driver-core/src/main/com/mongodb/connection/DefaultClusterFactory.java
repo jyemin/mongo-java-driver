@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @since 3.0
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("removal")
 public final class DefaultClusterFactory implements ClusterFactory {
 
     @Override
@@ -72,7 +72,7 @@ public final class DefaultClusterFactory implements ClusterFactory {
      * @deprecated use {@link #createCluster(ClusterSettings, ServerSettings, ConnectionPoolSettings, StreamFactory, StreamFactory,
      * List, CommandListener, String, MongoDriverInformation, List)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Cluster create(final ClusterSettings settings, final ServerSettings serverSettings,
                           final ConnectionPoolSettings connectionPoolSettings, final StreamFactory streamFactory,
                           final StreamFactory heartbeatStreamFactory,
@@ -107,7 +107,7 @@ public final class DefaultClusterFactory implements ClusterFactory {
      * @deprecated use {@link #createCluster(ClusterSettings, ServerSettings, ConnectionPoolSettings, StreamFactory, StreamFactory,
      * List, CommandListener, String, MongoDriverInformation, List)} instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Cluster create(final ClusterSettings settings, final ServerSettings serverSettings,
                           final ConnectionPoolSettings connectionPoolSettings, final StreamFactory streamFactory,
                           final StreamFactory heartbeatStreamFactory,
@@ -142,7 +142,7 @@ public final class DefaultClusterFactory implements ClusterFactory {
      * List, CommandListener, String, MongoDriverInformation, List)} instead
 
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public Cluster createCluster(final ClusterSettings clusterSettings, final ServerSettings serverSettings,
                                  final ConnectionPoolSettings connectionPoolSettings, final StreamFactory streamFactory,
                                  final StreamFactory heartbeatStreamFactory, final List<MongoCredential> credentialList,

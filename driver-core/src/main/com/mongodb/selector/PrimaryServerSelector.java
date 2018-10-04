@@ -27,11 +27,11 @@ import java.util.List;
  * @since 3.0
  * @deprecated Use either {@link ReadPreferenceServerSelector} or {@link WritableServerSelector}, depending on your requirements
  */
-@Deprecated
+@Deprecated(since = "3.1", forRemoval = true)
 public final class PrimaryServerSelector implements ServerSelector {
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public List<ServerDescription> select(final ClusterDescription clusterDescription) {
         return clusterDescription.getPrimaries();
     }

@@ -43,7 +43,7 @@ public abstract class GridFSUploadStream extends OutputStream {
      * @deprecated use {@link #getObjectId()} instead.
      * @return the ObjectId for the file to be uploaded
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public abstract ObjectId getFileId();
 
     /**

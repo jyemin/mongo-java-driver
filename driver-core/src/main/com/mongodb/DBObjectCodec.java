@@ -61,7 +61,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
  *
  * @since 3.0
  */
-@SuppressWarnings({"rawtypes", "deprecation"})
+@SuppressWarnings({"rawtypes", "removal"})
 public class DBObjectCodec implements CollectibleCodec<DBObject> {
     private static final BsonTypeClassMap DEFAULT_BSON_TYPE_CLASS_MAP = createDefaultBsonTypeClassMap();
     private static final CodecRegistry DEFAULT_REGISTRY =

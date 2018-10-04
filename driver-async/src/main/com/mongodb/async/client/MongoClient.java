@@ -86,7 +86,8 @@ public interface MongoClient extends Closeable {
      * @return the settings
      * @deprecated this method is being removed
      */
-    @Deprecated
+    @SuppressWarnings("removal")
+    @Deprecated(since = "3.7", forRemoval = true)
     MongoClientSettings getSettings();
 
     /**

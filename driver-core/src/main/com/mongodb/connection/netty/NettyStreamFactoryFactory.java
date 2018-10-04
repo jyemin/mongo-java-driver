@@ -44,7 +44,7 @@ public class NettyStreamFactoryFactory implements StreamFactoryFactory {
      *
      * @deprecated Use {@link NettyStreamFactoryFactory#builder()} instead to construct the {@code  NettyStreamFactoryFactory}.
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public NettyStreamFactoryFactory() {
         this(builder());
     }
@@ -56,7 +56,7 @@ public class NettyStreamFactoryFactory implements StreamFactoryFactory {
      * @param allocator the non-null byte buf allocator
      * @deprecated Use {@link NettyStreamFactoryFactory#builder()} instead to construct the {@code  NettyStreamFactoryFactory}.
      */
-    @Deprecated
+    @Deprecated(since = "3.3", forRemoval = true)
     public NettyStreamFactoryFactory(final EventLoopGroup eventLoopGroup, final ByteBufAllocator allocator) {
         this(builder().eventLoopGroup(eventLoopGroup).allocator(allocator));
     }

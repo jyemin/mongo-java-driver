@@ -58,7 +58,7 @@ public class RenameCollectionOperation implements AsyncWriteOperation<Void>, Wri
      * @param newNamespace      the desired new name for the collection
      * @deprecated Prefer {@link #RenameCollectionOperation(MongoNamespace, MongoNamespace, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public RenameCollectionOperation(final MongoNamespace originalNamespace, final MongoNamespace newNamespace) {
         this(originalNamespace, newNamespace, null);
     }

@@ -246,8 +246,8 @@ public abstract class GridFSFile implements DBObject {
         return extra.get(key);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    @Deprecated
     public boolean containsKey(final String key) {
         return containsField(key);
     }
@@ -276,7 +276,7 @@ public abstract class GridFSFile implements DBObject {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public String toString() {
         return com.mongodb.util.JSON.serialize(this);
     }

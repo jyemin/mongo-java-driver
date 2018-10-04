@@ -1329,7 +1329,7 @@ public class JsonReader extends AbstractBsonReader {
         return oid;
     }
 
-    @Deprecated
+    @SuppressWarnings("removal")
     @Override
     public void mark() {
         if (mark != null) {

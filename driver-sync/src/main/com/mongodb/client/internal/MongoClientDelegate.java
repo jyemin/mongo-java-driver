@@ -146,7 +146,7 @@ public class MongoClientDelegate {
         return clusterDescription;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     private List<ServerDescription> getServerDescriptionListToConsiderForSessionSupport(final ClusterDescription clusterDescription) {
         if (clusterDescription.getConnectionMode() == ClusterConnectionMode.SINGLE) {
             return clusterDescription.getAny();

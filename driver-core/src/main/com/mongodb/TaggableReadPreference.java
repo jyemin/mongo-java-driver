@@ -153,7 +153,7 @@ public abstract class TaggableReadPreference extends ReadPreference {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     protected List<ServerDescription> chooseForNonReplicaSet(final ClusterDescription clusterDescription) {
         return selectFreshServers(clusterDescription, clusterDescription.getAny());
     }
@@ -292,7 +292,7 @@ public abstract class TaggableReadPreference extends ReadPreference {
         }
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         protected List<ServerDescription> chooseForReplicaSet(final ClusterDescription clusterDescription) {
             List<ServerDescription> selectedServers = selectFreshServers(clusterDescription, clusterDescription.getSecondaries());
             if (!getTagSetList().isEmpty()) {
@@ -327,7 +327,7 @@ public abstract class TaggableReadPreference extends ReadPreference {
         }
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         protected List<ServerDescription> chooseForReplicaSet(final ClusterDescription clusterDescription) {
             List<ServerDescription> selectedServers = super.chooseForReplicaSet(clusterDescription);
             if (selectedServers.isEmpty()) {
@@ -356,7 +356,7 @@ public abstract class TaggableReadPreference extends ReadPreference {
 
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         public List<ServerDescription> chooseForReplicaSet(final ClusterDescription clusterDescription) {
             List<ServerDescription> selectedServers = selectFreshServers(clusterDescription, clusterDescription.getAnyPrimaryOrSecondary());
             if (!getTagSetList().isEmpty()) {
@@ -391,7 +391,7 @@ public abstract class TaggableReadPreference extends ReadPreference {
         }
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         protected List<ServerDescription> chooseForReplicaSet(final ClusterDescription clusterDescription) {
             List<ServerDescription> selectedServers = selectFreshServers(clusterDescription, clusterDescription.getPrimaries());
             if (selectedServers.isEmpty()) {

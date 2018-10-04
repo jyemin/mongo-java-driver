@@ -80,7 +80,7 @@ public class CreateIndexesOperation implements AsyncWriteOperation<Void>, WriteO
      * @param requests the index request
      * @deprecated Prefer {@link #CreateIndexesOperation(MongoNamespace, List, WriteConcern)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public CreateIndexesOperation(final MongoNamespace namespace, final List<IndexRequest> requests) {
         this(namespace, requests, null);
     }

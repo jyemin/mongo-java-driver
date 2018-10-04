@@ -46,7 +46,7 @@ public class FsyncUnlockOperation implements WriteOperation<BsonDocument>, ReadO
      * @return the result of the operation
      * @deprecated use {@link #execute(ReadBinding)} instead.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     @Override
     public BsonDocument execute(final WriteBinding binding) {
         return withConnection(binding, new CallableWithConnection<BsonDocument>() {

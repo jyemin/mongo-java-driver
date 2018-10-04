@@ -48,8 +48,8 @@ import java.util.regex.Pattern;
  *
  * @deprecated This class has been superseded by to toJson and parse methods on BasicDBObject
  */
-@Deprecated
-@SuppressWarnings("deprecation")
+@Deprecated(since = "3.5", forRemoval = true)
+@SuppressWarnings("removal")
 public class JSONCallback extends BasicBSONCallback {
 
     @Override

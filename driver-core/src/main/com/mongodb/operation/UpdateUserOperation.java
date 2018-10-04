@@ -48,7 +48,7 @@ import static com.mongodb.operation.CommandOperationHelper.writeConcernErrorTran
  * @since 3.0
  * @deprecated use {@link CommandWriteOperation} directly or the mongod shell helpers.
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class UpdateUserOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final MongoCredential credential;
     private final boolean readOnly;

@@ -159,7 +159,7 @@ public interface MongoCollection<TDocument> {
      * @param callback the callback passed the number of documents in the collection
      * @deprecated use {@link #estimatedDocumentCount(SingleResultCallback)} or {@link #countDocuments(SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(SingleResultCallback<Long> callback);
 
     /**
@@ -169,7 +169,7 @@ public interface MongoCollection<TDocument> {
      * @param callback the callback passed the number of documents in the collection
      * @deprecated use {@link #countDocuments(Bson, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(Bson filter, SingleResultCallback<Long> callback);
 
     /**
@@ -180,7 +180,7 @@ public interface MongoCollection<TDocument> {
      * @param callback the callback passed the number of documents in the collection
      * @deprecated use {@link #countDocuments(Bson, CountOptions, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(Bson filter, CountOptions options, SingleResultCallback<Long> callback);
 
     /**
@@ -193,7 +193,7 @@ public interface MongoCollection<TDocument> {
      * @deprecated use {@link #estimatedDocumentCount(SingleResultCallback)} or
      * {@link #countDocuments(ClientSession, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(ClientSession clientSession, SingleResultCallback<Long> callback);
 
     /**
@@ -206,7 +206,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #countDocuments(ClientSession, Bson, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(ClientSession clientSession, Bson filter, SingleResultCallback<Long> callback);
 
     /**
@@ -220,7 +220,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #countDocuments(ClientSession, Bson, CountOptions, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     void count(ClientSession clientSession, Bson filter, CountOptions options, SingleResultCallback<Long> callback);
 
     /**
@@ -1047,7 +1047,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
      * @deprecated use {@link #replaceOne(Bson, Object, ReplaceOptions, SingleResultCallback)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     void replaceOne(Bson filter, TDocument replacement, UpdateOptions options, SingleResultCallback<UpdateResult> callback);
 
     /**
@@ -1100,7 +1100,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #replaceOne(ClientSession, Bson, Object, ReplaceOptions, SingleResultCallback)}
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     void replaceOne(ClientSession clientSession, Bson filter, TDocument replacement, UpdateOptions options,
                     SingleResultCallback<UpdateResult> callback);
 

@@ -117,7 +117,7 @@ public class ClusterDescriptionTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void testAll() {
         ClusterDescription description = new ClusterDescription(MULTIPLE, UNKNOWN, Collections.<ServerDescription>emptyList());
         assertTrue(description.getAll().isEmpty());
@@ -126,7 +126,7 @@ public class ClusterDescriptionTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void testAny() throws UnknownHostException {
         List<ServerDescription> any = cluster.getAny();
         assertEquals(4, any.size());
@@ -137,7 +137,7 @@ public class ClusterDescriptionTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void testPrimaryOrSecondary() throws UnknownHostException {
         assertEquals(asList(primary, secondary, otherSecondary), cluster.getAnyPrimaryOrSecondary());
         assertEquals(asList(primary, secondary), cluster.getAnyPrimaryOrSecondary(new TagSet(asList(new Tag("foo", "1"),
@@ -162,14 +162,14 @@ public class ClusterDescriptionTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void getByServerAddress() throws UnknownHostException {
         assertEquals(primary, cluster.getByServerAddress(primary.getAddress()));
         assertNull(cluster.getByServerAddress(notOkMember.getAddress()));
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void testSortingOfAll() throws UnknownHostException {
         ClusterDescription description =
         new ClusterDescription(MULTIPLE, UNKNOWN, asList(

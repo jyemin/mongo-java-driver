@@ -215,7 +215,7 @@ public class JsonPoweredCrudTestHelper {
         return toResult(iterable);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     BsonDocument getCountResult(final BsonDocument collectionOptions, final BsonDocument arguments,
                                 @Nullable final ClientSession clientSession) {
         CountOptions options = new CountOptions();
@@ -288,7 +288,7 @@ public class JsonPoweredCrudTestHelper {
         return toResult(iterable.into(new BsonArray()));
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     BsonDocument getFindResult(final BsonDocument collectionOptions, final BsonDocument arguments,
                                @Nullable final ClientSession clientSession) {
         FindIterable<BsonDocument> iterable;

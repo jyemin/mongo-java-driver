@@ -52,7 +52,7 @@ public class DropDatabaseOperation implements AsyncWriteOperation<Void>, WriteOp
      *
      * @param databaseName the name of the database for the operation.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public DropDatabaseOperation(final String databaseName) {
         this(databaseName, null);
     }

@@ -29,7 +29,7 @@ import static java.util.Collections.newSetFromMap;
  * @deprecated register multiple command listeners instead
  */
 @Beta
-@Deprecated
+@Deprecated(since = "3.5", forRemoval = true)
 public final class ConnectionPoolEventMulticaster implements ConnectionPoolListener {
     private final Set<ConnectionPoolListener> connectionPoolListeners
         = newSetFromMap(new ConcurrentHashMap<ConnectionPoolListener, Boolean>());

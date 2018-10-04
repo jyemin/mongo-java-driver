@@ -41,7 +41,7 @@ public class JsonWriter extends AbstractBsonWriter {
      *
      * @param writer the writer to write JSON to.
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public JsonWriter(final Writer writer) {
         this(writer, new JsonWriterSettings());
     }
@@ -270,7 +270,7 @@ public class JsonWriter extends AbstractBsonWriter {
          * @param contextType   the type of this context
          * @param indentChars   the String to use for indentation at this level.
          */
-        @Deprecated
+        @Deprecated(since = "3.5", forRemoval = true)
         public Context(final Context parentContext, final BsonContextType contextType, final String indentChars) {
             this(parentContext, contextType);
         }

@@ -317,7 +317,7 @@ public final class RawBsonDocument extends BsonDocument {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public String toJson() {
         return toJson(new JsonWriterSettings());
     }

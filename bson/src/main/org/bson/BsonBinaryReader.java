@@ -390,7 +390,7 @@ public class BsonBinaryReader extends AbstractBsonReader {
         return (Context) super.getContext();
     }
 
-    @Deprecated
+    @SuppressWarnings("removal")
     @Override
     public void mark() {
         if (mark != null) {

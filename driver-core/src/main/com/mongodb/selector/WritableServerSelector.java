@@ -29,7 +29,7 @@ import java.util.List;
 public final class WritableServerSelector implements ServerSelector {
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public List<ServerDescription> select(final ClusterDescription clusterDescription) {
         return clusterDescription.getPrimaries();
     }

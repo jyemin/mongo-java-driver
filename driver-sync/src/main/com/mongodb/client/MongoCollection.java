@@ -158,7 +158,7 @@ public interface MongoCollection<TDocument> {
      * @return the number of documents in the collection
      * @deprecated use {@link #countDocuments()} or {@link #estimatedDocumentCount()} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count();
 
     /**
@@ -168,7 +168,7 @@ public interface MongoCollection<TDocument> {
      * @return the number of documents in the collection
      * @deprecated use {@link #countDocuments(Bson)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count(Bson filter);
 
     /**
@@ -179,7 +179,7 @@ public interface MongoCollection<TDocument> {
      * @return the number of documents in the collection
      * @deprecated use {@link #countDocuments(Bson, CountOptions)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count(Bson filter, CountOptions options);
 
     /**
@@ -191,7 +191,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #countDocuments(ClientSession)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count(ClientSession clientSession);
 
     /**
@@ -204,7 +204,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #countDocuments(ClientSession, Bson)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count(ClientSession clientSession, Bson filter);
 
     /**
@@ -218,7 +218,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      * @deprecated use {@link #countDocuments(ClientSession, Bson, CountOptions)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     long count(ClientSession clientSession, Bson filter, CountOptions options);
 
     /**
@@ -1035,7 +1035,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
      * @deprecated use {@link #replaceOne(Bson, Object, ReplaceOptions)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     UpdateResult replaceOne(Bson filter, TDocument replacement, UpdateOptions updateOptions);
 
     /**
@@ -1088,7 +1088,7 @@ public interface MongoCollection<TDocument> {
      * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
      * @deprecated use {@link #replaceOne(ClientSession, Bson, Object, ReplaceOptions)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.7", forRemoval = true)
     UpdateResult replaceOne(ClientSession clientSession, Bson filter, TDocument replacement, UpdateOptions updateOptions);
 
     /**

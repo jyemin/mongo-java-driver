@@ -37,7 +37,7 @@ import static java.util.Collections.unmodifiableList;
  * @deprecated register multiple command listeners instead
  */
 @Immutable
-@Deprecated
+@Deprecated(since = "3.5", forRemoval = true)
 public final class CommandEventMulticaster implements CommandListener {
     private static final Logger LOGGER = Loggers.getLogger("protocol.event");
 

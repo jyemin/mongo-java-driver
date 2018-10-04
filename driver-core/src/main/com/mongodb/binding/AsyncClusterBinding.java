@@ -49,7 +49,7 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
      * @param readPreference a non-null ReadPreference for read operations
      * @deprecated Prefer {@link #AsyncClusterBinding(Cluster, ReadPreference, ReadConcern)}
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public AsyncClusterBinding(final Cluster cluster, final ReadPreference readPreference) {
         this(cluster, readPreference, ReadConcern.DEFAULT);
     }

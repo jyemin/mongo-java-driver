@@ -622,13 +622,13 @@ public abstract class ReadPreference {
         }
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         protected List<ServerDescription> chooseForReplicaSet(final ClusterDescription clusterDescription) {
             return clusterDescription.getPrimaries();
         }
 
         @Override
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         protected List<ServerDescription> chooseForNonReplicaSet(final ClusterDescription clusterDescription) {
             return clusterDescription.getAny();
         }

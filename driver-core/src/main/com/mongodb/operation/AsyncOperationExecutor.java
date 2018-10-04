@@ -26,7 +26,7 @@ import com.mongodb.async.SingleResultCallback;
  * @since 3.0
  * @deprecated there is no replacement for this interface
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public interface AsyncOperationExecutor {
     /**
      * Execute the read operation with the given read preference.

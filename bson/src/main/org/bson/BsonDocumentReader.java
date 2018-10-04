@@ -235,7 +235,7 @@ public class BsonDocumentReader extends AbstractBsonReader {
         return getCurrentBsonType();
     }
 
-    @Deprecated
+    @SuppressWarnings("removal")
     @Override
     public void mark() {
         if (mark != null) {

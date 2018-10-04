@@ -181,7 +181,7 @@ public class ByteBufferBsonInput implements BsonInput {
         buffer.position(buffer.position() + numBytes);
     }
 
-    @Deprecated
+    @SuppressWarnings("removal")
     @Override
     public void mark(final int readLimit) {
         ensureOpen();

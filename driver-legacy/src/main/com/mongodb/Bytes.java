@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @deprecated there is no replacement for this class
  */
 @Deprecated(since = "3.9", forRemoval = true)
-@SuppressWarnings("deprecation")
+@SuppressWarnings("removal")
 public class Bytes extends org.bson.BSON {
 
     /**

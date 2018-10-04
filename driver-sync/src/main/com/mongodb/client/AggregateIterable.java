@@ -80,7 +80,7 @@ public interface AggregateIterable<TResult> extends MongoIterable<TResult> {
      * that support it (&gt;= 2.6).  The driver will ignore this as of MongoDB 3.6, which does not support inline results for the aggregate
      * command.
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     AggregateIterable<TResult> useCursor(@Nullable Boolean useCursor);
 
     /**

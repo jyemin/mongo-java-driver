@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 /**
  * An implementation of {@code BsonCallback} that creates an instance of BSONObject.
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("removal")
 public class BasicBSONCallback implements BSONCallback {
 
     private Object root;

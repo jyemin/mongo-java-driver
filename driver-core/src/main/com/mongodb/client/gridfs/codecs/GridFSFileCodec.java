@@ -84,7 +84,7 @@ public final class GridFSFileCodec implements Codec<GridFSFile> {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public void encode(final BsonWriter writer, final GridFSFile value, final EncoderContext encoderContext) {
         BsonDocument bsonDocument = new BsonDocument();
         bsonDocument.put("_id", value.getId());

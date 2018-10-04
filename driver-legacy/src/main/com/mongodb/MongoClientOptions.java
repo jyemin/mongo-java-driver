@@ -104,7 +104,7 @@ public class MongoClientOptions {
     private final List<ClusterListener> clusterListeners;
     private final List<CommandListener> commandListeners;
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     private MongoClientOptions(final Builder builder) {
         description = builder.description;
         applicationName = builder.applicationName;

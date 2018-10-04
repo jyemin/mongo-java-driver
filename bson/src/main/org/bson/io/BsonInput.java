@@ -117,7 +117,7 @@ public interface BsonInput extends Closeable {
      * @param readLimit the maximum limit of bytes that can be read before the mark position becomes invalid
      * @deprecated Use {@link #getMark(int)} instead
      */
-    @Deprecated
+    @Deprecated(since = "3.5", forRemoval = true)
     void mark(int readLimit);
 
     /**

@@ -455,10 +455,10 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
     /**
      * Gets the time of this ID, in seconds.
      *
-     * @deprecated Use #getTimestamp instead
      * @return the time component of this ID in seconds
+     * @deprecated Use #getTimestamp instead
      */
-    @Deprecated
+    @Deprecated(since = "3.0", forRemoval = true)
     public int getTimeSecond() {
         return timestamp;
     }
@@ -466,10 +466,10 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
     /**
      * Gets the time of this instance, in milliseconds.
      *
-     * @deprecated Use #getDate instead
      * @return the time component of this ID in milliseconds
+     * @deprecated Use #getDate instead
      */
-    @Deprecated
+    @Deprecated(since = "3.0", forRemoval = true)
     public long getTime() {
         return timestamp * 1000L;
     }
@@ -479,7 +479,7 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
      * @see ObjectId#toHexString()
      * @deprecated use {@link #toHexString()}
      */
-    @Deprecated
+    @Deprecated(since = "3.0", forRemoval = true)
     public String toStringMongod() {
         return toHexString();
     }

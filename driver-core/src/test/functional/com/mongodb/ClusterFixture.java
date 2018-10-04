@@ -117,7 +117,7 @@ public final class ClusterFixture {
     public static ServerVersion getServerVersion() {
         return getCluster().selectServer(new ServerSelector() {
             @Override
-            @SuppressWarnings("deprecation")
+            @SuppressWarnings("removal")
             public List<ServerDescription> select(final ClusterDescription clusterDescription) {
                 return clusterDescription.getAny();
             }
@@ -355,7 +355,7 @@ public final class ClusterFixture {
         return builder.build();
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public static ServerAddress getPrimary() {
         List<ServerDescription> serverDescriptions = getCluster().getDescription().getPrimaries();
         while (serverDescriptions.isEmpty()) {
@@ -369,7 +369,7 @@ public final class ClusterFixture {
         return serverDescriptions.get(0).getAddress();
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     public static ServerAddress getSecondary() {
         List<ServerDescription> serverDescriptions = getCluster().getDescription().getSecondaries();
         while (serverDescriptions.isEmpty()) {

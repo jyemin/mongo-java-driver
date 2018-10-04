@@ -47,7 +47,7 @@ public class ClusterBinding extends AbstractReferenceCounted implements ReadWrit
      * @param readPreference a non-null ReadPreference for read operations
      * @deprecated Prefer {@link #ClusterBinding(Cluster, ReadPreference, ReadConcern)}
      */
-    @Deprecated
+    @Deprecated(since = "3.8", forRemoval = true)
     public ClusterBinding(final Cluster cluster, final ReadPreference readPreference) {
         this(cluster, readPreference, ReadConcern.DEFAULT);
     }

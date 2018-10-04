@@ -46,7 +46,7 @@ public interface ClusterFactory {
      * @param connectionListener       an optional listener for connection-related events
      * @return the cluster
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     Cluster create(ClusterSettings settings,
                    ServerSettings serverSettings,
                    ConnectionPoolSettings connectionPoolSettings,

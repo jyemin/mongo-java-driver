@@ -33,7 +33,7 @@ import static java.lang.String.format;
  * @since 3.3
  * @deprecated register multiple server monitor listeners instead
  */
-@Deprecated
+@Deprecated(since = "3.5", forRemoval = true)
 public final class ServerMonitorEventMulticaster implements ServerMonitorListener {
     private static final Logger LOGGER = Loggers.getLogger("cluster.event");
 
