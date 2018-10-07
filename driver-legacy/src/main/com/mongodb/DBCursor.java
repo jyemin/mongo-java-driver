@@ -220,7 +220,9 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @return {@code this} so calls can be chained
      * @see Bytes
      * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query Query Flags
+     * @deprecated Prefer per-option methods, e.g. {@link #cursorType(CursorType)}, {@link #noCursorTimeout(boolean)}, etc.
      */
+    @Deprecated
     public DBCursor addOption(final int option) {
         setOptions(this.options |= option);
         return this;
@@ -234,6 +236,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @see Bytes
      * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query Query Flags
      */
+    @Deprecated
     public DBCursor setOptions(final int options) {
         if ((options & Bytes.QUERYOPTION_EXHAUST) != 0) {
             throw new UnsupportedOperationException("exhaust query option is not supported");
@@ -248,6 +251,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @return {@code this} so calls can be chained
      * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query Query Flags
      */
+    @Deprecated
     public DBCursor resetOptions() {
         this.options = 0;
         return this;
@@ -259,6 +263,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @return the bitmask of options
      * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query Query Flags
      */
+    @Deprecated
     public int getOptions() {
         return options;
     }
@@ -292,8 +297,10 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @param value the value of the special query operator
      * @return {@code this} so calls can be chained
      * @mongodb.driver.manual reference/operator Special Operators
+     * @deprecated Prefer per-operator methods, e.g. {@link #comment(String)}, {@link #explain()}, etc.
      */
     @SuppressWarnings("deprecation")
+    @Deprecated
     public DBCursor addSpecial(@Nullable final String name, @Nullable final Object value) {
         if (name == null || value == null) {
             return this;
@@ -342,7 +349,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @since 2.12
      */
     public DBCursor comment(final String comment) {
-        findOptions.getModifiers().put("$comment", comment);
+        findOptions.comment(comment);
         return this;
     }
 
@@ -371,7 +378,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @since 2.12
      */
     public DBCursor max(final DBObject max) {
-        findOptions.getModifiers().put("$max", max);
+        findOptions.max(max);
         return this;
     }
 
@@ -384,7 +391,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @since 2.12
      */
     public DBCursor min(final DBObject min) {
-        findOptions.getModifiers().put("$min", min);
+        findOptions.min(min);
         return this;
     }
 
@@ -396,7 +403,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @since 2.12
      */
     public DBCursor returnKey() {
-        findOptions.getModifiers().put("$returnKey", true);
+        findOptions.returnKey(true);
         return this;
     }
 
@@ -407,7 +414,9 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @return {@code this} so calls can be chained
      * @mongodb.driver.manual reference/operator/meta/showDiskLoc/ $showDiskLoc
      * @since 2.12
+     * @deprecated showDiskLoc has been deprecated in the MongoDB server.  There is no replacement for it.
      */
+    @Deprecated
     public DBCursor showDiskLoc() {
         findOptions.getModifiers().put("$showDiskLoc", true);
         return this;
@@ -421,7 +430,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @mongodb.driver.manual reference/operator/meta/hint/ $hint
      */
     public DBCursor hint(final DBObject indexKeys) {
-        findOptions.getModifiers().put("$hint", indexKeys);
+        findOptions.hint(indexKeys);
         return this;
     }
 
@@ -431,7 +440,9 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      * @param indexName the name of an index
      * @return same DBCursor for chaining operations
      * @mongodb.driver.manual reference/operator/meta/hint/ $hint
+     * @deprecated Prefer {@link #hint(DBObject)}
      */
+    @Deprecated
     public DBCursor hint(final String indexName) {
         findOptions.getModifiers().put("$hint", indexName);
         return this;
@@ -491,6 +502,55 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
                                            getReadPreference(), getReadConcern()));
     }
 
+    /**
+     * Sets the cursor type.
+     *
+     * @param cursorType the cursor type, which may not be null
+     * @return this
+     * @since 3.9
+     */
+    public DBCursor cursorType(final CursorType cursorType) {
+        findOptions.cursorType(cursorType);
+        return this;
+    }
+
+    /**
+     * Users should not set this under normal circumstances.
+     *
+     * @param oplogReplay if oplog replay is enabled
+     * @return this
+     * @since 3.9
+     */
+    public DBCursor oplogReplay(final boolean oplogReplay) {
+        findOptions.oplogReplay(oplogReplay);
+        return this;
+    }
+
+    /**
+     * The server normally times out idle cursors after an inactivity period (10 minutes)
+     * to prevent excess memory use. Set this option to prevent that.
+     *
+     * @param noCursorTimeout true if cursor timeout is disabled
+     * @return this
+     * @since 3.9
+     */
+    public DBCursor noCursorTimeout(final boolean noCursorTimeout) {
+        findOptions.noCursorTimeout(noCursorTimeout);
+        return this;
+    }
+
+    /**
+     * Get partial results from a sharded cluster if one or more shards are unreachable (instead of throwing an error).
+     *
+     * @param partial if partial results for sharded clusters is enabled
+     * @return this
+     * @since 3.9
+     */
+    public DBCursor partial(final boolean partial) {
+        findOptions.partial(partial);
+        return this;
+    }
+
     @SuppressWarnings("deprecation")
     private FindOperation<DBObject> getQueryOperation(final Decoder<DBObject> decoder) {
         FindOperation<DBObject> operation = new FindOperation<DBObject>(collection.getNamespace(), decoder)
@@ -503,7 +563,13 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
                                                 .modifiers(collection.wrapAllowNull(findOptions.getModifiers()))
                                                 .projection(collection.wrapAllowNull(findOptions.getProjection()))
                                                 .sort(collection.wrapAllowNull(findOptions.getSort()))
-                                                .collation(findOptions.getCollation());
+                                                .collation(findOptions.getCollation())
+                                                .comment(findOptions.getComment())
+                                                .hint(collection.wrapAllowNull(findOptions.getHint()))
+                                                .min(collection.wrapAllowNull(findOptions.getMin()))
+                                                .max(collection.wrapAllowNull(findOptions.getMax()))
+                                                .returnKey(findOptions.isReturnKey())
+                                                .showRecordId(findOptions.isShowRecordId());
 
         if ((this.options & Bytes.QUERYOPTION_TAILABLE) != 0) {
             if ((this.options & Bytes.QUERYOPTION_AWAITDATA) != 0) {
@@ -1024,7 +1090,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
                 .collation(getCollation())
                 .maxTime(findOptions.getMaxTime(MILLISECONDS), MILLISECONDS);
 
-        Object hint = findOptions.getModifiers().get("$hint");
+        Object hint = findOptions.getHint() != null ? findOptions.getHint() : findOptions.getModifiers().get("$hint");
         if (hint != null) {
             if (hint instanceof String) {
                 countOptions.hintString((String) hint);

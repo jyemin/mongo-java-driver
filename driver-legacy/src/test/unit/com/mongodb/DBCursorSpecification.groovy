@@ -147,6 +147,56 @@ class DBCursorSpecification extends Specification {
                                                                 .modifiers(new BsonDocument()))
     }
 
+    def 'DBCursor methods should be used to create the expected operation'() {
+        given:
+        def executor = new TestOperationExecutor([stubBatchCursor()]);
+        def collection = new DB(getMongoClient(), 'myDatabase', executor).getCollection('test')
+        def collation = Collation.builder().locale('en').build()
+        def cursorType = CursorType.NonTailable
+        def filter = new BasicDBObject()
+        def sort = BasicDBObject.parse('{a: 1}')
+        def bsonFilter = new BsonDocument()
+        def bsonSort = BsonDocument.parse(sort.toJson())
+        def readConcern = ReadConcern.LOCAL
+        def readPreference = ReadPreference.nearest()
+        def findOptions = new DBCollectionFindOptions()
+        def cursor = new DBCursor(collection, filter, findOptions)
+                .setReadConcern(readConcern)
+                .setReadPreference(readPreference)
+                .setCollation(collation)
+                .batchSize(1)
+                .cursorType(cursorType)
+                .limit(1)
+                .maxTime(1, TimeUnit.MILLISECONDS)
+                .noCursorTimeout(true)
+                .oplogReplay(true)
+                .partial(true)
+                .skip(1)
+                .sort(sort)
+
+        when:
+        cursor.toArray()
+
+        then:
+        expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
+                .batchSize(1)
+                .collation(collation)
+                .cursorType(cursorType)
+                .filter(bsonFilter)
+                .limit(1)
+                .maxTime(1, TimeUnit.MILLISECONDS)
+                .noCursorTimeout(true)
+                .oplogReplay(true)
+                .partial(true)
+                .skip(1)
+                .sort(bsonSort)
+                .modifiers(new BsonDocument())
+        )
+
+        executor.getReadPreference() == readPreference
+        executor.getReadConcern() == readConcern
+    }
+
     def 'DBCollectionFindOptions should be used to create the expected operation'() {
         given:
         def executor = new TestOperationExecutor([stubBatchCursor()]);
@@ -161,6 +211,13 @@ class DBCursorSpecification extends Specification {
         def bsonModifiers = BsonDocument.parse(modifiers.toJson())
         def bsonProjection = BsonDocument.parse(projection.toJson())
         def bsonSort = BsonDocument.parse(sort.toJson())
+        def comment = 'comment'
+        def hint = BasicDBObject.parse('{x : 1}')
+        def min = BasicDBObject.parse('{y : 1}')
+        def max = BasicDBObject.parse('{y : 100}')
+        def bsonHint = BsonDocument.parse(hint.toJson())
+        def bsonMin = BsonDocument.parse(min.toJson())
+        def bsonMax = BsonDocument.parse(max.toJson())
         def readConcern = ReadConcern.LOCAL
         def readPreference = ReadPreference.nearest()
         def findOptions = new DBCollectionFindOptions()
@@ -179,6 +236,13 @@ class DBCursorSpecification extends Specification {
                 .readPreference(readPreference)
                 .skip(1)
                 .sort(sort)
+                .comment(comment)
+                .hint(hint)
+                .max(max)
+                .min(min)
+                .returnKey(true)
+                .showRecordId(true)
+
         def cursor = new DBCursor(collection, filter, findOptions)
 
         when:
@@ -200,6 +264,12 @@ class DBCursorSpecification extends Specification {
                 .projection(bsonProjection)
                 .skip(1)
                 .sort(bsonSort)
+                .comment(comment)
+                .hint(bsonHint)
+                .max(bsonMax)
+                .min(bsonMin)
+                .returnKey(true)
+                .showRecordId(true)
         )
 
         executor.getReadPreference() == findOptions.getReadPreference()
