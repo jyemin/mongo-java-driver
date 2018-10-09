@@ -240,7 +240,7 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         if (maxTimeMS > 0) {
             commandDocument.put("maxTimeMS", new BsonInt64(maxTimeMS));
         }
-        if (!isInline(description)) {
+            if (!isInline(description)) {
             BsonDocument cursor = new BsonDocument();
             if (batchSize != null) {
                 cursor.put("batchSize", new BsonInt32(batchSize));
