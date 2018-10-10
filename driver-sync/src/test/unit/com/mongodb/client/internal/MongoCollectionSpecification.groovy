@@ -348,28 +348,28 @@ class MongoCollectionSpecification extends Specification {
         def findIterable = execute(findMethod, session)
 
         then:
-        expect findIterable, isTheSameAs(new FindIterableImpl(session, namespace, Document, Document, codecRegistry,
+        expect findIterable, isTheSameAs(MongoIterables.findOf(session, namespace, Document, Document, codecRegistry,
                 readPreference, readConcern, executor, new BsonDocument()))
 
         when:
         findIterable = execute(findMethod, session, BsonDocument)
 
         then:
-        expect findIterable, isTheSameAs(new FindIterableImpl(session, namespace, Document, BsonDocument, codecRegistry,
+        expect findIterable, isTheSameAs(MongoIterables.findOf(session, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern, executor, new BsonDocument()))
 
         when:
         findIterable = execute(findMethod, session, new Document())
 
         then:
-        expect findIterable, isTheSameAs(new FindIterableImpl(session, namespace, Document, Document, codecRegistry,
+        expect findIterable, isTheSameAs(MongoIterables.findOf(session, namespace, Document, Document, codecRegistry,
                 readPreference, readConcern, executor, new Document()))
 
         when:
         findIterable = execute(findMethod, session, new Document(), BsonDocument)
 
         then:
-        expect findIterable, isTheSameAs(new FindIterableImpl(session, namespace, Document, BsonDocument, codecRegistry,
+        expect findIterable, isTheSameAs(MongoIterables.findOf(session, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern, executor, new Document()))
 
         where:
@@ -387,14 +387,14 @@ class MongoCollectionSpecification extends Specification {
         def aggregateIterable = execute(aggregateMethod, session, [new Document('$match', 1)])
 
         then:
-        expect aggregateIterable, isTheSameAs(new AggregateIterableImpl(session, namespace, Document, Document, codecRegistry,
+        expect aggregateIterable, isTheSameAs(MongoIterables.aggregateOf(session, namespace, Document, Document, codecRegistry,
                 readPreference, readConcern,  ACKNOWLEDGED, executor, [new Document('$match', 1)]))
 
         when:
         aggregateIterable = execute(aggregateMethod, session, [new Document('$match', 1)], BsonDocument)
 
         then:
-        expect aggregateIterable, isTheSameAs(new AggregateIterableImpl(session, namespace, Document, BsonDocument, codecRegistry,
+        expect aggregateIterable, isTheSameAs(MongoIterables.aggregateOf(session, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern,  ACKNOWLEDGED, executor, [new Document('$match', 1)]))
 
         where:
