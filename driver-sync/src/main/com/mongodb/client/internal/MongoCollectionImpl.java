@@ -402,7 +402,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private <TResult> ChangeStreamIterable<TResult> createChangeStreamIterable(@Nullable final ClientSession clientSession,
                                                                                final List<? extends Bson> pipeline,
                                                                                final Class<TResult> resultClass) {
-        return new ChangeStreamIterableImpl<TResult>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
+        return MongoIterables.changeStreamOf(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, ChangeStreamLevel.COLLECTION);
     }
 

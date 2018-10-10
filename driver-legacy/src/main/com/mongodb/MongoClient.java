@@ -21,9 +21,9 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.internal.ChangeStreamIterableImpl;
 import com.mongodb.client.internal.ListDatabasesIterableImpl;
 import com.mongodb.client.internal.MongoDatabaseImpl;
+import com.mongodb.client.internal.MongoIterables;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -700,7 +700,7 @@ public class MongoClient extends Mongo implements Closeable {
                                                                                final List<? extends Bson> pipeline,
                                                                                final Class<TResult> resultClass) {
         MongoClientOptions clientOptions = getMongoClientOptions();
-        return new ChangeStreamIterableImpl<TResult>(clientSession, "admin",
+        return MongoIterables.changeStreamOf(clientSession, "admin",
                 clientOptions.getCodecRegistry(), clientOptions.getReadPreference(), clientOptions.getReadConcern(),
                 createOperationExecutor(), pipeline, resultClass, ChangeStreamLevel.CLIENT);
     }

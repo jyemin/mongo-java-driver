@@ -22,6 +22,7 @@ import com.mongodb.MongoInternalException
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
+import com.mongodb.client.model.changestream.ChangeStreamLevel
 import com.mongodb.operation.BatchCursor
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
@@ -123,6 +124,10 @@ class Java8MongoIterablesSpecification extends Specification {
                 { executor ->
                     new Java8AggregateIterableImpl(null, namespace, Document, Document, codecRegistry,
                             readPreference, readConcern, writeConcern, executor, pipeline)
+                },
+                { executor ->
+                    new Java8ChangeStreamIterableImpl<>(null, namespace, codecRegistry, readPreference, readConcern, executor, pipeline,
+                        Document, ChangeStreamLevel.COLLECTION)
                 }
         ]
     }

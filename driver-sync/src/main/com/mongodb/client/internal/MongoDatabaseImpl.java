@@ -369,7 +369,7 @@ public class MongoDatabaseImpl implements MongoDatabase {
     private <TResult> ChangeStreamIterable<TResult> createChangeStreamIterable(@Nullable final ClientSession clientSession,
                                                                                final List<? extends Bson> pipeline,
                                                                                final Class<TResult> resultClass) {
-        return new ChangeStreamIterableImpl<TResult>(clientSession, name, codecRegistry, readPreference,
+        return MongoIterables.changeStreamOf(clientSession, name, codecRegistry, readPreference,
                 readConcern, executor, pipeline, resultClass, ChangeStreamLevel.DATABASE);
     }
 

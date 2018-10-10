@@ -21,6 +21,7 @@ import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
 import com.mongodb.client.ClientSession
+import com.mongodb.client.model.changestream.ChangeStreamLevel
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
 import org.bson.Document
@@ -60,6 +61,22 @@ class MongoIterablesSpecification extends Specification {
         then:
         expect aggregateIterable, isTheSameAs(new Java8AggregateIterableImpl<Document, BsonDocument>(clientSession, namespace, Document,
                 BsonDocument, codecRegistry, readPreference, readConcern, writeConcern, executor, pipeline))
+
+        when:
+        def changeStreamIterable = MongoIterables.changeStreamOf(clientSession, namespace, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
+
+        then:
+        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
+
+        when:
+        changeStreamIterable = MongoIterables.changeStreamOf(clientSession, namespace.databaseName, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
+
+        then:
+        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace.databaseName, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
     }
 
     @IgnoreIf({ Java8MongoIterablesSpecification.IS_CONSUMER_CLASS_AVAILABLE })
@@ -79,5 +96,20 @@ class MongoIterablesSpecification extends Specification {
         then:
         expect aggregateIterable, isTheSameAs(new AggregateIterableImpl<Document, BsonDocument>(clientSession, namespace, Document,
                 BsonDocument, codecRegistry, readPreference, readConcern, writeConcern, executor, pipeline))
-    }
+
+        when:
+        def changeStreamIterable = MongoIterables.changeStreamOf(clientSession, namespace, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
+
+        then:
+        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
+
+        when:
+        changeStreamIterable = MongoIterables.changeStreamOf(clientSession, namespace.databaseName, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
+
+        then:
+        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace.databaseName, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])    }
 }

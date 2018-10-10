@@ -21,8 +21,10 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -35,7 +37,7 @@ import java.util.List;
 // override this method.
 // It does this by delegating to an implementation of MongoIterableFactory that is determined based on a runtime check for the existence of
 // the java.util.function.Consumer class.
-final class MongoIterables {
+public final class MongoIterables {
     private static MongoIterableFactory factory;
 
     static {
@@ -50,7 +52,7 @@ final class MongoIterables {
         }
     }
 
-    static <TDocument, TResult>
+    public static <TDocument, TResult>
     FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
                                  final Class<TDocument> documentClass, final Class<TResult> resultClass,
                                  final CodecRegistry codecRegistry,
@@ -60,7 +62,7 @@ final class MongoIterables {
                 filter);
     }
 
-    static <TDocument, TResult>
+    public static <TDocument, TResult>
     AggregateIterable<TResult> aggregateOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
                                            final Class<TDocument> documentClass, final Class<TResult> resultClass,
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
@@ -68,6 +70,26 @@ final class MongoIterables {
                                            final List<? extends Bson> pipeline) {
         return factory.aggregateOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline);
+    }
+
+    public static <TResult>
+    ChangeStreamIterable<TResult> changeStreamOf(final @Nullable ClientSession clientSession, final String databaseName,
+                                                 final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                                 final ReadConcern readConcern, final OperationExecutor executor,
+                                                 final List<? extends Bson> pipeline, final Class<TResult> resultClass,
+                                                 final ChangeStreamLevel changeStreamLevel) {
+        return factory.changeStreamOf(clientSession, databaseName, codecRegistry, readPreference, readConcern, executor, pipeline,
+                resultClass, changeStreamLevel);
+    }
+
+    public static <TResult>
+    ChangeStreamIterable<TResult> changeStreamOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                                 final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                                 final ReadConcern readConcern, final OperationExecutor executor,
+                                                 final List<? extends Bson> pipeline, final Class<TResult> resultClass,
+                                                 final ChangeStreamLevel changeStreamLevel) {
+        return factory.changeStreamOf(clientSession, namespace, codecRegistry, readPreference, readConcern, executor, pipeline, resultClass,
+                changeStreamLevel);
     }
 
     private MongoIterables() {

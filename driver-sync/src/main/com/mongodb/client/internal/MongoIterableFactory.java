@@ -21,8 +21,10 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -40,4 +42,16 @@ interface MongoIterableFactory {
                                            Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
                                            ReadConcern readConcern, WriteConcern writeConcern, OperationExecutor executor,
                                            List<? extends Bson> pipeline);
+
+    <TResult>
+    ChangeStreamIterable<TResult> changeStreamOf(@Nullable ClientSession clientSession, String databaseName, CodecRegistry codecRegistry,
+                                                 ReadPreference readPreference, ReadConcern readConcern, OperationExecutor executor,
+                                                 List<? extends Bson> pipeline, Class<TResult> resultClass,
+                                                 ChangeStreamLevel changeStreamLevel);
+
+    <TResult>
+    ChangeStreamIterable<TResult> changeStreamOf(@Nullable ClientSession clientSession, MongoNamespace namespace,
+                                                 CodecRegistry codecRegistry, ReadPreference readPreference, ReadConcern readConcern,
+                                                 OperationExecutor executor, List<? extends Bson> pipeline, Class<TResult> resultClass,
+                                                 ChangeStreamLevel changeStreamLevel);
 }
