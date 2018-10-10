@@ -70,7 +70,6 @@ final class MongoIterables {
                 readPreference, readConcern, writeConcern, executor, pipeline);
     }
 
-
     private MongoIterables() {
     }
 }
