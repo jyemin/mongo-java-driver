@@ -132,6 +132,22 @@ class Java8MongoIterablesSpecification extends Specification {
                 { executor ->
                     new Java8DistinctIterableImpl(null, namespace, Document, Document, codecRegistry, readPreference, readConcern,
                             executor, 'f1', filter)
+                },
+                { executor ->
+                    new Java8ListDatabasesIterableImpl(null, Document, codecRegistry, readPreference,
+                            executor)
+                },
+                { executor ->
+                    new Java8ListCollectionsIterableImpl(null, 'test', true, Document,
+                            codecRegistry, readPreference, executor)
+                },
+                { executor ->
+                    new Java8ListIndexesIterableImpl(null, namespace, Document, codecRegistry,
+                            readPreference, executor)
+                },
+                { executor ->
+                    new Java8MapReduceIterableImpl(null, namespace, Document, BsonDocument,
+                            codecRegistry, readPreference, readConcern, writeConcern, executor, 'map', 'reduce')
                 }
         ]
     }

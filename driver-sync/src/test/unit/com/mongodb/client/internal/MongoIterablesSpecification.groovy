@@ -85,6 +85,36 @@ class MongoIterablesSpecification extends Specification {
         then:
         expect distinctIterable, isTheSameAs(new Java8DistinctIterableImpl(clientSession, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern, executor, 'f1', filter))
+
+        when:
+        def listDatabasesIterable = MongoIterables.listDatabasesOf(clientSession, Document, codecRegistry, readPreference, executor)
+
+        then:
+        expect listDatabasesIterable, isTheSameAs(new Java8ListDatabasesIterableImpl(clientSession, Document, codecRegistry, readPreference,
+                executor))
+
+        when:
+        def listCollectionsIterable = MongoIterables.listCollectionsOf(clientSession, 'test', true, Document,
+                codecRegistry, readPreference, executor)
+
+        then:
+        expect listCollectionsIterable, isTheSameAs(new Java8ListCollectionsIterableImpl(clientSession, 'test', true, Document,
+                codecRegistry, readPreference, executor))
+
+        when:
+        def listIndexesIterable = MongoIterables.listIndexesOf(clientSession, namespace, Document, codecRegistry, readPreference, executor)
+
+        then:
+        expect listIndexesIterable, isTheSameAs(new Java8ListIndexesIterableImpl(clientSession, namespace, Document, codecRegistry,
+                readPreference, executor))
+
+        when:
+        def mapReduceIterable = MongoIterables.mapReduceOf(clientSession, namespace, Document, BsonDocument, codecRegistry, readPreference,
+                readConcern, writeConcern, executor, 'map', 'reduce')
+
+        then:
+        expect mapReduceIterable, isTheSameAs(new Java8MapReduceIterableImpl(clientSession, namespace, Document, BsonDocument,
+                codecRegistry, readPreference, readConcern, writeConcern, executor, 'map', 'reduce'))
     }
 
     @IgnoreIf({ Java8MongoIterablesSpecification.IS_CONSUMER_CLASS_AVAILABLE })
@@ -128,5 +158,34 @@ class MongoIterablesSpecification extends Specification {
         then:
         expect distinctIterable, isTheSameAs(new DistinctIterableImpl(clientSession, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern, executor, 'f1', filter))
-    }
+
+        when:
+        def listDatabasesIterable = MongoIterables.listDatabasesOf(clientSession, Document, codecRegistry, readPreference, executor)
+
+        then:
+        expect listDatabasesIterable, isTheSameAs(new ListDatabasesIterableImpl(clientSession, Document, codecRegistry, readPreference,
+                executor))
+
+        when:
+        def listCollectionsIterable = MongoIterables.listCollectionsOf(clientSession, 'test', true, Document,
+                codecRegistry, readPreference, executor)
+
+        then:
+        expect listCollectionsIterable, isTheSameAs(new ListCollectionsIterableImpl(clientSession, 'test', true, Document,
+                codecRegistry, readPreference, executor))
+
+        when:
+        def listIndexesIterable = MongoIterables.listIndexesOf(clientSession, namespace, Document, codecRegistry, readPreference, executor)
+
+        then:
+        expect listIndexesIterable, isTheSameAs(new ListIndexesIterableImpl(clientSession, namespace, Document, codecRegistry,
+                readPreference, executor))
+
+        when:
+        def mapReduceIterable = MongoIterables.mapReduceOf(clientSession, namespace, Document, BsonDocument, codecRegistry, readPreference,
+                readConcern, writeConcern, executor, 'map', 'reduce')
+
+        then:
+        expect mapReduceIterable, isTheSameAs(new MapReduceIterableImpl(clientSession, namespace, Document, BsonDocument,
+                codecRegistry, readPreference, readConcern, writeConcern, executor, 'map', 'reduce'))    }
 }

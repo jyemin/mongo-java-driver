@@ -21,7 +21,6 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.internal.ListDatabasesIterableImpl;
 import com.mongodb.client.internal.MongoDatabaseImpl;
 import com.mongodb.client.internal.MongoIterables;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
@@ -537,7 +536,7 @@ public class MongoClient extends Mongo implements Closeable {
     }
 
     private <T> ListDatabasesIterable<T> createListDatabasesIterable(@Nullable final ClientSession clientSession, final Class<T> clazz) {
-        return new ListDatabasesIterableImpl<T>(clientSession, clazz, getMongoClientOptions().getCodecRegistry(),
+        return MongoIterables.listDatabasesOf(clientSession, clazz, getMongoClientOptions().getCodecRegistry(),
                 ReadPreference.primary(), createOperationExecutor());
     }
 

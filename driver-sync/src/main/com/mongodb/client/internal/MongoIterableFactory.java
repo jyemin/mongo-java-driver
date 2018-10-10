@@ -25,6 +25,10 @@ import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListCollectionsIterable;
+import com.mongodb.client.ListDatabasesIterable;
+import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -60,4 +64,21 @@ interface MongoIterableFactory {
     DistinctIterable<TResult> distinctOf(@Nullable ClientSession clientSession, MongoNamespace namespace, Class<TDocument> documentClass,
                                          Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
                                          ReadConcern readConcern, OperationExecutor executor, String fieldName, Bson filter);
+
+    <TResult>
+    ListDatabasesIterable<TResult> listDatabasesOf(@Nullable ClientSession clientSession, Class<TResult> resultClass,
+                                                   CodecRegistry codecRegistry, ReadPreference readPreference, OperationExecutor executor);
+    <TResult>
+    ListCollectionsIterable<TResult> listCollectionsOf(@Nullable ClientSession clientSession, String databaseName,
+                                                       boolean collectionNamesOnly, Class<TResult> resultClass, CodecRegistry codecRegistry,
+                                                       ReadPreference readPreference, OperationExecutor executor);
+    <TResult>
+    ListIndexesIterable<TResult> listIndexesOf(@Nullable ClientSession clientSession, MongoNamespace namespace, Class<TResult> resultClass,
+                                               CodecRegistry codecRegistry, ReadPreference readPreference, OperationExecutor executor);
+
+    <TDocument, TResult>
+    MapReduceIterable<TResult> mapReduceOf(@Nullable ClientSession clientSession, MongoNamespace namespace, Class<TDocument> documentClass,
+                                           Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
+                                           ReadConcern readConcern, WriteConcern writeConcern, OperationExecutor executor,
+                                           String mapFunction, String reduceFunction);
 }

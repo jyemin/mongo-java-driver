@@ -482,7 +482,7 @@ class MongoCollectionSpecification extends Specification {
         def mapReduceIterable = execute(mapReduceMethod, session, 'map', 'reduce')
 
         then:
-        expect mapReduceIterable, isTheSameAs(new MapReduceIterableImpl(session, namespace, Document, Document, codecRegistry,
+        expect mapReduceIterable, isTheSameAs(MongoIterables.mapReduceOf(session, namespace, Document, Document, codecRegistry,
                 readPreference, readConcern,  ACKNOWLEDGED, executor, 'map', 'reduce'))
 
 
@@ -490,7 +490,7 @@ class MongoCollectionSpecification extends Specification {
         mapReduceIterable = execute(mapReduceMethod, session, 'map', 'reduce', BsonDocument)
 
         then:
-        expect mapReduceIterable, isTheSameAs(new MapReduceIterableImpl(session, namespace, Document, BsonDocument, codecRegistry,
+        expect mapReduceIterable, isTheSameAs(MongoIterables.mapReduceOf(session, namespace, Document, BsonDocument, codecRegistry,
                 readPreference, readConcern,  ACKNOWLEDGED, executor, 'map', 'reduce'))
 
         where:

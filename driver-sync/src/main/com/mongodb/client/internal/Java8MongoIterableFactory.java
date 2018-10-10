@@ -25,6 +25,10 @@ import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListCollectionsIterable;
+import com.mongodb.client.ListDatabasesIterable;
+import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -86,6 +90,43 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                          final Bson filter) {
         return new Java8DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, fieldName, filter);
+    }
+
+    @Override
+    public <TResult>
+    ListDatabasesIterable<TResult> listDatabasesOf(final @Nullable ClientSession clientSession, final Class<TResult> resultClass,
+                                                   final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                                   final OperationExecutor executor) {
+        return new Java8ListDatabasesIterableImpl<TResult>(clientSession, resultClass, codecRegistry, readPreference, executor);
+    }
+
+    @Override
+    public <TResult>
+    ListCollectionsIterable<TResult> listCollectionsOf(final @Nullable ClientSession clientSession, final String databaseName,
+                                                       final boolean collectionNamesOnly, final Class<TResult> resultClass,
+                                                       final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                                       final OperationExecutor executor) {
+        return new Java8ListCollectionsIterableImpl<TResult>(clientSession, databaseName, collectionNamesOnly, resultClass, codecRegistry,
+                readPreference, executor);
+    }
+
+    @Override
+    public <TResult>
+    ListIndexesIterable<TResult> listIndexesOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                               final Class<TResult> resultClass, final CodecRegistry codecRegistry,
+                                               final ReadPreference readPreference, final OperationExecutor executor) {
+        return new Java8ListIndexesIterableImpl<TResult>(clientSession, namespace, resultClass, codecRegistry, readPreference, executor);
+    }
+
+    @Override
+    public <TDocument, TResult>
+    MapReduceIterable<TResult> mapReduceOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                           final Class<TDocument> documentClass, final Class<TResult> resultClass,
+                                           final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                           final ReadConcern readConcern, final WriteConcern writeConcern, final OperationExecutor executor,
+                                           final String mapFunction, final String reduceFunction) {
+        return new Java8MapReduceIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, writeConcern, executor, mapFunction, reduceFunction);
     }
 }
 

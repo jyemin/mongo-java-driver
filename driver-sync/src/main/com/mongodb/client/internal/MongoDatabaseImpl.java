@@ -243,7 +243,7 @@ public class MongoDatabaseImpl implements MongoDatabase {
     private <TResult> ListCollectionsIterable<TResult> createListCollectionsIterable(@Nullable final ClientSession clientSession,
                                                                                      final Class<TResult> resultClass,
                                                                                      final boolean collectionNamesOnly) {
-        return new ListCollectionsIterableImpl<TResult>(clientSession, name, collectionNamesOnly, resultClass, codecRegistry,
+        return MongoIterables.listCollectionsOf(clientSession, name, collectionNamesOnly, resultClass, codecRegistry,
                 ReadPreference.primary(), executor);
     }
 
