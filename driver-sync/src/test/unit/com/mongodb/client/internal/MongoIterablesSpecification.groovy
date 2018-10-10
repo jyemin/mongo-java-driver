@@ -77,6 +77,14 @@ class MongoIterablesSpecification extends Specification {
         then:
         expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace.databaseName, codecRegistry,
                 readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
+
+        when:
+        def distinctIterable = MongoIterables.distinctOf(clientSession, namespace, Document, BsonDocument, codecRegistry, readPreference,
+                readConcern, executor, 'f1', filter)
+
+        then:
+        expect distinctIterable, isTheSameAs(new Java8DistinctIterableImpl(clientSession, namespace, Document, BsonDocument, codecRegistry,
+                readPreference, readConcern, executor, 'f1', filter))
     }
 
     @IgnoreIf({ Java8MongoIterablesSpecification.IS_CONSUMER_CLASS_AVAILABLE })
@@ -102,7 +110,7 @@ class MongoIterablesSpecification extends Specification {
                 readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
 
         then:
-        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace, codecRegistry,
+        expect changeStreamIterable, isTheSameAs(new ChangeStreamIterableImpl(clientSession, namespace, codecRegistry,
                 readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
 
         when:
@@ -110,6 +118,15 @@ class MongoIterablesSpecification extends Specification {
                 readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION)
 
         then:
-        expect changeStreamIterable, isTheSameAs(new Java8ChangeStreamIterableImpl(clientSession, namespace.databaseName, codecRegistry,
-                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])    }
+        expect changeStreamIterable, isTheSameAs(new ChangeStreamIterableImpl(clientSession, namespace.databaseName, codecRegistry,
+                readPreference, readConcern, executor, pipeline, Document, ChangeStreamLevel.COLLECTION), ['codec'])
+
+        when:
+        def distinctIterable = MongoIterables.distinctOf(clientSession, namespace, Document, BsonDocument, codecRegistry, readPreference,
+                readConcern, executor, 'f1', filter)
+
+        then:
+        expect distinctIterable, isTheSameAs(new DistinctIterableImpl(clientSession, namespace, Document, BsonDocument, codecRegistry,
+                readPreference, readConcern, executor, 'f1', filter))
+    }
 }

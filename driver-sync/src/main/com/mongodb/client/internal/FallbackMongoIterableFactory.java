@@ -23,6 +23,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
@@ -43,7 +44,7 @@ class FallbackMongoIterableFactory implements MongoIterableFactory {
     }
 
     @Override
-    public <TResult, TDocument>
+    public <TDocument, TResult>
     AggregateIterable<TResult> aggregateOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
                                            final Class<TDocument> documentClass, final Class<TResult> resultClass,
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
@@ -73,5 +74,17 @@ class FallbackMongoIterableFactory implements MongoIterableFactory {
                                                  final ChangeStreamLevel changeStreamLevel) {
         return new ChangeStreamIterableImpl<TResult>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, changeStreamLevel);
+    }
+
+
+    @Override
+    public <TDocument, TResult>
+    DistinctIterable<TResult> distinctOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                         final Class<TDocument> documentClass, final Class<TResult> resultClass,
+                                         final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                         final ReadConcern readConcern, final OperationExecutor executor, final String fieldName,
+                                         final Bson filter) {
+        return new DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, executor, fieldName, filter);
     }
 }

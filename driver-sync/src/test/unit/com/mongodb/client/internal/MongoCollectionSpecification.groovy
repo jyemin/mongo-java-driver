@@ -323,14 +323,14 @@ class MongoCollectionSpecification extends Specification {
         def distinctIterable = execute(distinctMethod, session, 'field', String)
 
         then:
-        expect distinctIterable, isTheSameAs(new DistinctIterableImpl(session, namespace, Document, String, codecRegistry, readPreference,
-                readConcern, executor, 'field', new BsonDocument()))
+        expect distinctIterable, isTheSameAs(MongoIterables.distinctOf(session, namespace, Document, String,
+                codecRegistry, readPreference, readConcern, executor, 'field', new BsonDocument()))
 
         when:
         distinctIterable = execute(distinctMethod, session, 'field', String).filter(filter)
 
         then:
-        expect distinctIterable, isTheSameAs(new DistinctIterableImpl(session, namespace, Document, String, codecRegistry, readPreference,
+        expect distinctIterable, isTheSameAs(MongoIterables.distinctOf(session, namespace, Document, String, codecRegistry, readPreference,
                 readConcern, executor, 'field', filter))
 
         where:

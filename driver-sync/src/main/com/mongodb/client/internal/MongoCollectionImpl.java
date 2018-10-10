@@ -273,7 +273,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     private <TResult> DistinctIterable<TResult> createDistinctIterable(@Nullable final ClientSession clientSession, final String fieldName,
                                                                        final Bson filter, final Class<TResult> resultClass) {
-        return new DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return MongoIterables.distinctOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, fieldName, filter);
     }
 

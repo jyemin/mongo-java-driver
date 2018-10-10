@@ -23,6 +23,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
@@ -90,6 +91,16 @@ public final class MongoIterables {
                                                  final ChangeStreamLevel changeStreamLevel) {
         return factory.changeStreamOf(clientSession, namespace, codecRegistry, readPreference, readConcern, executor, pipeline, resultClass,
                 changeStreamLevel);
+    }
+
+    public static <TDocument, TResult>
+    DistinctIterable<TResult> distinctOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                         final Class<TDocument> documentClass, final Class<TResult> resultClass,
+                                         final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                         final ReadConcern readConcern, final OperationExecutor executor,
+                                         final String fieldName, final Bson filter) {
+        return factory.distinctOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, executor, fieldName, filter);
     }
 
     private MongoIterables() {

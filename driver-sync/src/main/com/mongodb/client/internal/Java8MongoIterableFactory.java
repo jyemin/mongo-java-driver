@@ -23,6 +23,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
@@ -33,17 +34,18 @@ import java.util.List;
 
 class Java8MongoIterableFactory implements MongoIterableFactory {
     @Override
-    public <TDocument, TResult> FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
-                                                             final Class<TDocument> documentClass, final Class<TResult> resultClass,
-                                                             final CodecRegistry codecRegistry, final ReadPreference readPreference,
-                                                             final ReadConcern readConcern, final OperationExecutor executor,
-                                                             final Bson filter) {
+    public <TDocument, TResult>
+    FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                 final Class<TDocument> documentClass, final Class<TResult> resultClass,
+                                 final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                 final ReadConcern readConcern, final OperationExecutor executor,
+                                 final Bson filter) {
         return new Java8FindIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, filter);
     }
 
     @Override
-    public <TResult, TDocument>
+    public <TDocument, TResult>
     AggregateIterable<TResult> aggregateOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
                                            final Class<TDocument> documentClass, final Class<TResult> resultClass,
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
@@ -73,6 +75,17 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                  final ChangeStreamLevel changeStreamLevel) {
         return new Java8ChangeStreamIterableImpl<TResult>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, changeStreamLevel);
+    }
+
+    @Override
+    public <TDocument, TResult>
+    DistinctIterable<TResult> distinctOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
+                                         final Class<TDocument> documentClass, final Class<TResult> resultClass,
+                                         final CodecRegistry codecRegistry, final ReadPreference readPreference,
+                                         final ReadConcern readConcern, final OperationExecutor executor, final String fieldName,
+                                         final Bson filter) {
+        return new Java8DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, executor, fieldName, filter);
     }
 }
 

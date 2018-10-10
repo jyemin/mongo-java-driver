@@ -128,6 +128,10 @@ class Java8MongoIterablesSpecification extends Specification {
                 { executor ->
                     new Java8ChangeStreamIterableImpl<>(null, namespace, codecRegistry, readPreference, readConcern, executor, pipeline,
                         Document, ChangeStreamLevel.COLLECTION)
+                },
+                { executor ->
+                    new Java8DistinctIterableImpl(null, namespace, Document, Document, codecRegistry, readPreference, readConcern,
+                            executor, 'f1', filter)
                 }
         ]
     }

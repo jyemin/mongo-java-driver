@@ -23,6 +23,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
@@ -37,7 +38,7 @@ interface MongoIterableFactory {
                                  Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
                                  ReadConcern readConcern, OperationExecutor executor, Bson filter);
 
-    <TResult, TDocument>
+    <TDocument, TResult>
     AggregateIterable<TResult> aggregateOf(@Nullable ClientSession clientSession, MongoNamespace namespace, Class<TDocument> documentClass,
                                            Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
                                            ReadConcern readConcern, WriteConcern writeConcern, OperationExecutor executor,
@@ -54,4 +55,9 @@ interface MongoIterableFactory {
                                                  CodecRegistry codecRegistry, ReadPreference readPreference, ReadConcern readConcern,
                                                  OperationExecutor executor, List<? extends Bson> pipeline, Class<TResult> resultClass,
                                                  ChangeStreamLevel changeStreamLevel);
+
+    <TDocument, TResult>
+    DistinctIterable<TResult> distinctOf(@Nullable ClientSession clientSession, MongoNamespace namespace, Class<TDocument> documentClass,
+                                         Class<TResult> resultClass, CodecRegistry codecRegistry, ReadPreference readPreference,
+                                         ReadConcern readConcern, OperationExecutor executor, String fieldName, Bson filter);
 }
