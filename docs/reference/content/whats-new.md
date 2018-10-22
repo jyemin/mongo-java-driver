@@ -7,6 +7,15 @@ title = "What's New"
   pre = "<i class='fa fa-level-up'></i>"
 +++
 
+## What's new in 3.9
+
+Key new features of the 3.9 Java driver release:
+
+## Android support
+
+The `mongodb-driver-embedded-android` module supports interaction with a MongoDB server running on an Android device.
+This module is a core component of [MongoDB Mobile](https://www.mongodb.com/products/mobile). 
+
 ## What's New in 3.8
 
 Key new features of the 3.8 Java driver release:
