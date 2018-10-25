@@ -14,7 +14,7 @@ Key new features of the 3.9 Java driver release:
 ## Android support
 
 The `mongodb-driver-embedded-android` module supports interaction with a MongoDB server running on an Android device.
-This module is a core component of [MongoDB Mobile](https://www.mongodb.com/products/mobile). 
+See [MongoDB Mobile](https://www.mongodb.com/products/mobile) for more details.
 
 ## What's New in 3.8
 
