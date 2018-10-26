@@ -32,13 +32,16 @@ See the Upgrade guide in the 3.0 driver reference documentation for breaking cha
 
 ### System Requirements
 
-The minimum JVM is now Java 6: however, specific features require Java 7:
+The minimum JVM is Java 6. However, specific features require more recent versions:
 
-- SSL support requires Java 7 in order to perform host name verification, which is enabled by default.  See
+- [Atlas M0 (Free Tier)](https://docs.atlas.mongodb.com/getting-started/) support requires Java 8 or greater due to 
+its reliance on TLS Server Name Indication (SNI).
+- SSL support requires Java 7 or greater in order to perform host name verification, which is enabled by default.  See
 [SSL]({{< relref "driver/tutorials/ssl.md" >}}) for details on how to disable host name verification.
 - The asynchronous API requires Java 7, as by default it relies on
 [`AsynchronousSocketChannel`](http://docs.oracle.com/javase/7/docs/api/java/nio/channels/AsynchronousSocketChannel.html) for
-its implementation.  See [Async]({{< ref "driver-async/index.md" >}}) for details on configuring the driver to use [Netty](http://netty.io/) instead.
+its implementation.  See [Async]({{< ref "driver-async/index.md" >}}) for details on configuring the driver to use 
+[Netty](http://netty.io/) instead.
 
 ## Compatibility
 
@@ -56,18 +59,3 @@ The following table specifies the compatibility of the MongoDB Java driver for u
 |Version 3.2        |  ✓  |  ✓  |  ✓  |     |     |     |
 |Version 3.1        |  ✓  |  ✓  |     |     |     |     |
 |Version 3.0        |  ✓  |  ✓  |     |     |     |     |
-
-The following table specifies the compatibility of the MongoDB Java driver for use with a specific version of Java.
-
-|Java Driver Version| Java 6 | Java 7 | Java 8 | Java 9 |
-|-------------------|--------|--------|--------|--------|
-|Version 3.9        | ✓ | ✓ | ✓ | ✓ |
-|Version 3.8        | ✓ | ✓ | ✓ | ✓ |
-|Version 3.7        | ✓ | ✓ | ✓ | ✓ |
-|Version 3.6        | ✓ | ✓ | ✓ |
-|Version 3.5        | ✓ | ✓ | ✓ |
-|Version 3.4        | ✓ | ✓ | ✓ |
-|Version 3.3        | ✓ | ✓ | ✓ |
-|Version 3.2        | ✓ | ✓ | ✓ |
-|Version 3.1        | ✓ | ✓ | ✓ |
-|Version 3.0        | ✓ | ✓ | ✓ |
