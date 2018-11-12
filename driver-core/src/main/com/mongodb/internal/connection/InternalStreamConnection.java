@@ -329,6 +329,7 @@ public class InternalStreamConnection implements InternalConnection {
                         getMessageSettings(description));
                 compressedMessage.encode(compressedBsonOutput, sessionContext);
                 bsonOutput.close();
+                compressedBsonOutput.close();
                 sendCommandMessageAsync(message.getId(), decoder, sessionContext, callback, compressedBsonOutput, commandEventSender,
                         message.isResponseExpected());
             }
