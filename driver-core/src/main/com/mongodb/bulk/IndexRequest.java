@@ -519,7 +519,6 @@ public class IndexRequest {
      *
      * @return the wildcard projection
      * @mongodb.server.release 4.2
-     * @mongodb.driver.manual TODO
      * @since 3.10
      */
     public BsonDocument getWildcardProjection() {
@@ -532,7 +531,6 @@ public class IndexRequest {
      * @param wildcardProjection the wildcard projection
      * @return this
      * @mongodb.server.release 4.2
-     * @mongodb.driver.manual TODO
      * @since 3.10
      */
     public IndexRequest wildcardProjection(final BsonDocument wildcardProjection) {

@@ -472,7 +472,6 @@ public class IndexOptions {
      *
      * @return the wildcard projection
      * @mongodb.server.release 4.2
-     * @mongodb.driver.manual TODO
      * @since 3.10
      */
     public Bson getWildcardProjection() {
@@ -485,7 +484,6 @@ public class IndexOptions {
      * @param wildcardProjection the wildcard projection
      * @return this
      * @mongodb.server.release 4.2
-     * @mongodb.driver.manual TODO
      * @since 3.10
      */
     public IndexOptions wildcardProjection(final Bson wildcardProjection) {
