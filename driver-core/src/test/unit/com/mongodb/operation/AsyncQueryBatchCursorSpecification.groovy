@@ -37,6 +37,7 @@ import org.bson.codecs.DocumentCodec
 import spock.lang.Specification
 
 import static com.mongodb.ReadPreference.primary
+import static com.mongodb.operation.OperationUnitSpecification.getMaxWireVersion
 import static java.util.concurrent.TimeUnit.SECONDS
 
 class AsyncQueryBatchCursorSpecification extends Specification {
@@ -619,6 +620,7 @@ class AsyncQueryBatchCursorSpecification extends Specification {
         def mock = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getServerVersion() >> { serverVersion }
+                getMaxWireVersion() >> getMaxWireVersion(serverVersion.getVersionList())
             }
         }
         mock.retain() >> {

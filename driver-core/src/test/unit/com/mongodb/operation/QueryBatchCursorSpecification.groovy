@@ -39,6 +39,7 @@ class QueryBatchCursorSpecification extends Specification {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getServerVersion() >> new ServerVersion([3, 2, 0])
+                getMaxWireVersion() >> 4
             }
         }
         def connectionSource = Stub(ConnectionSource) {
@@ -91,6 +92,7 @@ class QueryBatchCursorSpecification extends Specification {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getServerVersion() >> new ServerVersion([3, 2, 0])
+                getMaxWireVersion() >> 4
             }
             _ * killCursor(_, _) >> { throw new MongoSocketException('No MongoD', serverAddress) }
             _ * command(_, _, _, _, _) >> { throw new MongoSocketException('No MongoD', serverAddress) }

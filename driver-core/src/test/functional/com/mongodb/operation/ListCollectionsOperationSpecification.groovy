@@ -498,9 +498,11 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         decoder: Stub(Decoder),
         twoSixConnectionDescription : Stub(ConnectionDescription) {
             getServerVersion() >> new ServerVersion([2, 6, 0])
+            getMaxWireVersion() >> 2
         },
         threeZeroConnectionDescription : Stub(ConnectionDescription) {
             getServerVersion() >> new ServerVersion([3, 0, 0])
+            getMaxWireVersion() >> 3
         },
         queryResult: Stub(QueryResult) {
             getNamespace() >> new MongoNamespace('db', 'coll')

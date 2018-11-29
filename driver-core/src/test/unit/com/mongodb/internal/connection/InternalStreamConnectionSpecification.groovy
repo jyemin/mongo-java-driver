@@ -74,7 +74,7 @@ class InternalStreamConnectionSpecification extends Specification {
     def commandListener = new TestCommandListener()
     def messageSettings = MessageSettings.builder().serverVersion(new ServerVersion(3, 6)).build()
 
-    def connectionDescription = new ConnectionDescription(connectionId, new ServerVersion(3, 6),
+    def connectionDescription = new ConnectionDescription(connectionId, new ServerVersion(3, 6), 3,
             ServerType.STANDALONE, getDefaultMaxWriteBatchSize(), getDefaultMaxDocumentSize(), getDefaultMaxMessageSize(), [])
     def stream = Mock(Stream) {
         openAsync(_) >> { it[0].completed(null) }
