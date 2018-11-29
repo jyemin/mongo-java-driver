@@ -18,7 +18,6 @@ package com.mongodb.internal.operation;
 
 
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerVersion;
 
 /**
  * This class is NOT part of the public API. It may change at any time without notification.
@@ -26,27 +25,23 @@ import com.mongodb.connection.ServerVersion;
 public final class ServerVersionHelper {
 
     public static boolean serverIsAtLeastVersionThreeDotZero(final ConnectionDescription description) {
-        return serverIsAtLeastVersion(description, new ServerVersion(3, 0));
+        return description.getMaxWireVersion() >= 3;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotTwo(final ConnectionDescription description) {
-        return serverIsAtLeastVersion(description, new ServerVersion(3, 2));
+        return description.getMaxWireVersion() >= 4;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotFour(final ConnectionDescription description) {
-        return serverIsAtLeastVersion(description, new ServerVersion(3, 4));
+        return description.getMaxWireVersion() >= 5;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotSix(final ConnectionDescription description) {
-        return serverIsAtLeastVersion(description, new ServerVersion(3, 6));
+        return description.getMaxWireVersion() >= 6;
     }
 
     public static boolean serverIsAtLeastVersionFourDotZero(final ConnectionDescription description) {
-        return serverIsAtLeastVersion(description, new ServerVersion(4, 0));
-    }
-
-    private static boolean serverIsAtLeastVersion(final ConnectionDescription description, final ServerVersion serverVersion) {
-        return description.getServerVersion().compareTo(serverVersion) >= 0;
+        return description.getMaxWireVersion() >= 7;
     }
 
     private ServerVersionHelper() {
