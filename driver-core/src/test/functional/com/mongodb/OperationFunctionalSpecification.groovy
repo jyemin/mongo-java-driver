@@ -244,7 +244,6 @@ class OperationFunctionalSpecification extends Specification {
                           ServerType serverType = ServerType.STANDALONE) {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> new ServerVersion(serverVersion)
                 getMaxWireVersion() >> getMaxWireVersion(serverVersion)
                 getServerType() >> serverType
             }
@@ -323,7 +322,6 @@ class OperationFunctionalSpecification extends Specification {
                            ServerType serverType = ServerType.STANDALONE) {
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> new ServerVersion(serverVersion)
                 getMaxWireVersion() >> getMaxWireVersion(serverVersion)
                 getServerType() >> serverType
             }

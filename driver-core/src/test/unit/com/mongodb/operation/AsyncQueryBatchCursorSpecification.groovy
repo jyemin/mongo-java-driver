@@ -619,7 +619,6 @@ class AsyncQueryBatchCursorSpecification extends Specification {
         def counter = 0
         def mock = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> { serverVersion }
                 getMaxWireVersion() >> getMaxWireVersion(serverVersion.getVersionList())
             }
         }

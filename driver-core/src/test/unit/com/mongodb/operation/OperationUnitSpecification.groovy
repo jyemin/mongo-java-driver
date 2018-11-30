@@ -86,7 +86,6 @@ class OperationUnitSpecification extends Specification {
                           Boolean checkSlaveOk=false, ReadPreference readPreference=ReadPreference.primary()) {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> new ServerVersion(serverVersion)
                 getMaxWireVersion() >> getMaxWireVersion(serverVersion)
             }
         }
@@ -137,7 +136,6 @@ class OperationUnitSpecification extends Specification {
                            Boolean checkSlaveOk=false, ReadPreference readPreference=ReadPreference.primary()) {
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> new ServerVersion(serverVersion)
                 getMaxWireVersion() >> getMaxWireVersion(serverVersion)
             }
         }
