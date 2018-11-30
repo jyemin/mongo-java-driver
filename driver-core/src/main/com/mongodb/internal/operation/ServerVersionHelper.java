@@ -24,44 +24,50 @@ import com.mongodb.connection.ConnectionDescription;
  */
 public final class ServerVersionHelper {
 
+    public static final int THREE_DOT_ZERO_WIRE_VERSION = 3;
+    public static final int THREE_DOT_TWO_WIRE_VERSION = 4;
+    public static final int THREE_DOT_FOUR_WIRE_VERSION = 5;
+    public static final int THREE_DOT_SIX_WIRE_VERSION = 6;
+    public static final int FOUR_DOT_ZERO_WIRE_VERSION = 7;
+
     public static boolean serverIsAtLeastVersionThreeDotZero(final ConnectionDescription description) {
-        return description.getMaxWireVersion() >= 3;
+        return description.getMaxWireVersion() >= THREE_DOT_ZERO_WIRE_VERSION;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotTwo(final ConnectionDescription description) {
-        return description.getMaxWireVersion() >= 4;
+        return description.getMaxWireVersion() >= THREE_DOT_TWO_WIRE_VERSION;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotFour(final ConnectionDescription description) {
-        return description.getMaxWireVersion() >= 5;
+        return description.getMaxWireVersion() >= THREE_DOT_FOUR_WIRE_VERSION;
     }
 
     public static boolean serverIsAtLeastVersionThreeDotSix(final ConnectionDescription description) {
-        return description.getMaxWireVersion() >= 6;
+        return description.getMaxWireVersion() >= THREE_DOT_SIX_WIRE_VERSION;
     }
 
     public static boolean serverIsAtLeastVersionFourDotZero(final ConnectionDescription description) {
-        return description.getMaxWireVersion() >= 7;
+        return description.getMaxWireVersion() >= FOUR_DOT_ZERO_WIRE_VERSION;
     }
 
     public static boolean serverIsLessThanVersionThreeDotZero(final ConnectionDescription description) {
-        return description.getMaxWireVersion() < 3;
+        return description.getMaxWireVersion() < THREE_DOT_ZERO_WIRE_VERSION;
     }
 
     public static boolean serverIsLessThanVersionThreeDotTwo(final ConnectionDescription description) {
-        return description.getMaxWireVersion() < 4;
+        return description.getMaxWireVersion() < THREE_DOT_TWO_WIRE_VERSION;
     }
 
     public static boolean serverIsLessThanVersionThreeDotFour(final ConnectionDescription description) {
-        return description.getMaxWireVersion() < 5;
+        return description.getMaxWireVersion() < THREE_DOT_FOUR_WIRE_VERSION;
     }
 
     public static boolean serverIsLessThanVersionThreeDotSix(final ConnectionDescription description) {
-        return description.getMaxWireVersion() < 6;
+        return description.getMaxWireVersion() < THREE_DOT_SIX_WIRE_VERSION;
     }
 
     public static boolean serverIsLessThanVersionFourDotZero(final ConnectionDescription description) {
-        return description.getMaxWireVersion() < 7;
+        return description.getMaxWireVersion() < FOUR_DOT_ZERO_WIRE_VERSION;
     }
 
     private ServerVersionHelper() {
