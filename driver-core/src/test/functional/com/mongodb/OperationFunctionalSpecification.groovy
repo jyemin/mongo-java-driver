@@ -71,7 +71,7 @@ import static com.mongodb.ClusterFixture.getBinding
 import static com.mongodb.ClusterFixture.getPrimary
 import static com.mongodb.ClusterFixture.loopCursor
 import static com.mongodb.WriteConcern.ACKNOWLEDGED
-import static com.mongodb.operation.OperationUnitSpecification.getMaxWireVersion
+import static com.mongodb.operation.OperationUnitSpecification.getMaxWireVersionForServerVersion
 
 class OperationFunctionalSpecification extends Specification {
 
@@ -244,7 +244,7 @@ class OperationFunctionalSpecification extends Specification {
                           ServerType serverType = ServerType.STANDALONE) {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getMaxWireVersion() >> getMaxWireVersion(serverVersion)
+                getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
                 getServerType() >> serverType
             }
         }
@@ -322,7 +322,7 @@ class OperationFunctionalSpecification extends Specification {
                            ServerType serverType = ServerType.STANDALONE) {
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getMaxWireVersion() >> getMaxWireVersion(serverVersion)
+                getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
                 getServerType() >> serverType
             }
         }
@@ -406,8 +406,8 @@ class OperationFunctionalSpecification extends Specification {
         def serverVersionSize = serverVersions.size()
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> {
-                    new ServerVersion(serverVersions.poll())
+                getMaxWireVersion() >> {
+                    getMaxWireVersionForServerVersion(serverVersions.poll())
                 }
                 getServerType() >> {
                     serverTypes.poll()
@@ -448,8 +448,8 @@ class OperationFunctionalSpecification extends Specification {
         def serverVersionSize = serverVersions.size()
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getServerVersion() >> {
-                    new ServerVersion(serverVersions.poll())
+                getMaxWireVersion() >> {
+                    getMaxWireVersionForServerVersion(serverVersions.poll())
                 }
                 getServerType() >> {
                     serverTypes.poll()

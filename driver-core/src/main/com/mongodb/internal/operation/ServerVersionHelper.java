@@ -44,6 +44,26 @@ public final class ServerVersionHelper {
         return description.getMaxWireVersion() >= 7;
     }
 
+    public static boolean serverIsLessThanVersionThreeDotZero(final ConnectionDescription description) {
+        return description.getMaxWireVersion() < 3;
+    }
+
+    public static boolean serverIsLessThanVersionThreeDotTwo(final ConnectionDescription description) {
+        return description.getMaxWireVersion() < 4;
+    }
+
+    public static boolean serverIsLessThanVersionThreeDotFour(final ConnectionDescription description) {
+        return description.getMaxWireVersion() < 5;
+    }
+
+    public static boolean serverIsLessThanVersionThreeDotSix(final ConnectionDescription description) {
+        return description.getMaxWireVersion() < 6;
+    }
+
+    public static boolean serverIsLessThanVersionFourDotZero(final ConnectionDescription description) {
+        return description.getMaxWireVersion() < 7;
+    }
+
     private ServerVersionHelper() {
     }
 }

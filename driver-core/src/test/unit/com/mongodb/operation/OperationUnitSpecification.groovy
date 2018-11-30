@@ -34,7 +34,6 @@ import com.mongodb.client.model.CollationStrength
 import com.mongodb.connection.AsyncConnection
 import com.mongodb.connection.Connection
 import com.mongodb.connection.ConnectionDescription
-import com.mongodb.connection.ServerVersion
 import com.mongodb.session.SessionContext
 import org.bson.BsonDocument
 import spock.lang.Shared
@@ -55,7 +54,7 @@ class OperationUnitSpecification extends Specification {
             [4, 1]: 8
     ]
 
-    static int getMaxWireVersion(List<Integer> serverVersion) {
+    static int getMaxWireVersionForServerVersion(List<Integer> serverVersion) {
         def maxWireVersion = SERVER_TO_WIRE_VERSION_MAP[serverVersion.subList(0, 2)]
 
         if (maxWireVersion == null) {
@@ -86,7 +85,7 @@ class OperationUnitSpecification extends Specification {
                           Boolean checkSlaveOk=false, ReadPreference readPreference=ReadPreference.primary()) {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getMaxWireVersion() >> getMaxWireVersion(serverVersion)
+                getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
             }
         }
 
@@ -136,7 +135,7 @@ class OperationUnitSpecification extends Specification {
                            Boolean checkSlaveOk=false, ReadPreference readPreference=ReadPreference.primary()) {
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
-                getMaxWireVersion() >> getMaxWireVersion(serverVersion)
+                getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
             }
         }
 
