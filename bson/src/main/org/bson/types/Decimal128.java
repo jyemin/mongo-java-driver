@@ -387,7 +387,7 @@ public final class Decimal128 extends Number {
      */
     @Override
     public int intValue() {
-        return Double.valueOf(doubleValue()).intValue();
+        return (int) doubleValue();
     }
 
     /**
@@ -403,7 +403,7 @@ public final class Decimal128 extends Number {
      */
     @Override
     public long longValue() {
-        return Double.valueOf(doubleValue()).longValue();
+        return (long) doubleValue();
     }
 
     /**
@@ -418,7 +418,7 @@ public final class Decimal128 extends Number {
      */
     @Override
     public float floatValue() {
-        return Double.valueOf(doubleValue()).floatValue();
+        return (float) doubleValue();
     }
 
     /**
