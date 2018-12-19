@@ -24,6 +24,8 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.ConnectionPoolListener;
 import com.mongodb.internal.connection.ClusterableServerFactory;
 import com.mongodb.internal.connection.DefaultClusterableServerFactory;
+import com.mongodb.internal.connection.DefaultDnsSrvRecordMonitorFactory;
+import com.mongodb.internal.connection.DnsSrvRecordMonitorFactory;
 import com.mongodb.internal.connection.MultiServerCluster;
 import com.mongodb.internal.connection.SingleServerCluster;
 
@@ -183,10 +185,12 @@ public final class DefaultClusterFactory implements ClusterFactory {
                 connectionPoolSettings, streamFactory, heartbeatStreamFactory, credentialList, commandListener, applicationName,
                 mongoDriverInformation != null ? mongoDriverInformation : MongoDriverInformation.builder().build(), compressorList);
 
+        DnsSrvRecordMonitorFactory dnsSrvRecordMonitorFactory = new DefaultDnsSrvRecordMonitorFactory(clusterId, serverSettings);
+
         if (clusterSettings.getMode() == ClusterConnectionMode.SINGLE) {
             return new SingleServerCluster(clusterId, clusterSettings, serverFactory);
         } else if (clusterSettings.getMode() == ClusterConnectionMode.MULTIPLE) {
-            return new MultiServerCluster(clusterId, clusterSettings, serverFactory);
+            return new MultiServerCluster(clusterId, clusterSettings, serverFactory, dnsSrvRecordMonitorFactory);
         } else {
             throw new UnsupportedOperationException("Unsupported cluster mode: " + clusterSettings.getMode());
         }
