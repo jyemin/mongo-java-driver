@@ -62,6 +62,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -737,15 +739,24 @@ public class JsonPoweredCrudTestHelper {
     }
 
     WriteConcern getWriteConcern(final BsonDocument arguments) {
+        WriteConcern writeConcern = WriteConcern.ACKNOWLEDGED;
         BsonDocument writeConcernDocument = arguments.getDocument("writeConcern");
-        if (writeConcernDocument.size() > 1) {
-            throw new UnsupportedOperationException("Write concern document contains unexpected keys: " + writeConcernDocument.keySet());
+        for (Map.Entry<String, BsonValue> entry: writeConcernDocument.entrySet()) {
+            if (entry.getKey().equals("w")) {
+                if (entry.getValue().isNumber()) {
+                    writeConcern = writeConcern.withW(entry.getValue().asNumber().intValue());
+                } else {
+                    writeConcern = writeConcern.withW(entry.getValue().asString().getValue());
+                }
+            } else if (entry.getKey().equals("j")) {
+                writeConcern = writeConcern.withJournal(entry.getValue().asBoolean().getValue());
+            } else if (entry.getKey().equals("wtimeout")) {
+                writeConcern = writeConcern.withWTimeout(entry.getValue().asNumber().intValue(), TimeUnit.MILLISECONDS);
+            } else {
+                throw new UnsupportedOperationException("Unsupported write concern document key: " + entry.getKey());
+            }
         }
-        if (writeConcernDocument.isNumber("w")) {
-            return new WriteConcern(writeConcernDocument.getNumber("w").intValue());
-        } else {
-            return new WriteConcern(writeConcernDocument.getString("w").getValue());
-        }
+        return writeConcern;
     }
 
     ReadConcern getReadConcern(final BsonDocument arguments) {
