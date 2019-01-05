@@ -18,16 +18,20 @@ package com.mongodb.client.internal;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientException;
+import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.ReadConcern;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.TransactionBody;
 import com.mongodb.internal.session.BaseClientSessionImpl;
 import com.mongodb.internal.session.ServerSessionPool;
 import com.mongodb.operation.AbortTransactionOperation;
 import com.mongodb.operation.CommitTransactionOperation;
 
+import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
+import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -150,6 +154,49 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             // ignore errors
         } finally {
             cleanupTransaction(TransactionState.ABORTED);
+        }
+    }
+
+    @Override
+    public <T> T withTransaction(final TransactionBody<T> transactionBody) {
+        return withTransaction(TransactionOptions.builder().build(), transactionBody);
+    }
+
+    @Override
+    public <T> T withTransaction(final TransactionOptions options, final TransactionBody<T> transactionBody) {
+        outer:
+        while (true) {
+            T retVal;
+            try {
+                startTransaction(options);
+                retVal = transactionBody.execute();
+            } catch (RuntimeException e) {
+                if (transactionState == TransactionState.IN) {
+                    abortTransaction();
+                }
+                if (e instanceof MongoException) {
+                    if (((MongoException) e).hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                        continue;
+                    }
+                }
+                throw e;
+            }
+            if (transactionState == TransactionState.IN) {
+                while (true) {
+                    try {
+                        commitTransaction();
+                        break;
+                    } catch (MongoException e) {
+                        if (e.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
+                            continue;
+                        } else if (e.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                            continue outer;
+                        }
+                        throw e;
+                    }
+                }
+            }
+            return retVal;
         }
     }
 
