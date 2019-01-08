@@ -51,9 +51,10 @@ import static com.mongodb.connection.ServerType.STANDALONE;
 import static java.lang.String.format;
 
 /**
+ * TODO: is this really true, or is it enough for the two sub-classes to be final?
  * This class needs to be final because we are leaking a reference to "this" from the constructor
  */
-public final class MultiServerCluster extends BaseCluster {
+public abstract class AbstractMultiServerCluster extends BaseCluster {
     private static final Logger LOGGER = Loggers.getLogger("cluster");
 
     private ClusterType clusterType;
@@ -63,9 +64,6 @@ public final class MultiServerCluster extends BaseCluster {
 
     private final ConcurrentMap<ServerAddress, ServerTuple> addressToServerTupleMap =
     new ConcurrentHashMap<ServerAddress, ServerTuple>();
-
-    private final DnsSrvRecordMonitor dnsSrvRecordMonitor;
-    private volatile MongoException srvResolutionException;
 
     private static final class ServerTuple {
         private final ClusterableServer server;
@@ -77,9 +75,8 @@ public final class MultiServerCluster extends BaseCluster {
         }
     }
 
-    // TODO: make sure that MultiServerCluster is always used for SRV hosts
-    public MultiServerCluster(final ClusterId clusterId, final ClusterSettings settings, final ClusterableServerFactory serverFactory,
-                              final DnsSrvRecordMonitorFactory dnsSrvRecordMonitorFactory) {
+    protected AbstractMultiServerCluster(final ClusterId clusterId, final ClusterSettings settings,
+                                      final ClusterableServerFactory serverFactory) {
         super(clusterId, settings, serverFactory);
         isTrue("connection mode is multiple", settings.getMode() == ClusterConnectionMode.MULTIPLE);
         clusterType = settings.getRequiredClusterType();
@@ -88,43 +85,17 @@ public final class MultiServerCluster extends BaseCluster {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(format("Cluster created with settings %s", settings.getShortDescription()));
         }
-
-        if (settings.getSrvHost() != null) {
-            dnsSrvRecordMonitor = dnsSrvRecordMonitorFactory.create(settings.getSrvHost(), new DnsSrvRecordListener() {
-                private volatile boolean initialized;
-
-                @Override
-                public void initialize(final Collection<ServerAddress> hosts) {
-                    srvResolutionException = null;
-                    if (!initialized) {
-                        initialized = true;
-                        MultiServerCluster.this.initialize(hosts);
-                    } else {
-                        onChange(hosts);
-                    }
-                }
-
-                @Override
-                public void initialize(final MongoException initializationException) {
-                    if (!initialized) {
-                        srvResolutionException = initializationException;
-                        MultiServerCluster.this.initialize(Collections.<ServerAddress>emptyList());
-                    }
-                }
-
-                @Override
-                public ClusterType getClusterType() {
-                    return clusterType;
-                }
-            });
-            dnsSrvRecordMonitor.start();
-        } else {
-            dnsSrvRecordMonitor = null;
-            initialize(settings.getHosts());
-        }
     }
 
-    private void initialize(final Collection<ServerAddress> serverAddresses) {
+    protected ClusterType getClusterType() {
+        return clusterType;
+    }
+
+    protected MongoException getSrvResolutionException() {
+        return null;
+    }
+
+    protected void initialize(final Collection<ServerAddress> serverAddresses) {
         ClusterDescription newDescription;
 
         // synchronizing this code because addServer registers a callback which is re-entrant to this instance.
@@ -160,9 +131,6 @@ public final class MultiServerCluster extends BaseCluster {
             }
             super.close();
         }
-        if (dnsSrvRecordMonitor != null) {
-            dnsSrvRecordMonitor.close();
-        }
     }
 
     @Override
@@ -184,7 +152,7 @@ public final class MultiServerCluster extends BaseCluster {
         }
     }
 
-    private void onChange(final Collection<ServerAddress> newHosts) {
+    protected void onChange(final Collection<ServerAddress> newHosts) {
         synchronized (this) {
             if (isClosed()) {
                 return;
@@ -416,7 +384,7 @@ public final class MultiServerCluster extends BaseCluster {
     }
 
     private ClusterDescription updateDescription() {
-        ClusterDescription newDescription = new ClusterDescription(MULTIPLE, clusterType, srvResolutionException,
+        ClusterDescription newDescription = new ClusterDescription(MULTIPLE, clusterType, getSrvResolutionException(),
                 getNewServerDescriptionList(), getSettings(), getServerFactory().getSettings());
         updateDescription(newDescription);
         return newDescription;

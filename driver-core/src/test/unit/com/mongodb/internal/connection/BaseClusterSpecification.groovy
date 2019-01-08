@@ -61,7 +61,7 @@ class BaseClusterSpecification extends Specification {
                 .serverSelectionTimeout(1, SECONDS)
                 .serverSelector(new ServerAddressSelector(firstServer))
                 .build()
-        def cluster = new MultiServerCluster(new ClusterId(), clusterSettings, factory, Stub(DnsSrvRecordMonitorFactory))
+        def cluster = new StableMultiServerCluster(new ClusterId(), clusterSettings, factory)
 
         expect:
         cluster.getSettings() == clusterSettings
@@ -69,13 +69,13 @@ class BaseClusterSpecification extends Specification {
 
     def 'should compose server selector passed to selectServer with server selector in cluster settings'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(1, SECONDS)
                         .serverSelector(new ServerAddressSelector(firstServer))
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
         factory.sendNotification(firstServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(secondServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(thirdServer, REPLICA_SET_PRIMARY, allServers)
@@ -86,12 +86,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'should use server selector passed to selectServer if server selector in cluster settings is null'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .serverSelectionTimeout(1, SECONDS)
                         .hosts([firstServer, secondServer, thirdServer])
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
         factory.sendNotification(firstServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(secondServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(thirdServer, REPLICA_SET_PRIMARY, allServers)
@@ -102,12 +102,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'should timeout with useful message'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer])
                         .serverSelectionTimeout(serverSelectionTimeoutMS, MILLISECONDS)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         factory.sendNotification(firstServer, ServerDescription.builder().type(ServerType.UNKNOWN)
@@ -143,12 +143,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'should select server'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(serverSelectionTimeoutMS, SECONDS)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
         factory.sendNotification(firstServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(secondServer, REPLICA_SET_SECONDARY, allServers)
         factory.sendNotification(thirdServer, REPLICA_SET_PRIMARY, allServers)
@@ -166,12 +166,12 @@ class BaseClusterSpecification extends Specification {
     @Category(Slow)
     def 'should wait indefinitely for a server until interrupted'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(-1, SECONDS)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         def latch = new CountDownLatch(1)
@@ -197,12 +197,12 @@ class BaseClusterSpecification extends Specification {
     @Category(Slow)
     def 'should wait indefinitely for a cluster description until interrupted'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(-1, SECONDS)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         def latch = new CountDownLatch(1)
@@ -227,12 +227,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'should select server asynchronously when server is already available'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .serverSelectionTimeout(serverSelectionTimeoutMS, MILLISECONDS)
                         .hosts([firstServer, secondServer, thirdServer])
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
         factory.sendNotification(firstServer, REPLICA_SET_SECONDARY, allServers)
 
         when:
@@ -250,12 +250,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'should select server asynchronously when server is not yet available'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .serverSelectionTimeout(serverSelectionTimeoutMS, MILLISECONDS)
                         .hosts([firstServer, secondServer, thirdServer])
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         def secondServerLatch = selectServerAsync(cluster, secondServer)
@@ -276,11 +276,11 @@ class BaseClusterSpecification extends Specification {
 
     def 'when selecting server asynchronously should send MongoClientException to callback if cluster is closed before success'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         def serverLatch = selectServerAsync(cluster, firstServer)
@@ -296,12 +296,12 @@ class BaseClusterSpecification extends Specification {
 
     def 'when selecting server asynchronously should send MongoTimeoutException to callback after timeout period'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(serverSelectionTimeoutMS, MILLISECONDS)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         selectServerAsyncAndGet(cluster, firstServer)
@@ -319,13 +319,13 @@ class BaseClusterSpecification extends Specification {
 
     def 'when selecting server asynchronously should send MongoWaitQueueFullException to callback if there are too many waiters'() {
         given:
-        def cluster = new MultiServerCluster(new ClusterId(),
+        def cluster = new StableMultiServerCluster(new ClusterId(),
                 builder().mode(MULTIPLE)
                         .hosts([firstServer, secondServer, thirdServer])
                         .serverSelectionTimeout(1, SECONDS)
                         .maxWaitQueueSize(1)
                         .build(),
-                factory, Stub(DnsSrvRecordMonitorFactory))
+                factory)
 
         when:
         selectServerAsync(cluster, firstServer)

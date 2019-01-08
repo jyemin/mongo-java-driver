@@ -25,8 +25,9 @@ import com.mongodb.event.ConnectionPoolListener;
 import com.mongodb.internal.connection.ClusterableServerFactory;
 import com.mongodb.internal.connection.DefaultClusterableServerFactory;
 import com.mongodb.internal.connection.DefaultDnsSrvRecordMonitorFactory;
+import com.mongodb.internal.connection.DnsMultiServerCluster;
 import com.mongodb.internal.connection.DnsSrvRecordMonitorFactory;
-import com.mongodb.internal.connection.MultiServerCluster;
+import com.mongodb.internal.connection.StableMultiServerCluster;
 import com.mongodb.internal.connection.SingleServerCluster;
 
 import java.util.Collections;
@@ -190,7 +191,11 @@ public final class DefaultClusterFactory implements ClusterFactory {
         if (clusterSettings.getMode() == ClusterConnectionMode.SINGLE) {
             return new SingleServerCluster(clusterId, clusterSettings, serverFactory);
         } else if (clusterSettings.getMode() == ClusterConnectionMode.MULTIPLE) {
-            return new MultiServerCluster(clusterId, clusterSettings, serverFactory, dnsSrvRecordMonitorFactory);
+            if (clusterSettings.getSrvHost() == null) {
+                return new StableMultiServerCluster(clusterId, clusterSettings, serverFactory);
+            } else {
+                return new DnsMultiServerCluster(clusterId, clusterSettings, serverFactory, dnsSrvRecordMonitorFactory);
+            }
         } else {
             throw new UnsupportedOperationException("Unsupported cluster mode: " + clusterSettings.getMode());
         }
