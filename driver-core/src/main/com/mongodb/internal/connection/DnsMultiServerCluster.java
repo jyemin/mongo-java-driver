@@ -27,7 +27,7 @@ import java.util.Collections;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
-public class DnsMultiServerCluster extends AbstractMultiServerCluster {
+public final class DnsMultiServerCluster extends AbstractMultiServerCluster {
     private final DnsSrvRecordMonitor dnsSrvRecordMonitor;
     private volatile MongoException srvResolutionException;
 

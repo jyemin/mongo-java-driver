@@ -50,10 +50,6 @@ import static com.mongodb.connection.ServerType.SHARD_ROUTER;
 import static com.mongodb.connection.ServerType.STANDALONE;
 import static java.lang.String.format;
 
-/**
- * TODO: is this really true, or is it enough for the two sub-classes to be final?
- * This class needs to be final because we are leaking a reference to "this" from the constructor
- */
 public abstract class AbstractMultiServerCluster extends BaseCluster {
     private static final Logger LOGGER = Loggers.getLogger("cluster");
 
@@ -75,8 +71,7 @@ public abstract class AbstractMultiServerCluster extends BaseCluster {
         }
     }
 
-    protected AbstractMultiServerCluster(final ClusterId clusterId, final ClusterSettings settings,
-                                      final ClusterableServerFactory serverFactory) {
+    AbstractMultiServerCluster(final ClusterId clusterId, final ClusterSettings settings, final ClusterableServerFactory serverFactory) {
         super(clusterId, settings, serverFactory);
         isTrue("connection mode is multiple", settings.getMode() == ClusterConnectionMode.MULTIPLE);
         clusterType = settings.getRequiredClusterType();
@@ -87,11 +82,11 @@ public abstract class AbstractMultiServerCluster extends BaseCluster {
         }
     }
 
-    protected ClusterType getClusterType() {
+    ClusterType getClusterType() {
         return clusterType;
     }
 
-    protected MongoException getSrvResolutionException() {
+    MongoException getSrvResolutionException() {
         return null;
     }
 
@@ -152,7 +147,7 @@ public abstract class AbstractMultiServerCluster extends BaseCluster {
         }
     }
 
-    protected void onChange(final Collection<ServerAddress> newHosts) {
+    void onChange(final Collection<ServerAddress> newHosts) {
         synchronized (this) {
             if (isClosed()) {
                 return;
