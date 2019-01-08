@@ -38,17 +38,18 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
     private final String hostName;
     private final long rescanFrequencyMillis;
     private final long noRecordsRescanFrequencyMillis;
-    private final DnsSrvRecordListener dnsSrvRecordListener;
+    private final DnsSrvRecordInitializer dnsSrvRecordInitializer;
     private final DnsResolver dnsResolver;
     private final Thread monitorThread;
     private volatile boolean isClosed;
 
     DefaultDnsSrvRecordMonitor(final String hostName, final long rescanFrequencyMillis, final long noRecordsRescanFrequencyMillis,
-                               final DnsSrvRecordListener dnsSrvRecordListener, final ClusterId clusterId, final DnsResolver dnsResolver) {
+                               final DnsSrvRecordInitializer dnsSrvRecordInitializer, final ClusterId clusterId,
+                               final DnsResolver dnsResolver) {
         this.hostName = hostName;
         this.rescanFrequencyMillis = rescanFrequencyMillis;
         this.noRecordsRescanFrequencyMillis = noRecordsRescanFrequencyMillis;
-        this.dnsSrvRecordListener = dnsSrvRecordListener;
+        this.dnsSrvRecordInitializer = dnsSrvRecordInitializer;
         this.dnsResolver = dnsResolver;
         monitorThread = new Thread(new DnsSrvRecordMonitorRunnable(), "cluster-" + clusterId + "-srv-" + hostName);
         monitorThread.setDaemon(true);
@@ -82,7 +83,7 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
 
                     if (!hosts.equals(currentHosts)) {
                         try {
-                            dnsSrvRecordListener.initialize(hosts);
+                            dnsSrvRecordInitializer.initialize(hosts);
                             currentHosts = hosts;
                         } catch (RuntimeException e) {
                             LOGGER.warn("Exception in monitor thread during notification of DNS resolution state change", e);
@@ -90,12 +91,12 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
                     }
                 } catch (MongoException e) {
                     if (currentHosts.isEmpty()) {
-                        dnsSrvRecordListener.initialize(e);
+                        dnsSrvRecordInitializer.initialize(e);
                     }
                     LOGGER.info("Exception while resolving SRV records", e);
                 } catch (RuntimeException e) {
                     if (currentHosts.isEmpty()) {
-                        dnsSrvRecordListener.initialize(new MongoInternalException("Unexpected runtime exception", e));
+                        dnsSrvRecordInitializer.initialize(new MongoInternalException("Unexpected runtime exception", e));
                     }
                     LOGGER.info("Unexpected runtime exception while resolving SRV record", e);
                 }
@@ -105,7 +106,7 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
                 } catch (InterruptedException e) {
                     // fall through
                 }
-                clusterType = dnsSrvRecordListener.getClusterType();
+                clusterType = dnsSrvRecordInitializer.getClusterType();
             }
         }
 

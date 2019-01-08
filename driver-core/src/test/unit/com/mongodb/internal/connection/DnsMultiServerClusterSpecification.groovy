@@ -49,11 +49,11 @@ class DnsMultiServerClusterSpecification extends Specification {
         def clusterListener = Mock(ClusterListener)
         def dnsSrvRecordMonitor = Mock(DnsSrvRecordMonitor)
         def exception = new MongoConfigurationException('test')
-        DnsSrvRecordListener listener
+        DnsSrvRecordInitializer initializer
         def dnsSrvRecordMonitorFactory = new DnsSrvRecordMonitorFactory() {
             @Override
-            DnsSrvRecordMonitor create(final String hostName, final DnsSrvRecordListener dnsSrvRecordListener) {
-                listener = dnsSrvRecordListener
+            DnsSrvRecordMonitor create(final String hostName, final DnsSrvRecordInitializer dnsSrvRecordListener) {
+                initializer = dnsSrvRecordListener
                 dnsSrvRecordMonitor
             }
         }
@@ -67,18 +67,18 @@ class DnsMultiServerClusterSpecification extends Specification {
                 factory, dnsSrvRecordMonitorFactory)
 
         then: 'the monitor is created and started'
-        listener != null
+        initializer != null
         1 * dnsSrvRecordMonitor.start()
 
         when: 'the listener is initialized with an exception'
-        listener.initialize(exception)
+        initializer.initialize(exception)
 
         then: 'the description includes the exception'
         cluster.getCurrentDescription().getServerDescriptions() == []
         cluster.getCurrentDescription().getSrvResolutionException() == exception
 
         when: 'the listener is initialized with servers'
-        listener.initialize([firstServer, secondServer] as Set)
+        initializer.initialize([firstServer, secondServer] as Set)
 
         then: 'an event is generated'
         1 * clusterListener.clusterDescriptionChanged(_)
@@ -99,7 +99,7 @@ class DnsMultiServerClusterSpecification extends Specification {
         !secondTestServer.isClosed()
 
         when: 'the listener is initialized with a different server'
-        listener.initialize([secondServer, thirdServer])
+        initializer.initialize([secondServer, thirdServer])
         factory.sendNotification(secondServer, SHARD_ROUTER)
         def thirdTestServer = factory.getServer(thirdServer)
         clusterDescription = cluster.getDescription()
@@ -114,7 +114,7 @@ class DnsMultiServerClusterSpecification extends Specification {
         !thirdTestServer.isClosed()
 
         when: 'the listener is initialized with another exception'
-        listener.initialize(exception)
+        initializer.initialize(exception)
         clusterDescription = cluster.getDescription()
 
         then: 'the exception is ignored'

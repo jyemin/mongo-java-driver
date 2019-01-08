@@ -34,15 +34,15 @@ class DefaultDnsSrvRecordMonitorSpecification extends Specification {
         def resolvedHostOne = 'localhost.test.build.10gen.cc:27017'
         def resolvedHostTwo = 'localhost.test.build.10gen.cc:27018'
         def expectedResolvedHosts = [resolvedHostOne, resolvedHostTwo]
-        def dnsSrvRecordListener = new TestDnsSrvRecordListener(ClusterType.REPLICA_SET, 1)
+        def dnsSrvRecordInitializer = new TestDnsSrvRecordInitializer(ClusterType.REPLICA_SET, 1)
         def dnsResolver = Mock(DnsResolver) {
             1 * resolveHostFromSrvRecords(hostName) >> expectedResolvedHosts
         }
-        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 10000, dnsSrvRecordListener, new ClusterId(), dnsResolver)
+        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 10000, dnsSrvRecordInitializer, new ClusterId(), dnsResolver)
 
         when:
         monitor.start()
-        def hostsLists = dnsSrvRecordListener.waitForInitializedHosts()
+        def hostsLists = dnsSrvRecordInitializer.waitForInitializedHosts()
 
         then:
         hostsLists == [[new ServerAddress(resolvedHostOne), new ServerAddress(resolvedHostTwo)] as Set]
@@ -59,15 +59,15 @@ class DefaultDnsSrvRecordMonitorSpecification extends Specification {
         def resolvedHostThree = 'localhost.test.build.10gen.cc:27019'
         def expectedResolvedHostsOne = [resolvedHostOne, resolvedHostTwo]
         def expectedResolvedHostsTwo = [resolvedHostTwo, resolvedHostThree]
-        def dnsSrvRecordListener = new TestDnsSrvRecordListener(ClusterType.SHARDED, 2)
+        def dnsSrvRecordInitializer = new TestDnsSrvRecordInitializer(ClusterType.SHARDED, 2)
         def dnsResolver = Mock(DnsResolver) {
             _ * resolveHostFromSrvRecords(hostName) >>> [expectedResolvedHostsOne, expectedResolvedHostsTwo]
         }
-        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 1, dnsSrvRecordListener, new ClusterId(), dnsResolver)
+        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 1, dnsSrvRecordInitializer, new ClusterId(), dnsResolver)
 
         when:
         monitor.start()
-        def hostsLists = dnsSrvRecordListener.waitForInitializedHosts()
+        def hostsLists = dnsSrvRecordInitializer.waitForInitializedHosts()
 
         then:
         hostsLists == [[new ServerAddress(resolvedHostOne), new ServerAddress(resolvedHostTwo)] as Set,
@@ -80,17 +80,17 @@ class DefaultDnsSrvRecordMonitorSpecification extends Specification {
     def 'should initialize listener with exception'() {
         given:
         def hostName = 'test1.test.build.10gen.cc'
-        def dnsSrvRecordListener = new TestDnsSrvRecordListener(ClusterType.UNKNOWN, 1)
+        def dnsSrvRecordInitializer = new TestDnsSrvRecordInitializer(ClusterType.UNKNOWN, 1)
         def dnsResolver = Mock(DnsResolver) {
             _ * resolveHostFromSrvRecords(hostName) >> {
                 throw initializationException
             }
         }
-        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 10000, dnsSrvRecordListener, new ClusterId(), dnsResolver)
+        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 10000, dnsSrvRecordInitializer, new ClusterId(), dnsResolver)
 
         when:
         monitor.start()
-        def initializationExceptionList = dnsSrvRecordListener.waitForInitializedException()
+        def initializationExceptionList = dnsSrvRecordInitializer.waitForInitializedException()
         if (!(initializationException instanceof MongoException)) {
             initializationExceptionList[0] = initializationExceptionList[0].getCause()
         }
@@ -110,15 +110,15 @@ class DefaultDnsSrvRecordMonitorSpecification extends Specification {
         def hostName = 'test1.test.build.10gen.cc'
         def resolvedHostListOne = ['localhost.test.build.10gen.cc:27017']
         def resolvedHostListTwo = ['localhost.test.build.10gen.cc:27018']
-        def dnsSrvRecordListener = new TestDnsSrvRecordListener(ClusterType.SHARDED, 2)
+        def dnsSrvRecordInitializer = new TestDnsSrvRecordInitializer(ClusterType.SHARDED, 2)
         def dnsResolver = Mock(DnsResolver) {
             _ * resolveHostFromSrvRecords(hostName) >> resolvedHostListOne >> { throw initializationException } >> resolvedHostListTwo
         }
-        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 1, dnsSrvRecordListener, new ClusterId(), dnsResolver)
+        def monitor = new DefaultDnsSrvRecordMonitor(hostName, 1, 1, dnsSrvRecordInitializer, new ClusterId(), dnsResolver)
 
         when:
         monitor.start()
-        def initializedExceptionList = dnsSrvRecordListener.waitForInitializedException()
+        def initializedExceptionList = dnsSrvRecordInitializer.waitForInitializedException()
 
         then:
         initializedExceptionList == []
@@ -131,14 +131,14 @@ class DefaultDnsSrvRecordMonitorSpecification extends Specification {
     }
 
     // Can't use a mock because we need to coordinate the monitor thread with the test via thread synchronization
-    static class TestDnsSrvRecordListener implements DnsSrvRecordListener {
+    static class TestDnsSrvRecordInitializer implements DnsSrvRecordInitializer {
 
         ClusterType clusterType
         List<Collection<ServerAddress>> hostsList = []
         List<MongoException> initializationExceptionList = []
         CountDownLatch latch
 
-        TestDnsSrvRecordListener(ClusterType clusterType, int expectedInitializations) {
+        TestDnsSrvRecordInitializer(ClusterType clusterType, int expectedInitializations) {
             this.clusterType = clusterType
             latch = new CountDownLatch(expectedInitializations)
         }

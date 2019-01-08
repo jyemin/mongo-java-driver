@@ -22,7 +22,7 @@ import com.mongodb.connection.ClusterType;
 
 import java.util.Collection;
 
-interface DnsSrvRecordListener {
+interface DnsSrvRecordInitializer {
     void initialize(Collection<ServerAddress> hosts);
 
     void initialize(MongoException initializationException);

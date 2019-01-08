@@ -36,8 +36,8 @@ public class DefaultDnsSrvRecordMonitorFactory implements DnsSrvRecordMonitorFac
     }
 
     @Override
-    public DnsSrvRecordMonitor create(final String hostName, final DnsSrvRecordListener dnsSrvRecordListener) {
-        return new DefaultDnsSrvRecordMonitor(hostName, DEFAULT_RESCAN_FREQUENCY_MILLIS, noRecordsRescanFrequency, dnsSrvRecordListener,
+    public DnsSrvRecordMonitor create(final String hostName, final DnsSrvRecordInitializer dnsSrvRecordInitializer) {
+        return new DefaultDnsSrvRecordMonitor(hostName, DEFAULT_RESCAN_FREQUENCY_MILLIS, noRecordsRescanFrequency, dnsSrvRecordInitializer,
                 clusterId, new DefaultDnsResolver());
     }
 }
