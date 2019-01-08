@@ -39,14 +39,18 @@ import static java.util.Arrays.asList;
  */
 public final class DefaultDnsResolver implements DnsResolver {
 
-    // The format of SRV record is
-    // priority weight port target.
-    // e.g.
-    // 0 5 5060 example.com.
-    // The priority and weight are ignored, and we just concatenate the host (after removing the ending '.') and port with a
-    // ':' in between, as expected by ServerAddress
-    // It's required that the srvHost has at least three parts (e.g. foo.bar.baz) and that all of the resolved hosts have a parent
-    // domain equal to the domain of the srvHost.
+    /*
+      The format of SRV record is
+        priority weight port target.
+      e.g.
+        0 5 5060 example.com.
+
+      The priority and weight are ignored, and we just concatenate the host (after removing the ending '.') and port with a
+      ':' in between, as expected by ServerAddress.
+
+      It's required that the srvHost has at least three parts (e.g. foo.bar.baz) and that all of the resolved hosts have a parent
+      domain equal to the domain of the srvHost.
+    */
     @Override
     public List<String> resolveHostFromSrvRecords(final String srvHost) {
         String srvHostDomain = srvHost.substring(srvHost.indexOf('.') + 1);
@@ -97,9 +101,11 @@ public final class DefaultDnsResolver implements DnsResolver {
                 .equals(srvHostDomainParts);
     }
 
-    // A TXT record is just a string
-    // We require each to be one or more query parameters for a MongoDB connection string.
-    // Here we concatenate TXT records together with a '&' separator as required by connection strings
+    /*
+      A TXT record is just a string
+      We require each to be one or more query parameters for a MongoDB connection string.
+      Here we concatenate TXT records together with a '&' separator as required by connection strings
+    */
     @Override
     public String resolveAdditionalQueryParametersFromTxtRecords(final String host) {
         String additionalQueryParameters = "";
@@ -133,16 +139,18 @@ public final class DefaultDnsResolver implements DnsResolver {
         return additionalQueryParameters;
     }
 
-    // It's unfortunate that we take a runtime dependency on com.sun.jndi.dns.DnsContextFactory.
-    // This is not guaranteed to work on all JVMs but in practice is expected to work on most.
+    /*
+      It's unfortunate that we take a runtime dependency on com.sun.jndi.dns.DnsContextFactory.
+      This is not guaranteed to work on all JVMs but in practice is expected to work on most.
+    */
     private static InitialDirContext createDnsDirContext() {
         Hashtable<String, String> envProps = new Hashtable<String, String>();
         envProps.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
         try {
             return new InitialDirContext(envProps);
         } catch (NamingException e) {
-            throw new MongoClientException("Unable to create JNDI context for resolving SRV records. "
-                    + "The 'com.sun.jndi.dns.DnsContextFactory' class is not available in this JRE", e);
+            throw new MongoClientException("Unable to support mongodb+srv// style connections as the 'com.sun.jndi.dns.DnsContextFactory' "
+                    + "class is not available in this JRE. A JNDI context is required for resolving SRV records.", e);
         }
     }
 }
