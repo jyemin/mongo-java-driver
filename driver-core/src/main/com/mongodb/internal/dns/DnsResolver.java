@@ -24,18 +24,8 @@ import java.util.List;
  * <p>This class should not be considered a part of the public API.</p>
  */
 public interface DnsResolver {
-    // The format of SRV record is
-    // priority weight port target.
-    // e.g.
-    // 0 5 5060 example.com.
-    // The priority and weight are ignored, and we just concatenate the host (after removing the ending '.') and port with a
-    // ':' in between, as expected by ServerAddress
-    // It's required that the srvHost has at least three parts (e.g. foo.bar.baz) and that all of the resolved hosts have a parent
-    // domain equal to the domain of the srvHost.
+
     List<String> resolveHostFromSrvRecords(String srvHost);
 
-    // A TXT record is just a string
-    // We require each to be one or more query parameters for a MongoDB connection string.
-    // Here we concatenate TXT records together with a '&' separator as required by connection strings
     String resolveAdditionalQueryParametersFromTxtRecords(String host);
 }
