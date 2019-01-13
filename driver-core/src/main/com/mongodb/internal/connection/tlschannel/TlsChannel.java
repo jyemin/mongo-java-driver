@@ -76,9 +76,6 @@ import java.util.function.Consumer;
  */
 public interface TlsChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
 
-    BufferAllocator DEFAULT_PLAIN_BUFFER_ALLOCATOR = new HeapBufferAllocator();
-    BufferAllocator DEFAULT_ENCRYPTED_BUFFER_ALLOCATOR = new HeapBufferAllocator();
-
     /**
      * Return a reference to the underlying {@link ByteChannel}.
      */

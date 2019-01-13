@@ -37,8 +37,8 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     };
     // @formatter:on
     boolean runTasks = true;
-    BufferAllocator plainBufferAllocator = TlsChannel.DEFAULT_PLAIN_BUFFER_ALLOCATOR;
-    BufferAllocator encryptedBufferAllocator = TlsChannel.DEFAULT_ENCRYPTED_BUFFER_ALLOCATOR;
+    BufferAllocator plainBufferAllocator = null;
+    BufferAllocator encryptedBufferAllocator = null;
     boolean releaseBuffers = true;
     boolean waitForCloseConfirmation = false;
 
@@ -59,10 +59,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     }
 
     /**
-     * Set the {@link BufferAllocator} to use for unencrypted data. By default a
-     * {@link HeapBufferAllocator} is used, as this buffers are used to
-     * supplement user-supplied ones when dealing with too big a TLS record,
-     * that is, they operate entirely inside the JVM.
+     * Set the {@link BufferAllocator} to use for unencrypted data.
      */
     public T withPlainBufferAllocator(final BufferAllocator bufferAllocator) {
         this.plainBufferAllocator = bufferAllocator;
@@ -70,8 +67,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     }
 
     /**
-     * Set the {@link BufferAllocator} to use for encrypted data. By default a
-     * {@link HeapBufferAllocator} is used.
+     * Set the {@link BufferAllocator} to use for encrypted data.
      */
     public T withEncryptedBufferAllocator(final BufferAllocator bufferAllocator) {
         this.encryptedBufferAllocator = bufferAllocator;

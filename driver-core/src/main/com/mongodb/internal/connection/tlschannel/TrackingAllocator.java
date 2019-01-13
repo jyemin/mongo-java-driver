@@ -16,7 +16,8 @@
 
 package com.mongodb.internal.connection.tlschannel;
 
-import java.nio.ByteBuffer;
+import org.bson.ByteBuf;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAccumulator;
 import java.util.concurrent.atomic.LongAdder;
@@ -46,14 +47,14 @@ public class TrackingAllocator implements BufferAllocator {
         this.impl = impl;
     }
 
-    public ByteBuffer allocate(final int size) {
+    public ByteBuf allocate(final int size) {
         bytesAllocatedAdder.add(size);
         currentAllocationSize.addAndGet(size);
         buffersAllocatedAdder.increment();
         return impl.allocate(size);
     }
 
-    public void free(final ByteBuffer buffer) {
+    public void free(final ByteBuf buffer) {
         int size = buffer.capacity();
         bytesDeallocatedAdder.add(size);
         maxAllocationSizeAcc.accumulate(currentAllocationSize.longValue());

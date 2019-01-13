@@ -19,11 +19,10 @@ package com.mongodb.internal.connection.tlschannel.impl;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.connection.tlschannel.BufferAllocator;
+import org.bson.ByteBuf;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.function.Function;
 
 import static com.mongodb.internal.connection.tlschannel.impl.TlsChannelImpl.MAX_TLS_PACKET_SIZE;
 import static java.lang.String.format;
@@ -40,28 +39,25 @@ public class BufferHolder {
     public final int maxSize;
     public final boolean opportunisticDispose;
 
+    private ByteBuf byteBuf;
     public ByteBuffer buffer;
     public int lastSize;
 
-    public BufferHolder(final String name, final Optional<ByteBuffer> buffer, final BufferAllocator allocator, final int initialSize,
+    public BufferHolder(final String name, final BufferAllocator allocator, final int initialSize,
                         final int maxSize, final boolean plainData, final boolean opportunisticDispose) {
         this.name = name;
         this.allocator = allocator;
-        this.buffer = buffer.orElse(null);
+        this.buffer = null;
         this.maxSize = maxSize;
         this.plainData = plainData;
         this.opportunisticDispose = opportunisticDispose;
-        this.lastSize = buffer.map(new Function<ByteBuffer, Integer>() {
-            @Override
-            public Integer apply(final ByteBuffer b) {
-                return b.capacity();
-            }
-        }).orElse(initialSize);
+        this.lastSize = initialSize;
     }
 
     public void prepare() {
         if (buffer == null) {
-            buffer = allocator.allocate(lastSize);
+            byteBuf = allocator.allocate(lastSize);
+            buffer = byteBuf.asNIO();
         }
     }
 
@@ -75,7 +71,7 @@ public class BufferHolder {
 
     public boolean dispose() {
         if (buffer != null) {
-            allocator.free(buffer);
+            allocator.free(byteBuf);
             buffer = null;
             return true;
         } else {
@@ -106,13 +102,15 @@ public class BufferHolder {
     }
 
     private void resizeImpl(final int newCapacity) {
-        ByteBuffer newBuffer = allocator.allocate(newCapacity);
+        ByteBuf newByteBuf = allocator.allocate(newCapacity);
+        ByteBuffer newBuffer = newByteBuf.asNIO();
         ((Buffer) buffer).flip();
         newBuffer.put(buffer);
         if (plainData) {
             zero();
         }
-        allocator.free(buffer);
+        allocator.free(byteBuf);
+        byteBuf = newByteBuf;
         buffer = newBuffer;
         lastSize = newCapacity;
     }

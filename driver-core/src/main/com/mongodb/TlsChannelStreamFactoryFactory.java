@@ -47,11 +47,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -492,20 +489,14 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
         }
 
         private class BufferProviderAllocator implements BufferAllocator {
-            // TODO: need a concurrent identity hash map
-            private final Map<ByteBuffer, ByteBuf> map = Collections.synchronizedMap(new IdentityHashMap<ByteBuffer, ByteBuf>());
-
             @Override
-            public ByteBuffer allocate(final int size) {
-                ByteBuf byteBuf = bufferProvider.getBuffer(size);
-                ByteBuffer byteBuffer = byteBuf.asNIO();
-                map.put(byteBuffer, byteBuf);
-                return byteBuffer;
+            public ByteBuf allocate(final int size) {
+                return bufferProvider.getBuffer(size);
             }
 
             @Override
-            public void free(final ByteBuffer buffer) {
-                map.remove(buffer).release();
+            public void free(final ByteBuf buffer) {
+                buffer.release();
             }
         }
     }

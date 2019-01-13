@@ -133,7 +133,6 @@ public class TlsChannelImpl implements ByteChannel {
             public BufferHolder get() {
                 return new BufferHolder(
                         "inEncrypted",
-                        Optional.<ByteBuffer>empty(),
                         encryptedBufAllocator,
                         BUFFERS_INITIAL_SIZE,
                         MAX_TLS_PACKET_SIZE,
@@ -148,7 +147,6 @@ public class TlsChannelImpl implements ByteChannel {
         this.waitForCloseConfirmation = waitForCloseConfirmation;
         inPlain = new BufferHolder(
                 "inPlain",
-                Optional.<ByteBuffer>empty(),
                 plainBufAllocator,
                 BUFFERS_INITIAL_SIZE,
                 MAX_TLS_PACKET_SIZE,
@@ -156,7 +154,6 @@ public class TlsChannelImpl implements ByteChannel {
                 releaseBuffers);
         outEncrypted = new BufferHolder(
                 "outEncrypted",
-                Optional.<ByteBuffer>empty(),
                 encryptedBufAllocator,
                 BUFFERS_INITIAL_SIZE,
                 MAX_TLS_PACKET_SIZE,
