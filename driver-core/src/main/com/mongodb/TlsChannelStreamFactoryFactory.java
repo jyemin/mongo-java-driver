@@ -58,7 +58,10 @@ import static com.mongodb.internal.connection.SslHelper.enableSni;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * POC
+ * A {@code StreamFactoryFactory} that supports TLS/SSL.  The implementation supports asynchronous usage.
+ * <p>
+ * Requires Java 8
+ * </p>
  *
  * @since 3.10
  */
@@ -68,13 +71,29 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
 
     private final SelectorMonitor selectorMonitor;
     private final AsynchronousTlsChannelGroup group;
+    private final boolean ownsGroup;
     private final PowerOfTwoBufferPool bufferPool = new PowerOfTwoBufferPool();
 
     /**
-     * POC
+     * Construct a new instance
      */
     public TlsChannelStreamFactoryFactory() {
-        group = new AsynchronousTlsChannelGroup();
+        this(new AsynchronousTlsChannelGroup(), true);
+    }
+
+    /**
+     * Construct a new instance with the given {@code AsynchronousTlsChannelGroup}.  Callers are required to close the provided group
+     * in order to free up resources.
+     *
+     * @param group the group
+     */
+    public TlsChannelStreamFactoryFactory(final AsynchronousTlsChannelGroup group) {
+        this(group, false);
+    }
+
+    private TlsChannelStreamFactoryFactory(final AsynchronousTlsChannelGroup group, final boolean ownsGroup) {
+        this.group = group;
+        this.ownsGroup = ownsGroup;
         selectorMonitor = new SelectorMonitor();
         selectorMonitor.start();
     }
@@ -92,7 +111,9 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
     @Override
     public void close() {
         selectorMonitor.close();
-        group.shutdown();
+        if (ownsGroup) {
+            group.shutdown();
+        }
     }
 
     private static class SelectorMonitor implements Closeable {
