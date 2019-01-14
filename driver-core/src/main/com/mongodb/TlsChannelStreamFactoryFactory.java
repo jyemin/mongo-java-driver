@@ -25,6 +25,7 @@ import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
+import com.mongodb.internal.connection.AsynchronousChannelStream;
 import com.mongodb.internal.connection.ConcurrentLinkedDeque;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.connection.tlschannel.BufferAllocator;
@@ -40,22 +41,15 @@ import javax.net.ssl.SSLParameters;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
-import java.nio.channels.CompletionHandler;
-import java.nio.channels.InterruptedByTimeoutException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.internal.connection.SslHelper.enableHostNameVerification;
 import static com.mongodb.internal.connection.SslHelper.enableSni;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * A {@code StreamFactoryFactory} that supports TLS/SSL.  The implementation supports asynchronous usage.
@@ -192,59 +186,53 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
         }
     }
 
-    private static class TlsChannelStream implements Stream {
+    private static class TlsChannelStream extends AsynchronousChannelStream implements Stream {
 
-        private final ServerAddress serverAddress;
-        private final SocketSettings settings;
-        private final SslSettings sslSettings;
-        private final BufferProvider bufferProvider;
         private final AsynchronousTlsChannelGroup group;
         private final SelectorMonitor selectorMonitor;
-        private volatile AsynchronousTlsChannel channel;
-        private volatile boolean isClosed;
+        private final SslSettings sslSettings;
 
         TlsChannelStream(final ServerAddress serverAddress, final SocketSettings settings, final SslSettings sslSettings,
                          final BufferProvider bufferProvider, final AsynchronousTlsChannelGroup group,
                          final SelectorMonitor selectorMonitor) {
-            this.serverAddress = serverAddress;
-            this.settings = settings;
+            super(serverAddress, settings, bufferProvider);
             this.sslSettings = sslSettings;
-            this.bufferProvider = bufferProvider;
             this.group = group;
             this.selectorMonitor = selectorMonitor;
         }
 
         @Override
         public void openAsync(final AsyncCompletionHandler<Void> handler) {
-            isTrue("unopened", channel == null);
+            isTrue("unopened", getChannel() == null);
             try {
                 final SocketChannel socketChannel = SocketChannel.open();
                 socketChannel.configureBlocking(false);
 
                 socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                 socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                if (settings.getReceiveBufferSize() > 0) {
-                    socketChannel.setOption(StandardSocketOptions.SO_RCVBUF, settings.getReceiveBufferSize());
+                if (getSettings().getReceiveBufferSize() > 0) {
+                    socketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getSettings().getReceiveBufferSize());
                 }
-                if (settings.getSendBufferSize() > 0) {
-                    socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, settings.getSendBufferSize());
+                if (getSettings().getSendBufferSize() > 0) {
+                    socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, getSettings().getSendBufferSize());
                 }
 
-                socketChannel.connect(serverAddress.getSocketAddress());
+                socketChannel.connect(getServerAddress().getSocketAddress());
 
                 selectorMonitor.register(socketChannel, new Runnable() {
                     @Override
                     public void run() {
                         try {
                             if (!socketChannel.finishConnect()) {
-                                throw new MongoSocketOpenException("Failed to finish connect", serverAddress);
+                                throw new MongoSocketOpenException("Failed to finish connect", getServerAddress());
                             }
 
-                            SSLEngine sslEngine = getSslContext().createSSLEngine(serverAddress.getHost(), serverAddress.getPort());
+                            SSLEngine sslEngine = getSslContext().createSSLEngine(getServerAddress().getHost(),
+                                    getServerAddress().getPort());
                             sslEngine.setUseClientMode(true);
 
                             SSLParameters sslParameters = sslEngine.getSSLParameters();
-                            enableSni(serverAddress.getHost(), sslParameters);
+                            enableSni(getServerAddress().getHost(), sslParameters);
 
                             if (!sslSettings.isInvalidHostNameAllowed()) {
                                 enableHostNameVerification(sslParameters);
@@ -259,99 +247,21 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
                                     .build();
 
                             // build asynchronous channel, based in the TLS channel and associated with the global group.
-                            channel = new AsynchronousTlsChannel(group, tlsChannel, socketChannel);
+                            setChannel(new AsynchronousTlsChannel(group, tlsChannel, socketChannel));
 
                             handler.completed(null);
                         } catch (IOException e) {
-                            handler.failed(new MongoSocketOpenException("Exception opening socket", serverAddress, e));
+                            handler.failed(new MongoSocketOpenException("Exception opening socket", getServerAddress(), e));
                         } catch (Throwable t) {
                             handler.failed(t);
                         }
                     }
                 });
             } catch (IOException e) {
-                handler.failed(new MongoSocketOpenException("Exception opening socket", serverAddress, e));
+                handler.failed(new MongoSocketOpenException("Exception opening socket", getServerAddress(), e));
             } catch (Throwable t) {
                 handler.failed(t);
             }
-        }
-
-        @Override
-        public void writeAsync(final List<ByteBuf> buffers, final AsyncCompletionHandler<Void> handler) {
-            final AsyncWritableByteChannelAdapter byteChannel = new AsyncWritableByteChannelAdapter();
-            final Iterator<ByteBuf> iter = buffers.iterator();
-            pipeOneBuffer(byteChannel, iter.next(), new AsyncCompletionHandler<Void>() {
-                @Override
-                public void completed(final Void t) {
-                    if (iter.hasNext()) {
-                        pipeOneBuffer(byteChannel, iter.next(), this);
-                    } else {
-                        handler.completed(null);
-                    }
-                }
-
-                @Override
-                public void failed(final Throwable t) {
-                    handler.failed(t);
-                }
-            });
-        }
-
-        @Override
-        public void readAsync(final int numBytes, final AsyncCompletionHandler<ByteBuf> handler) {
-            ByteBuf buffer = bufferProvider.getBuffer(numBytes);
-            channel.read(buffer.asNIO(), settings.getReadTimeout(MILLISECONDS), MILLISECONDS, null,
-                    new BasicCompletionHandler(buffer, handler));
-        }
-
-        @Override
-        public void open() throws IOException {
-            FutureAsyncCompletionHandler<Void> handler = new FutureAsyncCompletionHandler<Void>();
-            openAsync(handler);
-            handler.getOpen();
-        }
-
-        @Override
-        public void write(final List<ByteBuf> buffers) throws IOException {
-            FutureAsyncCompletionHandler<Void> handler = new FutureAsyncCompletionHandler<Void>();
-            writeAsync(buffers, handler);
-            handler.getWrite();
-        }
-
-        @Override
-        public ByteBuf read(final int numBytes) throws IOException {
-            FutureAsyncCompletionHandler<ByteBuf> handler = new FutureAsyncCompletionHandler<ByteBuf>();
-            readAsync(numBytes, handler);
-            return handler.getRead();
-        }
-
-        @Override
-        public ServerAddress getAddress() {
-            return serverAddress;
-        }
-
-        @Override
-        public void close() {
-            try {
-                if (channel != null) {
-                    channel.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            } finally {
-                channel = null;
-                isClosed = true;
-            }
-        }
-
-        @Override
-        public boolean isClosed() {
-            return isClosed;
-        }
-
-        @Override
-        public ByteBuf getBuffer(final int size) {
-            return bufferProvider.getBuffer(size);
         }
 
         private SSLContext getSslContext() {
@@ -362,157 +272,10 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory, Clo
             }
         }
 
-        private void pipeOneBuffer(final AsyncWritableByteChannelAdapter byteChannel, final ByteBuf byteBuffer,
-                                   final AsyncCompletionHandler<Void> outerHandler) {
-            byteChannel.write(byteBuffer.asNIO(), new AsyncCompletionHandler<Void>() {
-                @Override
-                public void completed(final Void t) {
-                    if (byteBuffer.hasRemaining()) {
-                        byteChannel.write(byteBuffer.asNIO(), this);
-                    } else {
-                        outerHandler.completed(null);
-                    }
-                }
-
-                @Override
-                public void failed(final Throwable t) {
-                    outerHandler.failed(t);
-                }
-            });
-        }
-
-        private class AsyncWritableByteChannelAdapter {
-            void write(final ByteBuffer src, final AsyncCompletionHandler<Void> handler) {
-                channel.write(src, null, new AsyncWritableByteChannelAdapter.WriteCompletionHandler(handler));
-            }
-
-            private class WriteCompletionHandler extends BaseCompletionHandler<Void, Integer, Object> {
-
-                WriteCompletionHandler(final AsyncCompletionHandler<Void> handler) {
-                    super(handler);
-                }
-
-                @Override
-                public void completed(final Integer result, final Object attachment) {
-                    AsyncCompletionHandler<Void> localHandler = getHandlerAndClear();
-                    localHandler.completed(null);
-                }
-
-                @Override
-                public void failed(final Throwable exc, final Object attachment) {
-                    AsyncCompletionHandler<Void> localHandler = getHandlerAndClear();
-                    localHandler.failed(exc);
-                }
-            }
-        }
-
-        private final class BasicCompletionHandler extends BaseCompletionHandler<ByteBuf, Integer, Void> {
-            private final AtomicReference<ByteBuf> byteBufReference;
-
-            private BasicCompletionHandler(final ByteBuf dst, final AsyncCompletionHandler<ByteBuf> handler) {
-                super(handler);
-                this.byteBufReference = new AtomicReference<ByteBuf>(dst);
-            }
-
-            @Override
-            public void completed(final Integer result, final Void attachment) {
-                AsyncCompletionHandler<ByteBuf> localHandler = getHandlerAndClear();
-                ByteBuf localByteBuf = byteBufReference.getAndSet(null);
-                if (result == -1) {
-                    localByteBuf.release();
-                    localHandler.failed(new MongoSocketReadException("Prematurely reached end of stream", serverAddress));
-                } else if (!localByteBuf.hasRemaining()) {
-                    localByteBuf.flip();
-                    localHandler.completed(localByteBuf);
-                } else {
-                    channel.read(localByteBuf.asNIO(), settings.getReadTimeout(MILLISECONDS), MILLISECONDS, null,
-                            new BasicCompletionHandler(localByteBuf, localHandler));
-                }
-            }
-
-            @Override
-            public void failed(final Throwable t, final Void attachment) {
-                AsyncCompletionHandler<ByteBuf> localHandler = getHandlerAndClear();
-                ByteBuf localByteBuf = byteBufReference.getAndSet(null);
-                localByteBuf.release();
-                if (t instanceof InterruptedByTimeoutException) {
-                    localHandler.failed(new MongoSocketReadTimeoutException("Timeout while receiving message", serverAddress, t));
-                } else {
-                    localHandler.failed(t);
-                }
-            }
-        }
-
-        // Private base class for all CompletionHandler implementors that ensures the upstream handler is
-        // set to null before it is used.  This is to work around an observed issue with implementations of
-        // AsynchronousSocketChannel that fail to clear references to handlers stored in instance fields of
-        // the class.
-        private abstract static class BaseCompletionHandler<T, V, A> implements CompletionHandler<V, A> {
-            private final AtomicReference<AsyncCompletionHandler<T>> handlerReference;
-
-            BaseCompletionHandler(final AsyncCompletionHandler<T> handler) {
-                this.handlerReference = new AtomicReference<AsyncCompletionHandler<T>>(handler);
-            }
-
-            AsyncCompletionHandler<T> getHandlerAndClear() {
-                return handlerReference.getAndSet(null);
-            }
-        }
-
-        static class FutureAsyncCompletionHandler<T> implements AsyncCompletionHandler<T> {
-            private final CountDownLatch latch = new CountDownLatch(1);
-            private volatile T result;
-            private volatile Throwable error;
-
-            @Override
-            public void completed(final T result) {
-                this.result = result;
-                latch.countDown();
-            }
-
-            @Override
-            public void failed(final Throwable t) {
-                this.error = t;
-                latch.countDown();
-            }
-
-            void getOpen() throws IOException {
-                get("Opening");
-            }
-
-            void getWrite() throws IOException {
-                get("Writing to");
-            }
-
-            T getRead() throws IOException {
-                return get("Reading from");
-            }
-
-            private T get(final String prefix) throws IOException {
-                try {
-                    latch.await();
-                } catch (InterruptedException e) {
-                    throw new MongoInterruptedException(prefix + " the AsynchronousSocketChannelStream failed", e);
-
-                }
-                if (error != null) {
-                    if (error instanceof IOException) {
-                        throw (IOException) error;
-                    } else if (error instanceof MongoException) {
-                        throw (MongoException) error;
-                    } else {
-                        throw new MongoInternalException(prefix + " the TlsChannelStream failed", error);
-                    }
-                }
-                return result;
-            }
-
-        }
-
         private class BufferProviderAllocator implements BufferAllocator {
             @Override
             public ByteBuf allocate(final int size) {
-                return bufferProvider.getBuffer(size);
+                return getBufferProvider().getBuffer(size);
             }
 
             @Override
