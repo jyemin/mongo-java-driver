@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package com.mongodb;
+package com.mongodb.connection;
 
-import com.mongodb.connection.AsyncCompletionHandler;
-import com.mongodb.connection.BufferProvider;
-import com.mongodb.connection.SocketSettings;
-import com.mongodb.connection.SslSettings;
-import com.mongodb.connection.Stream;
-import com.mongodb.connection.StreamFactory;
-import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.MongoClientException;
+import com.mongodb.MongoSocketOpenException;
+import com.mongodb.ServerAddress;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.connection.AsynchronousChannelStream;

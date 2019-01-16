@@ -20,12 +20,12 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoDriverInformation;
 import com.mongodb.MongoInternalException;
-import com.mongodb.TlsChannelStreamFactoryFactory;
 import com.mongodb.connection.AsynchronousSocketChannelStreamFactoryFactory;
 import com.mongodb.connection.Cluster;
 import com.mongodb.connection.DefaultClusterFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.connection.TlsChannelStreamFactoryFactory;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
 

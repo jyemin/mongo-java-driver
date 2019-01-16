@@ -24,11 +24,11 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoTimeoutException;
-import com.mongodb.TlsChannelStreamFactoryFactory;
 import com.mongodb.async.FutureResultCallback;
 import com.mongodb.connection.AsynchronousSocketChannelStreamFactoryFactory;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.connection.TlsChannelStreamFactoryFactory;
 import com.mongodb.connection.netty.NettyStreamFactoryFactory;
 import org.bson.Document;
 

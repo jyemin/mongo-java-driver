@@ -46,6 +46,7 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.connection.StreamFactory;
+import com.mongodb.connection.TlsChannelStreamFactoryFactory;
 import com.mongodb.connection.netty.NettyStreamFactory;
 import com.mongodb.operation.AsyncReadOperation;
 import com.mongodb.operation.AsyncWriteOperation;
