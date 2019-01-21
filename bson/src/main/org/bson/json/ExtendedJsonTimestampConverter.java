@@ -17,15 +17,14 @@
 package org.bson.json;
 
 import org.bson.BsonTimestamp;
-import org.bson.internal.UnsignedLongs;
 
 class ExtendedJsonTimestampConverter implements Converter<BsonTimestamp> {
     @Override
     public void convert(final BsonTimestamp value, final StrictJsonWriter writer) {
         writer.writeStartObject();
         writer.writeStartObject("$timestamp");
-        writer.writeNumber("t", UnsignedLongs.toString(toUnsignedLong(value.getTime())));
-        writer.writeNumber("i", UnsignedLongs.toString(toUnsignedLong(value.getInc())));
+        writer.writeNumber("t", Long.toUnsignedString(toUnsignedLong(value.getTime())));
+        writer.writeNumber("i", Long.toUnsignedString(toUnsignedLong(value.getInc())));
         writer.writeEndObject();
         writer.writeEndObject();
     }
