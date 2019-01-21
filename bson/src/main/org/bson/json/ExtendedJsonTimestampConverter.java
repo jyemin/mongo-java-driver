@@ -23,14 +23,10 @@ class ExtendedJsonTimestampConverter implements Converter<BsonTimestamp> {
     public void convert(final BsonTimestamp value, final StrictJsonWriter writer) {
         writer.writeStartObject();
         writer.writeStartObject("$timestamp");
-        writer.writeNumber("t", Long.toUnsignedString(toUnsignedLong(value.getTime())));
-        writer.writeNumber("i", Long.toUnsignedString(toUnsignedLong(value.getInc())));
+        writer.writeNumber("t", Long.toUnsignedString(Integer.toUnsignedLong(value.getTime())));
+        writer.writeNumber("i", Long.toUnsignedString(Integer.toUnsignedLong(value.getInc())));
         writer.writeEndObject();
         writer.writeEndObject();
     }
 
-    // Equivalent to Integer.toUnsignedLong() in Java 8
-    private long toUnsignedLong(final int value) {
-        return ((long) value) & 0xffffffffL;
-    }
 }
