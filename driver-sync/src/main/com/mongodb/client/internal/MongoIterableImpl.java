@@ -28,6 +28,7 @@ import com.mongodb.operation.BatchCursor;
 import com.mongodb.operation.ReadOperation;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -103,6 +104,18 @@ public abstract class MongoIterableImpl<TResult> implements MongoIterable<TResul
     @Override
     public <U> MongoIterable<U> map(final Function<TResult, U> mapper) {
         return new MappingIterable<TResult, U>(this, mapper);
+    }
+
+    @Override
+    public void forEach(final Consumer<? super TResult> action) {
+        MongoCursor<TResult> cursor = iterator();
+        try {
+            while (cursor.hasNext()) {
+                action.accept(cursor.next());
+            }
+        } finally {
+            cursor.close();
+        }
     }
 
     @Override

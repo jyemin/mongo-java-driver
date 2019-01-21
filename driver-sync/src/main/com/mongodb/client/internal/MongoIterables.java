@@ -29,34 +29,15 @@ import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MapReduceIterable;
-import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.client.model.AggregationLevel;
+import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
 import java.util.List;
 
-// Helper class for instantiating the right implementation class for each MongoIterable.  In proper Java 8 environments, which includes
-// the java.util.function.Consumer interface, it instantiates an implementation which overrides the default forEach(Consumer<TResult)
-// method that in Java 8 is defined as a default method on java.lang.Iterable.  Otherwise it instantiates an implementation which does not
-// override this method.
-// It does this by delegating to an implementation of MongoIterableFactory that is determined based on a runtime check for the existence of
-// the java.util.function.Consumer class.
 public final class MongoIterables {
-    private static MongoIterableFactory factory;
-
-    static {
-        try {
-            // Protect against running in an environment where Consumer is not available.  Either
-            // 1. Java version < 8
-            // 2. Android (which doesn't currently include Consumer even with its Java 8 support
-            Class.forName("java.util.function.Consumer");
-            factory = new Java8MongoIterableFactory();
-        } catch (ClassNotFoundException e) {
-            factory = new FallbackMongoIterableFactory();
-        }
-    }
 
     public static <TDocument, TResult>
     FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
@@ -64,8 +45,8 @@ public final class MongoIterables {
                                  final CodecRegistry codecRegistry,
                                  final ReadPreference readPreference, final ReadConcern readConcern,
                                  final OperationExecutor executor, final Bson filter) {
-        return factory.findOf(clientSession, namespace, documentClass, resultClass, codecRegistry, readPreference, readConcern, executor,
-                filter);
+        return new FindIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, executor, filter);
     }
 
     public static <TDocument, TResult>
@@ -74,7 +55,7 @@ public final class MongoIterables {
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                            final ReadConcern readConcern, final WriteConcern writeConcern, final OperationExecutor executor,
                                            final List<? extends Bson> pipeline, final AggregationLevel aggregationLevel) {
-        return factory.aggregateOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new AggregateIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline, aggregationLevel);
     }
 
@@ -84,7 +65,7 @@ public final class MongoIterables {
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                            final ReadConcern readConcern, final WriteConcern writeConcern, final OperationExecutor executor,
                                            final List<? extends Bson> pipeline, final AggregationLevel aggregationLevel) {
-        return factory.aggregateOf(clientSession, databaseName, documentClass, resultClass, codecRegistry,
+        return new AggregateIterableImpl<>(clientSession, databaseName, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline, aggregationLevel);
     }
 
@@ -94,8 +75,8 @@ public final class MongoIterables {
                                                  final ReadConcern readConcern, final OperationExecutor executor,
                                                  final List<? extends Bson> pipeline, final Class<TResult> resultClass,
                                                  final ChangeStreamLevel changeStreamLevel) {
-        return factory.changeStreamOf(clientSession, databaseName, codecRegistry, readPreference, readConcern, executor, pipeline,
-                resultClass, changeStreamLevel);
+        return new ChangeStreamIterableImpl<>(clientSession, databaseName, codecRegistry, readPreference, readConcern, executor,
+                pipeline, resultClass, changeStreamLevel);
     }
 
     public static <TResult>
@@ -104,8 +85,8 @@ public final class MongoIterables {
                                                  final ReadConcern readConcern, final OperationExecutor executor,
                                                  final List<? extends Bson> pipeline, final Class<TResult> resultClass,
                                                  final ChangeStreamLevel changeStreamLevel) {
-        return factory.changeStreamOf(clientSession, namespace, codecRegistry, readPreference, readConcern, executor, pipeline, resultClass,
-                changeStreamLevel);
+        return new ChangeStreamIterableImpl<>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
+                pipeline, resultClass, changeStreamLevel);
     }
 
     public static <TDocument, TResult>
@@ -114,7 +95,7 @@ public final class MongoIterables {
                                          final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                          final ReadConcern readConcern, final OperationExecutor executor,
                                          final String fieldName, final Bson filter) {
-        return factory.distinctOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new DistinctIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, fieldName, filter);
     }
 
@@ -122,7 +103,7 @@ public final class MongoIterables {
     ListDatabasesIterable<TResult> listDatabasesOf(final @Nullable ClientSession clientSession, final Class<TResult> resultClass,
                                                    final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                                    final OperationExecutor executor) {
-        return factory.listDatabasesOf(clientSession, resultClass, codecRegistry, readPreference, executor);
+        return new ListDatabasesIterableImpl<>(clientSession, resultClass, codecRegistry, readPreference, executor);
     }
 
     public static <TResult>
@@ -130,15 +111,15 @@ public final class MongoIterables {
                                                        final boolean collectionNamesOnly, final Class<TResult> resultClass,
                                                        final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                                        final OperationExecutor executor) {
-        return factory.listCollectionsOf(clientSession, databaseName, collectionNamesOnly, resultClass, codecRegistry, readPreference,
-                executor);
+        return new ListCollectionsIterableImpl<>(clientSession, databaseName, collectionNamesOnly, resultClass, codecRegistry,
+                readPreference, executor);
     }
 
     public static <TResult>
     ListIndexesIterable<TResult> listIndexesOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
                                                final Class<TResult> resultClass, final CodecRegistry codecRegistry,
                                                final ReadPreference readPreference, final OperationExecutor executor) {
-        return factory.listIndexesOf(clientSession, namespace, resultClass, codecRegistry, readPreference, executor);
+        return new ListIndexesIterableImpl<>(clientSession, namespace, resultClass, codecRegistry, readPreference, executor);
     }
 
     public static <TDocument, TResult>
@@ -147,8 +128,8 @@ public final class MongoIterables {
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                            final ReadConcern readConcern, final WriteConcern writeConcern, final OperationExecutor executor,
                                            final String mapFunction, final String reduceFunction) {
-        return factory.mapReduceOf(clientSession, namespace, documentClass, resultClass, codecRegistry, readPreference, readConcern,
-                writeConcern, executor, mapFunction, reduceFunction);
+        return new MapReduceIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                readPreference, readConcern, writeConcern, executor, mapFunction, reduceFunction);
     }
 
     private MongoIterables() {
