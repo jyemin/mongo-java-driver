@@ -28,8 +28,7 @@ else
   export ASYNC_TYPE="-Dorg.mongodb.async.type=nio2"
 fi
 
-# We always compile with the latest version of java
-export JAVA_HOME="/opt/java/jdk9"
+export JAVA_HOME="/opt/java/jdk11"
 
 
 ############################################
