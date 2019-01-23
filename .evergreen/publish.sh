@@ -37,8 +37,8 @@ if [ ! -e  $SDK_ROOT ]; then
 fi
 export ANDROID_HOME=${SDK_ROOT}
 
-echo "Publishing snapshot with jdk9"
-export JAVA_HOME="/opt/java/jdk9"
+echo "Publishing snapshot with jdk11"
+export JAVA_HOME="/opt/java/jdk11"
 
 ./gradlew -version
 ./gradlew publishSnapshots
