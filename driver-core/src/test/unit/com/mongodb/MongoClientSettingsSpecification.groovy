@@ -25,12 +25,10 @@ import com.mongodb.connection.SslSettings
 import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import com.mongodb.event.CommandListener
 import org.bson.codecs.configuration.CodecRegistry
-import spock.lang.IgnoreIf
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
-import static com.mongodb.ClusterFixture.isNotAtLeastJava7
 import static com.mongodb.CustomMatchers.isTheSameAs
 import static spock.util.matcher.HamcrestSupport.expect
 
@@ -256,7 +254,6 @@ class MongoClientSettingsSpecification extends Specification {
         settings.commandListeners[1].is commandListenerTwo
     }
 
-    @IgnoreIf({ isNotAtLeastJava7() })
     def 'should build settings from a connection string'() {
         when:
         ConnectionString connectionString = new ConnectionString('mongodb://user:pass@host1:1,host2:2/'
@@ -336,7 +333,6 @@ class MongoClientSettingsSpecification extends Specification {
         expect expected, isTheSameAs(settings)
     }
 
-    @IgnoreIf({ isNotAtLeastJava7() })
     def 'should build settings from a connection string with default values'() {
         when:
         def builder = MongoClientSettings.builder()
