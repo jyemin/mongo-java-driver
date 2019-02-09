@@ -101,14 +101,6 @@ public final class Fixture {
         return DEFAULT_DATABASE_NAME;
     }
 
-    static boolean isNotAtLeastJava7() {
-        return javaVersionStartsWith("1.6");
-    }
-
-    static boolean runEmbeddedTests() {
-        return !(isNotAtLeastJava7());
-    }
-
     static boolean serverVersionLessThan(final String versionString) {
         return getServerVersion().compareTo(new ServerVersion(getVersionList(versionString).subList(0, 3))) < 0;
     }
@@ -128,10 +120,6 @@ public final class Fixture {
                     versionArray.get(2).asInt32().getValue()));
         }
         return serverVersion;
-    }
-
-    private static boolean javaVersionStartsWith(final String versionPrefix) {
-        return System.getProperty("java.version", "").startsWith(versionPrefix + ".");
     }
 
     private static void cleanDBPath() {
