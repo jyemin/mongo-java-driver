@@ -17,11 +17,14 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.MongoConfigurationException
+import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.event.ClusterListener
 import spock.lang.Specification
+
+import java.util.concurrent.TimeUnit
 
 import static com.mongodb.connection.ClusterConnectionMode.MULTIPLE
 import static com.mongodb.connection.ClusterType.SHARDED
@@ -61,6 +64,7 @@ class DnsMultiServerClusterSpecification extends Specification {
         def cluster = new DnsMultiServerCluster(new ClusterId(),
                 ClusterSettings.builder()
                         .addClusterListener(clusterListener)
+                        .serverSelectionTimeout(1, TimeUnit.MILLISECONDS)
                         .srvHost(srvHost)
                         .mode(MULTIPLE)
                         .build(),
@@ -69,6 +73,24 @@ class DnsMultiServerClusterSpecification extends Specification {
         then: 'the monitor is created and started'
         initializer != null
         1 * dnsSrvRecordMonitor.start()
+
+        when: 'the current description is accessed before initialization'
+        def description = cluster.getCurrentDescription()
+
+        then: 'the description is not null'
+        description != null
+
+        when: 'the description is accessed before initialization'
+        cluster.getDescription()
+
+        then: 'a MongoTimeoutException is thrown'
+        thrown(MongoTimeoutException)
+
+        when: 'a server is selected before initialization'
+        cluster.selectServer { def clusterDescription -> [] }
+
+        then: 'a MongoTimeoutException is thrown'
+        thrown(MongoTimeoutException)
 
         when: 'the listener is initialized with an exception'
         initializer.initialize(exception)

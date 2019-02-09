@@ -26,7 +26,9 @@ import com.mongodb.MongoTimeoutException
 import com.mongodb.MongoWaitQueueFullException
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
+import com.mongodb.connection.ClusterDescription
 import com.mongodb.connection.ClusterId
+import com.mongodb.connection.ClusterType
 import com.mongodb.connection.Server
 import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
@@ -53,6 +55,30 @@ class BaseClusterSpecification extends Specification {
     private final ServerAddress thirdServer = new ServerAddress('localhost:27019')
     private final List<ServerAddress> allServers = [firstServer, secondServer, thirdServer]
     private final TestClusterableServerFactory factory = new TestClusterableServerFactory()
+
+    def 'should have current description immediately after construction'() {
+        given:
+        def clusterSettings = builder().mode(MULTIPLE)
+                .hosts([firstServer, secondServer, thirdServer])
+                .serverSelectionTimeout(1, SECONDS)
+                .serverSelector(new ServerAddressSelector(firstServer))
+                .build()
+        def cluster = new BaseCluster(new ClusterId(), clusterSettings, factory) {
+            @Override
+            protected void connect() {
+                throw new UnsupportedOperationException()
+            }
+
+            @Override
+            protected ClusterableServer getServer(final ServerAddress serverAddress) {
+                throw new UnsupportedOperationException()
+            }
+        }
+
+        expect:
+        cluster.getCurrentDescription() == new ClusterDescription(clusterSettings.getMode(), ClusterType.UNKNOWN, [], clusterSettings,
+                factory.getSettings())
+    }
 
     def 'should get cluster settings'() {
         given:
