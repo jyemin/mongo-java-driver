@@ -31,7 +31,7 @@ See the Upgrade guide in the 3.0 driver reference documentation for breaking cha
 
 ## System Requirements
 
-The minimum JVM is Java 8. However, specific features require more recent versions:
+The minimum JVM is Java 8.
 
 ## Compatibility
 
