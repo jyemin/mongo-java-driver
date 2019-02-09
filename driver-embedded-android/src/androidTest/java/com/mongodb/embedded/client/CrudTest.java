@@ -110,9 +110,6 @@ public class CrudTest {
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() throws URISyntaxException, IOException {
         List<Object[]> data = new ArrayList<Object[]>();
-        if (!Fixture.runEmbeddedTests()) {
-            return data;
-        }
 
         for (BsonDocument testDocument : JsonPoweredCrudTestHelper.getTestDocuments("crud")) {
             if (testDocument.containsKey("minServerVersion")
