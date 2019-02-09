@@ -29,7 +29,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.mongodb.ClusterFixture.isNotAtLeastJava7;
 import static java.util.Arrays.asList;
 
 
@@ -124,7 +123,7 @@ public final class Fixture {
     }
 
     static boolean runEmbeddedTests() {
-        return !(isNotAtLeastJava7() || System.getProperty(EMBEDDED_PATH_PROPERTY_NAME, "").isEmpty());
+        return !(System.getProperty(EMBEDDED_PATH_PROPERTY_NAME, "").isEmpty());
     }
 
     static synchronized MongoEmbeddedSettings getMongoEmbeddedSettings() {
