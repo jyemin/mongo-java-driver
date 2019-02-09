@@ -29,7 +29,6 @@ import org.bson.BsonBinarySubType
 import org.bson.BsonDocument
 import org.bson.BsonString
 
-import static com.mongodb.ClusterFixture.isNotAtLeastJava8
 import static com.mongodb.ClusterFixture.serverVersionAtLeast
 import static com.mongodb.async.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.async.client.Fixture.getMongoClient
@@ -37,7 +36,6 @@ import static com.mongodb.async.client.Fixture.getMongoClientBuilderFromConnecti
 import static com.mongodb.async.client.Fixture.getMongoClientSettings
 import static com.mongodb.client.model.Filters.eq
 import static java.util.Collections.singletonMap
-import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
 class ClientSideEncryptionProseTestSpecification extends FunctionalSpecification {
@@ -53,7 +51,6 @@ class ClientSideEncryptionProseTestSpecification extends FunctionalSpecification
     private MongoCollection<BsonDocument> autoEncryptingDataCollection
 
     def setup() {
-        assumeFalse(isNotAtLeastJava8())
         assumeTrue(serverVersionAtLeast(4, 2))
         assumeTrue('Key vault tests disabled',
                 System.getProperty('org.mongodb.test.awsAccessKeyId') != null

@@ -31,7 +31,6 @@ import spock.lang.Unroll
 import static com.mongodb.ClusterFixture.connectionString
 import static com.mongodb.ClusterFixture.getCredentialList
 import static com.mongodb.ClusterFixture.getSslSettings
-import static com.mongodb.ClusterFixture.isNotAtLeastJava8
 import static com.mongodb.ClusterFixture.isStandalone
 import static com.mongodb.ClusterFixture.serverVersionAtLeast
 import static com.mongodb.ReadPreference.primary
@@ -42,7 +41,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 class MongoClientsSpecification extends FunctionalSpecification {
 
-    @IgnoreIf({ isNotAtLeastJava8() })
     def 'should connect'() {
         given:
         def connectionString = 'mongodb://'
