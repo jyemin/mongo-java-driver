@@ -60,13 +60,12 @@ class BaseClusterSpecification extends Specification {
         given:
         def clusterSettings = builder().mode(MULTIPLE)
                 .hosts([firstServer, secondServer, thirdServer])
-                .serverSelectionTimeout(1, SECONDS)
+                .serverSelectionTimeout(1, MILLISECONDS)
                 .serverSelector(new ServerAddressSelector(firstServer))
                 .build()
         def cluster = new BaseCluster(new ClusterId(), clusterSettings, factory) {
             @Override
             protected void connect() {
-                throw new UnsupportedOperationException()
             }
 
             @Override
@@ -75,9 +74,21 @@ class BaseClusterSpecification extends Specification {
             }
         }
 
-        expect:
+        expect: 'the description is initialized after construction'
         cluster.getCurrentDescription() == new ClusterDescription(clusterSettings.getMode(), ClusterType.UNKNOWN, [], clusterSettings,
                 factory.getSettings())
+
+        when: 'the description is accessed before initialization'
+        cluster.getDescription()
+
+        then: 'a MongoTimeoutException is thrown'
+        thrown(MongoTimeoutException)
+
+        when: 'a server is selected before initialization'
+        cluster.selectServer { def clusterDescription -> [] }
+
+        then: 'a MongoTimeoutException is thrown'
+        thrown(MongoTimeoutException)
     }
 
     def 'should get cluster settings'() {

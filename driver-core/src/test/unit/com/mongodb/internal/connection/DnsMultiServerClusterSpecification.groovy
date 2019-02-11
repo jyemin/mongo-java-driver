@@ -17,7 +17,6 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.MongoConfigurationException
-import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ClusterSettings
@@ -80,24 +79,13 @@ class DnsMultiServerClusterSpecification extends Specification {
         then: 'the description is not null'
         description != null
 
-        when: 'the description is accessed before initialization'
-        cluster.getDescription()
-
-        then: 'a MongoTimeoutException is thrown'
-        thrown(MongoTimeoutException)
-
-        when: 'a server is selected before initialization'
-        cluster.selectServer { def clusterDescription -> [] }
-
-        then: 'a MongoTimeoutException is thrown'
-        thrown(MongoTimeoutException)
-
         when: 'the listener is initialized with an exception'
         initializer.initialize(exception)
+        description = cluster.getCurrentDescription()
 
         then: 'the description includes the exception'
-        cluster.getCurrentDescription().getServerDescriptions() == []
-        cluster.getCurrentDescription().getSrvResolutionException() == exception
+        description.getServerDescriptions() == []
+        description.getSrvResolutionException() == exception
 
         when: 'the listener is initialized with servers'
         initializer.initialize([firstServer, secondServer] as Set)
