@@ -527,15 +527,15 @@ class DefaultConnectionPool implements ConnectionPool {
 
         @Override
         public void close(final UsageTrackingInternalConnection connection) {
-            connectionPoolListener.connectionRemoved(new ConnectionRemovedEvent(getId(connection)));
+            connectionPoolListener.connectionRemoved(new ConnectionRemovedEvent(getId(connection), getReasonForClosing(connection)));
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(format("Closed connection [%s] to %s because %s.", getId(connection), serverId.getAddress(),
-                                  getReasonForClosing(connection)));
+                                  getReasonStringForClosing(connection)));
             }
             connection.close();
         }
 
-        private String getReasonForClosing(final UsageTrackingInternalConnection connection) {
+        private String getReasonStringForClosing(final UsageTrackingInternalConnection connection) {
             String reason;
             if (connection.isClosed()) {
                 reason = "there was a socket exception raised by this connection";
@@ -547,6 +547,22 @@ class DefaultConnectionPool implements ConnectionPool {
                 reason = "it is past its maximum allowed idle time";
             } else {
                 reason = "the pool has been closed";
+            }
+            return reason;
+        }
+
+        private ConnectionRemovedEvent.Reason getReasonForClosing(final UsageTrackingInternalConnection connection) {
+            ConnectionRemovedEvent.Reason reason;
+            if (connection.isClosed()) {
+                reason = ConnectionRemovedEvent.Reason.ERROR;
+            } else if (fromPreviousGeneration(connection)) {
+                reason = ConnectionRemovedEvent.Reason.STALE;
+            } else if (pastMaxLifeTime(connection)) {
+                reason = ConnectionRemovedEvent.Reason.MAX_LIFE_TIME_EXCEEDED;
+            } else if (pastMaxIdleTime(connection)) {
+                reason = ConnectionRemovedEvent.Reason.MAX_IDLE_TIME_EXCEEDED;
+            } else {
+                reason = ConnectionRemovedEvent.Reason.POOL_CLOSED;
             }
             return reason;
         }

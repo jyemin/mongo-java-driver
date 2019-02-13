@@ -193,10 +193,35 @@ public class ConnectionPoolTest {
                 } else if (type.equals("ConnectionClosed")) {
                     ConnectionRemovedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionRemovedEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
+                    assertReasonMatch(expectedEvent, actualEvent);
                 } else {
                     throw new UnsupportedOperationException("Unsupported event type " + type);
                 }
             }
+        }
+    }
+
+    private void assertReasonMatch(final BsonDocument expectedEvent, final ConnectionRemovedEvent connectionRemovedEvent) {
+        if (!expectedEvent.containsKey("reason")) {
+            return;
+        }
+
+        String expectedReason = expectedEvent.getString("reason").getValue();
+        switch (connectionRemovedEvent.getReason()) {
+            case STALE:
+                assertEquals(expectedReason, "stale");
+                break;
+            case MAX_IDLE_TIME_EXCEEDED:
+                assertEquals(expectedReason, "idle");
+                break;
+            case ERROR:
+                assertEquals(expectedReason, "error");
+                break;
+            case POOL_CLOSED:
+                assertEquals(expectedReason, "poolClosed");
+                break;
+            default:
+                fail("Unexpected reason to close connection " + connectionRemovedEvent.getReason());
         }
     }
 
