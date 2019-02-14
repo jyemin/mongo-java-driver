@@ -174,13 +174,13 @@ public class ConnectionPoolTest {
                     ConnectionPoolClosedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionPoolClosedEvent.class);
                     assertEquals(serverAddress, actualEvent.getServerId().getAddress());
                 } else if (type.equals("ConnectionPoolCleared")) {
-                    // TODO
+                    // TODO in 4.0, when this event will be implemented
                 } else if (type.equals("ConnectionReady")) {
-                    // TODO
+                    // TODO in 4.0, when this event will be implemented
                 } else if (type.equals("ConnectionCheckOutStarted")) {
-                    // TODO
+                    // TODO in 4.0, when this event will be implemented
                 } else if (type.equals("ConnectionCheckOutFailed")) {
-                    // TODO
+                    // TODO in 4.0, when this event will be implemented
                 } else if (type.equals("ConnectionCreated")) {
                     ConnectionAddedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionAddedEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
@@ -254,13 +254,13 @@ public class ConnectionPoolTest {
             } else if (type.equals("ConnectionPoolClosed")) {
                 ignoredEventClasses.add(ConnectionPoolClosedEvent.class);
             } else if (type.equals("ConnectionPoolCleared")) {
-                // TODO
+                // TODO in 4.0, when this event will be implemented
             } else if (type.equals("ConnectionReady")) {
-                // TODO
+                // TODO in 4.0, when this event will be implemented
             } else if (type.equals("ConnectionCheckOutStarted")) {
-                // TODO
+                // TODO in 4.0, when this event will be implemented
             } else if (type.equals("ConnectionCheckOutFailed")) {
-                // TODO
+                // TODO in 4.0, when this event will be implemented
             } else if (type.equals("ConnectionCreated")) {
                 ignoredEventClasses.add(ConnectionAddedEvent.class);
             } else if (type.equals("ConnectionCheckedOut")) {
