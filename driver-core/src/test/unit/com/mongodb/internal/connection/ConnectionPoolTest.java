@@ -59,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeNotNull;
 
 // Implementation of
 // https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst
@@ -81,7 +82,8 @@ public class ConnectionPoolTest {
         this.description = description;
         this.definition = definition;
 
-        ConnectionPoolSettings.Builder settingsBuilder = ConnectionPoolSettings.builder();
+        ConnectionPoolSettings.Builder settingsBuilder = ConnectionPoolSettings.builder()
+                .maintenanceFrequency(1, TimeUnit.MILLISECONDS);
         BsonDocument poolOptions = definition.getDocument("poolOptions", new BsonDocument());
 
         if (poolOptions.containsKey("maxPoolSize")) {
@@ -123,19 +125,25 @@ public class ConnectionPoolTest {
                 if (name.equals("start")) {
                     String target = operation.getString("target", new BsonString("")).getValue();
                     executorServiceMap.put(target, Executors.newSingleThreadExecutor());
-                } else if (name.equals("waitFor")) {
+                } else if (name.equals("wait")) {
+                    Thread.sleep(operation.getNumber("ms").intValue());
+                } else if (name.equals("waitForThread")) {
                     String target = operation.getString("target", new BsonString("")).getValue();
                     Exception exceptionFromFuture = futureMap.remove(target).get(5, TimeUnit.SECONDS);
                     if (exceptionFromFuture != null) {
                         throw exceptionFromFuture;
                     }
-                } else if (name.equals("wait")) {
-                    Thread.sleep(operation.getNumber("ms").intValue());
+                } else if (name.equals("waitForEvent")) {
+                    Class<?> eventClass = getEventClass(operation.getString("event").getValue());
+                    // TODO: In 4.0 we will support all event classes.  Until then, skipping tests where we need to wait on an
+                    // unsupported one
+                    assumeNotNull(eventClass);
+                    listener.waitForEvent(eventClass, operation.getNumber("count").intValue(), 5, TimeUnit.SECONDS);
                 } else if (name.equals("clear")) {
                     pool.invalidate();
                 } else if (name.equals("close")) {
                     pool.close();
-                } else {
+                } else if (name.equals("checkOut") || name.equals("checkIn")) {
                     Callable<Exception> callable = createCallable(operation);
                     if (operation.containsKey("thread")) {
                         String threadTarget = operation.getString("thread").getValue();
@@ -144,6 +152,8 @@ public class ConnectionPoolTest {
                     } else {
                         callable.call();
                     }
+                } else {
+                    throw new UnsupportedOperationException("No support for " + name);
                 }
             }
         } catch (Exception e) {
@@ -155,9 +165,11 @@ public class ConnectionPoolTest {
             if (exceptionType.equals("PoolClosedError")) {
                 assertEquals(IllegalStateException.class, e.getClass());
             } else if (exceptionType.equals("WaitQueueTimeoutError")) {
-                assertEquals(MongoTimeoutException.class, e.getClass());
+                if (e.getClass() != MongoTimeoutException.class) {
+                    throw e;
+                }
             } else {
-                fail("Unexpected exception type " + exceptionType);
+                throw e;
             }
         }
 
@@ -250,32 +262,40 @@ public class ConnectionPoolTest {
         ignoredEventClasses.add(ConnectionPoolWaitQueueExitedEvent.class);
         for (BsonValue cur : definition.getArray("ignore", new BsonArray())) {
             String type = cur.asString().getValue();
-            if (type.equals("ConnectionPoolCreated")) {
-                ignoredEventClasses.add(ConnectionPoolOpenedEvent.class);
-            } else if (type.equals("ConnectionPoolClosed")) {
-                ignoredEventClasses.add(ConnectionPoolClosedEvent.class);
-            } else if (type.equals("ConnectionPoolCleared")) {
-                // TODO in 4.0, when this event will be implemented
-            } else if (type.equals("ConnectionReady")) {
-                // TODO in 4.0, when this event will be implemented
-            } else if (type.equals("ConnectionCheckOutStarted")) {
-                // TODO in 4.0, when this event will be implemented
-            } else if (type.equals("ConnectionCheckOutFailed")) {
-                // TODO in 4.0, when this event will be implemented
-            } else if (type.equals("ConnectionCreated")) {
-                ignoredEventClasses.add(ConnectionAddedEvent.class);
-            } else if (type.equals("ConnectionCheckedOut")) {
-                ignoredEventClasses.add(ConnectionCheckedOutEvent.class);
-            } else if (type.equals("ConnectionCheckedIn")) {
-                ignoredEventClasses.add(ConnectionCheckedInEvent.class);
-            } else if (type.equals("ConnectionClosed")) {
-                ignoredEventClasses.add(ConnectionRemovedEvent.class);
-            } else {
-                throw new UnsupportedOperationException("Unsupported event type " + type);
+            Class<?> eventClass = getEventClass(type);
+            if (eventClass != null) {
+                ignoredEventClasses.add(eventClass);
             }
         }
         return ignoredEventClasses;
     }
+
+    private Class<?> getEventClass(final String type) {
+        if (type.equals("ConnectionPoolCreated")) {
+             return ConnectionPoolOpenedEvent.class;
+        } else if (type.equals("ConnectionPoolClosed")) {
+            return ConnectionPoolClosedEvent.class;
+        } else if (type.equals("ConnectionCreated")) {
+            return ConnectionAddedEvent.class;
+        } else if (type.equals("ConnectionCheckedOut")) {
+            return ConnectionCheckedOutEvent.class;
+        } else if (type.equals("ConnectionCheckedIn")) {
+            return ConnectionCheckedInEvent.class;
+        } else if (type.equals("ConnectionClosed")) {
+            return ConnectionRemovedEvent.class;
+        } else if (type.equals("ConnectionPoolCleared")) {
+            return null;
+        } else if (type.equals("ConnectionReady")) {
+            return null;
+        } else if (type.equals("ConnectionCheckOutStarted")) {
+            return null;
+        } else if (type.equals("ConnectionCheckOutFailed")) {
+            return null;
+        } else {
+            throw new UnsupportedOperationException("Unsupported event type " + type);
+        }
+    }
+
 
     private <Event> Event getNextEvent(final Iterator<Object> eventsIterator, final Class<Event> expectedType) {
         if (!eventsIterator.hasNext()) {

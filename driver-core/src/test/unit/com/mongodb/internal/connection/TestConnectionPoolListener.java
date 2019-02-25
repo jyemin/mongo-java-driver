@@ -28,52 +28,115 @@ import com.mongodb.event.ConnectionRemovedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 class TestConnectionPoolListener implements ConnectionPoolListener {
 
     private final List<Object> events = new ArrayList<Object>();
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
+    private volatile Class<?> waitingForEventClass;
+    private volatile int waitingForEventCount;
 
     public List<Object> getEvents() {
-        return events;
+        lock.lock();
+        try {
+            return new ArrayList<Object>(events);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public <T> void waitForEvent(final Class<T> eventClass, final int count, final long time, final TimeUnit unit)
+            throws InterruptedException, TimeoutException {
+        lock.lock();
+        try {
+            if (waitingForEventClass != null) {
+                throw new IllegalStateException("Already waiting for events of class " + waitingForEventClass);
+            }
+            waitingForEventClass = eventClass;
+            waitingForEventCount = count;
+            if (containsEvent(eventClass, count)) {
+                return;
+            }
+            if (!condition.await(time, unit)) {
+                throw new TimeoutException("Timed out waiting for " + count + " events of type " + eventClass);
+            }
+        } finally {
+            waitingForEventClass = null;
+            lock.unlock();
+        }
+    }
+
+    private <T> boolean containsEvent(final Class<T> eventClass, final int expectedEventCount) {
+        int eventCount = 0;
+        for (Object event : events) {
+            if (event.getClass().equals(eventClass)) {
+                eventCount++;
+                if (eventCount == expectedEventCount) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void addEvent(final Object event) {
+        lock.lock();
+        try {
+            events.add(event);
+            if (containsEvent(waitingForEventClass, waitingForEventCount)) {
+                if (waitingForEventClass != null) {
+                    waitingForEventClass = null;
+                    condition.signalAll();
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public void connectionPoolOpened(final ConnectionPoolOpenedEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void connectionPoolClosed(final ConnectionPoolClosedEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void connectionCheckedOut(final ConnectionCheckedOutEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void connectionCheckedIn(final ConnectionCheckedInEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void waitQueueEntered(final ConnectionPoolWaitQueueEnteredEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void waitQueueExited(final ConnectionPoolWaitQueueExitedEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void connectionAdded(final ConnectionAddedEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 
     @Override
     public void connectionRemoved(final ConnectionRemovedEvent event) {
-        events.add(event);
+        addEvent(event);
     }
 }
