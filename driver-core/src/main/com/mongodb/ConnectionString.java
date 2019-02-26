@@ -475,12 +475,14 @@ public class ConnectionString {
     }
 
     private void translateOptions(final Map<String, List<String>> optionsMap) {
+        boolean tlsInsecureSet = false;
+        boolean tlsAllowInvalidHostnamesSet = false;
+
         for (final String key : GENERAL_OPTIONS_KEYS) {
             String value = getLastValue(optionsMap, key);
             if (value == null) {
                 continue;
             }
-
             if (key.equals("maxpoolsize")) {
                 maxConnectionPoolSize = parseInteger(value, "maxpoolsize");
             } else if (key.equals("minpoolsize")) {
@@ -498,15 +500,36 @@ public class ConnectionString {
             } else if (key.equals("sockettimeoutms")) {
                 socketTimeout = parseInteger(value, "sockettimeoutms");
             } else if (key.equals("tlsallowinvalidhostnames")) {
+                if (tlsInsecureSet) {
+                    throw new IllegalArgumentException("tlsAllowInvalidHostnames set along with tlsInsecure is not allowed");
+                }
                 sslInvalidHostnameAllowed = parseBoolean(value, "tlsAllowInvalidHostnames");
+                tlsAllowInvalidHostnamesSet = true;
             } else if (key.equals("sslinvalidhostnameallowed")) {
+                if (tlsInsecureSet) {
+                    throw new IllegalArgumentException("sslInvalidHostnameAllowed set along with tlsInsecure is not allowed");
+                }
                 sslInvalidHostnameAllowed = parseBoolean(value, "sslinvalidhostnameallowed");
+                tlsAllowInvalidHostnamesSet = true;
             } else if (key.equals("tlsinsecure")) {
+                if (tlsAllowInvalidHostnamesSet) {
+                    throw new IllegalArgumentException("tlsInsecure set along with tlsAllowInvalidHostnames or sslInvalidHostnameAllowed "
+                            + "is not allowed");
+                }
                 sslInvalidHostnameAllowed = parseBoolean(value, "tlsinsecure");
+                tlsInsecureSet = true;
             } else if (key.equals("ssl")) {
-                sslEnabled = parseBoolean(value, "ssl");
+                boolean booleanValue = parseBoolean(value, "ssl");
+                if (sslEnabled != null && sslEnabled != booleanValue) {
+                    throw new IllegalArgumentException("Multiple tls/ssl parameters with different value are not allowed");
+                }
+                sslEnabled = booleanValue;
             } else if (key.equals("tls")) {
-                sslEnabled = parseBoolean(value, "tls");
+                boolean booleanValue = parseBoolean(value, "tls");
+                if (sslEnabled != null && sslEnabled != booleanValue) {
+                    throw new IllegalArgumentException("Multiple tls/ssl parameters with different values are not allowed");
+                }
+                sslEnabled = booleanValue;
             } else if (key.equals("streamtype")) {
                 streamType = value;
                 LOGGER.warn("The streamType query parameter is deprecated and support for it will be removed"
