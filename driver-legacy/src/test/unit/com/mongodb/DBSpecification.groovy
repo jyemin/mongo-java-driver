@@ -70,7 +70,7 @@ class DBSpecification extends Specification {
 
     def 'should execute CreateCollectionOperation'() {
         given:
-        def mongo = Stub(Mongo)
+        def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
         def executor = new TestOperationExecutor([1L, 2L, 3L])
         def db = new DB(mongo, 'test', executor)
@@ -135,7 +135,7 @@ class DBSpecification extends Specification {
 
     def 'should execute CreateViewOperation'() {
         given:
-        def mongo = Stub(Mongo)
+        def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
         def executor = new TestOperationExecutor([1L, 2L, 3L])
 
@@ -171,7 +171,7 @@ class DBSpecification extends Specification {
 
     def 'should execute ListCollectionsOperation'() {
         given:
-        def mongo = Stub(Mongo)
+        def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
         def executor = new TestOperationExecutor([Stub(BatchCursor), Stub(BatchCursor)])
 
@@ -196,7 +196,7 @@ class DBSpecification extends Specification {
 
     def 'should use provided read preference for obedient commands'() {
         given:
-        def mongo = Stub(Mongo)
+        def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
         def executor = new TestOperationExecutor([new BsonDocument('ok', new BsonDouble(1.0))])
         def database = new DB(mongo, 'test', executor)
@@ -227,7 +227,7 @@ class DBSpecification extends Specification {
 
     def 'should use primary read preference for non obedient commands'() {
         given:
-        def mongo = Stub(Mongo)
+        def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
         def executor = new TestOperationExecutor([new BsonDocument('ok', new BsonDouble(1.0))])
         def database = new DB(mongo, 'test', executor)

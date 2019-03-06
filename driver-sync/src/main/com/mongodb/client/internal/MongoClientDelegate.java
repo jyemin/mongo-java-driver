@@ -18,7 +18,6 @@ package com.mongodb.client.internal;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientException;
-import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoQueryException;
@@ -60,19 +59,16 @@ import static com.mongodb.assertions.Assertions.notNull;
 public class MongoClientDelegate {
     private final Cluster cluster;
     private final ServerSessionPool serverSessionPool;
-    private final List<MongoCredential> credentialList;
     private final Object originator;
     private final OperationExecutor operationExecutor;
 
-    public MongoClientDelegate(final Cluster cluster, final List<MongoCredential> credentialList, final Object originator) {
-        this(cluster, credentialList, originator, null);
+    public MongoClientDelegate(final Cluster cluster, final Object originator) {
+        this(cluster, originator, null);
     }
 
-    public MongoClientDelegate(final Cluster cluster, final List<MongoCredential> credentialList, final Object originator,
-                               @Nullable final OperationExecutor operationExecutor) {
+    public MongoClientDelegate(final Cluster cluster, final Object originator, @Nullable final OperationExecutor operationExecutor) {
         this.cluster = cluster;
         this.serverSessionPool = new ServerSessionPool(cluster);
-        this.credentialList = credentialList;
         this.originator = originator;
         this.operationExecutor = operationExecutor == null ? new DelegateOperationExecutor() : operationExecutor;
     }
@@ -87,10 +83,6 @@ public class MongoClientDelegate {
         notNull("readConcern", readConcern);
         notNull("writeConcern", writeConcern);
         notNull("readPreference", readPreference);
-
-        if (credentialList.size() > 1) {
-            return null;
-        }
 
         ClusterDescription connectedClusterDescription = getConnectedClusterDescription();
 
