@@ -44,13 +44,11 @@ import com.mongodb.operation.FindAndDeleteOperation
 import com.mongodb.operation.FindAndReplaceOperation
 import com.mongodb.operation.FindAndUpdateOperation
 import com.mongodb.operation.FindOperation
-import com.mongodb.operation.GroupOperation
 import com.mongodb.operation.MapReduceBatchCursor
 import com.mongodb.operation.MapReduceStatistics
 import com.mongodb.operation.MapReduceToCollectionOperation
 import com.mongodb.operation.MapReduceWithInlineResultsOperation
 import com.mongodb.operation.MixedBulkWriteOperation
-import com.mongodb.operation.ParallelCollectionScanOperation
 import com.mongodb.operation.UpdateOperation
 import org.bson.BsonDocument
 import org.bson.BsonDocumentWrapper
@@ -63,8 +61,8 @@ import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
-import static com.mongodb.CustomMatchers.isTheSameAs
 import static Fixture.getMongoClient
+import static com.mongodb.CustomMatchers.isTheSameAs
 import static java.util.Arrays.asList
 import static spock.util.matcher.HamcrestSupport.expect
 
@@ -268,8 +266,7 @@ class DBCollectionSpecification extends Specification {
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
-                .filter(new BsonDocument())
-                .modifiers(new BsonDocument()))
+                .filter(new BsonDocument()))
 
         when: // Inherits from DB
         db.setReadConcern(ReadConcern.MAJORITY)
@@ -277,8 +274,7 @@ class DBCollectionSpecification extends Specification {
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
-                .filter(new BsonDocument())
-                .modifiers(new BsonDocument()))
+                .filter(new BsonDocument()))
 
         when:
         collection.setReadConcern(ReadConcern.LOCAL)
@@ -287,7 +283,6 @@ class DBCollectionSpecification extends Specification {
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
                 .filter(new BsonDocument())
-                .modifiers(new BsonDocument())
                 .collation(collation))
     }
 
@@ -309,7 +304,6 @@ class DBCollectionSpecification extends Specification {
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
                 .filter(new BsonDocument())
-                .modifiers(new BsonDocument())
                 .limit(-1))
 
         when: // Inherits from DB
@@ -319,7 +313,6 @@ class DBCollectionSpecification extends Specification {
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
                 .filter(new BsonDocument())
-                .modifiers(new BsonDocument())
                 .limit(-1))
 
         when:
@@ -329,7 +322,6 @@ class DBCollectionSpecification extends Specification {
         then:
         expect executor.getReadOperation(), isTheSameAs(new FindOperation(collection.getNamespace(), collection.getObjectCodec())
                 .filter(new BsonDocument())
-                .modifiers(new BsonDocument())
                 .limit(-1)
                 .collation(collation))
     }
@@ -495,37 +487,6 @@ class DBCollectionSpecification extends Specification {
         executor.getReadConcern() == ReadConcern.LOCAL
     }
 
-    def 'group should create the correct GroupOperation'() {
-        given:
-        def cursor = Stub(BatchCursor) {
-            next() >> []
-            hasNext() >> false
-        }
-        def executor = new TestOperationExecutor([cursor, cursor, cursor])
-        def key = BasicDBObject.parse('{name: 1}')
-        def reduce = 'function ( curr, result ) { }'
-        def db = new DB(getMongoClient(), 'myDatabase', executor)
-        def collection = db.getCollection('test')
-
-        when:
-        collection.group(key, new BasicDBObject(), new BasicDBObject(), reduce)
-
-        then:
-        expect executor.getReadOperation(), isTheSameAs(new GroupOperation<DBObject>(collection.getNamespace(), new BsonJavaScript(reduce),
-                new BsonDocument(), collection.getDefaultDBObjectCodec()).key(BsonDocument.parse('{name: 1}'))
-                .filter(new BsonDocument()))
-
-        when: // Can set collation
-        def groupCommand = new GroupCommand(collection, key, new BasicDBObject(), new BasicDBObject(), reduce, null, collation)
-        collection.group(groupCommand)
-
-        then:
-        expect executor.getReadOperation(), isTheSameAs(new GroupOperation<DBObject>(collection.getNamespace(), new BsonJavaScript(reduce),
-                new BsonDocument(), collection.getDefaultDBObjectCodec()).key(BsonDocument.parse('{name: 1}')).collation(collation)
-                .filter(new BsonDocument())
-        )
-    }
-
     def 'mapReduce should create the correct MapReduceInlineResultsOperation'() {
         given:
         def cursor = Stub(MapReduceBatchCursor) {
@@ -634,20 +595,20 @@ class DBCollectionSpecification extends Specification {
         def bsonPipeline = [BsonDocument.parse('{$match: {}}')]
 
         when:
-        collection.aggregate(pipeline)
+        collection.aggregate(pipeline, AggregationOptions.builder().build())
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new AggregateOperation(collection.getNamespace(), bsonPipeline,
-                collection.getDefaultDBObjectCodec()).useCursor(true))
+                collection.getDefaultDBObjectCodec()))
         executor.getReadConcern() == ReadConcern.DEFAULT
 
         when: // Inherits from DB
         db.setReadConcern(ReadConcern.MAJORITY)
-        collection.aggregate(pipeline)
+        collection.aggregate(pipeline, AggregationOptions.builder().build())
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new AggregateOperation(collection.getNamespace(), bsonPipeline,
-                collection.getDefaultDBObjectCodec()).useCursor(true))
+                collection.getDefaultDBObjectCodec()))
         executor.getReadConcern() == ReadConcern.MAJORITY
 
         when:
@@ -656,7 +617,7 @@ class DBCollectionSpecification extends Specification {
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new AggregateOperation(collection.getNamespace(), bsonPipeline,
-                collection.getDefaultDBObjectCodec()).useCursor(true).collation(collation))
+                collection.getDefaultDBObjectCodec()).collation(collation))
         executor.getReadConcern() == ReadConcern.LOCAL
     }
 
@@ -669,14 +630,14 @@ class DBCollectionSpecification extends Specification {
         def bsonPipeline = [BsonDocument.parse('{$match: {}}'), BsonDocument.parse('{$out: "myColl"}')]
 
         when:
-        collection.aggregate(pipeline)
+        collection.aggregate(pipeline, AggregationOptions.builder().build())
 
         then:
         expect executor.getWriteOperation(), isTheSameAs(new AggregateToCollectionOperation(collection.getNamespace(),
                 bsonPipeline, collection.getWriteConcern()))
 
         when: // Inherits from DB
-        collection.aggregate(pipeline)
+        collection.aggregate(pipeline, AggregationOptions.builder().build())
 
         then:
         expect executor.getWriteOperation(), isTheSameAs(new AggregateToCollectionOperation(collection.getNamespace(),
@@ -724,26 +685,6 @@ class DBCollectionSpecification extends Specification {
         expect executor.getReadOperation(), isTheSameAs(new AggregateOperation(collection.getNamespace(), bsonPipeline,
                 collection.getDefaultDBObjectCodec()).useCursor(false).collation(collation)
                 .asExplainableOperation(ExplainVerbosity.QUERY_PLANNER))
-    }
-
-    def 'parallel should create the correct ParallelCollectionScanOperation'() {
-        given:
-        def executor = new TestOperationExecutor([[Stub(BatchCursor) {
-            hasNext() >> {
-                false
-            }
-        }]])
-        def collection = new DB(getMongoClient(), 'myDatabase', executor).getCollection('test')
-        collection.setReadConcern(ReadConcern.MAJORITY)
-
-        when:
-        def cursors = collection.parallelScan(ParallelScanOptions.builder().build())
-
-        then:
-        cursors.size() == 1
-        expect executor.getReadOperation(), isTheSameAs(new ParallelCollectionScanOperation(collection.getNamespace(), 1,
-                                                                                            collection.getObjectCodec()))
-        executor.getReadConcern() == ReadConcern.MAJORITY
     }
 
     def 'update should create the correct UpdateOperation'() {
