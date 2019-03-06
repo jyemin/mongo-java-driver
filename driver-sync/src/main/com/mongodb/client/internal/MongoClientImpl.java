@@ -65,8 +65,7 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         AutoEncryptionSettings autoEncryptionSettings = settings.getAutoEncryptionSettings();
-        this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                singletonList(settings.getCredential()), this, operationExecutor,
+        this.delegate = new MongoClientDelegate(notNull("cluster", cluster), this, operationExecutor,
                 autoEncryptionSettings == null ? null : createCrypt(SimpleMongoClients.create(this), autoEncryptionSettings));
     }
 
