@@ -50,7 +50,6 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.internal.Crypts.createCrypt;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
-import static java.util.Collections.singletonList;
 
 public final class MongoClientImpl implements MongoClient {
 
@@ -65,8 +64,7 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         AutoEncryptionSettings autoEncryptionSettings = settings.getAutoEncryptionSettings();
-        this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                singletonList(settings.getCredential()), this, operationExecutor,
+        this.delegate = new MongoClientDelegate(notNull("cluster", cluster), this, operationExecutor,
                 autoEncryptionSettings == null ? null : createCrypt(SimpleMongoClients.create(this), autoEncryptionSettings));
     }
 
