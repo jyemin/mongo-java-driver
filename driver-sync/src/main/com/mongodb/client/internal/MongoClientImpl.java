@@ -61,7 +61,7 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                Collections.singletonList(settings.getCredential()), this, operationExecutor);
+                this, operationExecutor);
     }
 
     @Override
