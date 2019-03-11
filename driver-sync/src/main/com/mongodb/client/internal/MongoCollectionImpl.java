@@ -77,7 +77,6 @@ import static com.mongodb.bulk.WriteRequest.Type.DELETE;
 import static com.mongodb.bulk.WriteRequest.Type.INSERT;
 import static com.mongodb.bulk.WriteRequest.Type.REPLACE;
 import static com.mongodb.bulk.WriteRequest.Type.UPDATE;
-import static com.mongodb.client.model.ReplaceOptions.createReplaceOptions;
 import static com.mongodb.internal.client.model.CountOptionsHelper.fromEstimatedDocumentCountOptions;
 import static java.util.Collections.singletonList;
 
@@ -532,12 +531,6 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public UpdateResult replaceOne(final Bson filter, final TDocument replacement, final UpdateOptions updateOptions) {
-        return replaceOne(filter, replacement, createReplaceOptions(updateOptions));
-    }
-
-    @Override
     public UpdateResult replaceOne(final Bson filter, final TDocument replacement, final ReplaceOptions replaceOptions) {
         return executeReplaceOne(null, filter, replacement, replaceOptions);
     }
@@ -545,13 +538,6 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     @Override
     public UpdateResult replaceOne(final ClientSession clientSession, final Bson filter, final TDocument replacement) {
         return replaceOne(clientSession, filter, replacement, new ReplaceOptions());
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public UpdateResult replaceOne(final ClientSession clientSession, final Bson filter, final TDocument replacement,
-                                   final UpdateOptions updateOptions) {
-        return replaceOne(clientSession, filter, replacement, createReplaceOptions(updateOptions));
     }
 
     @Override
