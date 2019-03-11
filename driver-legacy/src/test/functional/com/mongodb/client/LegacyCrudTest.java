@@ -37,6 +37,7 @@ import static com.mongodb.ClusterFixture.serverVersionGreaterThan;
 import static com.mongodb.ClusterFixture.serverVersionLessThan;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 // See https://github.com/mongodb/specifications/tree/master/source/crud/tests
 @RunWith(Parameterized.class)
@@ -75,6 +76,7 @@ public class LegacyCrudTest extends LegacyDatabaseTestCase {
 
     @Test
     public void shouldPassAllOutcomes() {
+        assumeFalse(definition.getString("description").getValue().startsWith("Deprecated count"));
         BsonDocument outcome = helper.getOperationResults(definition.getDocument("operation"));
         BsonDocument expectedOutcome = definition.getDocument("outcome");
 

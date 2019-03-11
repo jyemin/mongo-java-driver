@@ -20,9 +20,9 @@ import com.mongodb.Block;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.connection.SocketSettings;
-import com.mongodb.internal.connection.TestCommandListener;
 import com.mongodb.event.CommandEvent;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.internal.connection.TestCommandListener;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.After;
@@ -71,7 +71,7 @@ public class ReadConcernTest {
     @SuppressWarnings("deprecation")
     public void shouldIncludeReadConcernInCommand() {
         mongoClient.getDatabase(getDefaultDatabaseName()).getCollection("test")
-                .withReadConcern(ReadConcern.LOCAL).count();
+                .withReadConcern(ReadConcern.LOCAL).estimatedDocumentCount();
 
         List<CommandEvent> events = commandListener.getCommandStartedEvents();
 
