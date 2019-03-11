@@ -226,7 +226,10 @@ public final class CommandMonitoringTestHelper {
         if (command.containsKey("recoveryToken")) {
             command.remove("recoveryToken");
         }
-
+        // Tests expect maxTimeMS to be int32, but Java API requires maxTime to be a long.  This massage seems preferable to casting
+        if (command.containsKey("maxTimeMS")) {
+            command.put("maxTimeMS", new BsonInt32(command.getNumber("maxTimeMS").intValue()));
+        }
         return new CommandStartedEvent(event.getRequestId(), event.getConnectionDescription(), event.getDatabaseName(),
                 event.getCommandName(), command);
     }
