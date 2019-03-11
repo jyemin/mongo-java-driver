@@ -21,14 +21,14 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.model.AggregationLevel;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.FindOptions;
-import com.mongodb.client.model.AggregationLevel;
 import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.lang.Nullable;
 import com.mongodb.operation.BatchCursor;
 import com.mongodb.operation.ReadOperation;
-import com.mongodb.client.ClientSession;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -51,7 +51,6 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
     private Boolean allowDiskUse;
     private long maxTimeMS;
     private long maxAwaitTimeMS;
-    private Boolean useCursor;
     private Boolean bypassDocumentValidation;
     private Collation collation;
     private String comment;
@@ -109,13 +108,6 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public AggregateIterable<TResult> useCursor(@Nullable final Boolean useCursor) {
-        this.useCursor = useCursor;
-        return this;
-    }
-
-    @Override
     public AggregateIterable<TResult> maxAwaitTime(final long maxAwaitTime, final TimeUnit timeUnit) {
         notNull("timeUnit", timeUnit);
         this.maxAwaitTimeMS = TimeUnit.MILLISECONDS.convert(maxAwaitTime, timeUnit);
@@ -164,7 +156,7 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
                     resultClass, findOptions);
         } else {
             return operations.aggregate(pipeline, resultClass, maxTimeMS, maxAwaitTimeMS, getBatchSize(), collation,
-                    hint, comment, allowDiskUse, useCursor, aggregationLevel);
+                    hint, comment, allowDiskUse, true, aggregationLevel);
         }
     }
 

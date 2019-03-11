@@ -22,13 +22,13 @@ import com.mongodb.MongoException
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
+import com.mongodb.client.ClientSession
 import com.mongodb.client.model.AggregationLevel
 import com.mongodb.client.model.Collation
 import com.mongodb.operation.AggregateOperation
 import com.mongodb.operation.AggregateToCollectionOperation
 import com.mongodb.operation.BatchCursor
 import com.mongodb.operation.FindOperation
-import com.mongodb.client.ClientSession
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonString
@@ -70,14 +70,14 @@ class AggregateIterableSpecification extends Specification {
 
         then:
         expect operation, isTheSameAs(new AggregateOperation<Document>(namespace,
-                [new BsonDocument('$match', new BsonInt32(1))], new DocumentCodec()))
+                [new BsonDocument('$match', new BsonInt32(1))], new DocumentCodec())
+                .useCursor(true))
         readPreference == secondary()
 
         when: 'overriding initial options'
         aggregationIterable
                 .maxAwaitTime(99, MILLISECONDS)
                 .maxTime(999, MILLISECONDS)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment')
@@ -109,7 +109,6 @@ class AggregateIterableSpecification extends Specification {
                 .batchSize(99)
                 .maxTime(999, MILLISECONDS)
                 .allowDiskUse(true)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment').iterator()
@@ -143,7 +142,6 @@ class AggregateIterableSpecification extends Specification {
                 .batchSize(99)
                 .maxTime(999, MILLISECONDS)
                 .allowDiskUse(true)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment').iterator()
