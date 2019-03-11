@@ -16,12 +16,13 @@
 
 package com.mongodb.client.internal
 
-import com.mongodb.Block
+
 import com.mongodb.Function
 import com.mongodb.MongoException
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
+import com.mongodb.client.ClientSession
 import com.mongodb.client.model.Collation
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import com.mongodb.client.model.changestream.ChangeStreamDocumentCodec
@@ -29,7 +30,6 @@ import com.mongodb.client.model.changestream.ChangeStreamLevel
 import com.mongodb.client.model.changestream.FullDocument
 import com.mongodb.operation.BatchCursor
 import com.mongodb.operation.ChangeStreamOperation
-import com.mongodb.client.ClientSession
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonTimestamp
@@ -40,6 +40,8 @@ import org.bson.codecs.DocumentCodecProvider
 import org.bson.codecs.ValueCodecProvider
 import org.bson.codecs.configuration.CodecConfigurationException
 import spock.lang.Specification
+
+import java.util.function.Consumer
 
 import static com.mongodb.CustomMatchers.isTheSameAs
 import static com.mongodb.ReadPreference.secondary
@@ -163,9 +165,9 @@ class ChangeStreamIterableSpecification extends Specification {
         results == cannedResults[0]
 
         when:
-        mongoIterable.forEach(new Block<ChangeStreamDocument<Document>>() {
+        mongoIterable.forEach(new Consumer<ChangeStreamDocument<Document>>() {
             @Override
-            void apply(ChangeStreamDocument<Document> result) {
+            void accept(ChangeStreamDocument<Document> result) {
                 count++
             }
         })
@@ -209,9 +211,9 @@ class ChangeStreamIterableSpecification extends Specification {
         results == cannedResults[0]
 
         when:
-        mongoIterable.forEach(new Block<RawBsonDocument>() {
+        mongoIterable.forEach(new Consumer<RawBsonDocument>() {
             @Override
-            void apply(final RawBsonDocument rawBsonDocument) {
+            void accept(final RawBsonDocument rawBsonDocument) {
                 count++
             }
         })
