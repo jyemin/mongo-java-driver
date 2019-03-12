@@ -45,6 +45,7 @@ import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.InsertOneOptions;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
@@ -632,10 +633,14 @@ public class JsonPoweredCrudTestHelper {
     BsonDocument getInsertOneResult(final BsonDocument collectionOptions, final BsonDocument arguments,
                                     @Nullable final ClientSession clientSession) {
         BsonDocument document = arguments.getDocument("document");
+        InsertOneOptions options = new InsertOneOptions();
+        if (arguments.containsKey("bypassDocumentValidation")) {
+                options.bypassDocumentValidation(arguments.getBoolean("bypassDocumentValidation").getValue());
+        }
         if (clientSession == null) {
-            getCollection(collectionOptions).insertOne(document);
+            getCollection(collectionOptions).insertOne(document, options);
         } else {
-            getCollection(collectionOptions).insertOne(clientSession, document);
+            getCollection(collectionOptions).insertOne(clientSession, document, options);
         }
 
         return toResult(new BsonDocument("insertedId", document.get("_id")));
@@ -649,14 +654,16 @@ public class JsonPoweredCrudTestHelper {
         }
 
         try {
+            InsertManyOptions options = new InsertManyOptions().ordered(arguments.getDocument("options", new BsonDocument())
+                    .getBoolean("ordered", BsonBoolean.TRUE).getValue());
+            if (arguments.containsKey("bypassDocumentValidation")) {
+                options.bypassDocumentValidation(arguments.getBoolean("bypassDocumentValidation").getValue());
+            }
+
             if (clientSession == null) {
-                getCollection(collectionOptions).insertMany(documents,
-                        new InsertManyOptions().ordered(arguments.getDocument("options", new BsonDocument())
-                                                            .getBoolean("ordered", BsonBoolean.TRUE).getValue()));
+                getCollection(collectionOptions).insertMany(documents, options);
             } else {
-                getCollection(collectionOptions).insertMany(clientSession, documents,
-                        new InsertManyOptions().ordered(arguments.getDocument("options", new BsonDocument())
-                                                            .getBoolean("ordered", BsonBoolean.TRUE).getValue()));
+                getCollection(collectionOptions).insertMany(clientSession, documents, options);
             }
 
             BsonDocument insertedIds = new BsonDocument();
@@ -690,6 +697,10 @@ public class JsonPoweredCrudTestHelper {
         if (arguments.containsKey("collation")) {
             options.collation(getCollation(arguments.getDocument("collation")));
         }
+        if (arguments.containsKey("bypassDocumentValidation")) {
+            options.bypassDocumentValidation(arguments.getBoolean("bypassDocumentValidation").getValue());
+        }
+
         UpdateResult updateResult;
         if (clientSession == null) {
             updateResult = getCollection(collectionOptions).replaceOne(arguments.getDocument("filter"),
@@ -713,6 +724,9 @@ public class JsonPoweredCrudTestHelper {
         }
         if (arguments.containsKey("arrayFilters")) {
             options.arrayFilters((getArrayFilters(arguments.getArray("arrayFilters"))));
+        }
+        if (arguments.containsKey("bypassDocumentValidation")) {
+            options.bypassDocumentValidation(arguments.getBoolean("bypassDocumentValidation").getValue());
         }
 
         UpdateResult updateResult;
@@ -739,6 +753,9 @@ public class JsonPoweredCrudTestHelper {
         }
         if (arguments.containsKey("arrayFilters")) {
             options.arrayFilters((getArrayFilters(arguments.getArray("arrayFilters"))));
+        }
+        if (arguments.containsKey("bypassDocumentValidation")) {
+            options.bypassDocumentValidation(arguments.getBoolean("bypassDocumentValidation").getValue());
         }
 
         UpdateResult updateResult;
@@ -786,16 +803,17 @@ public class JsonPoweredCrudTestHelper {
 
         try {
             BulkWriteResult bulkWriteResult;
+            BsonDocument optionsDocument = arguments.getDocument("options", new BsonDocument());
+            BulkWriteOptions options = new BulkWriteOptions()
+                    .ordered(optionsDocument.getBoolean("ordered", BsonBoolean.TRUE).getValue());
+            if (optionsDocument.containsKey("bypassDocumentValidation")) {
+                options.bypassDocumentValidation(optionsDocument.getBoolean("bypassDocumentValidation").getValue());
+            }
+
             if (clientSession == null) {
-                bulkWriteResult = getCollection(collectionOptions)
-                        .bulkWrite(writeModels, new BulkWriteOptions()
-                                .ordered(arguments.getDocument("options", new BsonDocument())
-                                            .getBoolean("ordered", BsonBoolean.TRUE).getValue()));
+                bulkWriteResult = getCollection(collectionOptions).bulkWrite(writeModels, options);
             } else {
-                bulkWriteResult = getCollection(collectionOptions)
-                        .bulkWrite(clientSession, writeModels, new BulkWriteOptions()
-                                .ordered(arguments.getDocument("options", new BsonDocument())
-                                            .getBoolean("ordered", BsonBoolean.TRUE).getValue()));
+                bulkWriteResult = getCollection(collectionOptions).bulkWrite(clientSession, writeModels, options);
             }
 
             return toResult(bulkWriteResult, writeModels, Collections.<BulkWriteError>emptyList());
