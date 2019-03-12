@@ -16,6 +16,7 @@
 
 package com.mongodb.client.internal;
 
+import com.mongodb.AutoEncryptionOptions;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.Function;
 import com.mongodb.MongoClientException;
@@ -47,6 +48,7 @@ import java.util.List;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
+import static java.util.Collections.singletonList;
 
 public final class MongoClientImpl implements MongoClient {
 
@@ -61,7 +63,14 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                Collections.singletonList(settings.getCredential()), this, operationExecutor);
+                singletonList(settings.getCredential()), this, operationExecutor);
+    }
+
+
+    public void init() {
+        AutoEncryptionOptions autoEncryptionOptions = settings.getAutoEncryptionOptions();
+        delegate.init(autoEncryptionOptions == null
+                ? null : Crypts.createCrypt(this, this, autoEncryptionOptions));
     }
 
     @Override
@@ -185,7 +194,7 @@ public final class MongoClientImpl implements MongoClient {
     private static Cluster createCluster(final MongoClientSettings settings,
                                          @Nullable final MongoDriverInformation mongoDriverInformation) {
         notNull("settings", settings);
-        List<MongoCredential> credentialList = settings.getCredential() != null ? Collections.singletonList(settings.getCredential())
+        List<MongoCredential> credentialList = settings.getCredential() != null ? singletonList(settings.getCredential())
                 : Collections.<MongoCredential>emptyList();
         return new DefaultClusterFactory().createCluster(settings.getClusterSettings(), settings.getServerSettings(),
                 settings.getConnectionPoolSettings(), getStreamFactory(settings, false), getStreamFactory(settings, true), credentialList,
