@@ -662,7 +662,14 @@ public class ConnectionString {
             }
 
             if (key.equals("authmechanism")) {
-                mechanism = AuthenticationMechanism.fromMechanismName(value);
+                if (value.equals("MONGODB-CR")) {
+                    if (userName == null) {
+                        throw new IllegalArgumentException("username can not be null");
+                    }
+                    LOGGER.warn("Deprecated MONGDOB-CR authentication mechanism used in connection string");
+                } else {
+                    mechanism = AuthenticationMechanism.fromMechanismName(value);
+                }
             } else if (key.equals("authsource")) {
                 authSource = value;
             } else if (key.equals("gssapiservicename")) {
@@ -734,9 +741,6 @@ public class ConnectionString {
                 break;
             case PLAIN:
                 credential = MongoCredential.createPlainCredential(userName, mechanismAuthSource, password);
-                break;
-            case MONGODB_CR:
-                credential = MongoCredential.createMongoCRCredential(userName, mechanismAuthSource, password);
                 break;
             case MONGODB_X509:
                 if (password != null) {
