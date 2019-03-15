@@ -60,7 +60,6 @@ class MongoClientSettingsSpecification extends Specification {
         settings.getServerSettings() == ServerSettings.builder().build()
         settings.getStreamFactoryFactory() == null
         settings.getCompressorList() == []
-        settings.getCredentialList() == []
         settings.getCredential() == null
     }
 
@@ -110,11 +109,6 @@ class MongoClientSettingsSpecification extends Specification {
         thrown(IllegalArgumentException)
 
         when:
-        builder.credentialList(null)
-        then:
-        thrown(IllegalArgumentException)
-
-        when:
         builder.codecRegistry(null)
         then:
         thrown(IllegalArgumentException)
@@ -142,7 +136,7 @@ class MongoClientSettingsSpecification extends Specification {
         def socketSettings = SocketSettings.builder().build()
         def heartbeatSocketSettings = SocketSettings.builder().readTimeout(100, TimeUnit.MILLISECONDS).build()
         def serverSettings = ServerSettings.builder().build()
-        def credentialList = [MongoCredential.createMongoX509Credential('test')]
+        def credential = MongoCredential.createMongoX509Credential('test')
         def connectionPoolSettings = ConnectionPoolSettings.builder().build()
         def codecRegistry = Stub(CodecRegistry)
         def commandListener = Stub(CommandListener)
@@ -162,7 +156,7 @@ class MongoClientSettingsSpecification extends Specification {
                 .socketSettings(socketSettings)
                 .heartbeatSocketSettings(heartbeatSocketSettings)
                 .serverSettings(serverSettings)
-                .credentialList(credentialList)
+                .credential(credential)
                 .connectionPoolSettings(connectionPoolSettings)
                 .clusterSettings(clusterSettings).streamFactoryFactory(streamFactoryFactory)
                 .compressorList([MongoCompressor.createZlibCompressor()])
@@ -181,8 +175,7 @@ class MongoClientSettingsSpecification extends Specification {
         settings.getHeartbeatSocketSettings() == heartbeatSocketSettings
         settings.getServerSettings() == serverSettings
         settings.getCodecRegistry() == codecRegistry
-        settings.getCredentialList() == credentialList
-        settings.getCredential() == credentialList.get(0)
+        settings.getCredential() == credential
         settings.getConnectionPoolSettings() == connectionPoolSettings
         settings.getClusterSettings() == clusterSettings
         settings.getStreamFactoryFactory() == streamFactoryFactory
@@ -231,34 +224,9 @@ class MongoClientSettingsSpecification extends Specification {
         settings.getCommandListeners().get(0) == commandListener
         settings.getCodecRegistry() == codecRegistry
         settings.getCredential() == credential
-        settings.getCredentialList() == [credential]
         settings.getClusterSettings() == clusterSettings
         settings.getStreamFactoryFactory() == streamFactoryFactory
         settings.getCompressorList() == [MongoCompressor.createZlibCompressor()]
-    }
-
-    def 'should support deprecated multiple credentials'() {
-        given:
-        def credentialList = [MongoCredential.createMongoX509Credential('test'), MongoCredential.createGSSAPICredential('gssapi')]
-
-        when:
-        def settings = MongoClientSettings.builder().credentialList(credentialList).build()
-
-        then:
-        settings.getCredentialList() == credentialList
-
-        when:
-        settings.getCredential()
-
-        then:
-        thrown(IllegalStateException)
-
-        when:
-        settings = MongoClientSettings.builder().credential(credentialList.get(0)).build()
-
-        then:
-        settings.getCredentialList() == [credentialList.get(0)]
-        settings.getCredential() == credentialList.get(0)
     }
 
     def 'should be easy to create new settings from existing'() {
@@ -273,7 +241,7 @@ class MongoClientSettingsSpecification extends Specification {
         def socketSettings = SocketSettings.builder().build()
         def serverSettings = ServerSettings.builder().build()
         def heartbeatSocketSettings = SocketSettings.builder().build()
-        def credentialList = [MongoCredential.createMongoX509Credential('test')]
+        def credential = MongoCredential.createMongoX509Credential('test')
         def connectionPoolSettings = ConnectionPoolSettings.builder().build()
         def codecRegistry = Stub(CodecRegistry)
         def commandListener = Stub(CommandListener)
@@ -292,7 +260,7 @@ class MongoClientSettingsSpecification extends Specification {
                 .socketSettings(socketSettings)
                 .serverSettings(serverSettings)
                 .heartbeatSocketSettings(heartbeatSocketSettings)
-                .credentialList(credentialList)
+                .credential(credential)
                 .connectionPoolSettings(connectionPoolSettings)
                 .codecRegistry(codecRegistry)
                 .clusterSettings(clusterSettings)
