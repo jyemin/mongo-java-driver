@@ -444,7 +444,6 @@ public class ConnectionString {
         WRITE_CONCERN_KEYS.add("safe");
         WRITE_CONCERN_KEYS.add("w");
         WRITE_CONCERN_KEYS.add("wtimeoutms");
-        WRITE_CONCERN_KEYS.add("fsync");
         WRITE_CONCERN_KEYS.add("journal");
 
         AUTH_KEYS.add("authmechanism");
@@ -606,7 +605,6 @@ public class ConnectionString {
         String w = null;
         Integer wTimeout = null;
         Boolean safe = null;
-        Boolean fsync = null;
         Boolean journal = null;
 
         for (final String key : WRITE_CONCERN_KEYS) {
@@ -621,13 +619,11 @@ public class ConnectionString {
                 w = value;
             } else if (key.equals("wtimeoutms")) {
                 wTimeout = Integer.parseInt(value);
-            } else if (key.equals("fsync")) {
-                fsync = parseBoolean(value, "fsync");
             } else if (key.equals("journal")) {
                 journal = parseBoolean(value, "journal");
             }
         }
-        return buildWriteConcern(safe, w, wTimeout, fsync, journal);
+        return buildWriteConcern(safe, w, wTimeout, journal);
     }
 
     @Nullable
@@ -860,10 +856,10 @@ public class ConnectionString {
     @SuppressWarnings("deprecation")
     @Nullable
     private WriteConcern buildWriteConcern(@Nullable final Boolean safe, @Nullable final String w,
-                                           @Nullable final Integer wTimeout, @Nullable final Boolean fsync,
+                                           @Nullable final Integer wTimeout,
                                            @Nullable final Boolean journal) {
         WriteConcern retVal = null;
-        if (w != null || wTimeout != null || fsync != null || journal != null) {
+        if (w != null || wTimeout != null || journal != null) {
             if (w == null) {
                 retVal = WriteConcern.ACKNOWLEDGED;
             } else {
@@ -878,9 +874,6 @@ public class ConnectionString {
             }
             if (journal != null) {
                 retVal = retVal.withJournal(journal);
-            }
-            if (fsync != null) {
-                retVal = retVal.withFsync(fsync);
             }
             return retVal;
         } else if (safe != null) {
