@@ -199,7 +199,7 @@ public final class MongoClientSettings {
                 readPreference = connectionString.getReadPreference();
             }
             if (connectionString.getRetryWritesValue() != null) {
-                retryWrites = connectionString.getRetryWrites();
+                retryWrites = connectionString.getRetryWritesValue();
             }
             serverSettingsBuilder.applyConnectionString(connectionString);
             socketSettingsBuilder.applyConnectionString(connectionString);
