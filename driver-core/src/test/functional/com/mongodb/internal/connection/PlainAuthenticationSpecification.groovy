@@ -34,13 +34,13 @@ import spock.lang.Specification
 
 import static com.mongodb.AuthenticationMechanism.PLAIN
 import static com.mongodb.ClusterFixture.getConnectionString
-import static com.mongodb.ClusterFixture.getCredentialList
+import static com.mongodb.ClusterFixture.getCredential
 import static com.mongodb.ClusterFixture.getSslSettings
 import static com.mongodb.MongoCredential.createPlainCredential
 import static com.mongodb.internal.connection.CommandHelper.executeCommand
 import static java.util.concurrent.TimeUnit.SECONDS
 
-@IgnoreIf({ getCredentialList().isEmpty() || getCredentialList().get(0).getAuthenticationMechanism() != PLAIN })
+@IgnoreIf({ getCredential() == null || getCredential().getAuthenticationMechanism() != PLAIN })
 class PlainAuthenticationSpecification extends Specification {
 
     def 'should not authorize when not authenticated'() {
@@ -98,7 +98,7 @@ class PlainAuthenticationSpecification extends Specification {
     }
 
     private static MongoCredential getMongoCredential() {
-        getCredentialList().get(0);
+        getCredential()
     }
 
     private static InternalStreamConnection createConnection(final boolean async, final MongoCredential credential) {
