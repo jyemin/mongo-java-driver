@@ -45,7 +45,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
     def 'should create correct description'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], null, [])
+        def initializer = new InternalStreamConnectionInitializer(null, null, [])
 
         when:
         enqueueSuccessfulReplies(false, null)
@@ -57,7 +57,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
     def 'should create correct description asynchronously'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], null, [])
+        def initializer = new InternalStreamConnectionInitializer(null, null, [])
 
         when:
         enqueueSuccessfulReplies(false, null)
@@ -71,7 +71,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
     def 'should create correct description with server connection id'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], null, [])
+        def initializer = new InternalStreamConnectionInitializer(null, null, [])
 
         when:
         enqueueSuccessfulReplies(false, 123)
@@ -83,7 +83,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
     def 'should create correct description with server connection id asynchronously'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], null, [])
+        def initializer = new InternalStreamConnectionInitializer(null, null, [])
 
         when:
         enqueueSuccessfulReplies(false, 123)
@@ -95,11 +95,10 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         description == getExpectedDescription(description.connectionId.localValue, 123)
     }
 
-    def 'should authenticate multiple credentials'() {
+    def 'should authenticate'() {
         given:
         def firstAuthenticator = Mock(Authenticator)
-        def secondAuthenticator = Mock(Authenticator)
-        def initializer = new InternalStreamConnectionInitializer([firstAuthenticator, secondAuthenticator], null, [])
+        def initializer = new InternalStreamConnectionInitializer(firstAuthenticator, null, [])
 
         when:
         enqueueSuccessfulReplies(false, null)
@@ -109,14 +108,12 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         then:
         description
         1 * firstAuthenticator.authenticate(internalConnection, _)
-        1 * secondAuthenticator.authenticate(internalConnection, _)
     }
 
-    def 'should authenticate multiple credentials asynchronously'() {
+    def 'should authenticate asynchronously'() {
         given:
-        def firstAuthenticator = Mock(Authenticator)
-        def secondAuthenticator = Mock(Authenticator)
-        def initializer = new InternalStreamConnectionInitializer([firstAuthenticator, secondAuthenticator], null, [])
+        def authenticator = Mock(Authenticator)
+        def initializer = new InternalStreamConnectionInitializer(authenticator, null, [])
 
         when:
         enqueueSuccessfulReplies(false, null)
@@ -127,14 +124,13 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         then:
         description
-        1 * firstAuthenticator.authenticateAsync(internalConnection, _, _) >> { it[2].onResult(null, null) }
-        1 * secondAuthenticator.authenticateAsync(internalConnection, _, _) >> { it[2].onResult(null, null) }
+        1 * authenticator.authenticateAsync(internalConnection, _, _) >> { it[2].onResult(null, null) }
     }
 
     def 'should not authenticate if server is an arbiter'() {
         given:
-        def firstAuthenticator = Mock(Authenticator)
-        def initializer = new InternalStreamConnectionInitializer([firstAuthenticator], null, [])
+        def authenticator = Mock(Authenticator)
+        def initializer = new InternalStreamConnectionInitializer(authenticator, null, [])
 
         when:
         enqueueSuccessfulReplies(true, null)
@@ -143,13 +139,13 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         then:
         description
-        0 * firstAuthenticator.authenticate(internalConnection, _)
+        0 * authenticator.authenticate(internalConnection, _)
     }
 
     def 'should not authenticate asynchronously if server is an arbiter asynchronously'() {
         given:
-        def firstAuthenticator = Mock(Authenticator)
-        def initializer = new InternalStreamConnectionInitializer([firstAuthenticator], null, [])
+        def authenticator = Mock(Authenticator)
+        def initializer = new InternalStreamConnectionInitializer(authenticator, null, [])
 
         when:
         enqueueSuccessfulReplies(true, null)
@@ -160,12 +156,12 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         then:
         description
-        0 * firstAuthenticator.authenticateAsync(internalConnection, _, _)
+        0 * authenticator.authenticateAsync(internalConnection, _, _)
     }
 
     def 'should add client metadata document to isMaster command'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], clientMetadataDocument, [])
+        def initializer = new InternalStreamConnectionInitializer(null, clientMetadataDocument, [])
         def expectedIsMasterCommandDocument = new BsonDocument('ismaster', new BsonInt32(1))
         if (clientMetadataDocument != null) {
             expectedIsMasterCommandDocument.append('client', clientMetadataDocument)
@@ -192,7 +188,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
     def 'should add compression to isMaster command'() {
         given:
-        def initializer = new InternalStreamConnectionInitializer([], null, compressors)
+        def initializer = new InternalStreamConnectionInitializer(null, null, compressors)
         def expectedIsMasterCommandDocument = new BsonDocument('ismaster', new BsonInt32(1))
 
         def compressionArray = new BsonArray()
