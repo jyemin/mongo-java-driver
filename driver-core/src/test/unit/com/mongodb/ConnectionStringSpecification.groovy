@@ -120,24 +120,23 @@ class ConnectionStringSpecification extends Specification {
         new ConnectionString('mongodb://localhost/?safe=false')                              | WriteConcern.UNACKNOWLEDGED
         new ConnectionString('mongodb://localhost/?wTimeout=5')                              | WriteConcern.ACKNOWLEDGED
                                                                                                            .withWTimeout(5, MILLISECONDS)
-        new ConnectionString('mongodb://localhost/?fsync=true')                              | WriteConcern.ACKNOWLEDGED.withFsync(true)
         new ConnectionString('mongodb://localhost/?journal=true')                            | WriteConcern.ACKNOWLEDGED.withJournal(true)
-        new ConnectionString('mongodb://localhost/?w=2&wtimeout=5&fsync=true&journal=true')  | new WriteConcern(2, 5, true, true)
-        new ConnectionString('mongodb://localhost/?w=majority&wtimeout=5&fsync=true&j=true') | new WriteConcern('majority', 5, true, true)
+        new ConnectionString('mongodb://localhost/?w=2&wtimeout=5&journal=true')  | new WriteConcern(2, 5).withJournal(true)
+        new ConnectionString('mongodb://localhost/?w=majority&wtimeout=5&j=true') | new WriteConcern('majority')
+                .withWTimeout(5, MILLISECONDS).withJournal(true)
     }
 
     @Unroll
     def 'should correctly parse retryWrites'() {
         expect:
-        uri.getRetryWrites() == retryWrites
         uri.getRetryWritesValue() == retryWritesValue
 
         where:
-        uri                                                                            | retryWrites | retryWritesValue
-        new ConnectionString('mongodb://localhost/')                    | true        | null
-        new ConnectionString('mongodb://localhost/?retryWrites=false')  | false       | false
-        new ConnectionString('mongodb://localhost/?retryWrites=true')   | true        | true
-        new ConnectionString('mongodb://localhost/?retryWrites=foos')   | true        | null
+        uri                                                                           | retryWritesValue
+        new ConnectionString('mongodb://localhost/')                   | null
+        new ConnectionString('mongodb://localhost/?retryWrites=false') | false
+        new ConnectionString('mongodb://localhost/?retryWrites=true')  | true
+        new ConnectionString('mongodb://localhost/?retryWrites=foos')  | null
     }
 
     @Unroll
@@ -181,7 +180,7 @@ class ConnectionStringSpecification extends Specification {
         connectionString.getMaxConnectionLifeTime() == 300
         connectionString.getConnectTimeout() == 2500;
         connectionString.getSocketTimeout() == 5500;
-        connectionString.getWriteConcern() == new WriteConcern(1, 2500, true);
+        connectionString.getWriteConcern() == new WriteConcern(1, 2500);
         connectionString.getReadPreference() == primary() ;
         connectionString.getRequiredReplicaSetName() == 'test'
         connectionString.getSslEnabled()
@@ -197,7 +196,7 @@ class ConnectionStringSpecification extends Specification {
                 [new ConnectionString('mongodb://localhost/?minPoolSize=5&maxPoolSize=10&waitQueueMultiple=7&waitQueueTimeoutMS=150&'
                                             + 'maxIdleTimeMS=200&maxLifeTimeMS=300&replicaSet=test&'
                                             + 'connectTimeoutMS=2500&socketTimeoutMS=5500&'
-                                            + 'safe=false&w=1&wtimeout=2500&fsync=true&readPreference=primary&ssl=true&streamType=netty&'
+                                            + 'safe=false&w=1&wtimeout=2500&readPreference=primary&ssl=true&streamType=netty&'
                                             + 'sslInvalidHostNameAllowed=true&'
                                             + 'serverSelectionTimeoutMS=25000&'
                                             + 'localThresholdMS=30&'
@@ -206,7 +205,7 @@ class ConnectionStringSpecification extends Specification {
                  new ConnectionString('mongodb://localhost/?minPoolSize=5;maxPoolSize=10;waitQueueMultiple=7;waitQueueTimeoutMS=150;'
                                             + 'maxIdleTimeMS=200;maxLifeTimeMS=300;replicaSet=test;'
                                             + 'connectTimeoutMS=2500;socketTimeoutMS=5500;'
-                                            + 'safe=false;w=1;wtimeout=2500;fsync=true;readPreference=primary;ssl=true;streamType=netty;'
+                                            + 'safe=false;w=1;wtimeout=2500;readPreference=primary;ssl=true;streamType=netty;'
                                             + 'sslInvalidHostNameAllowed=true;'
                                             + 'serverSelectionTimeoutMS=25000;'
                                             + 'localThresholdMS=30;'
@@ -216,7 +215,7 @@ class ConnectionStringSpecification extends Specification {
                                             + 'maxIdleTimeMS=200&maxLifeTimeMS=300&replicaSet=test;'
                                             + 'connectTimeoutMS=2500;'
                                             + 'socketTimeoutMS=5500&'
-                                            + 'safe=false&w=1;wtimeout=2500;fsync=true&readPreference=primary;ssl=true&streamType=netty;'
+                                            + 'safe=false&w=1;wtimeout=2500;readPreference=primary;ssl=true&streamType=netty;'
                                             + 'sslInvalidHostNameAllowed=true;'
                                             + 'serverSelectionTimeoutMS=25000&'
                                             + 'localThresholdMS=30;'
@@ -410,7 +409,6 @@ class ConnectionStringSpecification extends Specification {
         connectionString.getStreamType() == null
         connectionString.getApplicationName() == null
         connectionString.getCompressorList() == []
-        connectionString.getRetryWrites()
         connectionString.getRetryWritesValue() == null
         connectionString.getRetryReads() == null
     }
