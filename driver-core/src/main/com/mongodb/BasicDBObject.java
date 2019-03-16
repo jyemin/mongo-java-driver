@@ -151,7 +151,7 @@ public class BasicDBObject extends BasicBSONObject implements DBObject, Bson {
      */
     @SuppressWarnings("deprecation")
     public String toJson() {
-        return toJson(new JsonWriterSettings());
+        return toJson(JsonWriterSettings.builder().build());
     }
 
     /**
@@ -178,7 +178,7 @@ public class BasicDBObject extends BasicBSONObject implements DBObject, Bson {
      */
     @SuppressWarnings("deprecation")
     public String toJson(final Encoder<BasicDBObject> encoder) {
-        return toJson(new JsonWriterSettings(), encoder);
+        return toJson(JsonWriterSettings.builder().build(), encoder);
     }
 
     /**

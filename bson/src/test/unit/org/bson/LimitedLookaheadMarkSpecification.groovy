@@ -18,8 +18,10 @@ package org.bson
 
 import org.bson.io.BasicOutputBuffer
 import org.bson.io.ByteBufferBsonInput
+import org.bson.json.JsonMode
 import org.bson.json.JsonReader
 import org.bson.json.JsonWriter
+import org.bson.json.JsonWriterSettings
 import spock.lang.Specification
 
 @SuppressWarnings('UnnecessaryObjectReferences')
@@ -209,7 +211,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         writer << [
                 new BsonDocumentWriter(new BsonDocument()),
                 new BsonBinaryWriter(new BasicOutputBuffer()),
-                new JsonWriter(new StringWriter())
+                new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build())
         ]
     }
 
@@ -251,7 +253,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         writer << [
                 new BsonDocumentWriter(new BsonDocument()),
                 new BsonBinaryWriter(new BasicOutputBuffer()),
-                new JsonWriter(new StringWriter())
+                new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build())
         ]
     }
 }
