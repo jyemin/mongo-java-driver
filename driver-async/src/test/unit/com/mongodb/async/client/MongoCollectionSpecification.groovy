@@ -201,48 +201,6 @@ class MongoCollectionSpecification extends Specification {
                 true, newReadConcern, executor))
     }
 
-    def 'should use CountOperation correctly with count'() {
-        given:
-        def executor = new TestOperationExecutor([1L, 2L, 3L])
-        def filter = new BsonDocument()
-        def collection = new MongoCollectionImpl(namespace, Document, codecRegistry, readPreference, ACKNOWLEDGED, true,
-                readConcern, executor)
-        def expectedOperation = new CountOperation(namespace).filter(filter)
-
-        def countMethod = collection.&count
-
-        when:
-        execute(countMethod, session)
-        def operation = executor.getReadOperation() as CountOperation
-
-        then:
-        executor.getClientSession() == session
-        expect operation, isTheSameAs(expectedOperation)
-
-        when:
-        filter = new BsonDocument('a', new BsonInt32(1))
-        execute(countMethod, session, filter)
-        operation = executor.getReadOperation() as CountOperation
-
-        then:
-        executor.getClientSession() == session
-        expect operation, isTheSameAs(expectedOperation.filter(filter))
-
-        when:
-        def hint = new BsonDocument('hint', new BsonInt32(1))
-        execute(countMethod, session, filter, new CountOptions().hint(hint).skip(10).limit(100)
-                .maxTime(100, MILLISECONDS).collation(collation))
-        operation = executor.getReadOperation() as CountOperation
-
-        then:
-        executor.getClientSession() == session
-        expect operation, isTheSameAs(expectedOperation.filter(filter).hint(hint).skip(10).limit(100).maxTime(100, MILLISECONDS)
-                .collation(collation))
-
-        where:
-        session << [null, Stub(ClientSession)]
-    }
-
     def 'should use CountOperation correctly with documentCount'() {
         given:
         def executor = new TestOperationExecutor([1L, 2L, 3L, 4L])
@@ -829,7 +787,7 @@ class MongoCollectionSpecification extends Specification {
 
         when:
         def result = execute(replaceOneMethod, session, new Document('a', 1), new Document('a', 10),
-                new UpdateOptions().bypassDocumentValidation(bypassDocumentValidation))
+                new ReplaceOptions().bypassDocumentValidation(bypassDocumentValidation))
         def operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
         then:
@@ -839,7 +797,7 @@ class MongoCollectionSpecification extends Specification {
 
         when:
         result = execute(replaceOneMethod, session, new Document('a', 1), new Document('a', 10),
-                new UpdateOptions().upsert(true).bypassDocumentValidation(bypassDocumentValidation).collation(collation))
+                new ReplaceOptions().upsert(true).bypassDocumentValidation(bypassDocumentValidation).collation(collation))
         executor.getClientSession() == session
         operation = executor.getWriteOperation() as MixedBulkWriteOperation
 
@@ -1458,11 +1416,6 @@ class MongoCollectionSpecification extends Specification {
 
         when:
         collection.bulkWrite(null, [new InsertOneModel(new Document())], callback)
-        then:
-        thrown(IllegalArgumentException)
-
-        when:
-        collection.count(null, callback)
         then:
         thrown(IllegalArgumentException)
 

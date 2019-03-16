@@ -158,76 +158,6 @@ public interface MongoCollection<TDocument> {
     /**
      * Counts the number of documents in the collection.
      *
-     * @param callback the callback passed the number of documents in the collection
-     * @deprecated use {@link #estimatedDocumentCount(SingleResultCallback)} or {@link #countDocuments(SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection according to the given options.
-     *
-     * @param filter   the query filter
-     * @param callback the callback passed the number of documents in the collection
-     * @deprecated use {@link #countDocuments(Bson, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(Bson filter, SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection according to the given options.
-     *
-     * @param filter   the query filter
-     * @param options  the options describing the count
-     * @param callback the callback passed the number of documents in the collection
-     * @deprecated use {@link #countDocuments(Bson, CountOptions, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(Bson filter, CountOptions options, SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection.
-     *
-     * @param clientSession  the client session with which to associate this operation
-     * @param callback the callback passed the number of documents in the collection
-     * @since 3.6
-     * @mongodb.server.release 3.6
-     * @deprecated use {@link #estimatedDocumentCount(SingleResultCallback)} or
-     * {@link #countDocuments(ClientSession, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(ClientSession clientSession, SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection according to the given options.
-     *
-     * @param clientSession  the client session with which to associate this operation
-     * @param filter   the query filter
-     * @param callback the callback passed the number of documents in the collection
-     * @since 3.6
-     * @mongodb.server.release 3.6
-     * @deprecated use {@link #countDocuments(ClientSession, Bson, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(ClientSession clientSession, Bson filter, SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection according to the given options.
-     *
-     * @param clientSession  the client session with which to associate this operation
-     * @param filter   the query filter
-     * @param options  the options describing the count
-     * @param callback the callback passed the number of documents in the collection
-     * @since 3.6
-     * @mongodb.server.release 3.6
-     * @deprecated use {@link #countDocuments(ClientSession, Bson, CountOptions, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void count(ClientSession clientSession, Bson filter, CountOptions options, SingleResultCallback<Long> callback);
-
-    /**
-     * Counts the number of documents in the collection.
-     *
      * <p>
      * Note: When migrating from {@code count()} to {@code countDocuments()} the following query operators must be replaced:
      * </p>
@@ -1047,23 +977,6 @@ public interface MongoCollection<TDocument> {
      * @throws com.mongodb.MongoWriteConcernException returned via the callback
      * @throws com.mongodb.MongoException             returned via the callback
      * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
-     * @deprecated use {@link #replaceOne(Bson, Object, ReplaceOptions, SingleResultCallback)} instead
-     */
-    @Deprecated
-    void replaceOne(Bson filter, TDocument replacement, UpdateOptions options, SingleResultCallback<UpdateResult> callback);
-
-    /**
-     * Replace a document in the collection according to the specified arguments.
-     *
-     * <p>Note: Supports retryable writes on MongoDB server versions 3.6 or higher when the retryWrites setting is enabled.</p>
-     * @param filter      the query filter to apply the the replace operation
-     * @param replacement the replacement document
-     * @param options     the options to apply to the replace operation
-     * @param callback    the callback passed the result of the replace one operation
-     * @throws com.mongodb.MongoWriteException        returned via the callback
-     * @throws com.mongodb.MongoWriteConcernException returned via the callback
-     * @throws com.mongodb.MongoException             returned via the callback
-     * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
      * @since 3.7
      */
     void replaceOne(Bson filter, TDocument replacement, ReplaceOptions options, SingleResultCallback<UpdateResult> callback);
@@ -1084,27 +997,6 @@ public interface MongoCollection<TDocument> {
      * @mongodb.server.release 3.6
      */
     void replaceOne(ClientSession clientSession, Bson filter, TDocument replacement, SingleResultCallback<UpdateResult> callback);
-
-    /**
-     * Replace a document in the collection according to the specified arguments.
-     *
-     * <p>Note: Supports retryable writes on MongoDB server versions 3.6 or higher when the retryWrites setting is enabled.</p>
-     * @param clientSession  the client session with which to associate this operation
-     * @param filter      the query filter to apply the the replace operation
-     * @param replacement the replacement document
-     * @param options     the options to apply to the replace operation
-     * @param callback    the callback passed the result of the replace one operation
-     * @throws com.mongodb.MongoWriteException        returned via the callback
-     * @throws com.mongodb.MongoWriteConcernException returned via the callback
-     * @throws com.mongodb.MongoException             returned via the callback
-     * @mongodb.driver.manual tutorial/modify-documents/#replace-the-document Replace
-     * @since 3.6
-     * @mongodb.server.release 3.6
-     * @deprecated use {@link #replaceOne(ClientSession, Bson, Object, ReplaceOptions, SingleResultCallback)}
-     */
-    @Deprecated
-    void replaceOne(ClientSession clientSession, Bson filter, TDocument replacement, UpdateOptions options,
-                    SingleResultCallback<UpdateResult> callback);
 
     /**
      * Replace a document in the collection according to the specified arguments.

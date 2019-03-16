@@ -86,7 +86,6 @@ class AggregateIterableSpecification extends Specification {
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment')
-                .useCursor(true)
                 .into([]) { result, t -> }
 
         operation = executor.getReadOperation() as AggregateOperation<Document>
@@ -96,7 +95,6 @@ class AggregateIterableSpecification extends Specification {
                 new DocumentCodec())
                 .maxAwaitTime(99, MILLISECONDS)
                 .maxTime(999, MILLISECONDS)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new BsonDocument('a', new BsonInt32(1)))
                 .comment('this is a comment')
@@ -122,7 +120,6 @@ class AggregateIterableSpecification extends Specification {
                 .maxAwaitTime(99, MILLISECONDS)
                 .maxTime(999, MILLISECONDS)
                 .allowDiskUse(true)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment')
@@ -156,7 +153,6 @@ class AggregateIterableSpecification extends Specification {
                 .maxAwaitTime(99, MILLISECONDS)
                 .maxTime(999, MILLISECONDS)
                 .allowDiskUse(true)
-                .useCursor(true)
                 .collation(collation)
                 .hint(new Document('a', 1))
                 .comment('this is a comment')
