@@ -207,8 +207,7 @@ public class DBObjectCodec implements CollectibleCodec<DBObject> {
     }
 
     @SuppressWarnings("unchecked")
-    private void writeValue(final BsonWriter bsonWriter, final EncoderContext encoderContext, final Object initialValue) {
-        Object value = org.bson.BSON.applyEncodingHooks(initialValue);
+    private void writeValue(final BsonWriter bsonWriter, final EncoderContext encoderContext, @Nullable final Object value) {
         if (value == null) {
             bsonWriter.writeNull();
         } else if (value instanceof DBRef) {
@@ -293,7 +292,7 @@ public class DBObjectCodec implements CollectibleCodec<DBObject> {
         bsonWriter.writeEndArray();
     }
 
-    private Object readValue(final BsonReader reader, final DecoderContext decoderContext, @Nullable final String fieldName,
+    @Nullable private Object readValue(final BsonReader reader, final DecoderContext decoderContext, @Nullable final String fieldName,
                              final List<String> path) {
         Object initialRetVal;
         BsonType bsonType = reader.getCurrentBsonType();
@@ -333,7 +332,7 @@ public class DBObjectCodec implements CollectibleCodec<DBObject> {
             path.remove(fieldName);
         }
 
-        return org.bson.BSON.applyDecodingHooks(initialRetVal);
+        return initialRetVal;
     }
 
     private Object readBinary(final BsonReader reader, final DecoderContext decoderContext) {
