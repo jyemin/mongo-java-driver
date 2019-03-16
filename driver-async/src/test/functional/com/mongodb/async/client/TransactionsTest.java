@@ -19,6 +19,7 @@ package com.mongodb.async.client;
 import com.mongodb.Block;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
@@ -119,6 +120,8 @@ public class TransactionsTest {
         assumeFalse(skipTest);
         assumeTrue("Skipping test: " + definition.getString("skipReason", new BsonString("")).getValue(),
                 !definition.containsKey("skipReason"));
+        assumeFalse("Skipping test of count", filename.equals("count.json"));
+
         collectionHelper = new CollectionHelper<Document>(new DocumentCodec(), new MongoNamespace(databaseName, collectionName));
 
         collectionHelper.killAllSessions();
@@ -284,8 +287,10 @@ public class TransactionsTest {
     private void runDistinctOnHost(final String host) {
         MongoClient client = MongoClients.create(MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
-                .clusterSettings(ClusterSettings.builder()
-                        .hosts(singletonList(new ServerAddress(host))).build()).build());
+                .applyToClusterSettings(builder -> {
+                    builder.hosts(singletonList(new ServerAddress(host)));
+                })
+                .build());
         DistinctIterable<BsonValue> iterable = client.getDatabase(databaseName).getCollection(collectionName)
                 .distinct("_id", BsonValue.class);
         FutureResultCallback<List<BsonValue>> futureResultCallback = new FutureResultCallback<List<BsonValue>>();
@@ -562,8 +567,13 @@ public class TransactionsTest {
             if (clientSession.getPinnedServerAddress() != null) {
                 mongoClient = MongoClients.create(MongoClientSettings.builder()
                         .applyConnectionString(connectionString)
-                        .clusterSettings(ClusterSettings.builder()
-                        .hosts(singletonList(clientSession.getPinnedServerAddress())).build()).build());
+                        .applyToClusterSettings(new Block<ClusterSettings.Builder>() {
+                            @Override
+                            public void apply(final ClusterSettings.Builder builder) {
+                                builder.hosts(singletonList(clientSession.getPinnedServerAddress()));
+                            }
+                        })
+                        .build());
 
                 adminDB = mongoClient.getDatabase("admin");
             } else {

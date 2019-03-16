@@ -63,7 +63,6 @@ class FindIterableSpecification extends Specification {
         def findIterable = new FindIterableImpl(null, namespace, Document, Document, codecRegistry, readPreference, readConcern, executor,
                 new Document('filter', 1), true)
                 .sort(new Document('sort', 1))
-                .modifiers(new Document('modifier', 1))
                 .projection(new Document('projection', 1))
                 .maxTime(10, SECONDS)
                 .maxAwaitTime(20, SECONDS)
@@ -79,10 +78,8 @@ class FindIterableSpecification extends Specification {
                 .hint(new Document('hint', 1))
                 .min(new Document('min', 1))
                 .max(new Document('max', 1))
-                .maxScan(42L)
                 .returnKey(false)
                 .showRecordId(false)
-                .snapshot(false)
 
         when: 'default input should be as expected'
         findIterable.into([]) { result, t -> }
@@ -94,7 +91,6 @@ class FindIterableSpecification extends Specification {
         expect operation, isTheSameAs(new FindOperation<Document>(namespace, new DocumentCodec())
                 .filter(new BsonDocument('filter', new BsonInt32(1)))
                 .sort(new BsonDocument('sort', new BsonInt32(1)))
-                .modifiers(new BsonDocument('modifier', new BsonInt32(1)))
                 .projection(new BsonDocument('projection', new BsonInt32(1)))
                 .maxTime(10000, MILLISECONDS)
                 .maxAwaitTime(20000, MILLISECONDS)
@@ -107,7 +103,6 @@ class FindIterableSpecification extends Specification {
                 .hint(new BsonDocument('hint', new BsonInt32(1)))
                 .min(new BsonDocument('min', new BsonInt32(1)))
                 .max(new BsonDocument('max', new BsonInt32(1)))
-                .maxScan(42L)
                 .returnKey(false)
                 .showRecordId(false)
                 .snapshot(false)
@@ -118,7 +113,6 @@ class FindIterableSpecification extends Specification {
         when: 'overriding initial options'
         findIterable.filter(new Document('filter', 2))
                 .sort(new Document('sort', 2))
-                .modifiers(new Document('modifier', 2))
                 .projection(new Document('projection', 2))
                 .maxTime(9, SECONDS)
                 .maxAwaitTime(18, SECONDS)
@@ -134,10 +128,8 @@ class FindIterableSpecification extends Specification {
                 .hint(new Document('hint', 2))
                 .min(new Document('min', 2))
                 .max(new Document('max', 2))
-                .maxScan(88L)
                 .returnKey(true)
                 .showRecordId(true)
-                .snapshot(true)
                 .into([]) { result, t -> }
 
         operation = executor.getReadOperation() as FindOperation<Document>
@@ -146,7 +138,6 @@ class FindIterableSpecification extends Specification {
         expect operation, isTheSameAs(new FindOperation<Document>(namespace, new DocumentCodec())
                 .filter(new BsonDocument('filter', new BsonInt32(2)))
                 .sort(new BsonDocument('sort', new BsonInt32(2)))
-                .modifiers(new BsonDocument('modifier', new BsonInt32(2)))
                 .projection(new BsonDocument('projection', new BsonInt32(2)))
                 .maxTime(9000, MILLISECONDS)
                 .maxAwaitTime(18000, MILLISECONDS)
@@ -163,10 +154,8 @@ class FindIterableSpecification extends Specification {
                 .hint(new BsonDocument('hint', new BsonInt32(2)))
                 .min(new BsonDocument('min', new BsonInt32(2)))
                 .max(new BsonDocument('max', new BsonInt32(2)))
-                .maxScan(88L)
                 .returnKey(true)
                 .showRecordId(true)
-                .snapshot(true)
                 .retryReads(true)
         )
 
@@ -175,7 +164,6 @@ class FindIterableSpecification extends Specification {
                 new Document('filter', 1), true)
                 .filter(null as Bson)
                 .collation(null)
-                .modifiers(null)
                 .projection(null)
                 .sort(null as Bson)
                 .comment(null)
@@ -205,7 +193,6 @@ class FindIterableSpecification extends Specification {
         when:
         findIterable.filter(new Document('filter', 1))
                 .sort(new BsonDocument('sort', new BsonInt32(1)))
-                .modifiers(new Document('modifier', 1))
                 .batchSize(100)
                 .into([]) { result, t -> }
 
@@ -215,7 +202,6 @@ class FindIterableSpecification extends Specification {
         expect operation, isTheSameAs(new FindOperation<Document>(namespace, new DocumentCodec())
                 .filter(new BsonDocument('filter', new BsonInt32(1)))
                 .sort(new BsonDocument('sort', new BsonInt32(1)))
-                .modifiers(new BsonDocument('modifier', new BsonInt32(1)))
                 .cursorType(CursorType.NonTailable)
                 .slaveOk(true)
                 .batchSize(100)
