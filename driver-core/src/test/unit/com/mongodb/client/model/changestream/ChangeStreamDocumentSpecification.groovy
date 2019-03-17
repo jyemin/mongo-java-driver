@@ -49,21 +49,6 @@ class ChangeStreamDocumentSpecification extends Specification {
         changeStreamDocument.getUpdateDescription() == updateDesc
         changeStreamDocument.getDatabaseName() == namespace.getDatabaseName()
         changeStreamDocument.getNamespaceDocument() == namespaceDocument
-
-        when:
-        def changeStreamDocumentFromNamespace = new ChangeStreamDocument<BsonDocument>(resumeToken, namespace, fullDocument,
-                documentKey, clusterTime, operationType, updateDesc)
-
-        then:
-        changeStreamDocumentFromNamespace.getResumeToken() == resumeToken
-        changeStreamDocumentFromNamespace.getFullDocument() == fullDocument
-        changeStreamDocumentFromNamespace.getDocumentKey() == documentKey
-        changeStreamDocumentFromNamespace.getClusterTime() == clusterTime
-        changeStreamDocumentFromNamespace.getNamespace() == namespace
-        changeStreamDocumentFromNamespace.getOperationType() == operationType
-        changeStreamDocumentFromNamespace.getUpdateDescription() == updateDesc
-        changeStreamDocumentFromNamespace.getDatabaseName() == namespace.getDatabaseName()
-        changeStreamDocumentFromNamespace.getNamespaceDocument() == namespaceDocument
     }
 
     def 'should handle null namespace correctly'() {
