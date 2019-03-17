@@ -29,7 +29,6 @@ import com.mongodb.client.model.AggregationLevel;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CountOptions;
-import com.mongodb.internal.client.model.CountStrategy;
 import com.mongodb.client.model.CreateIndexOptions;
 import com.mongodb.client.model.DeleteManyModel;
 import com.mongodb.client.model.DeleteOneModel;
@@ -52,6 +51,7 @@ import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
+import com.mongodb.internal.client.model.CountStrategy;
 import com.mongodb.operation.AggregateOperation;
 import com.mongodb.operation.AggregateToCollectionOperation;
 import com.mongodb.operation.CountOperation;
@@ -123,8 +123,6 @@ final class Operations<TDocument> {
                 .collation(options.getCollation());
         if (options.getHint() != null) {
             operation.hint(toBsonDocument(options.getHint()));
-        } else if (options.getHintString() != null) {
-            operation.hint(new BsonString(options.getHintString()));
         }
         return operation;
     }
@@ -155,7 +153,6 @@ final class Operations<TDocument> {
                 .limit(options.getLimit())
                 .maxTime(options.getMaxTime(MILLISECONDS), MILLISECONDS)
                 .maxAwaitTime(options.getMaxAwaitTime(MILLISECONDS), MILLISECONDS)
-                .modifiers(toBsonDocumentOrNull(options.getModifiers()))
                 .projection(toBsonDocumentOrNull(options.getProjection()))
                 .sort(toBsonDocumentOrNull(options.getSort()))
                 .cursorType(options.getCursorType())
@@ -168,10 +165,8 @@ final class Operations<TDocument> {
                 .hint(toBsonDocumentOrNull(options.getHint()))
                 .min(toBsonDocumentOrNull(options.getMin()))
                 .max(toBsonDocumentOrNull(options.getMax()))
-                .maxScan(options.getMaxScan())
                 .returnKey(options.isReturnKey())
-                .showRecordId(options.isShowRecordId())
-                .snapshot(options.isSnapshot());
+                .showRecordId(options.isShowRecordId());
     }
 
     <TResult> DistinctOperation<TResult> distinct(final String fieldName, final Bson filter,
