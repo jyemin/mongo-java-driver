@@ -352,7 +352,6 @@ public class DB {
         boolean autoIndex = true;
         long sizeInBytes = 0;
         long maxDocuments = 0;
-        Boolean usePowerOfTwoSizes = null;
         BsonDocument storageEngineOptions = null;
         BsonDocument indexOptionDefaults = null;
         BsonDocument validator = null;
@@ -370,9 +369,6 @@ public class DB {
         }
         if (options.get("max") != null) {
             maxDocuments = ((Number) options.get("max")).longValue();
-        }
-        if (options.get("usePowerOfTwoSizes") != null) {
-            usePowerOfTwoSizes = (Boolean) options.get("usePowerOfTwoSizes");
         }
         if (options.get("storageEngine") != null) {
             storageEngineOptions = wrap((DBObject) options.get("storageEngine"));
@@ -396,7 +392,6 @@ public class DB {
                    .sizeInBytes(sizeInBytes)
                    .autoIndex(autoIndex)
                    .maxDocuments(maxDocuments)
-                   .usePowerOf2Sizes(usePowerOfTwoSizes)
                    .storageEngineOptions(storageEngineOptions)
                    .indexOptionDefaults(indexOptionDefaults)
                    .validator(validator)

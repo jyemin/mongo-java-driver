@@ -683,7 +683,7 @@ class DBCollectionSpecification extends Specification {
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new AggregateOperation(collection.getNamespace(), bsonPipeline,
-                collection.getDefaultDBObjectCodec()).useCursor(false).collation(collation)
+                collection.getDefaultDBObjectCodec()).collation(collation)
                 .asExplainableOperation(ExplainVerbosity.QUERY_PLANNER))
     }
 

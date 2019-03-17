@@ -156,7 +156,7 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
                     resultClass, findOptions);
         } else {
             return operations.aggregate(pipeline, resultClass, maxTimeMS, maxAwaitTimeMS, getBatchSize(), collation,
-                    hint, comment, allowDiskUse, true, aggregationLevel);
+                    hint, comment, allowDiskUse, aggregationLevel);
         }
     }
 
