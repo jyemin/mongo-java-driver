@@ -265,9 +265,7 @@ class MongoDatabaseSpecification extends Specification {
 
         when:
         def createCollectionOptions = new CreateCollectionOptions()
-                .autoIndex(false)
                 .capped(true)
-                .usePowerOf2Sizes(true)
                 .maxDocuments(100)
                 .sizeInBytes(1000)
                 .storageEngineOptions(BsonDocument.parse('{ wiredTiger : {}}'))
@@ -283,9 +281,7 @@ class MongoDatabaseSpecification extends Specification {
         then:
         expect operation, isTheSameAs(new CreateCollectionOperation(name, collectionName, writeConcern)
                 .collation(collation)
-                .autoIndex(false)
                 .capped(true)
-                .usePowerOf2Sizes(true)
                 .maxDocuments(100)
                 .sizeInBytes(1000)
                 .storageEngineOptions(BsonDocument.parse('{ wiredTiger : {}}'))
