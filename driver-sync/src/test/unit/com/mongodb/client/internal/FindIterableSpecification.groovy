@@ -101,9 +101,7 @@ class FindIterableSpecification extends Specification {
                 .min(new BsonDocument('min', new BsonInt32(1)))
                 .max(new BsonDocument('max', new BsonInt32(1)))
                 .returnKey(false)
-                .showRecordId(false)
-                .snapshot(false)
-        )
+                .showRecordId(false))
         readPreference == secondary()
 
         when: 'overriding initial options'

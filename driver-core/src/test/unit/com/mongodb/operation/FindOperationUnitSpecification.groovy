@@ -75,10 +75,8 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
             "$hint": { hint: 1 },
             "$min": { abc: 99 },
             "$max": { abc: 1000 },
-            "$maxScan" : { "$numberLong": "42" },
             "$returnKey": true,
-            "$showDiskLoc": true,
-            "$snapshot": true
+            "$showDiskLoc": true
         }''')
         def operation = new FindOperation<BsonDocument>(namespace, decoder)
 
@@ -88,16 +86,6 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
 
         then:
         1 * connection.query(namespace, new BsonDocument(), operation.getProjection(), operation.getSkip(), operation.getLimit(),
-                operation.getBatchSize(), readPreference.isSlaveOk(), false, false, false, false, false, decoder) >> queryResult
-        1 * connection.release()
-
-        // modifiers
-        when:
-        operation.modifiers(modifiers)
-        operation.execute(readBinding)
-
-        then:
-        1 * connection.query(namespace, modifiers, operation.getProjection(), operation.getSkip(), operation.getLimit(),
                 operation.getBatchSize(), readPreference.isSlaveOk(), false, false, false, false, false, decoder) >> queryResult
         1 * connection.release()
 
@@ -117,10 +105,8 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
                 .hint(BsonDocument.parse('{ hint : 1}'))
                 .min(BsonDocument.parse('{ abc: 99 }'))
                 .max(BsonDocument.parse('{ abc: 1000 }'))
-                .maxScan(42L)
                 .returnKey(true)
                 .showRecordId(true)
-                .snapshot(true)
 
         when:
         operation.execute(readBinding)
@@ -136,22 +122,6 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
         when:
         def operation = new FindOperation<BsonDocument>(namespace, new BsonDocumentCodec())
         def expectedCommand = new BsonDocument('find', new BsonString(namespace.getCollectionName()))
-
-        then:
-        testOperation(operation, [3, 2, 0], expectedCommand, async, commandResult)
-
-        // Modifiers
-        when:
-        operation.modifiers(modifiers)
-        expectedCommand.append('filter', modifiers.getDocument('$query'))
-                .append('comment', modifiers.getString('$comment'))
-                .append('hint', modifiers.getDocument('$hint'))
-                .append('min', modifiers.getDocument('$min'))
-                .append('max', modifiers.getDocument('$max'))
-                .append('maxScan', modifiers.getInt64('$maxScan'))
-                .append('returnKey', modifiers.getBoolean('$returnKey'))
-                .append('showRecordId', modifiers.getBoolean('$showDiskLoc'))
-                .append('snapshot', modifiers.getBoolean('$snapshot'))
 
         then:
         testOperation(operation, [3, 2, 0], expectedCommand, async, commandResult)
@@ -173,10 +143,8 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
                 .hint(BsonDocument.parse('{ hint : 1}'))
                 .min(BsonDocument.parse('{ abc: 99 }'))
                 .max(BsonDocument.parse('{ abc: 1000 }'))
-                .maxScan(42L)
                 .returnKey(true)
                 .showRecordId(true)
-                .snapshot(true)
 
         expectedCommand.append('filter', operation.getFilter())
                 .append('projection', operation.getProjection())
@@ -186,16 +154,13 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
                 .append('allowPartialResults', BsonBoolean.TRUE)
                 .append('noCursorTimeout', BsonBoolean.TRUE)
                 .append('oplogReplay', BsonBoolean.TRUE)
-                .append('snapshot', BsonBoolean.TRUE)
                 .append('maxTimeMS', new BsonInt64(operation.getMaxTime(MILLISECONDS)))
                 .append('comment', new BsonString(operation.getComment()))
                 .append('hint', operation.getHint())
                 .append('min', operation.getMin())
                 .append('max', operation.getMax())
-                .append('maxScan', new BsonInt64(operation.getMaxScan()))
                 .append('returnKey', BsonBoolean.TRUE)
                 .append('showRecordId', BsonBoolean.TRUE)
-                .append('snapshot', BsonBoolean.TRUE)
 
         if (commandLimit != null) {
             expectedCommand.append('limit', new BsonInt32(commandLimit))
@@ -302,7 +267,7 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
 
     def 'should use the readPreference to set slaveOK for commands'() {
         when:
-        def operation = new FindOperation<BsonDocument>(namespace, new DocumentCodec())
+        def operation = new FindOperation<Document>(namespace, new DocumentCodec())
 
         then:
         testOperationSlaveOk(operation, [3, 2, 0], readPreference, async, commandResult)
@@ -334,15 +299,4 @@ class FindOperationUnitSpecification extends OperationUnitSpecification {
     def commandResult = new BsonDocument('cursor', new BsonDocument('id', new BsonInt64(0))
             .append('ns', new BsonString('db.coll'))
             .append('firstBatch', new BsonArrayWrapper([])))
-    def modifiers = BsonDocument.parse('''{
-            "$query": { zzz : { $gte: 100 }},
-            "$comment": "modifier comment",
-            "$hint": { modHint: 1 },
-            "$min": { zzz: 99 },
-            "$max": { zzz: 1000 },
-            "$maxScan" : { "$numberLong": "99" },
-            "$returnKey": false,
-            "$showDiskLoc": false,
-            "$snapshot": false
-        }''')
 }
