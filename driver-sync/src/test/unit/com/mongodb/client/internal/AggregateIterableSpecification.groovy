@@ -72,8 +72,7 @@ class AggregateIterableSpecification extends Specification {
 
         then:
         expect operation, isTheSameAs(new AggregateOperation<Document>(namespace,
-                [new BsonDocument('$match', new BsonInt32(1))], new DocumentCodec())
-                .useCursor(true))
+                [new BsonDocument('$match', new BsonInt32(1))], new DocumentCodec()))
         readPreference == secondary()
 
         when: 'overriding initial options'
@@ -94,8 +93,7 @@ class AggregateIterableSpecification extends Specification {
                 .hint(new BsonDocument('a', new BsonInt32(1)))
                 .comment('this is a comment')
                 .maxAwaitTime(99, MILLISECONDS)
-                .maxTime(999, MILLISECONDS)
-                .useCursor(true))
+                .maxTime(999, MILLISECONDS))
     }
 
     def 'should build the expected AggregateToCollectionOperation'() {
