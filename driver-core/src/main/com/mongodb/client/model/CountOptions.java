@@ -31,7 +31,6 @@ import static com.mongodb.assertions.Assertions.notNull;
  */
 public class CountOptions {
     private Bson hint;
-    private String hintString;
     private int limit;
     private int skip;
     private long maxTimeMS;
@@ -48,18 +47,6 @@ public class CountOptions {
     }
 
     /**
-     * Gets the hint string to apply.
-     *
-     * @return the hint string, which should be the name of an existing index
-     * @deprecated Prefer {@link #getHint()}
-     */
-    @Deprecated
-    @Nullable
-    public String getHintString() {
-        return hintString;
-    }
-
-    /**
      * Sets the hint to apply.
      *
      * @param hint a document describing the index which should be used for this operation.
@@ -67,19 +54,6 @@ public class CountOptions {
      */
     public CountOptions hint(@Nullable final Bson hint) {
         this.hint = hint;
-        return this;
-    }
-
-    /**
-     * Sets the hint to apply.
-     *
-     * @param hint the name of the index which should be used for the operation
-     * @return this
-     * @deprecated Prefer {@link #hint(Bson)}
-     */
-    @Deprecated
-    public CountOptions hintString(@Nullable final String hint) {
-        this.hintString = hint;
         return this;
     }
 
@@ -181,7 +155,6 @@ public class CountOptions {
     public String toString() {
         return "CountOptions{"
                 + "hint=" + hint
-                + ", hintString='" + hintString + '\''
                 + ", limit=" + limit
                 + ", skip=" + skip
                 + ", maxTimeMS=" + maxTimeMS
