@@ -53,51 +53,6 @@ public final class ChangeStreamDocument<TDocument> {
      * Creates a new instance
      *
      * @param resumeToken the resume token
-     * @param namespace the namespace
-     * @param documentKey a document containing the _id of the changed document
-     * @param fullDocument the fullDocument
-     * @param operationType the operation type
-     * @param updateDescription the update description
-     * @deprecated Prefer {@link #ChangeStreamDocument(BsonDocument, MongoNamespace, Object, BsonDocument, BsonTimestamp, OperationType,
-     *                                                 UpdateDescription)}
-     */
-    @Deprecated
-    public ChangeStreamDocument(final BsonDocument resumeToken,
-                                final MongoNamespace namespace,
-                                final TDocument fullDocument,
-                                final BsonDocument documentKey,
-                                final OperationType operationType,
-                                final UpdateDescription updateDescription) {
-        this(resumeToken, namespace, fullDocument, documentKey, null, operationType, updateDescription);
-    }
-
-    /**
-     * Creates a new instance
-     *
-     * @param resumeToken the resume token
-     * @param namespace the namespace
-     * @param documentKey a document containing the _id of the changed document
-     * @param clusterTime the cluster time at which the change occurred
-     * @param fullDocument the fullDocument
-     * @param operationType the operation type
-     * @param updateDescription the update description
-     */
-    @Deprecated
-    public ChangeStreamDocument(final BsonDocument resumeToken,
-                                final MongoNamespace namespace,
-                                final TDocument fullDocument,
-                                final BsonDocument documentKey,
-                                @Nullable final BsonTimestamp clusterTime,
-                                final OperationType operationType,
-                                final UpdateDescription updateDescription) {
-        this(resumeToken, namespaceToDocument(namespace), fullDocument, documentKey,
-                clusterTime, operationType, updateDescription);
-    }
-
-    /**
-     * Creates a new instance
-     *
-     * @param resumeToken the resume token
      * @param namespaceDocument the BsonDocument representing the namespace
      * @param fullDocument the full document
      * @param documentKey a document containing the _id of the changed document
