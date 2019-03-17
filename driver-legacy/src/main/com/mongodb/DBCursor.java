@@ -341,7 +341,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
      */
     public DBObject explain() {
         return toDBObject(executor.execute(getQueryOperation(collection.getObjectCodec())
-                                           .asExplainableOperation(ExplainVerbosity.QUERY_PLANNER),
+                                           .asExplainableOperation(),
                                            getReadPreference(), getReadConcern()));
     }
 
