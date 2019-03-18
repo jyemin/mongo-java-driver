@@ -127,6 +127,9 @@
     },
     {
       "description": "withTransaction still succeeds if callback commits and runs extra op",
+      "clientOptions": {
+        "retryWrites": false
+      },
       "operations": [
         {
           "name": "withTransaction",
