@@ -356,7 +356,7 @@ class ConnectionStringSpecification extends Specification {
         connectionString.getStreamType() == null
         connectionString.getApplicationName() == null
         connectionString.getCompressorList() == []
-        !connectionString.getRetryWrites()
+        connectionString.getRetryWrites()
         connectionString.getRetryWritesValue() == null
     }
 
