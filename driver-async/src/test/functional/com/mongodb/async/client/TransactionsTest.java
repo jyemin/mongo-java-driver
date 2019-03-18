@@ -149,9 +149,10 @@ public class TransactionsTest {
                 }
             });
         }
-
-        mongoClient = MongoClients.create(builder
-                .addCommandListener(commandListener)
+        if (clientOptions.containsKey("retryWrites")) {
+            builder.retryWrites(clientOptions.getBoolean("retryWrites").getValue());
+        }
+        builder.addCommandListener(commandListener)
                 .applyToSocketSettings(new Block<SocketSettings.Builder>() {
                     @Override
                     public void apply(final SocketSettings.Builder builder) {
@@ -161,8 +162,9 @@ public class TransactionsTest {
                 .retryWrites(clientOptions.getBoolean("retryWrites", BsonBoolean.FALSE).getValue())
                 .writeConcern(getWriteConcern(clientOptions))
                 .readConcern(getReadConcern(clientOptions))
-                .readPreference(getReadPreference(clientOptions))
-                .build());
+                .readPreference(getReadPreference(clientOptions));
+
+        mongoClient = MongoClients.create(builder.build());
 
         MongoDatabase database = mongoClient.getDatabase(databaseName);
         helper = new JsonPoweredCrudTestHelper(description, database, database.getCollection(collectionName, BsonDocument.class));

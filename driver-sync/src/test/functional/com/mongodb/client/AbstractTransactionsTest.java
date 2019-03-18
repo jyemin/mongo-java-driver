@@ -134,20 +134,20 @@ public abstract class AbstractTransactionsTest {
                 }
             });
         }
-
-        mongoClient = MongoClients.create(MongoClientSettings.builder(builder.build())
-                .addCommandListener(commandListener)
+        builder.addCommandListener(commandListener)
                 .applyToSocketSettings(new Block<SocketSettings.Builder>() {
                     @Override
                     public void apply(final SocketSettings.Builder builder) {
                         builder.readTimeout(5, TimeUnit.SECONDS);
                     }
                 })
-                .retryWrites(clientOptions.getBoolean("retryWrites", BsonBoolean.FALSE).getValue())
                 .writeConcern(getWriteConcern(clientOptions))
                 .readConcern(getReadConcern(clientOptions))
-                .readPreference(getReadPreference(clientOptions))
-                .build());
+                .readPreference(getReadPreference(clientOptions));
+        if (clientOptions.containsKey("retryWrites")) {
+            builder.retryWrites(clientOptions.getBoolean("retryWrites").getValue());
+        }
+        mongoClient = MongoClients.create(builder.build());
 
         MongoDatabase database = mongoClient.getDatabase(databaseName);
         helper = new JsonPoweredCrudTestHelper(description, database, database.getCollection(collectionName, BsonDocument.class));
