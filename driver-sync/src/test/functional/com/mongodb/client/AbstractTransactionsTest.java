@@ -143,10 +143,8 @@ public abstract class AbstractTransactionsTest {
                 })
                 .writeConcern(getWriteConcern(clientOptions))
                 .readConcern(getReadConcern(clientOptions))
-                .readPreference(getReadPreference(clientOptions));
-        if (clientOptions.containsKey("retryWrites")) {
-            builder.retryWrites(clientOptions.getBoolean("retryWrites").getValue());
-        }
+                .readPreference(getReadPreference(clientOptions))
+                .retryWrites(clientOptions.getBoolean("retryWrites", BsonBoolean.FALSE).getValue());
         mongoClient = MongoClients.create(builder.build());
 
         MongoDatabase database = mongoClient.getDatabase(databaseName);
