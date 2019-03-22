@@ -26,7 +26,6 @@ import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
-import com.mongodb.connection.ServerVersion
 import org.bson.types.ObjectId
 import spock.lang.Specification
 
@@ -38,7 +37,6 @@ import static org.bson.BsonDocument.parse
 
 class DescriptionHelperSpecification extends Specification {
     private final ServerAddress serverAddress = new ServerAddress('localhost', 27018)
-    private final ServerVersion serverVersion = new ServerVersion([3, 0, 0])
     private final int roundTripTime = 5000
 
     def setup() {
@@ -62,26 +60,8 @@ class DescriptionHelperSpecification extends Specification {
                                           maxWireVersion : 6,
                                           minWireVersion : 0,
                                           ok : 1
-                                          }'''),
-                                    parse('''{
-                                          "version" : "2.6.1",
-                                          "gitVersion" : "nogitversion",
-                                          "OpenSSLVersion" : "",
-                                          "loaderFlags" : "-fPIC -pthread -Wl,-bind_at_load -m64 -mmacosx-version-min=10.9",
-                                          "allocator" : "tcmalloc",
-                                          "versionArray" : [
-                                          3,
-                                          0,
-                                          0,
-                                          1
-                                          ],
-                                          "javascriptEngine" : "V8",
-                                          "bits" : 64,
-                                          "debug" : false,
-                                          "maxBsonObjectSize" : 16777216,
-                                          "ok" : 1
                                           }''')) ==
-        new ConnectionDescription(connectionId, serverVersion, 6, ServerType.STANDALONE, 1000, 16777216, 48000000, [])
+        new ConnectionDescription(connectionId, 6, ServerType.STANDALONE, 1000, 16777216, 48000000, [])
     }
 
     def 'connection description should reflect ismaster result with compressors'() {
@@ -98,38 +78,19 @@ class DescriptionHelperSpecification extends Specification {
                                           minWireVersion : 0,
                                           compression : ["zlib", "snappy"],
                                           ok : 1
-                                          }'''),
-                parse('''{
-                                          "version" : "2.6.1",
-                                          "gitVersion" : "nogitversion",
-                                          "OpenSSLVersion" : "",
-                                          "loaderFlags" : "-fPIC -pthread -Wl,-bind_at_load -m64 -mmacosx-version-min=10.9",
-                                          "allocator" : "tcmalloc",
-                                          "versionArray" : [
-                                          3,
-                                          0,
-                                          0,
-                                          1
-                                          ],
-                                          "javascriptEngine" : "V8",
-                                          "bits" : 64,
-                                          "debug" : false,
-                                          "maxBsonObjectSize" : 16777216,
-                                          "ok" : 1
                                           }''')) ==
-        new ConnectionDescription(connectionId, serverVersion, 6, ServerType.STANDALONE, 1000, 16777216, 48000000,
+        new ConnectionDescription(connectionId, 6, ServerType.STANDALONE, 1000, 16777216, 48000000,
                 ['zlib', 'snappy'])
     }
 
     def 'server description should reflect not ok ismaster result'() {
         expect:
         createServerDescription(serverAddress,
-                                parse('{ok : 0}'), serverVersion, roundTripTime) ==
+                                parse('{ok : 0}'), roundTripTime) ==
                 ServerDescription.builder()
                          .ok(false)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .type(ServerType.UNKNOWN)
                          .build()
     }
@@ -137,7 +98,7 @@ class DescriptionHelperSpecification extends Specification {
     def 'server description should reflect last update time'() {
         expect:
         createServerDescription(serverAddress,
-                parse('{ ok : 1 }'), serverVersion, roundTripTime).getLastUpdateTime(TimeUnit.NANOSECONDS) == Time.CONSTANT_TIME
+                parse('{ ok : 1 }'), roundTripTime).getLastUpdateTime(TimeUnit.NANOSECONDS) == Time.CONSTANT_TIME
     }
 
     def 'server description should reflect roundTripNanos'() {
@@ -152,12 +113,11 @@ class DescriptionHelperSpecification extends Specification {
                                       maxWireVersion : 3,
                                       minWireVersion : 0,
                                       ok : 1
-                                      }'''), serverVersion, roundTripTime).roundTripTimeNanos ==
+                                      }'''), roundTripTime).roundTripTimeNanos ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.STANDALONE)
@@ -177,12 +137,11 @@ class DescriptionHelperSpecification extends Specification {
                         maxWireVersion : 3,
                         minWireVersion : 0,
                         ok : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.STANDALONE)
@@ -212,12 +171,11 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(new ServerAddress('localhost', 27018))
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.REPLICA_SET_SECONDARY)
@@ -252,12 +210,11 @@ class DescriptionHelperSpecification extends Specification {
                         "minWireVersion" : 0,
                         "lastWrite" : { "lastWriteDate" : ISODate("2016-03-04T23:14:07.338Z") }
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
                 ServerDescription.builder()
                         .ok(true)
                         .address(new ServerAddress('localhost', 27018))
                         .state(ServerConnectionState.CONNECTED)
-                        .version(serverVersion)
                         .maxWireVersion(5)
                         .lastWriteDate(new Date(1457133247338L))
                         .maxDocumentSize(16777216)
@@ -300,7 +257,7 @@ class DescriptionHelperSpecification extends Specification {
                         "setVersion" : 2,
                         tags : { "dc" : "east", "use" : "production" }
                         "ok" : 1
-                        }"""), serverVersion, roundTripTime)
+                        }"""), roundTripTime)
 
         then:
         serverDescription ==
@@ -308,7 +265,6 @@ class DescriptionHelperSpecification extends Specification {
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .electionId(electionId)
@@ -348,12 +304,11 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.REPLICA_SET_ARBITER)
@@ -393,7 +348,7 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime)
+                        }'''), roundTripTime)
 
         then:
         serverDescription ==
@@ -401,7 +356,6 @@ class DescriptionHelperSpecification extends Specification {
                          .ok(true)
                          .address(serverAddressOfHidden)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.REPLICA_SET_OTHER)
@@ -442,12 +396,11 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddressOfHidden)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.REPLICA_SET_OTHER)
@@ -476,12 +429,11 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .canonicalAddress('localhost:27020' )
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
@@ -503,12 +455,11 @@ class DescriptionHelperSpecification extends Specification {
                         "maxWireVersion" : 3,
                         "minWireVersion" : 0,
                         "ok" : 1
-                        }'''), serverVersion, roundTripTime) ==
+                        }'''), roundTripTime) ==
         ServerDescription.builder()
                          .ok(true)
                          .address(serverAddress)
                          .state(ServerConnectionState.CONNECTED)
-                         .version(serverVersion)
                          .maxWireVersion(3)
                          .maxDocumentSize(16777216)
                          .type(ServerType.SHARD_ROUTER)

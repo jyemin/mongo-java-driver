@@ -296,7 +296,7 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
 
         then:
         def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by server version:')
+        exception.getMessage().startsWith('Collation not supported by wire version:')
 
         where:
         async << [false, false]
