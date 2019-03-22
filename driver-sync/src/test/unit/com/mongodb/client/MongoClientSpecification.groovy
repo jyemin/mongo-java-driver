@@ -20,13 +20,12 @@ import com.mongodb.MongoClientSettings
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
-import com.mongodb.client.internal.ListDatabasesIterableImpl
 import com.mongodb.client.internal.MongoClientImpl
 import com.mongodb.client.internal.MongoDatabaseImpl
 import com.mongodb.client.internal.MongoIterables
 import com.mongodb.client.internal.TestOperationExecutor
-import com.mongodb.client.model.changestream.ChangeStreamLevel
 import com.mongodb.connection.Cluster
+import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
 import org.bson.BsonDocument
 import org.bson.Document
 import spock.lang.Specification
