@@ -16,13 +16,12 @@
 
 package com.mongodb.client.internal
 
-
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoInternalException
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
-import com.mongodb.client.model.AggregationLevel
+import com.mongodb.internal.client.model.AggregationLevel
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
 import com.mongodb.operation.BatchCursor
 import org.bson.BsonBoolean
