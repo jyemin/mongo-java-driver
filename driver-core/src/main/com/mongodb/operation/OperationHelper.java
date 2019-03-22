@@ -81,8 +81,8 @@ final class OperationHelper {
 
     static void validateReadConcern(final Connection connection, final ReadConcern readConcern) {
         if (!ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo(connection.getDescription()) && !readConcern.isServerDefault()) {
-            throw new IllegalArgumentException(format("ReadConcern not supported by server version: %s",
-                    connection.getDescription().getServerVersion()));
+            throw new IllegalArgumentException(format("ReadConcern not supported by wire version: %s",
+                    connection.getDescription().getMaxWireVersion()));
         }
     }
 
@@ -90,8 +90,8 @@ final class OperationHelper {
                                     final AsyncCallableWithConnection callable) {
         Throwable throwable = null;
         if (!ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo(connection.getDescription()) && !readConcern.isServerDefault()) {
-            throwable = new IllegalArgumentException(format("ReadConcern not supported by server version: %s",
-                    connection.getDescription().getServerVersion()));
+            throwable = new IllegalArgumentException(format("ReadConcern not supported by wire version: %s",
+                    connection.getDescription().getMaxWireVersion()));
         }
         callable.call(connection, throwable);
     }
@@ -112,16 +112,16 @@ final class OperationHelper {
 
     static void validateCollation(final ConnectionDescription connectionDescription, final Collation collation) {
         if (collation != null && !ServerVersionHelper.serverIsAtLeastVersionThreeDotFour(connectionDescription)) {
-            throw new IllegalArgumentException(format("Collation not supported by server version: %s",
-                    connectionDescription.getServerVersion()));
+            throw new IllegalArgumentException(format("Collation not supported by wire version: %s",
+                    connectionDescription.getMaxWireVersion()));
         }
     }
 
     static void validateCollationAndWriteConcern(final ConnectionDescription connectionDescription, final Collation collation,
                                                  final WriteConcern writeConcern) {
         if (collation != null && !ServerVersionHelper.serverIsAtLeastVersionThreeDotFour(connectionDescription)) {
-            throw new IllegalArgumentException(format("Collation not supported by server version: %s",
-                    connectionDescription.getServerVersion()));
+            throw new IllegalArgumentException(format("Collation not supported by wire version: %s",
+                    connectionDescription.getMaxWireVersion()));
         } else if (collation != null && !writeConcern.isAcknowledged()) {
             throw new MongoClientException("Specifying collation with an unacknowledged WriteConcern is not supported");
         }
@@ -131,8 +131,8 @@ final class OperationHelper {
                                   final AsyncCallableWithConnection callable) {
         Throwable throwable = null;
         if (!ServerVersionHelper.serverIsAtLeastVersionThreeDotFour(connection.getDescription()) && collation != null) {
-            throwable = new IllegalArgumentException(format("Collation not supported by server version: %s",
-                    connection.getDescription().getServerVersion()));
+            throwable = new IllegalArgumentException(format("Collation not supported by wire version: %s",
+                    connection.getDescription().getMaxWireVersion()));
         }
         callable.call(connection, throwable);
     }

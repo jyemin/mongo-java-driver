@@ -29,14 +29,13 @@ import com.mongodb.binding.AsyncReadBinding
 import com.mongodb.binding.ConnectionSource
 import com.mongodb.binding.ReadBinding
 import com.mongodb.bulk.IndexRequest
-import com.mongodb.internal.client.model.CountStrategy
 import com.mongodb.connection.AsyncConnection
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.Connection
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ConnectionId
 import com.mongodb.connection.ServerId
-import com.mongodb.connection.ServerVersion
+import com.mongodb.internal.client.model.CountStrategy
 import com.mongodb.session.SessionContext
 import org.bson.BsonArray
 import org.bson.BsonDocument
@@ -325,7 +324,7 @@ class CountOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('ReadConcern not supported by server version:')
+        exception.getMessage().startsWith('ReadConcern not supported by wire version:')
 
         where:
         [async, strategy, readConcern] << [[true, false], [CountStrategy.AGGREGATE, CountStrategy.COMMAND],
@@ -341,7 +340,7 @@ class CountOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by server version:')
+        exception.getMessage().startsWith('Collation not supported by wire version:')
 
         where:
         [async, strategy] << [[true, false], [CountStrategy.AGGREGATE, CountStrategy.COMMAND]].combinations()
@@ -384,7 +383,7 @@ class CountOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         _ * connection.description >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())),
-                new ServerVersion(3, 6), 6, STANDALONE, 1000, 100000, 100000, [])
+                6, STANDALONE, 1000, 100000, 100000, [])
         1 * connection.command(_, commandDocument, _, _, _, sessionContext) >>
                 new BsonDocument('n', new BsonInt64(42))
         1 * connection.release()
@@ -420,7 +419,7 @@ class CountOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         _ * connection.description >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())),
-                new ServerVersion(3, 6), 6, STANDALONE, 1000, 100000, 100000, [])
+                6, STANDALONE, 1000, 100000, 100000, [])
         1 * connection.commandAsync(_, commandDocument, _, _, _, sessionContext, _) >> {
             it[6].onResult(new BsonDocument('n', new BsonInt64(42)), null)
         }
