@@ -51,7 +51,6 @@ import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConce
  * @mongodb.driver.manual reference/command/dropIndexes/ Drop indexes
  * @since 3.0
  */
-@Deprecated
 public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final MongoNamespace namespace;
     private final String indexName;
@@ -64,9 +63,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
      *
      * @param namespace the database and collection namespace for the operation.
      * @param indexName the name of the index to be dropped.
-     * @deprecated Prefer {@link #DropIndexOperation(MongoNamespace, String, WriteConcern)}
      */
-    @Deprecated
     public DropIndexOperation(final MongoNamespace namespace, final String indexName) {
         this(namespace, indexName, null);
     }
@@ -76,9 +73,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
      *
      * @param namespace the database and collection namespace for the operation.
      * @param keys      the keys of the index to be dropped
-     * @deprecated Prefer {@link #DropIndexOperation(MongoNamespace, BsonDocument, WriteConcern)}
      */
-    @Deprecated
     public DropIndexOperation(final MongoNamespace namespace, final BsonDocument keys) {
         this(namespace, keys, null);
     }

@@ -52,7 +52,6 @@ import static com.mongodb.internal.operation.OperationHelper.withConnection;
  * @param <T> the document type
  * @since 3.0
  */
-@Deprecated
 public class ListDatabasesOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>, ReadOperation<BatchCursor<T>> {
     private final Decoder<T> decoder;
 
