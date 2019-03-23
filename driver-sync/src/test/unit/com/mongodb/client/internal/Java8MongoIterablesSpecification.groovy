@@ -23,7 +23,7 @@ import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
 import com.mongodb.internal.client.model.AggregationLevel
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
-import com.mongodb.operation.BatchCursor
+import com.mongodb.internal.operation.BatchCursor
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
 import org.bson.Document

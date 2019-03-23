@@ -29,6 +29,8 @@ import com.mongodb.client.model.changestream.FullDocument
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
 import com.mongodb.operation.BatchCursor
 import com.mongodb.operation.ChangeStreamOperation
+import com.mongodb.internal.operation.BatchCursor
+import com.mongodb.internal.operation.ChangeStreamOperation
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonTimestamp
