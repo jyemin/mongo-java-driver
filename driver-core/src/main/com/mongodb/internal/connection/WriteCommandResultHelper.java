@@ -23,7 +23,7 @@ import com.mongodb.bulk.BulkWriteError;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.bulk.WriteConcernError;
-import com.mongodb.bulk.WriteRequest;
+import com.mongodb.internal.bulk.WriteRequest;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -34,8 +34,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.mongodb.bulk.WriteRequest.Type.REPLACE;
-import static com.mongodb.bulk.WriteRequest.Type.UPDATE;
+import static com.mongodb.internal.bulk.WriteRequest.Type.REPLACE;
+import static com.mongodb.internal.bulk.WriteRequest.Type.UPDATE;
 import static com.mongodb.internal.operation.WriteConcernHelper.createWriteConcernError;
 
 final class WriteCommandResultHelper {
