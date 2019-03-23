@@ -47,7 +47,6 @@ import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConce
  * @mongodb.driver.manual reference/command/renameCollection renameCollection
  * @since 3.0
  */
-@Deprecated
 public class RenameCollectionOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final MongoNamespace originalNamespace;
     private final MongoNamespace newNamespace;
@@ -57,9 +56,7 @@ public class RenameCollectionOperation implements AsyncWriteOperation<Void>, Wri
     /**
      * @param originalNamespace the name of the collection to rename
      * @param newNamespace      the desired new name for the collection
-     * @deprecated Prefer {@link #RenameCollectionOperation(MongoNamespace, MongoNamespace, WriteConcern)}
      */
-    @Deprecated
     public RenameCollectionOperation(final MongoNamespace originalNamespace, final MongoNamespace newNamespace) {
         this(originalNamespace, newNamespace, null);
     }
