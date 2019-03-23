@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.mongodb.binding;
+package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.connection.AsyncConnection;
+import com.mongodb.connection.Connection;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.session.SessionContext;
@@ -26,25 +25,25 @@ import com.mongodb.session.SessionContext;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An asynchronous read binding that is bound to a single connection.
+ * A read binding that is bound to a single connection.
  *
  * @since 3.2
  */
-@Deprecated
-public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted implements AsyncReadBinding {
+public class SingleConnectionReadBinding extends AbstractReferenceCounted implements ReadBinding {
+
     private final ReadPreference readPreference;
     private final ServerDescription serverDescription;
-    private final AsyncConnection connection;
+    private final Connection connection;
 
     /**
      * Construct an instance.
      *
-     * @param readPreference the read preferenced of this binding
+     * @param readPreference the read preference of this binding
      * @param serverDescription the description of the server
      * @param connection the connection to bind to.
      */
-    public AsyncSingleConnectionReadBinding(final ReadPreference readPreference, final ServerDescription serverDescription,
-                                            final AsyncConnection connection) {
+    public SingleConnectionReadBinding(final ReadPreference readPreference, final ServerDescription serverDescription,
+                                       final Connection connection) {
         this.readPreference = notNull("readPreference", readPreference);
         this.serverDescription = notNull("serverDescription", serverDescription);
         this.connection = notNull("connection", connection).retain();
@@ -56,17 +55,17 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
     }
 
     @Override
+    public ConnectionSource getReadConnectionSource() {
+        return new SingleConnectionSource();
+    }
+
+    @Override
     public SessionContext getSessionContext() {
         return NoOpSessionContext.INSTANCE;
     }
 
     @Override
-    public void getReadConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
-          callback.onResult(new AsyncSingleConnectionSource(), null);
-    }
-
-    @Override
-    public AsyncReadBinding retain() {
+    public ReadBinding retain() {
         super.retain();
         return this;
     }
@@ -79,9 +78,10 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
         }
     }
 
-    private class AsyncSingleConnectionSource extends AbstractReferenceCounted implements AsyncConnectionSource {
-        AsyncSingleConnectionSource() {
-            AsyncSingleConnectionReadBinding.this.retain();
+    private class SingleConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
+
+        SingleConnectionSource() {
+            SingleConnectionReadBinding.this.retain();
         }
 
         @Override
@@ -95,12 +95,12 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
         }
 
         @Override
-        public void getConnection(final SingleResultCallback<AsyncConnection> callback) {
-            callback.onResult(connection.retain(), null);
+        public Connection getConnection() {
+            return connection.retain();
         }
 
         @Override
-        public AsyncConnectionSource retain() {
+        public ConnectionSource retain() {
             super.retain();
             return this;
         }
@@ -109,7 +109,7 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
         public void release() {
             super.release();
             if (super.getCount() == 0) {
-                AsyncSingleConnectionReadBinding.this.release();
+                SingleConnectionReadBinding.this.release();
             }
         }
     }

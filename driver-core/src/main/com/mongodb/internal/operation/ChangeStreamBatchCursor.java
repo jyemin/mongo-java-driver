@@ -21,7 +21,7 @@ import com.mongodb.MongoChangeStreamException;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
-import com.mongodb.binding.ReadBinding;
+import com.mongodb.internal.binding.ReadBinding;
 import org.bson.BsonDocument;
 import org.bson.RawBsonDocument;
 

@@ -17,7 +17,7 @@
 package com.mongodb.internal.operation
 
 
-import com.mongodb.binding.ReadBinding
+import com.mongodb.internal.binding.ReadBinding
 import spock.lang.Specification
 
 class ChangeStreamBatchCursorSpecification extends Specification {

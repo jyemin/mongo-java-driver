@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mongodb.binding;
+package com.mongodb.internal.binding;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
