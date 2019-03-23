@@ -57,7 +57,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * @since 3.0
  * @mongodb.driver.manual reference/command/findAndModify/ findAndModify
  */
-@Deprecated
 public class FindAndUpdateOperation<T> extends BaseFindAndModifyOperation<T> {
     private final BsonDocument update;
     private final List<? extends Bson> updatePipeline;
@@ -77,9 +76,7 @@ public class FindAndUpdateOperation<T> extends BaseFindAndModifyOperation<T> {
      * @param namespace the database and collection namespace for the operation.
      * @param decoder   the decoder for the result documents.
      * @param update    the document containing update operators.
-     * @deprecated use {@link #FindAndUpdateOperation(MongoNamespace, WriteConcern, boolean, Decoder, BsonDocument)} instead
      */
-    @Deprecated
     public FindAndUpdateOperation(final MongoNamespace namespace, final Decoder<T> decoder, final BsonDocument update) {
         this(namespace, WriteConcern.ACKNOWLEDGED, false, decoder, update);
     }
@@ -92,9 +89,7 @@ public class FindAndUpdateOperation<T> extends BaseFindAndModifyOperation<T> {
      * @param decoder      the decoder for the result documents.
      * @param update       the document containing update operators.
      * @since 3.2
-     * @deprecated use {@link #FindAndUpdateOperation(MongoNamespace, WriteConcern, boolean, Decoder, BsonDocument)} instead
      */
-    @Deprecated
     public FindAndUpdateOperation(final MongoNamespace namespace, final WriteConcern writeConcern, final Decoder<T> decoder,
                                   final BsonDocument update) {
         this(namespace, writeConcern, false, decoder, update);
