@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mongodb.binding;
+package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -33,7 +33,6 @@ import static com.mongodb.assertions.Assertions.notNull;
  *
  * @since 3.0
  */
-@Deprecated
 public class SingleServerBinding extends AbstractReferenceCounted implements ReadWriteBinding {
     private final Cluster cluster;
     private final ServerAddress serverAddress;

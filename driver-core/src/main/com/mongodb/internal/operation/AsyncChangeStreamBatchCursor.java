@@ -19,7 +19,7 @@ package com.mongodb.internal.operation;
 import com.mongodb.MongoChangeStreamException;
 import com.mongodb.async.AsyncBatchCursor;
 import com.mongodb.async.SingleResultCallback;
-import com.mongodb.binding.AsyncReadBinding;
+import com.mongodb.internal.binding.AsyncReadBinding;
 import org.bson.BsonDocument;
 import org.bson.RawBsonDocument;
 
