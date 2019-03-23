@@ -29,9 +29,9 @@ import com.mongodb.binding.AsyncClusterBinding;
 import com.mongodb.binding.AsyncReadWriteBinding;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
+import com.mongodb.internal.operation.AsyncReadOperation;
+import com.mongodb.internal.operation.AsyncWriteOperation;
 import com.mongodb.lang.Nullable;
-import com.mongodb.operation.AsyncReadOperation;
-import com.mongodb.operation.AsyncWriteOperation;
 
 import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
 import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
