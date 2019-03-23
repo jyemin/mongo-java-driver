@@ -28,10 +28,10 @@ import org.bson.BsonInt32
 import org.bson.BsonString
 import spock.lang.Specification
 
-import static com.mongodb.bulk.WriteRequest.Type.DELETE
-import static com.mongodb.bulk.WriteRequest.Type.INSERT
-import static com.mongodb.bulk.WriteRequest.Type.REPLACE
-import static com.mongodb.bulk.WriteRequest.Type.UPDATE
+import static com.mongodb.internal.bulk.WriteRequest.Type.DELETE
+import static com.mongodb.internal.bulk.WriteRequest.Type.INSERT
+import static com.mongodb.internal.bulk.WriteRequest.Type.REPLACE
+import static com.mongodb.internal.bulk.WriteRequest.Type.UPDATE
 import static com.mongodb.internal.connection.WriteCommandResultHelper.getBulkWriteException
 import static com.mongodb.internal.connection.WriteCommandResultHelper.getBulkWriteResult
 import static com.mongodb.internal.connection.WriteCommandResultHelper.hasError
