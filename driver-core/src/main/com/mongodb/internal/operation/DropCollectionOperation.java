@@ -48,7 +48,6 @@ import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConce
  *
  * @since 3.0
  */
-@Deprecated
 public class DropCollectionOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final MongoNamespace namespace;
     private final WriteConcern writeConcern;
@@ -57,9 +56,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
      * Construct a new instance.
      *
      * @param namespace the database and collection namespace for the operation.
-     * @deprecated Prefer {@link #DropCollectionOperation(MongoNamespace, WriteConcern)}
      */
-    @Deprecated
     public DropCollectionOperation(final MongoNamespace namespace) {
         this(namespace, null);
     }

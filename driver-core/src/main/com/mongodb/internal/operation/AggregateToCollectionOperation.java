@@ -62,7 +62,6 @@ import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConce
  * @mongodb.driver.manual reference/command/aggregate/ Aggregation
  * @since 3.0
  */
-@Deprecated
 public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>, WriteOperation<Void> {
     private final MongoNamespace namespace;
     private final List<BsonDocument> pipeline;
@@ -81,9 +80,7 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
      *
      * @param namespace the database and collection namespace for the operation.
      * @param pipeline the aggregation pipeline.
-     * @deprecated Prefer {@link #AggregateToCollectionOperation(MongoNamespace, List, WriteConcern)}
      */
-    @Deprecated
     public AggregateToCollectionOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline) {
         this(namespace, pipeline, null);
     }

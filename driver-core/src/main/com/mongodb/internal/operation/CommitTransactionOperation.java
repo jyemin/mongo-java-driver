@@ -43,7 +43,6 @@ import static java.util.Arrays.asList;
  *
  * @since 3.8
  */
-@Deprecated
 public class CommitTransactionOperation extends TransactionOperation {
     private final boolean alreadyCommitted;
     private BsonDocument recoveryToken;
