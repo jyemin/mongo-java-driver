@@ -27,6 +27,8 @@ import com.mongodb.connection.SslSettings;
 
 import java.util.List;
 
+import static com.mongodb.internal.connection.ClusterDescriptionHelper.getPrimaries;
+
 /**
  * Helper class for the acceptance tests.
  */
@@ -102,10 +104,10 @@ public final class Fixture {
     @SuppressWarnings("deprecation")
     public static ServerAddress getPrimary() throws InterruptedException {
         getMongoClient();
-        List<ServerDescription> serverDescriptions = ((MongoClientImpl) mongoClient).getCluster().getDescription().getPrimaries();
+        List<ServerDescription> serverDescriptions = getPrimaries(((MongoClientImpl) mongoClient).getCluster().getDescription());
         while (serverDescriptions.isEmpty()) {
             Thread.sleep(100);
-            serverDescriptions = ((MongoClientImpl) mongoClient).getCluster().getDescription().getPrimaries();
+            serverDescriptions = getPrimaries(((MongoClientImpl) mongoClient).getCluster().getDescription());
         }
         return serverDescriptions.get(0).getAddress();
     }
