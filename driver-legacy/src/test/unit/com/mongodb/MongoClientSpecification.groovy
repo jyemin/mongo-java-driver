@@ -21,8 +21,8 @@ import com.mongodb.client.internal.MongoClientImpl
 import com.mongodb.client.internal.MongoIterables
 import com.mongodb.client.internal.TestOperationExecutor
 import com.mongodb.client.model.geojson.MultiPolygon
-import com.mongodb.connection.Cluster
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
+import com.mongodb.internal.connection.Cluster
 import org.bson.BsonDocument
 import org.bson.Document
 import spock.lang.Specification
