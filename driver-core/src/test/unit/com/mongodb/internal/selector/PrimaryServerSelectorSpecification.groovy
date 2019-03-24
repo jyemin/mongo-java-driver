@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mongodb.selector
+package com.mongodb.internal.selector
 
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterDescription
@@ -28,7 +28,7 @@ import static com.mongodb.connection.ServerConnectionState.CONNECTED
 import static com.mongodb.connection.ServerType.REPLICA_SET_PRIMARY
 import static com.mongodb.connection.ServerType.REPLICA_SET_SECONDARY
 
-class WritableServerSelectorSpecification extends Specification {
+class PrimaryServerSelectorSpecification extends Specification {
     private static final ServerDescription.Builder SERVER_DESCRIPTION_BUILDER = ServerDescription.builder()
             .state(CONNECTED)
             .address(new ServerAddress())
@@ -37,9 +37,9 @@ class WritableServerSelectorSpecification extends Specification {
     private static final ServerDescription SECONDARY_SERVER = SERVER_DESCRIPTION_BUILDER.type(REPLICA_SET_SECONDARY).build()
 
     @Unroll
-    def 'WritableServerSelector will choose primary server for #clusterDescription'() throws UnknownHostException {
+    def 'PrimaryServerSelector will choose primary server for #clusterDescription'() throws UnknownHostException {
         expect:
-        WritableServerSelector selector = new WritableServerSelector()
+        PrimaryServerSelector selector = new PrimaryServerSelector()
         expectedServerList == selector.select(clusterDescription)
 
         where:
