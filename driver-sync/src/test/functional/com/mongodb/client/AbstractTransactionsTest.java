@@ -99,6 +99,14 @@ public abstract class AbstractTransactionsTest {
         this.commandListener = new TestCommandListener();
     }
 
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     @Before
     public void setUp() {
         assumeTrue(canRunTests());

@@ -19,6 +19,7 @@ package com.mongodb.client;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import util.JsonPoweredTestHelper;
@@ -30,11 +31,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.junit.Assume.assumeFalse;
+
 // See https://github.com/mongodb/specifications/tree/master/source/transactions/tests
 @RunWith(Parameterized.class)
 public class MainTransactionsTest extends AbstractTransactionsTest {
     public MainTransactionsTest(final String filename, final String description, final BsonArray data, final BsonDocument definition) {
         super(filename, description, data, definition);
+    }
+
+    @Before
+    public void setUp() {
+        assumeFalse("Skipiping test of count", getFilename().equals("reads.json") && getDescription().equals("count"));
+        super.setUp();
     }
 
     @Parameterized.Parameters(name = "{0}: {1}")
