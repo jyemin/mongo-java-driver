@@ -32,7 +32,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.async.FutureResultCallback;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.test.CollectionHelper;
-import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
@@ -78,6 +77,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 // See https://github.com/mongodb/specifications/tree/master/source/transactions/tests
@@ -111,7 +111,7 @@ public class TransactionsTest {
         assumeTrue(canRunTests());
         assumeTrue("Skipping test: " + definition.getString("skipReason", new BsonString("")).getValue(),
                 !definition.containsKey("skipReason"));
-
+        assumeFalse("Skipiping test of count", filename.equals("reads.json") && description.equals("count"));
         String collectionName = "test";
         collectionHelper = new CollectionHelper<Document>(new DocumentCodec(), new MongoNamespace(databaseName, collectionName));
 
@@ -520,8 +520,9 @@ public class TransactionsTest {
             if (clientSession.getPinnedServerAddress() != null) {
                 mongoClient = MongoClients.create(MongoClientSettings.builder()
                         .applyConnectionString(connectionString)
-                        .clusterSettings(ClusterSettings.builder()
-                        .hosts(singletonList(clientSession.getPinnedServerAddress())).build()).build());
+                        .applyToClusterSettings(builder -> {
+                            builder.hosts(singletonList(clientSession.getPinnedServerAddress()));
+                        }).build());
 
                 adminDB = mongoClient.getDatabase("admin");
             } else {
