@@ -20,6 +20,7 @@ import org.bson.AbstractBsonReader;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonDbPointer;
+import org.bson.BsonReaderMark;
 import org.bson.BsonRegularExpression;
 import org.bson.BsonTimestamp;
 import org.bson.BsonType;
@@ -1459,6 +1460,30 @@ public class JsonReaderTest {
             }
         });
     }
+
+    @Test
+    public void testMultipleMarks() {
+        String json = "{a : { b : 1 }}";
+        testStringAndStream(json, new Function<AbstractBsonReader, Void>() {
+            @Override
+            public Void apply(final AbstractBsonReader bsonReader) {
+                bsonReader.readStartDocument();
+                BsonReaderMark markOne = bsonReader.getMark();
+                bsonReader.readName("a");
+                bsonReader.readStartDocument();
+                BsonReaderMark markTwo = bsonReader.getMark();
+                bsonReader.readName("b");
+                bsonReader.readInt32();
+                bsonReader.readEndDocument();
+                markTwo.reset();
+                bsonReader.readName("b");
+                markOne.reset();
+                bsonReader.readName("a");
+                return null;
+            }
+        });
+    }
+
 
     private long dateStringToTime(final String date) {
         SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss z", Locale.ENGLISH);
