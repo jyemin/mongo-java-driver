@@ -119,11 +119,12 @@ class WriteCommandHelperSpecification extends Specification {
 
     def 'should get write concern error from writeConcernError field'() {
         expect:
-        new WriteConcernError(75, 'wtimeout', new BsonDocument('wtimeout', new BsonString('0'))) ==
+        new WriteConcernError(75, 'wtimeout', 'wtimeout message', new BsonDocument('wtimeout', new BsonString('0'))) ==
         getBulkWriteException(INSERT, new BsonDocument('n', new BsonInt32(1))
                 .append('writeConcernError',
                         new BsonDocument('code', new BsonInt32(75))
-                                .append('errmsg', new BsonString('wtimeout'))
+                                .append('codeName', new BsonString('wtimeout'))
+                                .append('errmsg', new BsonString('wtimeout message'))
                                 .append('errInfo', new BsonDocument('wtimeout',
                                                                     new BsonString('0')))),
                               new ServerAddress())
