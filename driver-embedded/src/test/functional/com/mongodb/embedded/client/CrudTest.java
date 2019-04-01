@@ -42,6 +42,7 @@ import static com.mongodb.embedded.client.Fixture.getMongoClient;
 import static com.mongodb.embedded.client.Fixture.serverVersionGreaterThan;
 import static com.mongodb.embedded.client.Fixture.serverVersionLessThan;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 // See https://github.com/mongodb/specifications/tree/master/source/crud/tests
 @RunWith(Parameterized.class)
@@ -87,6 +88,7 @@ public class CrudTest extends DatabaseTestCase {
 
     @Test
     public void shouldPassAllOutcomes() {
+        assumeFalse(definition.getString("description").getValue().startsWith("Deprecated count"));
         BsonDocument outcome = helper.getOperationResults(definition.getDocument("operation"));
         BsonDocument expectedOutcome = definition.getDocument("outcome");
 
