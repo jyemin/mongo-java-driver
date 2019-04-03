@@ -59,6 +59,7 @@ import static com.mongodb.internal.operation.OperationHelper.withReleasableConne
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+@SuppressWarnings("overloads")
 final class CommandOperationHelper {
 
     interface CommandTransformer<T, R> {

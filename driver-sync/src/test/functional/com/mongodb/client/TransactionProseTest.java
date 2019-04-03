@@ -93,7 +93,7 @@ public class TransactionProseTest {
             collection.insertOne(session, Document.parse("{ _id : 1 }"));
             session.commitTransaction();
 
-            Set<FindIterable> addresses = new HashSet<FindIterable>();
+            Set<FindIterable<Document>> addresses = new HashSet<>();
             int iterations = 50;
             while (iterations-- > 0) {
                 session.startTransaction();
@@ -121,7 +121,7 @@ public class TransactionProseTest {
             session.startTransaction();
             collection.insertOne(session, Document.parse("{ _id : 1 }"));
 
-            Set<FindIterable> addresses = new HashSet<FindIterable>();
+            Set<FindIterable<Document>> addresses = new HashSet<>();
             int iterations = 50;
             while (iterations-- > 0) {
                 addresses.add(collection.find(session, Document.parse("{}")));
