@@ -707,7 +707,6 @@ public class ConnectionString {
         return credential;
     }
 
-    @SuppressWarnings("deprecation")
     private MongoCredential createMongoCredentialWithMechanism(final AuthenticationMechanism mechanism, final String userName,
                                                                @Nullable final char[] password,
                                                                @Nullable final String authSource,
@@ -851,7 +850,6 @@ public class ConnectionString {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     @Nullable
     private WriteConcern buildWriteConcern(@Nullable final Boolean safe, @Nullable final String w,
                                            @Nullable final Integer wTimeout,
