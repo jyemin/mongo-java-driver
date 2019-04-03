@@ -101,7 +101,6 @@ public final class Fixture {
         return MongoClientSettings.builder(getMongoClientSettings());
     }
 
-    @SuppressWarnings("deprecation")
     public static ServerAddress getPrimary() throws InterruptedException {
         getMongoClient();
         List<ServerDescription> serverDescriptions = getPrimaries(((MongoClientImpl) mongoClient).getCluster().getDescription());

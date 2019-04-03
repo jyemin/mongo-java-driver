@@ -68,7 +68,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
-@SuppressWarnings("deprecation")
 public class DBCollectionTest extends DatabaseTestCase {
 
     @Test
@@ -1270,7 +1269,6 @@ public class DBCollectionTest extends DatabaseTestCase {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     public void testBypassDocumentValidationForAggregateDollarOut() {
         //given
         DBObject options = new BasicDBObject("validator", QueryBuilder.start("level").greaterThanEquals(10).get());

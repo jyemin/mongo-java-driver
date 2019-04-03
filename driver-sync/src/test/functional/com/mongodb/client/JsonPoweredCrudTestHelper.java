@@ -338,7 +338,6 @@ public class JsonPoweredCrudTestHelper {
         return toResult(iterable.into(new BsonArray()));
     }
 
-    @SuppressWarnings("deprecation")
     BsonDocument getFindResult(final BsonDocument collectionOptions, final BsonDocument arguments,
                                @Nullable final ClientSession clientSession) {
         FindIterable<BsonDocument> iterable;

@@ -93,7 +93,6 @@ public class MongoClientOptions {
     private final List<ClusterListener> clusterListeners;
     private final List<CommandListener> commandListeners;
 
-    @SuppressWarnings("deprecation")
     private MongoClientOptions(final Builder builder) {
         applicationName = builder.applicationName;
         compressorList = builder.compressorList;
@@ -909,7 +908,6 @@ public class MongoClientOptions {
          *
          * @param options create a builder from existing options
          */
-        @SuppressWarnings("deprecation")
         public Builder(final MongoClientOptions options) {
             applicationName = options.getApplicationName();
             compressorList = options.getCompressorList();

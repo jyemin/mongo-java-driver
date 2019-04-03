@@ -68,7 +68,6 @@ public class ReadConcernTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     public void shouldIncludeReadConcernInCommand() {
         mongoClient.getDatabase(getDefaultDatabaseName()).getCollection("test")
                 .withReadConcern(ReadConcern.LOCAL).estimatedDocumentCount();
