@@ -106,7 +106,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * @see MongoClientURI
  * @since 2.10.0
  */
-@SuppressWarnings("deprecation")
 public class MongoClient implements Closeable {
 
     private final ConcurrentMap<String, DB> dbCache = new ConcurrentHashMap<>();

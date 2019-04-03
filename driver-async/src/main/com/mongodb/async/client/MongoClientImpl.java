@@ -40,7 +40,6 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 
-@SuppressWarnings("deprecation")
 class MongoClientImpl implements MongoClient {
     private static final Logger LOGGER = Loggers.getLogger("client");
     private final Cluster cluster;
