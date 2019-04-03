@@ -16,36 +16,32 @@
 
 package org.bson.json;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 class JsonStreamBuffer implements JsonBuffer {
 
-    private final BufferedReader stream;
+    private final Reader reader;
+    private final List<Integer> markedPositions = new ArrayList<Integer>();
+    private final int initialBufferSize;
     private int position;
     private int lastChar;
-    private int bufferStartPos;
     private boolean reuseLastChar;
     private boolean eof;
-    private List<Integer> buffer;
-    private List<Integer> markedPoses;
+    private char[] buffer;
+    private int bufferStartPos;
+    private int bufferCount;
 
-    JsonStreamBuffer(final InputStream stream) {
-        try {
-            this.stream = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-        } catch (final UnsupportedEncodingException e) {
-            throw new JsonParseException(e);
-        }
-        buffer = new ArrayList<Integer>();
-        markedPoses = new LinkedList<Integer>();
-        bufferStartPos = -1;
+    JsonStreamBuffer(final Reader reader) {
+        this(reader, 16);
+    }
+
+    JsonStreamBuffer(final Reader reader, final int initialBufferSize) {
+        this.initialBufferSize = initialBufferSize;
+        this.reader = reader;
+        resetBuffer();
     }
 
     public int getPosition() {
@@ -61,44 +57,46 @@ class JsonStreamBuffer implements JsonBuffer {
         // buffer
         if (reuseLastChar) {
             reuseLastChar = false;
-            final int reusedChar = lastChar;
+            int reusedChar = lastChar;
             lastChar = -1;
             position++;
             return reusedChar;
         }
 
         // use the buffer until we catch up to the stream position
-        if (position >= bufferStartPos && position - bufferStartPos < buffer.size()) {
-            final int currChar = buffer.get(position - bufferStartPos);
+        if (position - bufferStartPos < bufferCount) {
+            int currChar = buffer[position - bufferStartPos];
             lastChar = currChar;
             position++;
             return currChar;
         }
 
-        // if there are no marked positions and we have caught up, we can clear the buffer
-        if (markedPoses.isEmpty()) {
-            bufferStartPos = -1;
-            buffer.clear();
+        if (markedPositions.isEmpty()) {
+            resetBuffer();
         }
 
         // otherwise, try and read from the stream
-        final int currChar;
         try {
-            currChar = stream.read();
-            lastChar = currChar;
-
-            // if the lowest mark is ahead of our position, we can safely
-            if (!markedPoses.isEmpty()) {
-                buffer.add(currChar);
+            int nextChar = reader.read();
+            if (nextChar != -1) {
+                lastChar = nextChar;
+                addToBuffer((char) nextChar);
             }
+            position++;
+            if (nextChar == -1) {
+                eof = true;
+            }
+            return nextChar;
+
         } catch (final IOException e) {
             throw new JsonParseException(e);
         }
-        position++;
-        if (currChar == -1) {
-            eof = true;
-        }
-        return currChar;
+    }
+
+    private void resetBuffer() {
+        bufferStartPos = -1;
+        bufferCount = 0;
+        buffer = new char[initialBufferSize];
     }
 
     public void unread(final int c) {
@@ -110,55 +108,50 @@ class JsonStreamBuffer implements JsonBuffer {
     }
 
     public int mark() {
-        if (buffer.isEmpty()) {
+        if (bufferCount == 0) {   // Why not markedPositions.isEmpty()?
             bufferStartPos = position;
         }
-        markedPoses.add(position);
+        if (!markedPositions.contains(position)) {
+            markedPositions.add(position);
+        }
         return position;
     }
 
     public void reset(final int markPos) {
-        if (markedPoses.isEmpty()) {
-            return;
-        }
-        final int idx = markedPoses.indexOf(markPos);
-        if (idx == -1) {
-            throw new IllegalArgumentException("mark invalidated");
-        }
         if (markPos > position) {
             throw new IllegalStateException("mark cannot reset ahead of position, only back");
         }
-        final Iterator<Integer> markIter = markedPoses.iterator();
-        while (markIter.hasNext()) {
-            final Integer nextMark = markIter.next();
-            if (nextMark > markPos) {
-                markIter.remove();
-            }
+        int idx = markedPositions.indexOf(markPos);
+        if (idx == -1) {
+            throw new IllegalArgumentException("mark invalidated");
         }
-        if (reuseLastChar && markPos != position) {
+        if (markPos != position) {
             reuseLastChar = false;
         }
-        markedPoses.remove(idx);
+        markedPositions.subList(idx, markedPositions.size()).clear();
         position = markPos;
     }
 
     public void discard(final int markPos) {
-        if (markedPoses.isEmpty()) {
-            return;
-        }
-        final int idx = markedPoses.indexOf(markPos);
+        int idx = markedPositions.indexOf(markPos);
         if (idx == -1) {
             return;
         }
-        markedPoses.remove(idx);
+        // TODO: is this really safe? Can we assume that discarding an earlier mark also
+        // TODO: discards all subsequent marks?
+        markedPositions.subList(idx, markedPositions.size()).clear();
     }
 
-    public void close() {
-        try {
-            stream.close();
-        } catch (IOException e) {
-            throw new JsonParseException(e);
+    private void addToBuffer(final char curChar) {
+        // if the lowest mark is ahead of our position, we can safely add it to our buffer
+        if (!markedPositions.isEmpty()) {
+            if (bufferCount == buffer.length) {
+                char[] newBuffer = new char[buffer.length * 2];
+                System.arraycopy(buffer, 0, newBuffer, 0, bufferCount);
+                buffer = newBuffer;
+            }
+            buffer[bufferCount] = curChar;
+            bufferCount++;
         }
-        buffer.clear();
     }
 }

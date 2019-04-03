@@ -35,7 +35,7 @@ import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
 
-import java.io.InputStream;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -69,28 +69,33 @@ public class JsonReader extends AbstractBsonReader {
     private Object currentValue;
     private Mark mark;
 
-    private JsonReader(final JsonScanner scanner) {
-        super();
-        this.scanner = scanner;
-        setContext(new Context(null, BsonContextType.TOP_LEVEL));
-    }
-
     /**
-     * Constructs a new instance with the given JSON string.
+     * Constructs a new instance with the given string positioned at a JSON object.
      *
-     * @param json     A string representation of a JSON.
+     * @param json     A string representation of a JSON object.
      */
     public JsonReader(final String json) {
         this(new JsonScanner(json));
     }
 
     /**
-     * Constructs a new instance with the given JSON input stream.
+     * Constructs a new instance with the given {@code Reader} positioned at a JSON object.
      *
-     * @param jsonStream     A stream representation of a JSON.
+     * <p>
+     * The application is responsible for closing the {@code Reader}.
+     * </p>
+     *
+     * @param reader A reader representation of a JSON object.
+     * @since 3.11
      */
-    public JsonReader(final InputStream jsonStream) {
-        this(new JsonScanner(jsonStream));
+    public JsonReader(final Reader reader) {
+        this(new JsonScanner(reader));
+    }
+
+    private JsonReader(final JsonScanner scanner) {
+        super();
+        this.scanner = scanner;
+        setContext(new Context(null, BsonContextType.TOP_LEVEL));
     }
 
     @Override
@@ -1378,15 +1383,6 @@ public class JsonReader extends AbstractBsonReader {
     @Override
     protected Context getContext() {
         return (Context) super.getContext();
-    }
-
-    /**
-     * Closes the reader.
-     */
-    @Override
-    public void close() {
-        super.close();
-        scanner.close();
     }
 
     protected class Mark extends AbstractBsonReader.Mark {

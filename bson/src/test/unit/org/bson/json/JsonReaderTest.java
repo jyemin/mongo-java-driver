@@ -28,51 +28,26 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
 public class JsonReaderTest {
-    interface Function<T, R> {
-        R apply(T t);
-    }
-
-    void testStringAndStream(
-            final String json,
-            final Function<AbstractBsonReader, Void> testFunc,
-            final Class<? extends RuntimeException> exClass) {
-        try {
-            testFunc.apply(new JsonReader(json));
-        } catch (final RuntimeException e) {
-            if (exClass == null) {
-                throw e;
-            }
-            assertEquals(exClass, e.getClass());
-        }
-        try {
-            testFunc.apply(new JsonReader(new ByteArrayInputStream(json.getBytes())));
-        } catch (final RuntimeException e) {
-            if (exClass == null) {
-                throw e;
-            }
-            assertEquals(exClass, e.getClass());
-        }
-    }
-
-    void testStringAndStream(final String json, final Function<AbstractBsonReader, Void> testFunc) {
-        testStringAndStream(json, testFunc, null);
-    }
-
     @Test
     public void testArrayEmpty() {
         String json = "[]";
@@ -134,7 +109,7 @@ public class JsonReaderTest {
             @Override
             public Void apply(final AbstractBsonReader bsonReader) {
                 assertEquals(BsonType.BOOLEAN, bsonReader.readBsonType());
-                assertEquals(false, bsonReader.readBoolean());
+                assertFalse(bsonReader.readBoolean());
                 assertEquals(AbstractBsonReader.State.DONE, bsonReader.getState());
                 return null;
             }
@@ -148,7 +123,7 @@ public class JsonReaderTest {
             @Override
             public Void apply(final AbstractBsonReader bsonReader) {
                 assertEquals(BsonType.BOOLEAN, bsonReader.readBsonType());
-                assertEquals(true, bsonReader.readBoolean());
+                assertTrue(bsonReader.readBoolean());
                 assertEquals(AbstractBsonReader.State.DONE, bsonReader.getState());
                 return null;
             }
@@ -1484,6 +1459,46 @@ public class JsonReaderTest {
         });
     }
 
+    @Test
+    public void testTwoDocuments() {
+        Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream("{a : 1}{b : 1}".getBytes())));
+
+        JsonReader jsonReader = new JsonReader(reader);
+        jsonReader.readStartDocument();
+        jsonReader.readName("a");
+        jsonReader.readInt32();
+        jsonReader.readEndDocument();
+
+        jsonReader = new JsonReader(reader);
+        jsonReader.readStartDocument();
+        jsonReader.readName("b");
+        jsonReader.readInt32();
+        jsonReader.readEndDocument();
+    }
+
+    private void testStringAndStream(final String json, final Function<AbstractBsonReader, Void> testFunc,
+                                     final Class<? extends RuntimeException> exClass) {
+        try {
+            testFunc.apply(new JsonReader(json));
+        } catch (final RuntimeException e) {
+            if (exClass == null) {
+                throw e;
+            }
+            assertEquals(exClass, e.getClass());
+        }
+        try {
+            testFunc.apply(new JsonReader(new InputStreamReader(new ByteArrayInputStream(json.getBytes()))));
+        } catch (final RuntimeException e) {
+            if (exClass == null) {
+                throw e;
+            }
+            assertEquals(exClass, e.getClass());
+        }
+    }
+
+    private void testStringAndStream(final String json, final Function<AbstractBsonReader, Void> testFunc) {
+        testStringAndStream(json, testFunc, null);
+    }
 
     private long dateStringToTime(final String date) {
         SimpleDateFormat df = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss z", Locale.ENGLISH);

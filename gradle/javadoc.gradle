@@ -73,7 +73,6 @@ allprojects {
             |     })();
             | }
             | </script>'''.stripMargin()
-                source '8'
             }
         }
     }

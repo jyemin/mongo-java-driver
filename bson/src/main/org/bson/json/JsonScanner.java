@@ -18,7 +18,7 @@ package org.bson.json;
 
 import org.bson.BsonRegularExpression;
 
-import java.io.InputStream;
+import java.io.Reader;
 
 /**
  * Parses the string representation of a JSON object into a set of {@link JsonToken}-derived objects.
@@ -34,11 +34,11 @@ class JsonScanner {
     }
 
     JsonScanner(final String json) {
-        this(JsonBufferFactory.createBuffer(json));
+        this(new JsonStringBuffer(json));
     }
 
-    JsonScanner(final InputStream jsonStream) {
-        this(JsonBufferFactory.createBuffer(jsonStream));
+    JsonScanner(final Reader reader) {
+        this(new JsonStreamBuffer(reader));
     }
 
     public void reset(final int markPos) {
@@ -47,6 +47,10 @@ class JsonScanner {
 
     public int mark() {
         return buffer.mark();
+    }
+
+    public void discard(final int markPos) {
+        buffer.discard(markPos);
     }
 
     /**
@@ -115,8 +119,8 @@ class JsonScanner {
      */
     private JsonToken scanRegularExpression() {
 
-        final StringBuilder patternBuilder = new StringBuilder();
-        final StringBuilder optionsBuilder = new StringBuilder();
+        StringBuilder patternBuilder = new StringBuilder();
+        StringBuilder optionsBuilder = new StringBuilder();
         RegularExpressionState state = RegularExpressionState.IN_PATTERN;
         while (true) {
             int c = buffer.read();
@@ -197,7 +201,7 @@ class JsonScanner {
      * @return The string token.
      */
     private JsonToken scanUnquotedString(final char firstChar) {
-        final StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         sb.append(firstChar);
         int c = buffer.read();
         while (c == '$' || c == '_' || Character.isLetterOrDigit(c)) {
@@ -231,7 +235,7 @@ class JsonScanner {
     private JsonToken scanNumber(final char firstChar) {
 
         int c = firstChar;
-        final StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         sb.append(firstChar);
 
         NumberState state;
@@ -529,14 +533,6 @@ class JsonScanner {
                 throw new JsonParseException("End of file in JSON string.");
             }
         }
-    }
-
-    public void close() {
-        buffer.close();
-    }
-
-    public void discard(final int markPos) {
-        buffer.discard(markPos);
     }
 
     private enum NumberState {

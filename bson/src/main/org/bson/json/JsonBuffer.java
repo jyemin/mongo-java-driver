@@ -16,9 +16,7 @@
 
 package org.bson.json;
 
-import java.io.Closeable;
-
-interface JsonBuffer extends Closeable {
+interface JsonBuffer {
 
     int getPosition();
 
@@ -29,8 +27,6 @@ interface JsonBuffer extends Closeable {
     int mark();
 
     void reset(int markPos);
-
-    void close();
 
     void discard(int markPos);
 }

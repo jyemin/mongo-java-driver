@@ -16,21 +16,14 @@
 
 package org.bson.json;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 class JsonStringBuffer implements JsonBuffer {
 
     private final String buffer;
     private int position;
-    private List<Integer> markedPoses;
     private boolean eof;
-    private int lastChar;
 
     JsonStringBuffer(final String buffer) {
         this.buffer = buffer;
-        markedPoses = new ArrayList<Integer>();
     }
 
     public int getPosition() {
@@ -40,60 +33,33 @@ class JsonStringBuffer implements JsonBuffer {
     public int read() {
         if (eof) {
             throw new JsonParseException("Trying to read past EOF.");
-    } else if (position >= buffer.length()) {
+        } else if (position >= buffer.length()) {
             eof = true;
             return -1;
-        }  else {
-            final int currChar = buffer.charAt(position++);
-            lastChar = currChar;
-            return currChar;
+        } else {
+            return (int) buffer.charAt(position++);
         }
     }
 
     public void unread(final int c) {
         eof = false;
-        if (c != -1 && lastChar != -1 && lastChar == c) {
-            lastChar = -1;
+        if (c != -1 && buffer.charAt(position - 1) == c) {
             position--;
         }
     }
 
     public int mark() {
-        markedPoses.add(position);
         return position;
     }
 
     public void reset(final int markPos) {
-        if (markedPoses.isEmpty()) {
-            return;
-        }
-        final int idx = markedPoses.indexOf(markPos);
-        if (idx == -1) {
-            throw new IllegalArgumentException("mark invalidated");
-        }
         if (markPos > position) {
             throw new IllegalStateException("mark cannot reset ahead of position, only back");
         }
-        final Iterator<Integer> markIter = markedPoses.iterator();
-        while (markIter.hasNext()) {
-            final Integer nextMark = markIter.next();
-            if (nextMark > markPos) {
-                markIter.remove();
-            }
-        }
-        markedPoses.remove(idx);
         position = markPos;
     }
 
     public void discard(final int markPos) {
-        final int idx = markedPoses.indexOf(markPos);
-        if (idx == -1) {
-            return;
-        }
-        markedPoses.remove(idx);
     }
 
-    public void close() {
-
-    }
 }

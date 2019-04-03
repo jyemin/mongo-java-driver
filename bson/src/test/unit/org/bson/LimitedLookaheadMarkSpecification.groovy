@@ -275,7 +275,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
             reader = new BsonBinaryReader(new ByteBufferBsonInput(buffer.getByteBuffers().get(0)))
         } else if (writer instanceof JsonWriter) {
             if (useAlternateReader) {
-                reader = new JsonReader(new ByteArrayInputStream(writer.writer.toString().getBytes()))
+                reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(writer.writer.toString().getBytes())))
             } else {
                 reader = new JsonReader(writer.writer.toString())
             }
