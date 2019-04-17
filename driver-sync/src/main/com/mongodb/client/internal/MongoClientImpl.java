@@ -257,7 +257,7 @@ public final class MongoClientImpl implements MongoClient {
             } else if (entry.getKey().equals("local")) {
                 mongoCryptOptionsBuilder.localKmsProviderOptions(
                         MongoLocalKmsProviderOptions.builder()
-                                .localMasterKey(ByteBuffer.wrap((byte[]) entry.getValue().get("localMasterKey")))
+                                .localMasterKey(ByteBuffer.wrap((byte[]) entry.getValue().get("key")))
                                 .build()
                 );
             } else {

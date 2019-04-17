@@ -130,6 +130,7 @@ public class ClientSideEncryptionTest {
 
         BsonDocument clientOptions = definition.getDocument("clientOptions");
         BsonDocument cryptOptions = clientOptions.getDocument("clientSideEncryptionOptions");
+        BsonDocument kmsProviders = cryptOptions.getDocument("kmsProviders");
         BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("autoEncryptMap");
 
         Map<String, AutoEncryptOptions> namespaceToSchemaMap = new HashMap<String, AutoEncryptOptions>();
@@ -143,10 +144,19 @@ public class ClientSideEncryptionTest {
 
         Map<String, Map<String, Object>> kmsProvidersMap = new HashMap<String, Map<String, Object>>();
 
-        Map<String, Object> kmsProviderMap = new HashMap<String, Object>();
-        kmsProviderMap.put("accessKeyId", System.getProperty("awsAccessKeyId"));
-        kmsProviderMap.put("secretAccessKey", System.getProperty("awsSecretAccessKey"));
-        kmsProvidersMap.put("aws", kmsProviderMap);
+        for (String kmsProviderKey : kmsProviders.keySet()) {
+            BsonDocument kmsProviderOptions = kmsProviders.get(kmsProviderKey).asDocument();
+            Map<String, Object> kmsProviderMap = new HashMap<String, Object>();
+
+            if (kmsProviderKey.equals("aws")) {
+                kmsProviderMap.put("accessKeyId", System.getProperty("awsAccessKeyId"));
+                kmsProviderMap.put("secretAccessKey", System.getProperty("awsSecretAccessKey"));
+                kmsProvidersMap.put("aws", kmsProviderMap);
+            } else if (kmsProviderKey.equals("local")) {
+                kmsProviderMap.put("key", kmsProviderOptions.getBinary("key").getData());
+                kmsProvidersMap.put("local", kmsProviderMap);
+            }
+        }
 
         mongoClient = MongoClients.create(builder
                 .clientSideEncryptionOptions(new ClientSideEncryptionOptions(null, "admin.datakeys",

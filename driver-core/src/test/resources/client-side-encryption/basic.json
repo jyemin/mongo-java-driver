@@ -73,10 +73,13 @@
   },
   "tests": [
     {
-      "description": "Insert a document requiring encryption",
+      "description": "Insert a document requiring encryption using AWS KMS provider",
       "clientOptions": {
         "clientSideEncryptionOptions": {
-          "kmsProvider": "aws-kms",
+          "kmsProviders": {
+            "aws": {
+            }
+          },
           "autoEncryptMap": {
             "default.default": {
               enabled: true
