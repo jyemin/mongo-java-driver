@@ -149,8 +149,8 @@ public class ClientSideEncryptionTest {
             Map<String, Object> kmsProviderMap = new HashMap<String, Object>();
 
             if (kmsProviderKey.equals("aws")) {
-                kmsProviderMap.put("accessKeyId", System.getProperty("awsAccessKeyId"));
-                kmsProviderMap.put("secretAccessKey", System.getProperty("awsSecretAccessKey"));
+                kmsProviderMap.put("accessKeyId", System.getProperty("org.mongodb.test.awsAccessKeyId"));
+                kmsProviderMap.put("secretAccessKey", System.getProperty("org.mongodb.test.awsSecretAccessKey"));
                 kmsProvidersMap.put("aws", kmsProviderMap);
             } else if (kmsProviderKey.equals("local")) {
                 kmsProviderMap.put("key", kmsProviderOptions.getBinary("key").getData());
