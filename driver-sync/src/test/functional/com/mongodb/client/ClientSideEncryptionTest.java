@@ -26,11 +26,13 @@ import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.event.CommandEvent;
+import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.internal.connection.TestCommandListener;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
+import org.bson.json.JsonWriterSettings;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +63,7 @@ import static org.junit.Assume.assumeTrue;
 public class ClientSideEncryptionTest {
 
     private final String filename;
-    private final BsonDocument encryptionSetupDocument;
+    private final BsonDocument specDocument;
     private final String description;
     private final BsonArray data;
     private final BsonDocument definition;
@@ -70,11 +72,11 @@ public class ClientSideEncryptionTest {
     private MongoClient mongoClient;
 
     public ClientSideEncryptionTest(final String filename,
-                                    final BsonDocument encryptionSetupDocument,
+                                    final BsonDocument specDocument,
                                     final String description, final BsonArray data, final BsonDocument definition) {
 
         this.filename = filename;
-        this.encryptionSetupDocument = encryptionSetupDocument;
+        this.specDocument = specDocument;
         this.description = description;
         this.data = data;
         this.definition = definition;
@@ -84,39 +86,36 @@ public class ClientSideEncryptionTest {
     public void setUp() {
         assumeTrue(canRunTests());
 
-        for (BsonValue cur : encryptionSetupDocument.getArray("collections")) {
-            BsonDocument collectionDocument = cur.asDocument();
-            String databaseName = collectionDocument.getString("database").getValue();
-            String collectionName = collectionDocument.getString("collection").getValue();
+        String databaseName = specDocument.getString("database_name").getValue();
+        String collectionName = specDocument.getString("collection_name").getValue();
+        MongoDatabase database = getMongoClient().getDatabase(databaseName);
 
-            MongoDatabase database = getMongoClient().getDatabase(databaseName);
+        /* Create the collection for auto encryption. */
+        if (specDocument.containsKey("json_schema")) {
             MongoCollection<BsonDocument> collection = database
                     .getCollection(collectionName, BsonDocument.class);
             collection.drop();
 
-            if (collectionDocument.containsKey("jsonSchema")) {
-                database.createCollection(collectionName, new CreateCollectionOptions()
-                        .validationOptions(new ValidationOptions()
-                                .validationAction(ValidationAction.WARN)
-                                .validator(new BsonDocument("$jsonSchema",
-                                        collectionDocument.getDocument("jsonSchema")))));
-            }
-
-            if (collectionDocument.containsKey("data")) {
-                BsonArray data = collectionDocument.getArray("data", new BsonArray());
-
-                if (!data.isEmpty()) {
-                    List<BsonDocument> documents = new ArrayList<BsonDocument>();
-                    for (BsonValue document : data) {
-                        documents.add(document.asDocument());
-                    }
-                    collection.insertMany(documents);
-                }
-            }
+            database.createCollection(collectionName, new CreateCollectionOptions()
+                    .validationOptions(new ValidationOptions()
+                            .validationAction(ValidationAction.WARN)
+                            .validator(new BsonDocument("$jsonSchema", specDocument.getDocument("json_schema")))));
         }
 
-        commandListener = new TestCommandListener();
+        /* Insert data into the "admin.datakeys" key vault. */
+        BsonArray data = specDocument.getArray("key_vault_data", new BsonArray());
+        MongoCollection<BsonDocument> collection = getMongoClient().getDatabase("admin").getCollection("datakeys", BsonDocument.class);
+        collection.drop();
+        if (!data.isEmpty()) {
+            List<BsonDocument> documents = new ArrayList<BsonDocument>();
+            for (BsonValue document : data) {
+                documents.add(document.asDocument());
+            }
+            collection.insertMany(documents);
+        }
 
+
+        commandListener = new TestCommandListener();
         MongoClientSettings.Builder builder = MongoClientSettings.builder()
                 .applyConnectionString(getConnectionString());
         if (System.getProperty("java.version").startsWith("1.6.")) {
@@ -129,18 +128,22 @@ public class ClientSideEncryptionTest {
         }
 
         BsonDocument clientOptions = definition.getDocument("clientOptions");
-        BsonDocument cryptOptions = clientOptions.getDocument("clientSideEncryptionOptions");
-        BsonDocument kmsProviders = cryptOptions.getDocument("kmsProviders");
-        BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("autoEncryptMap");
+        BsonDocument cryptOptions = clientOptions.getDocument("auto_encrypt_opts");
+        BsonDocument kmsProviders = cryptOptions.getDocument("kms_providers");
 
+//        BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("autoEncryptMap");
+//
         Map<String, AutoEncryptOptions> namespaceToSchemaMap = new HashMap<String, AutoEncryptOptions>();
+        /* TODO: when implementation is updated, collections will all undergo auto encryption by default. */
+        namespaceToSchemaMap.put (databaseName + "." + collectionName, new AutoEncryptOptions(true, null));
 
-        for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
-            final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
-            namespaceToSchemaMap.put(entries.getKey(),
-                    new AutoEncryptOptions(autoEncryptMapDocument.getBoolean("enabled", BsonBoolean.TRUE).getValue(),
-                            autoEncryptOptionsDocument.getDocument("schema", null)));
-        }
+//
+//        for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
+//            final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
+//            namespaceToSchemaMap.put(entries.getKey(),
+//                    new AutoEncryptOptions(autoEncryptMapDocument.getBoolean("enabled", BsonBoolean.TRUE).getValue(),
+//                            autoEncryptOptionsDocument.getDocument("schema", null)));
+//        }
 
         Map<String, Map<String, Object>> kmsProvidersMap = new HashMap<String, Map<String, Object>>();
 
@@ -170,7 +173,7 @@ public class ClientSideEncryptionTest {
                 })
                 .build());
 
-        MongoDatabase database = mongoClient.getDatabase("default");
+        database = mongoClient.getDatabase(databaseName);
         helper = new JsonPoweredCrudTestHelper(description, database, database.getCollection("default", BsonDocument.class));
     }
 
@@ -197,11 +200,11 @@ public class ClientSideEncryptionTest {
             List<CommandEvent> expectedEvents = getExpectedEvents(definition.getArray("expectations"), "default", null);
             List<CommandEvent> events = commandListener.getCommandStartedEvents();
 
-//            for (CommandEvent event : events) {
-//                System.out.println(((CommandStartedEvent) event).getCommand().toJson(JsonWriterSettings.builder().indent(true).build()));
-//                System.out.println();
-//            }
-//
+            for (CommandEvent event : events) {
+                System.out.println(((CommandStartedEvent) event).getCommand().toJson(JsonWriterSettings.builder().indent(true).build()));
+                System.out.println();
+            }
+
             // TODO: these don't match
             assertEventsEquality(expectedEvents, events);
         }
@@ -212,11 +215,10 @@ public class ClientSideEncryptionTest {
     public static Collection<Object[]> data() throws URISyntaxException, IOException {
         List<Object[]> data = new ArrayList<Object[]>();
         for (File file : JsonPoweredTestHelper.getTestFiles("/client-side-encryption")) {
-            BsonDocument testDocument = JsonPoweredTestHelper.getTestDocument(file);
-            BsonDocument encryptionSetupDocument = testDocument.getDocument("encryption_setup");
-            for (BsonValue test : testDocument.getArray("tests")) {
-                data.add(new Object[]{file.getName(), encryptionSetupDocument, test.asDocument().getString("description").getValue(),
-                        testDocument.getArray("data", new BsonArray()), test.asDocument()});
+            BsonDocument specDocument = JsonPoweredTestHelper.getTestDocument(file);
+            for (BsonValue test : specDocument.getArray("tests")) {
+                data.add(new Object[]{file.getName(), specDocument, test.asDocument().getString("description").getValue(),
+                        specDocument.getArray("data", new BsonArray()), test.asDocument()});
             }
         }
         return data;
