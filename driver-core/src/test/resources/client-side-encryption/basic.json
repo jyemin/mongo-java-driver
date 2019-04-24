@@ -118,7 +118,8 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "listCollections": "default",
+                            "listCollections": 1,
+                            "cursor": {},
                             "filter": {
                                 "name": "default"
                             }
@@ -129,7 +130,20 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "find": "datakeys"
+                            "find": "datakeys",
+                            "filter": {
+                                "_id": {
+                                    "$in": [
+                                        {
+                                            "$binary": {
+                                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+                                                "subType": "04"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "$db": "admin"
                         },
                         "command_name": "find"
                     }
@@ -143,13 +157,14 @@
                                     "_id": 1,
                                     "ssn": {
                                         "$binary": {
-                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpabxsgJndMBCMERBAi/fCAOAQu6/LKU2mu5X7FLmEJlhkHsRr7TxMoz/2akbqBBzCVn1FXiIe9esJCgNhan6EY8g=",
+                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
                                             "subType": "06"
                                         }
                                     }
                                 }
                             ],
-                            "ordered": true
+                            "ordered": true,
+                            "bypassDocumentValidation": false
                         },
                         "command_name": "insert"
                     }
@@ -173,7 +188,7 @@
                             "_id": 1,
                             "ssn": {
                                 "$binary": {
-                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpabxsgJndMBCMERBAi/fCAOAQu6/LKU2mu5X7FLmEJlhkHsRr7TxMoz/2akbqBBzCVn1FXiIe9esJCgNhan6EY8g=",
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
                                     "subType": "06"
                                 }
                             }
