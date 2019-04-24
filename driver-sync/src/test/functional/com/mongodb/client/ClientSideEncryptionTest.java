@@ -205,7 +205,6 @@ public class ClientSideEncryptionTest {
                 System.out.println();
             }
 
-            // TODO: these don't match
             assertEventsEquality(expectedEvents, events);
         }
 
