@@ -79,7 +79,11 @@ public final class CommandMonitoringTestHelper {
             if (eventType.equals("command_started_event")) {
                 BsonDocument commandDocument = eventDescriptionDocument.getDocument("command");
                 String actualDatabaseName = databaseName;
-                if (commandName.equals("commitTransaction") || commandName.equals("abortTransaction")) {
+                // If the spec test supplies a $db field in the command, then use that database.
+                if (commandDocument.containsKey("$db")) {
+                    actualDatabaseName = commandDocument.getString("$db").getValue();
+                }
+                else if (commandName.equals("commitTransaction") || commandName.equals("abortTransaction")) {
                     actualDatabaseName = "admin";
                 }
                 // Not clear whether these global fields should be included, but also not clear how to efficiently exclude them
