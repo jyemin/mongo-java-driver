@@ -137,8 +137,6 @@ class JsonStreamBuffer implements JsonBuffer {
         if (idx == -1) {
             return;
         }
-        // TODO: is this really safe? Can we assume that discarding an earlier mark also
-        // TODO: discards all subsequent marks?
         markedPositions.subList(idx, markedPositions.size()).clear();
     }
 
