@@ -78,6 +78,7 @@ public class ClientSideEncryptionTest {
         this.description = description;
         this.data = data;
         this.definition = definition;
+        System.out.println(description);
     }
 
     @Before
@@ -100,12 +101,21 @@ public class ClientSideEncryptionTest {
                             .validator(new BsonDocument("$jsonSchema", specDocument.getDocument("json_schema")))));
         }
 
+        /* Insert data into the collection */
+        List<BsonDocument> documents = new ArrayList<BsonDocument>();
+        if (!data.isEmpty()) {
+            for (BsonValue document : data) {
+                documents.add(document.asDocument());
+            }
+            database.getCollection(collectionName, BsonDocument.class).insertMany(documents);
+        }
+
         /* Insert data into the "admin.datakeys" key vault. */
         BsonArray data = specDocument.getArray("key_vault_data", new BsonArray());
         MongoCollection<BsonDocument> collection = getMongoClient().getDatabase("admin").getCollection("datakeys", BsonDocument.class);
         collection.drop();
         if (!data.isEmpty()) {
-            List<BsonDocument> documents = new ArrayList<BsonDocument>();
+            documents = new ArrayList<BsonDocument>();
             for (BsonValue document : data) {
                 documents.add(document.asDocument());
             }
@@ -217,6 +227,10 @@ public class ClientSideEncryptionTest {
     }
 
     private boolean canRunTests() {
+        if (definition.containsKey("skipReason")) {
+            System.out.println("Skipping test because: " + definition.getString("skipReason").getValue());
+            return false;
+        }
         return true;
     }
 

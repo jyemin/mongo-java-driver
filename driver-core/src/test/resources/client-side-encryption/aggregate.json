@@ -6,7 +6,17 @@
     ],
     "database_name": "default",
     "collection_name": "default",
-    "data": [],
+    "data": [
+        {
+            "_id": 1,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "subType": "06"
+                }
+            }
+        }
+    ],
     "json_schema": {
         "properties": {
             "ssn": {
@@ -80,7 +90,8 @@
     ],
     "tests": [
         {
-            "description": "Insert a document with auto encryption",
+            "description": "Aggregate with deterministic encryption",
+            "skipReason": "Blocked on SERVER-39395",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -90,21 +101,15 @@
             },
             "operations": [
                 {
-                    "name": "insertOne",
+                    "name": "aggregate",
                     "arguments": {
-                        "document": {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
-                    }
-                },
-                {
-                    "name": "find",
-                    "collectionOptions": {},
-                    "arguments": {
-                        "filter": {
-                            "_id": 1
-                        }
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "ssn": "457-55-5642"
+                                }
+                            }
+                        ]
                     },
                     "result": [
                         {
@@ -151,33 +156,18 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "insert": "default",
-                            "documents": [
+                            "aggregate": "default",
+                            "pipeline": [
                                 {
-                                    "_id": 1,
-                                    "ssn": {
-                                        "$binary": {
-                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                            "subType": "06"
-                                        }
+                                    "$match": {
+                                        "ssn": "457-55-5642"
                                     }
                                 }
                             ],
                             "ordered": true,
                             "bypassDocumentValidation": false
                         },
-                        "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
+                        "command_name": "aggregate"
                     }
                 }
             ],

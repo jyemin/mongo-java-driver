@@ -80,7 +80,7 @@
     ],
     "tests": [
         {
-            "description": "Insert a document with auto encryption",
+            "description": "Bulk write with deterministic encryption",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -90,28 +90,29 @@
             },
             "operations": [
                 {
-                    "name": "insertOne",
+                    "name": "bulkWrite",
                     "arguments": {
-                        "document": {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
+                        "requests": [
+                            {
+                                "name": "insertOne",
+                                "arguments": {
+                                    "document": {
+                                        "_id": 1,
+                                        "ssn": "457-55-5462"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "insertOne",
+                                "arguments": {
+                                    "document": {
+                                        "_id": 1,
+                                        "ssn": "123-45-6789"
+                                    }
+                                }
+                            }
+                        ]
                     }
-                },
-                {
-                    "name": "find",
-                    "collectionOptions": {},
-                    "arguments": {
-                        "filter": {
-                            "_id": 1
-                        }
-                    },
-                    "result": [
-                        {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
-                    ]
                 }
             ],
             "expectations": [
@@ -161,23 +162,21 @@
                                             "subType": "06"
                                         }
                                     }
+                                },
+                                {
+                                    "_id": 1,
+                                    "ssn": {
+                                        "$binary": {
+                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                            "subType": "06"
+                                        }
+                                    }
                                 }
                             ],
                             "ordered": true,
                             "bypassDocumentValidation": false
                         },
                         "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
                     }
                 }
             ],
@@ -189,6 +188,15 @@
                             "ssn": {
                                 "$binary": {
                                     "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                                    "subType": "06"
+                                }
+                            }
+                        },
+                        {
+                            "_id": 1,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
                                     "subType": "06"
                                 }
                             }

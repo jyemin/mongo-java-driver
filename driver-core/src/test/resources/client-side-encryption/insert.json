@@ -80,7 +80,7 @@
     ],
     "tests": [
         {
-            "description": "Insert a document with auto encryption",
+            "description": "Insert with deterministic encryption",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -97,21 +97,6 @@
                             "ssn": "457-55-5462"
                         }
                     }
-                },
-                {
-                    "name": "find",
-                    "collectionOptions": {},
-                    "arguments": {
-                        "filter": {
-                            "_id": 1
-                        }
-                    },
-                    "result": [
-                        {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
-                    ]
                 }
             ],
             "expectations": [
@@ -167,17 +152,6 @@
                             "bypassDocumentValidation": false
                         },
                         "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
                     }
                 }
             ],
