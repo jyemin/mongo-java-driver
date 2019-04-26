@@ -163,9 +163,7 @@
                                         "ssn": "457-55-5642"
                                     }
                                 }
-                            ],
-                            "ordered": true,
-                            "bypassDocumentValidation": false
+                            ]
                         },
                         "command_name": "aggregate"
                     }

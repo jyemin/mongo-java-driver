@@ -15,6 +15,15 @@
                     "subType": "06"
                 }
             }
+        },
+        {
+            "_id": 2,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                    "subType": "06"
+                }
+            }
         }
     ],
     "json_schema": {
@@ -90,7 +99,8 @@
     ],
     "tests": [
         {
-            "description": "Delete with deterministic encryption",
+            "description": "findOneAndDelete with deterministic encryption",
+            "skipReason": "Waiting on SERVER-40005",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -100,14 +110,11 @@
             },
             "operations": [
                 {
-                    "name": "deleteOne",
+                    "name": "findOneAndDelete",
                     "arguments": {
                         "filter": {
                             "ssn": "457-55-5462"
                         }
-                    },
-                    "result": {
-                        "deletedCount": 1
                     }
                 }
             ],
@@ -148,31 +155,36 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "delete": "default",
-                            "deletes": [
-                                {
-                                    "q": {
-                                        "ssn": {
-                                            "$eq": {
-                                                "$binary": {
-                                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                                    "subType": "06"
-                                                }
-                                            }
+                            "findAndModify": "default",
+                            "query": {
+                                "ssn": {
+                                    "$eq": {
+                                        "$binary": {
+                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                                            "subType": "06"
                                         }
-                                    },
-                                    "limit": 1
+                                    }
                                 }
-                            ],
-                            "ordered": true
+                            },
+                            "remove": true
                         },
-                        "command_name": "delete"
+                        "command_name": "findAndModify"
                     }
                 }
             ],
             "outcome": {
                 "collection": {
-                    "data": []
+                    "data": [
+                        {
+                            "_id": 2,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                    "subType": "06"
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         }
