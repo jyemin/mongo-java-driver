@@ -90,7 +90,8 @@
     ],
     "tests": [
         {
-            "description": "Delete with deterministic encryption",
+            "description": "findOneAndUpdate with deterministic encryption",
+            "skipReason": "Waiting on SERVER-40005",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -100,14 +101,20 @@
             },
             "operations": [
                 {
-                    "name": "deleteOne",
+                    "name": "findOneAndReplace",
                     "arguments": {
                         "filter": {
                             "ssn": "457-55-5462"
-                        }
+                        },
+                        "update": {
+                            "$set": {
+                                "ssn": "123-45-6789"
+                            }
+                        },
+                        "returnDocument": "Before"
                     },
                     "result": {
-                        "deletedCount": 1
+                        "ssn": "457-55-5462"
                     }
                 }
             ],
@@ -148,31 +155,45 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "delete": "default",
-                            "deletes": [
-                                {
-                                    "q": {
-                                        "ssn": {
-                                            "$eq": {
-                                                "$binary": {
-                                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                                    "subType": "06"
-                                                }
-                                            }
+                            "findAndModify": "default",
+                            "query": {
+                                "ssn": {
+                                    "$eq": {
+                                        "$binary": {
+                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                                            "subType": "06"
                                         }
-                                    },
-                                    "limit": 1
+                                    }
                                 }
-                            ],
-                            "ordered": true
+                            },
+                            "update": {
+                                "$set": {
+                                    "ssn": {
+                                        "$binary": {
+                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                            "subType": "06"
+                                        }
+                                    }
+                                }
+                            }
                         },
-                        "command_name": "delete"
+                        "command_name": "findAndModify"
                     }
                 }
             ],
             "outcome": {
                 "collection": {
-                    "data": []
+                    "data": [
+                        {
+                            "_id": 1,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                    "subType": "06"
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         }

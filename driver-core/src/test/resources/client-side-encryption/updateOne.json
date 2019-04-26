@@ -90,7 +90,7 @@
     ],
     "tests": [
         {
-            "description": "Delete with deterministic encryption",
+            "description": "updateOne with deterministic encryption",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -100,14 +100,21 @@
             },
             "operations": [
                 {
-                    "name": "deleteOne",
+                    "name": "updateOne",
                     "arguments": {
                         "filter": {
                             "ssn": "457-55-5462"
+                        },
+                        "update": {
+                            "$set": {
+                                "ssn": "123-45-6789"
+                            }
                         }
                     },
                     "result": {
-                        "deletedCount": 1
+                        "matchedCount": 1,
+                        "modifiedCount": 1,
+                        "upsertedCount": 0
                     }
                 }
             ],
@@ -148,8 +155,8 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "delete": "default",
-                            "deletes": [
+                            "update": "default",
+                            "updates": [
                                 {
                                     "q": {
                                         "ssn": {
@@ -161,18 +168,39 @@
                                             }
                                         }
                                     },
-                                    "limit": 1
+                                    "u": {
+                                        "$set": {
+                                            "ssn": {
+                                                "$binary": {
+                                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                                    "subType": "06"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "multi": false,
+                                    "upsert": false
                                 }
                             ],
                             "ordered": true
                         },
-                        "command_name": "delete"
+                        "command_name": "update"
                     }
                 }
             ],
             "outcome": {
                 "collection": {
-                    "data": []
+                    "data": [
+                        {
+                            "_id": 1,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                    "subType": "06"
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         }
