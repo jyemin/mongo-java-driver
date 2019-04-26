@@ -6,7 +6,26 @@
     ],
     "database_name": "default",
     "collection_name": "default",
-    "data": [],
+    "data": [
+        {
+            "_id": 1,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "subType": "06"
+                }
+            }
+        },
+        {
+            "_id": 2,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "subType": "06"
+                }
+            }
+        }
+    ],
     "json_schema": {
         "properties": {
             "ssn": {
@@ -80,7 +99,8 @@
     ],
     "tests": [
         {
-            "description": "Insert a document with auto encryption",
+            "description": "Count with deterministic encryption",
+            "skipReason": "waiting for 4.1.11",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -90,28 +110,12 @@
             },
             "operations": [
                 {
-                    "name": "insertOne",
+                    "name": "count",
                     "arguments": {
-                        "document": {
-                            "_id": 1,
+                        "filter": {
                             "ssn": "457-55-5462"
                         }
                     }
-                },
-                {
-                    "name": "find",
-                    "collectionOptions": {},
-                    "arguments": {
-                        "filter": {
-                            "_id": 1
-                        }
-                    },
-                    "result": [
-                        {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
-                    ]
                 }
             ],
             "expectations": [
@@ -151,10 +155,9 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "insert": "default",
-                            "documents": [
-                                {
-                                    "_id": 1,
+                            "count": "default",
+                            "filter": {
+                                "$match": {
                                     "ssn": {
                                         "$binary": {
                                             "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
@@ -162,40 +165,13 @@
                                         }
                                     }
                                 }
-                            ],
-                            "ordered": true,
+                            },
                             "bypassDocumentValidation": false
                         },
-                        "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
+                        "command_name": "count"
                     }
                 }
-            ],
-            "outcome": {
-                "collection": {
-                    "data": [
-                        {
-                            "_id": 1,
-                            "ssn": {
-                                "$binary": {
-                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                    "subType": "06"
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
+            ]
         }
     ]
 }
