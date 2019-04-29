@@ -197,7 +197,6 @@
         },
         {
             "description": "Insert with randomized encryption, then find it",
-            "skipReason": "$type not implemented",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -272,7 +271,7 @@
                                 {
                                     "_id": 1,
                                     "random": {
-                                        "$type": "binData"
+                                        "$$type": "binData"
                                     }
                                 }
                             ],
