@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package com.mongodb.client.internal;
+package com.mongodb.client.vault;
 
-import org.bson.BsonDocument;
+import com.mongodb.KeyVaultEncryptionOptions;
+import com.mongodb.client.internal.KeyVaultImpl;
 
-import java.util.Iterator;
+public class KeyVaults {
+    public static KeyVault create(final KeyVaultEncryptionOptions options) {
+        return new KeyVaultImpl(options);
+    }
 
-interface KeyVault {
-    Iterator<BsonDocument> find(BsonDocument keyFilter);
+    private KeyVaults() {
+    }
 }

@@ -17,6 +17,11 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.vault.DataKeyOptions;
+import com.mongodb.client.vault.EncryptOptions;
+import org.bson.BsonBinary;
+import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.RawBsonDocument;
 
 import java.io.Closeable;
@@ -51,6 +56,12 @@ public interface Crypt extends Closeable {
      */
     RawBsonDocument decrypt(MongoNamespace namespace, RawBsonDocument commandResponse);
 
+    BsonDocument createDataKey(String kmsProvider, DataKeyOptions dataKeyOptions);
+
+    BsonBinary encryptExplicitly(BsonValue value, EncryptOptions options);
+
+    BsonValue decryptExplicitly(BsonBinary value);
+
     @Override
-    public void close();
+    void close();
 }

@@ -16,20 +16,57 @@
 
 package com.mongodb.client.internal;
 
-import com.mongodb.client.MongoCollection;
+import com.mongodb.KeyVaultEncryptionOptions;
+import com.mongodb.MongoNamespace;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.vault.DataKeyOptions;
+import com.mongodb.client.vault.EncryptOptions;
+import com.mongodb.client.vault.KeyVault;
+import org.bson.BsonBinary;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.io.Closeable;
 
-class KeyVaultImpl implements KeyVault {
-    private final MongoCollection<BsonDocument> collection;
+public class KeyVaultImpl implements KeyVault, Closeable {
+    private final Crypt crypt;
+    private final KeyVaultEncryptionOptions options;
+    private final MongoClient keyVaultClient;
 
-    KeyVaultImpl(final MongoCollection<BsonDocument> collection) {
-        this.collection = collection;
+    public KeyVaultImpl(final KeyVaultEncryptionOptions options) {
+        keyVaultClient = MongoClients.create(options.getKeyVaultMongoClientSettings());
+        this.crypt = Crypts.create(keyVaultClient, options);
+        this.options = options;
     }
+
     @Override
-    public Iterator<BsonDocument> find(final BsonDocument keyFilter) {
-        return collection.find(keyFilter).into(new ArrayList<BsonDocument>()).iterator();
+    public BsonBinary createDataKey(final String kmsProvider) {
+        return createDataKey(kmsProvider, new DataKeyOptions());
+    }
+
+    @Override
+    public BsonBinary createDataKey(final String kmsProvider, final DataKeyOptions dataKeyOptions) {
+        BsonDocument dataKeyDocument = crypt.createDataKey(kmsProvider, dataKeyOptions);
+
+        MongoNamespace namespace = new MongoNamespace(options.getKeyVaultNamespace());
+        keyVaultClient.getDatabase(namespace.getDatabaseName()).getCollection(namespace.getCollectionName(), BsonDocument.class)
+                .insertOne(dataKeyDocument);
+        return dataKeyDocument.getBinary("_id");
+    }
+
+    @Override
+    public BsonBinary encrypt(final BsonValue value, final EncryptOptions options) {
+        return crypt.encryptExplicitly(value, options);
+    }
+
+    @Override
+    public BsonValue decrypt(final BsonBinary value) {
+        return crypt.decryptExplicitly(value);
+    }
+
+    @Override
+    public void close() {
+        keyVaultClient.close();
     }
 }

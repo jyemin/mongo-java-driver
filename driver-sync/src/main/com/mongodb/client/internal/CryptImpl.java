@@ -17,15 +17,21 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.AutoEncryptOptions;
-import com.mongodb.ClientSideEncryptionOptions;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.vault.DataKeyOptions;
+import com.mongodb.client.vault.EncryptOptions;
 import com.mongodb.crypt.capi.MongoCrypt;
 import com.mongodb.crypt.capi.MongoCryptContext;
+import com.mongodb.crypt.capi.MongoDataKeyOptions;
+import com.mongodb.crypt.capi.MongoExplicitEncryptOptions;
 import com.mongodb.crypt.capi.MongoKeyDecryptor;
+import com.mongodb.lang.Nullable;
+import org.bson.BsonBinary;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.RawBsonDocument;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.DecoderContext;
@@ -34,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
@@ -41,27 +48,37 @@ import static com.mongodb.crypt.capi.MongoCryptContext.State;
 
 class CryptImpl implements Crypt {
 
-    private final ClientSideEncryptionOptions options;
+    private final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap;
+    // TODO: clean this up.  shouldn't take options, but the stuff it needs from options
     private final MongoCrypt mongoCrypt;
     private final CollectionInfoRetriever collectionInfoRetriever;
     private final CommandMarker commandMarker;
-    private final KeyVault keyVault;
+    private final KeyRetriever keyRetriever;
     private final KeyManagementService keyManagementService;
 
-    CryptImpl(final ClientSideEncryptionOptions options, final MongoCrypt mongoCrypt,
-              final CollectionInfoRetriever collectionInfoRetriever, final CommandMarker commandMarker,
-              final KeyVault keyVault, final KeyManagementService keyManagementService) {
-        this.options = options;
+    CryptImpl(final MongoCrypt mongoCrypt, final CollectionInfoRetriever collectionInfoRetriever, final CommandMarker commandMarker,
+              final KeyRetriever keyRetriever, final KeyManagementService keyManagementService) {
+        this(mongoCrypt, collectionInfoRetriever, commandMarker, keyRetriever, keyManagementService, null);
+    }
+
+    CryptImpl(final MongoCrypt mongoCrypt, final KeyRetrieverImpl keyRetriever, final KeyManagementServiceImpl keyManagementService) {
+        this(mongoCrypt, null, null, keyRetriever, keyManagementService, null);
+    }
+
+    CryptImpl(final MongoCrypt mongoCrypt, final CollectionInfoRetriever collectionInfoRetriever,
+              final CommandMarker commandMarker, final KeyRetriever keyRetriever, final KeyManagementService keyManagementService,
+              @Nullable final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap) {
+        this.namespaceToAutoEncryptOptionsMap = namespaceToAutoEncryptOptionsMap;
         this.mongoCrypt = mongoCrypt;
         this.collectionInfoRetriever = collectionInfoRetriever;
         this.commandMarker = commandMarker;
-        this.keyVault = keyVault;
+        this.keyRetriever = keyRetriever;
         this.keyManagementService = keyManagementService;
     }
 
     @Override
     public boolean isEnabled(final MongoNamespace namespace) {
-        AutoEncryptOptions autoEncryptOptions = options.getNamespaceToAutoEncryptOptionsMap().get(namespace.getFullName());
+        AutoEncryptOptions autoEncryptOptions = namespaceToAutoEncryptOptionsMap.get(namespace.getFullName());
         return autoEncryptOptions != null && autoEncryptOptions.isEnabled();
     }
 
@@ -71,7 +88,7 @@ class CryptImpl implements Crypt {
         notNull("command", command);
         isTrue("encryption enabled", isEnabled(namespace));
 
-        AutoEncryptOptions autoEncryptOptions = options.getNamespaceToAutoEncryptOptionsMap().get(namespace.getFullName());
+        AutoEncryptOptions autoEncryptOptions = namespaceToAutoEncryptOptionsMap.get(namespace.getFullName());
 
         MongoCryptContext encryptionContext = mongoCrypt.createEncryptionContext(namespace.getFullName(),
                 autoEncryptOptions.getLocalSchemaDocument());
@@ -100,6 +117,56 @@ class CryptImpl implements Crypt {
 
         try {
             return executeStateMachine(decryptionContext, null, commandResponse);
+        } finally {
+            decryptionContext.close();
+        }
+    }
+
+    @Override
+    public BsonDocument createDataKey(final String kmsProvider, final DataKeyOptions options) {
+        notNull("kmsProvider", kmsProvider);
+        notNull("options", options);
+
+        MongoCryptContext dataKeyCreationContext = mongoCrypt.createDataKeyContext(kmsProvider,
+                MongoDataKeyOptions.builder()
+                        .keyAltNames(options.getKeyAltNames())
+                        .masterKey(options.getMasterKey())
+                        .build());
+
+        try {
+            return executeStateMachine(dataKeyCreationContext, null, null);
+        } finally {
+            dataKeyCreationContext.close();
+        }
+    }
+
+    @Override
+    public BsonBinary encryptExplicitly(final BsonValue value, final EncryptOptions options) {
+        notNull("value", value);
+        notNull("options", options);
+
+        MongoCryptContext encryptionContext = mongoCrypt.createExplicitEncryptionContext(
+                new BsonDocument("v", value), MongoExplicitEncryptOptions.builder()
+                        .keyId(options.getKeyId())
+                        .algorithm(options.getAlgorithm())
+                        .initializationVector(options.getInitializationVector())
+                        .build());
+
+        try {
+            return executeStateMachine(encryptionContext, null, null).getBinary("v");
+        } finally {
+            encryptionContext.close();
+        }
+    }
+
+    @Override
+    public BsonValue decryptExplicitly(final BsonBinary value) {
+        notNull("value", value);
+
+        MongoCryptContext decryptionContext = mongoCrypt.createExplicitDecryptionContext(new BsonDocument("v", value));
+
+        try {
+            return executeStateMachine(decryptionContext, null, null).get("v");
         } finally {
             decryptionContext.close();
         }
@@ -148,7 +215,7 @@ class CryptImpl implements Crypt {
     }
 
     private void fetchKeys(final MongoCryptContext keyBroker) {
-        Iterator<BsonDocument> iterator = keyVault.find(keyBroker.getMongoOperation());
+        Iterator<BsonDocument> iterator = keyRetriever.find(keyBroker.getMongoOperation());
         while (iterator.hasNext()) {
             keyBroker.addMongoOperationResult(iterator.next());
         }

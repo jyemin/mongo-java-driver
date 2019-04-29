@@ -28,7 +28,6 @@ import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.changestream.ChangeStreamLevel;
@@ -38,21 +37,13 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
-import com.mongodb.crypt.capi.MongoAwsKmsProviderOptions;
-import com.mongodb.crypt.capi.MongoCryptOptions;
-import com.mongodb.crypt.capi.MongoCrypts;
-import com.mongodb.crypt.capi.MongoLocalKmsProviderOptions;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import javax.net.ssl.SSLContext;
-import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
@@ -76,7 +67,8 @@ public final class MongoClientImpl implements MongoClient {
 
 
     public void init() {
-        delegate.init(createCrypt(settings));
+        delegate.init(settings.getClientSideEncryptionOptions() == null
+                ? null : Crypts.createCrypt(this, this, settings.getClientSideEncryptionOptions()));
     }
 
     @Override
@@ -230,55 +222,6 @@ public final class MongoClientImpl implements MongoClient {
                 return result.getString("name").getValue();
             }
         });
-    }
-
-    @Nullable
-    private Crypt createCrypt(final MongoClientSettings settings) {
-        if (settings.getClientSideEncryptionOptions() == null) {
-            return null;
-        }
-
-        // TODO: this has to be closed
-        // TODO: make this configurable, but default according to platform
-        MongoClient mongocryptdClient =
-                MongoClients.create("mongodb://%2Ftmp%2Fmongocryptd.sock/?serverSelectionTimeoutMS=1000");
-
-        MongoCryptOptions.Builder mongoCryptOptionsBuilder = MongoCryptOptions.builder();
-
-        for (Map.Entry<String, Map<String, Object>> entry :
-                settings.getClientSideEncryptionOptions().getKmsProviders().entrySet()) {
-            if (entry.getKey().equals("aws")) {
-                mongoCryptOptionsBuilder.awsKmsProviderOptions(
-                        MongoAwsKmsProviderOptions.builder()
-                                .accessKeyId((String) entry.getValue().get("accessKeyId"))
-                                .secretAccessKey((String) entry.getValue().get("secretAccessKey"))
-                                .build()
-                );
-            } else if (entry.getKey().equals("local")) {
-                mongoCryptOptionsBuilder.localKmsProviderOptions(
-                        MongoLocalKmsProviderOptions.builder()
-                                .localMasterKey(ByteBuffer.wrap((byte[]) entry.getValue().get("key")))
-                                .build()
-                );
-            } else {
-                throw new MongoClientException("Unrecognized KMS provider key: " + entry.getKey());
-            }
-        }
-
-        SSLContext sslContext = null;
-        try {
-            sslContext = SSLContext.getDefault();
-        } catch (NoSuchAlgorithmException e) {
-            throw new MongoClientException("Unable to create default SSLContext", e);
-        }
-
-        return new CryptImpl(
-                settings.getClientSideEncryptionOptions(),
-                MongoCrypts.create(mongoCryptOptionsBuilder.build()),
-                new CollectionInfoRetrieverImpl(this),
-                new CommandMarkerImpl(mongocryptdClient, "mongocryptd"),
-                new KeyVaultImpl(getDatabase("admin").getCollection("datakeys", BsonDocument.class)),
-                new KeyManagementServiceImpl(sslContext, 443, 10000));
     }
 }
 
