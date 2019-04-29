@@ -6,7 +6,26 @@
     ],
     "database_name": "default",
     "collection_name": "default",
-    "data": [],
+    "data": [
+        {
+            "_id": 1,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "subType": "06"
+                }
+            }
+        },
+        {
+            "_id": 2,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                    "subType": "06"
+                }
+            }
+        }
+    ],
     "json_schema": {
         "properties": {
             "ssn": {
@@ -80,7 +99,8 @@
     ],
     "tests": [
         {
-            "description": "Insert with deterministic encryption, then find it",
+            "description": "countDocuments with deterministic encryption",
+            "skipReason": "waiting on SERVER-39395",
             "clientOptions": {
                 "auto_encrypt_opts": {
                     "kms_providers": {
@@ -90,27 +110,13 @@
             },
             "operations": [
                 {
-                    "name": "insertOne",
-                    "arguments": {
-                        "document": {
-                            "_id": 1,
-                            "ssn": "457-55-5462"
-                        }
-                    }
-                },
-                {
-                    "name": "find",
+                    "name": "countDocuments",
                     "arguments": {
                         "filter": {
-                            "_id": 1
-                        }
-                    },
-                    "result": [
-                        {
-                            "_id": 1,
                             "ssn": "457-55-5462"
                         }
-                    ]
+                    },
+                    "result": 1
                 }
             ],
             "expectations": [
@@ -150,32 +156,29 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "insert": "default",
-                            "documents": [
+                            "aggregate": "default",
+                            "pipeline": [
                                 {
-                                    "_id": 1,
-                                    "ssn": {
-                                        "$binary": {
-                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                            "subType": "06"
+                                    "$match": {
+                                        "ssn": {
+                                            "$binary": {
+                                                "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                                                "subType": "06"
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "$group": {
+                                        "_id": 1,
+                                        "n": {
+                                            "$sum": 1
                                         }
                                     }
                                 }
-                            ],
-                            "ordered": true
+                            ]
                         },
-                        "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
+                        "command_name": "aggregate"
                     }
                 }
             ],
@@ -190,116 +193,14 @@
                                     "subType": "06"
                                 }
                             }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "description": "Insert with randomized encryption, then find it",
-            "skipReason": "$type not implemented",
-            "clientOptions": {
-                "auto_encrypt_opts": {
-                    "kms_providers": {
-                        "aws": {}
-                    }
-                }
-            },
-            "operations": [
-                {
-                    "name": "insertOne",
-                    "arguments": {
-                        "document": {
-                            "_id": 1,
-                            "random": "123"
-                        }
-                    }
-                },
-                {
-                    "name": "find",
-                    "arguments": {
-                        "filter": {
-                            "_id": 1
-                        }
-                    },
-                    "result": [
+                        },
                         {
-                            "_id": 1,
-                            "random": "123"
-                        }
-                    ]
-                }
-            ],
-            "expectations": [
-                {
-                    "command_started_event": {
-                        "command": {
-                            "listCollections": 1,
-                            "cursor": {},
-                            "filter": {
-                                "name": "default"
-                            }
-                        },
-                        "command_name": "listCollections"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "datakeys",
-                            "filter": {
-                                "_id": {
-                                    "$in": [
-                                        {
-                                            "$binary": {
-                                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
-                                                "subType": "04"
-                                            }
-                                        }
-                                    ]
+                            "_id": 2,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                    "subType": "06"
                                 }
-                            },
-                            "$db": "admin"
-                        },
-                        "command_name": "find"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "insert": "default",
-                            "documents": [
-                                {
-                                    "_id": 1,
-                                    "random": {
-                                        "$type": "binData"
-                                    }
-                                }
-                            ],
-                            "ordered": true
-                        },
-                        "command_name": "insert"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "default",
-                            "filter": {
-                                "_id": 1
-                            }
-                        },
-                        "command_name": "find"
-                    }
-                }
-            ],
-            "outcome": {
-                "collection": {
-                    "data": [
-                        {
-                            "_id": 1,
-                            "random": {
-                                "$type": "binData"
                             }
                         }
                     ]
