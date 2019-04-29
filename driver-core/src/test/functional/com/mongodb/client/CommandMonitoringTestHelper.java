@@ -31,6 +31,7 @@ import org.bson.BsonDouble;
 import org.bson.BsonInt32;
 import org.bson.BsonInt64;
 import org.bson.BsonString;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.BsonValueCodecProvider;
@@ -134,7 +135,7 @@ public final class CommandMonitoringTestHelper {
                 CommandStartedEvent actualCommandStartedEvent = massageActualCommandStartedEvent((CommandStartedEvent) actual,
                         lsidMap);
                 CommandStartedEvent expectedCommandStartedEvent = massageExpectedCommandStartedEvent((CommandStartedEvent) expected,
-                        lsidMap);
+                        (CommandStartedEvent) actual, lsidMap);
 
                 assertEquals(expectedCommandStartedEvent.getDatabaseName(), actualCommandStartedEvent.getDatabaseName());
                 assertEquals(expectedCommandStartedEvent.getCommand(), actualCommandStartedEvent.getCommand());
@@ -236,6 +237,7 @@ public final class CommandMonitoringTestHelper {
     }
 
     private static CommandStartedEvent massageExpectedCommandStartedEvent(final CommandStartedEvent event,
+                                                                          final CommandStartedEvent actualEvent,
                                                                           @Nullable final Map<String, BsonDocument> lsidMap) {
         BsonDocument command = getWritableCloneOfCommand(event.getCommand());
 
@@ -271,8 +273,44 @@ public final class CommandMonitoringTestHelper {
             command.remove("recoveryToken");
         }
 
+        replaceExpectedWithActual(command, actualEvent.getCommand());
+
         return new CommandStartedEvent(event.getRequestId(), event.getConnectionDescription(), event.getDatabaseName(),
                 event.getCommandName(), command);
+    }
+
+    private static void replaceExpectedWithActual(final BsonDocument expected, final BsonDocument actual) {
+        for (String key : expected.keySet()) {
+            BsonValue value = expected.get(key);
+            if (value.isDocument()) {
+                BsonDocument valueDocument = value.asDocument();
+                BsonValue actualValue = actual.get(key);
+                if (valueDocument.size() == 1 && valueDocument.getFirstKey().equals("$$type")) {
+                    String type = valueDocument.getString("$$type").getValue();
+                    if (type.equals("binData")) {
+                        assertEquals(BsonType.BINARY, actualValue.getBsonType());
+                        expected.put(key, actualValue);
+                    } else {
+                        throw new UnsupportedOperationException("Unsupported type: " + type);
+                    }
+                } else {
+                    replaceExpectedWithActual(valueDocument, actualValue.asDocument());
+                }
+            } else if (value.isArray()) {
+                replaceExpectedWithActual(value.asArray(), actual.get(key).asArray());
+            }
+        }
+    }
+
+    private static void replaceExpectedWithActual(final BsonArray expected, final BsonArray actual) {
+        for (int i = 0; i < expected.size(); i++) {
+            BsonValue value = expected.get(i);
+            if (value.isDocument()) {
+                replaceExpectedWithActual(value.asDocument(), actual.get(i).asDocument());
+            } else if (value.isArray()) {
+                replaceExpectedWithActual(value.asArray(), actual.get(i).asArray());
+            }
+        }
     }
 
     private static void massageCommand(final CommandStartedEvent event, final BsonDocument command) {
