@@ -30,6 +30,9 @@ import org.bson.RawBsonDocument;
 import org.bson.io.BasicOutputBuffer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 
@@ -39,12 +42,39 @@ class CommandMarkerImpl implements CommandMarker {
     private final ProcessBuilder processBuilder;
     private boolean active;
 
-    CommandMarkerImpl(final MongoClient client, final String path) {
+    CommandMarkerImpl(final MongoClient client, final Map<String, Object> options) {
         this.client = client;
         this.active = false;
-        processBuilder = new ProcessBuilder(path,
-                "--idleShutdownTimeoutSecs", "60",
-                "--setParameter", "enableTestCommands=1");
+
+
+        // TODO: this isn't in the spec yet
+        if (!options.containsKey("spawn") || ((Boolean) options.get("spawn"))) {
+            List<String> spawnArgs = createSpawnArgs(options);
+            processBuilder = new ProcessBuilder(spawnArgs);
+
+        } else {
+            processBuilder = null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> createSpawnArgs(final Map<String, Object> options) {
+        List<String> spawnArgs = new ArrayList<String>();
+
+        String path = options.containsKey("mongocryptdPath")
+                ? (String) options.get("mongocryptdPath")
+                : "mongocryptd";
+
+        spawnArgs.add(path);
+        if (options.containsKey("mongocryptdSpawnArgs")) {
+            spawnArgs.addAll((List<String>) options.get("mongocryptdSpawnArgs"));
+        }
+
+        if (!spawnArgs.contains("--idleShutdownTimeoutSecs")) {
+            spawnArgs.add("--idleShutdownTimeoutSecs");
+            spawnArgs.add("60");
+        }
+        return spawnArgs;
     }
 
     @Override
@@ -60,13 +90,15 @@ class CommandMarkerImpl implements CommandMarker {
 
         RawBsonDocument markableCommand = new RawBsonDocument(buffer.getInternalBuffer(), 0, buffer.getSize());
 
-        synchronized (this) {
-            if (!active) {
-                spawn();
-                active = true;
+        if (processBuilder != null) {
+            synchronized (this) {
+                if (!active) {
+                    spawn();
+                    active = true;
+                }
             }
         }
-
+        
         try {
             return executeCommand(databaseName, markableCommand);
         } catch (MongoTimeoutException e) {

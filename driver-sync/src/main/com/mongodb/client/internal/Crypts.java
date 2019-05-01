@@ -41,13 +41,18 @@ class Crypts {
                              final AutoEncryptionOptions options) {
         // TODO: this has to be closed
         // TODO: make this configurable, but default according to platform
+
+        String connectionString =
+                System.getProperty("os.name").toLowerCase().contains("windows")
+                        ? "mongodb://localhost:27020/?serverSelectionTimeoutMS=1000"
+                        : "mongodb://%2Ftmp%2Fmongocryptd.sock/?serverSelectionTimeoutMS=1000";
         MongoClient mongocryptdClient =
-                MongoClients.create("mongodb://%2Ftmp%2Fmongocryptd.sock/?serverSelectionTimeoutMS=1000");
+                MongoClients.create(connectionString);
 
         return new CryptImpl(
                 MongoCrypts.create(createMongoCryptOptions(options.getKmsProviders())),
                 new CollectionInfoRetrieverImpl(collectionInfoClient),
-                new CommandMarkerImpl(mongocryptdClient, "mongocryptd"),
+                new CommandMarkerImpl(mongocryptdClient, options.getExtraOptions()),
                 createKeyRetriever(keyVaultClient, options.getKeyVaultNamespace()),
                 createtKeyManagementService(),
                 options.getNamespaceToLocalSchemaDocumentMap());
