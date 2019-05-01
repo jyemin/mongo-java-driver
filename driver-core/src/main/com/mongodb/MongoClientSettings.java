@@ -87,7 +87,7 @@ public final class MongoClientSettings {
     private final String applicationName;
     private final List<MongoCompressor> compressorList;
 
-    private final ClientSideEncryptionOptions clientSideEncryptionOptions;
+    private final AutoEncryptionOptions autoEncryptionOptions;
 
     /**
      * Gets the default codec registry.  It includes the following providers:
@@ -154,7 +154,7 @@ public final class MongoClientSettings {
         private String applicationName;
         private List<MongoCompressor> compressorList = Collections.emptyList();
 
-        private ClientSideEncryptionOptions clientSideEncryptionOptions;
+        private AutoEncryptionOptions autoEncryptionOptions;
 
         private Builder() {
         }
@@ -421,12 +421,12 @@ public final class MongoClientSettings {
         /**
          * Sets the key vault options.
          *
-         * @param clientSideEncryptionOptions key vault options
+         * @param autoEncryptionOptions key vault options
          * @return this
          * @since 3.11
          */
-        public Builder clientSideEncryptionOptions(final ClientSideEncryptionOptions clientSideEncryptionOptions) {
-            this.clientSideEncryptionOptions = clientSideEncryptionOptions;
+        public Builder autoEncryptionOptions(final AutoEncryptionOptions autoEncryptionOptions) {
+            this.autoEncryptionOptions = autoEncryptionOptions;
             return this;
         }
 
@@ -561,8 +561,8 @@ public final class MongoClientSettings {
      * @since 3.11
      */
     @Nullable
-    public ClientSideEncryptionOptions getClientSideEncryptionOptions() {
-        return clientSideEncryptionOptions;
+    public AutoEncryptionOptions getAutoEncryptionOptions() {
+        return autoEncryptionOptions;
     }
 
     /**
@@ -645,7 +645,7 @@ public final class MongoClientSettings {
         connectionPoolSettings = builder.connectionPoolSettingsBuilder.build();
         sslSettings = builder.sslSettingsBuilder.build();
         compressorList = builder.compressorList;
-        clientSideEncryptionOptions = builder.clientSideEncryptionOptions;
+        autoEncryptionOptions = builder.autoEncryptionOptions;
 
         SocketSettings.Builder heartbeatSocketSettingsBuilder = SocketSettings.builder()
                 .readTimeout(socketSettings.getConnectTimeout(MILLISECONDS), MILLISECONDS)

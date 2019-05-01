@@ -16,7 +16,7 @@
 
 package com.mongodb.client.internal;
 
-import com.mongodb.ClientSideEncryptionOptions;
+import com.mongodb.AutoEncryptionOptions;
 import com.mongodb.KeyVaultEncryptionOptions;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoNamespace;
@@ -38,7 +38,7 @@ class Crypts {
 
     @Nullable
     static Crypt createCrypt(final MongoClient keyVaultClient, final MongoClient collectionInfoClient,
-                             final ClientSideEncryptionOptions options) {
+                             final AutoEncryptionOptions options) {
         // TODO: this has to be closed
         // TODO: make this configurable, but default according to platform
         MongoClient mongocryptdClient =
@@ -50,7 +50,7 @@ class Crypts {
                 new CommandMarkerImpl(mongocryptdClient, "mongocryptd"),
                 createKeyRetriever(keyVaultClient, options.getKeyVaultNamespace()),
                 createtKeyManagementService(),
-                options.getNamespaceToAutoEncryptOptionsMap());
+                options.getNamespaceToLocalSchemaDocumentMap());
     }
 
     static Crypt create(final MongoClient keyVaultClient, final KeyVaultEncryptionOptions options) {

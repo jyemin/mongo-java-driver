@@ -67,8 +67,8 @@ public final class MongoClientImpl implements MongoClient {
 
 
     public void init() {
-        delegate.init(settings.getClientSideEncryptionOptions() == null
-                ? null : Crypts.createCrypt(this, this, settings.getClientSideEncryptionOptions()));
+        delegate.init(settings.getAutoEncryptionOptions() == null
+                ? null : Crypts.createCrypt(this, this, settings.getAutoEncryptionOptions()));
     }
 
     @Override

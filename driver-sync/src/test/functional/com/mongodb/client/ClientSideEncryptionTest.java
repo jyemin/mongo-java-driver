@@ -16,9 +16,8 @@
 
 package com.mongodb.client;
 
-import com.mongodb.AutoEncryptOptions;
+import com.mongodb.AutoEncryptionOptions;
 import com.mongodb.Block;
-import com.mongodb.ClientSideEncryptionOptions;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.ValidationAction;
@@ -28,7 +27,6 @@ import com.mongodb.connection.SslSettings;
 import com.mongodb.event.CommandEvent;
 import com.mongodb.internal.connection.TestCommandListener;
 import org.bson.BsonArray;
-import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.junit.After;
@@ -133,13 +131,11 @@ public class ClientSideEncryptionTest {
         BsonDocument kmsProviders = cryptOptions.getDocument("kmsProviders");
         BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("autoEncryptMap");
 
-        Map<String, AutoEncryptOptions> namespaceToSchemaMap = new HashMap<String, AutoEncryptOptions>();
+        Map<String, BsonDocument> namespaceToSchemaMap = new HashMap<String, BsonDocument>();
 
         for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
             final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
-            namespaceToSchemaMap.put(entries.getKey(),
-                    new AutoEncryptOptions(autoEncryptMapDocument.getBoolean("enabled", BsonBoolean.TRUE).getValue(),
-                            autoEncryptOptionsDocument.getDocument("schema", null)));
+            namespaceToSchemaMap.put(entries.getKey(), autoEncryptOptionsDocument.getDocument("schema", null));
         }
 
         Map<String, Map<String, Object>> kmsProvidersMap = new HashMap<String, Map<String, Object>>();
@@ -159,7 +155,7 @@ public class ClientSideEncryptionTest {
         }
 
         mongoClient = MongoClients.create(builder
-                .clientSideEncryptionOptions(new ClientSideEncryptionOptions(null, "admin.datakeys",
+                .autoEncryptionOptions(new AutoEncryptionOptions(null, "admin.datakeys",
                         kmsProvidersMap, namespaceToSchemaMap, Collections.<String, Object>emptyMap()))
                 .addCommandListener(commandListener)
                 .applyToSocketSettings(new Block<SocketSettings.Builder>() {

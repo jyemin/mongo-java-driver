@@ -17,6 +17,7 @@
 package com.mongodb;
 
 import com.mongodb.lang.Nullable;
+import org.bson.BsonDocument;
 
 import java.util.Map;
 
@@ -24,23 +25,23 @@ import java.util.Map;
  *
  * @since 3.11
  */
-public class ClientSideEncryptionOptions {
+public class AutoEncryptionOptions {
     private final MongoClientSettings keyVaultMongoClientSettings;
     private final String keyVaultNamespace;
     private final Map<String, Map<String, Object>> kmsProviders;
-    private final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap;
+    private final Map<String, BsonDocument> namespaceToLocalSchemaDocumentMap;
     private final Map<String, Object> extraOptions;
 
-    public ClientSideEncryptionOptions(@Nullable final MongoClientSettings keyVaultMongoClientSettings,
-                                       @Nullable final String keyVaultNamespace,
-                                       final Map<String, Map<String, Object>> kmsProviders,
-                                       final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap,
-                                       final Map<String, Object> extraOptions) {
+    public AutoEncryptionOptions(@Nullable final MongoClientSettings keyVaultMongoClientSettings,
+                                 @Nullable final String keyVaultNamespace,
+                                 final Map<String, Map<String, Object>> kmsProviders,
+                                 final Map<String, BsonDocument> namespaceToLocalSchemaDocumentMap,
+                                 final Map<String, Object> extraOptions) {
         this.keyVaultMongoClientSettings = keyVaultMongoClientSettings;
         this.keyVaultNamespace = keyVaultNamespace;
         this.kmsProviders = kmsProviders;
-        this.namespaceToAutoEncryptOptionsMap = namespaceToAutoEncryptOptionsMap;
-        this.extraOptions = extraOptions;
+        this.namespaceToLocalSchemaDocumentMap = namespaceToLocalSchemaDocumentMap;
+        this.extraOptions = extraOptions;       
     }
 
     @Nullable
@@ -57,8 +58,8 @@ public class ClientSideEncryptionOptions {
         return kmsProviders;
     }
 
-    public Map<String, AutoEncryptOptions> getNamespaceToAutoEncryptOptionsMap() {
-        return namespaceToAutoEncryptOptionsMap;
+    public Map<String, BsonDocument> getNamespaceToLocalSchemaDocumentMap() {
+        return namespaceToLocalSchemaDocumentMap;
     }
 
     public Map<String, Object> getExtraOptions() {

@@ -16,7 +16,6 @@
 
 package com.mongodb.client.internal;
 
-import com.mongodb.AutoEncryptOptions;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoNamespace;
@@ -42,13 +41,12 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.crypt.capi.MongoCryptContext.State;
 
 class CryptImpl implements Crypt {
 
-    private final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap;
+    private final Map<String, BsonDocument> namespaceToLocalSchemaDocumentMap;
     // TODO: clean this up.  shouldn't take options, but the stuff it needs from options
     private final MongoCrypt mongoCrypt;
     private final CollectionInfoRetriever collectionInfoRetriever;
@@ -56,19 +54,14 @@ class CryptImpl implements Crypt {
     private final KeyRetriever keyRetriever;
     private final KeyManagementService keyManagementService;
 
-    CryptImpl(final MongoCrypt mongoCrypt, final CollectionInfoRetriever collectionInfoRetriever, final CommandMarker commandMarker,
-              final KeyRetriever keyRetriever, final KeyManagementService keyManagementService) {
-        this(mongoCrypt, collectionInfoRetriever, commandMarker, keyRetriever, keyManagementService, null);
-    }
-
     CryptImpl(final MongoCrypt mongoCrypt, final KeyRetrieverImpl keyRetriever, final KeyManagementServiceImpl keyManagementService) {
         this(mongoCrypt, null, null, keyRetriever, keyManagementService, null);
     }
 
     CryptImpl(final MongoCrypt mongoCrypt, final CollectionInfoRetriever collectionInfoRetriever,
               final CommandMarker commandMarker, final KeyRetriever keyRetriever, final KeyManagementService keyManagementService,
-              @Nullable final Map<String, AutoEncryptOptions> namespaceToAutoEncryptOptionsMap) {
-        this.namespaceToAutoEncryptOptionsMap = namespaceToAutoEncryptOptionsMap;
+              @Nullable final Map<String, BsonDocument> namespaceToLocalSchemaDocumentMap) {
+        this.namespaceToLocalSchemaDocumentMap = namespaceToLocalSchemaDocumentMap;
         this.mongoCrypt = mongoCrypt;
         this.collectionInfoRetriever = collectionInfoRetriever;
         this.commandMarker = commandMarker;
@@ -77,21 +70,12 @@ class CryptImpl implements Crypt {
     }
 
     @Override
-    public boolean isEnabled(final MongoNamespace namespace) {
-        AutoEncryptOptions autoEncryptOptions = namespaceToAutoEncryptOptionsMap.get(namespace.getFullName());
-        return autoEncryptOptions != null && autoEncryptOptions.isEnabled();
-    }
-
-    @Override
     public RawBsonDocument encrypt(final MongoNamespace namespace, final RawBsonDocument command) {
         notNull("databaseName", namespace);
         notNull("command", command);
-        isTrue("encryption enabled", isEnabled(namespace));
-
-        AutoEncryptOptions autoEncryptOptions = namespaceToAutoEncryptOptionsMap.get(namespace.getFullName());
 
         MongoCryptContext encryptionContext = mongoCrypt.createEncryptionContext(namespace.getFullName(),
-                autoEncryptOptions.getLocalSchemaDocument());
+                namespaceToLocalSchemaDocumentMap.get(namespace.getFullName()));
 
         try {
             RawBsonDocument encryptedDocument = executeStateMachine(encryptionContext, namespace.getDatabaseName(), command);
@@ -111,7 +95,6 @@ class CryptImpl implements Crypt {
     @Override
     public RawBsonDocument decrypt(final MongoNamespace namespace, final RawBsonDocument commandResponse) {
         notNull("commandResponse", commandResponse);
-        isTrue("decryption enabled", isEnabled(namespace));
 
         MongoCryptContext decryptionContext = mongoCrypt.createDecryptionContext(commandResponse);
 

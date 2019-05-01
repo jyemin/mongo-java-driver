@@ -124,7 +124,7 @@ class CryptConnection implements Connection {
         // TODO: This is not always efficient, e.g. when it's a BsonDocumentWrapper.  Consider just turning everyting to raw first
         String commandName = command.getFirstKey();
 
-        if (!ENCRYPTED_COMMANDS.contains(commandName) || !crypt.isEnabled(getNamespace(database, command, commandName))) {
+        if (!ENCRYPTED_COMMANDS.contains(commandName)) {
             return wrapped.command(database, command, commandFieldNameValidator, readPreference, commandResultDecoder, sessionContext,
                     responseExpected, payload, payloadFieldNameValidator);
         }

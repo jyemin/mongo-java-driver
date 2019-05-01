@@ -32,13 +32,6 @@ import java.io.Closeable;
 public interface Crypt extends Closeable {
 
     /**
-     * Whether the namespace should be auto-encrypted or auto-decrypted
-     * @param namespace the namespace
-     * @return true if the namespace should be auto-encrypted or auto-decrypted
-     */
-    boolean isEnabled(MongoNamespace namespace);
-
-    /**
      * Encrypt the given command
      *
      * @param namespace the namespace
