@@ -88,13 +88,12 @@ public class ClientSideEncryptionTest {
         String databaseName = specDocument.getString("database_name").getValue();
         String collectionName = specDocument.getString("collection_name").getValue();
         MongoDatabase database = getMongoClient().getDatabase(databaseName);
+        MongoCollection<BsonDocument> collection = database
+                .getCollection(collectionName, BsonDocument.class);
+        collection.drop();
 
         /* Create the collection for auto encryption. */
         if (specDocument.containsKey("json_schema")) {
-            MongoCollection<BsonDocument> collection = database
-                    .getCollection(collectionName, BsonDocument.class);
-            collection.drop();
-
             database.createCollection(collectionName, new CreateCollectionOptions()
                     .validationOptions(new ValidationOptions()
                             .validationAction(ValidationAction.WARN)
@@ -112,7 +111,7 @@ public class ClientSideEncryptionTest {
 
         /* Insert data into the "admin.datakeys" key vault. */
         BsonArray data = specDocument.getArray("key_vault_data", new BsonArray());
-        MongoCollection<BsonDocument> collection = getMongoClient().getDatabase("admin").getCollection("datakeys", BsonDocument.class);
+        collection = getMongoClient().getDatabase("admin").getCollection("datakeys", BsonDocument.class);
         collection.drop();
         if (!data.isEmpty()) {
             documents = new ArrayList<BsonDocument>();
@@ -141,11 +140,14 @@ public class ClientSideEncryptionTest {
 
 
         Map<String, BsonDocument> namespaceToSchemaMap = new HashMap<String, BsonDocument>();
-        BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("autoEncryptMap");
 
-        for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
-            final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
-            namespaceToSchemaMap.put(entries.getKey(), autoEncryptOptionsDocument.getDocument("schema", null));
+        if (cryptOptions.containsKey("schema_map")) {
+            BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("schema_map");
+
+            for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
+                final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
+                namespaceToSchemaMap.put(entries.getKey(), autoEncryptOptionsDocument.getDocument("schema", null));
+            }
         }
 
         Map<String, Map<String, Object>> kmsProvidersMap = new HashMap<String, Map<String, Object>>();
