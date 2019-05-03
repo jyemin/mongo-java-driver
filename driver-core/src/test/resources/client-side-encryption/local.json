@@ -122,6 +122,19 @@
                 {
                     "command_started_event": {
                         "command": {
+                            "listCollections": 1,
+                            "cursor": {},
+                            "filter": {
+                                "name": "datakeys"
+                            },
+                            "$db": "admin"
+                        },
+                        "command_name": "listCollections"
+                    }
+                },
+                {
+                    "command_started_event": {
+                        "command": {
                             "find": "datakeys",
                             "filter": {
                                 "_id": {
