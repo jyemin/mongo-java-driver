@@ -250,7 +250,7 @@ class SingleResultCallbackSubscriptionSpecification extends Specification {
         observer.assertTerminalEvent()
     }
 
-    def 'should be able to handle Void callbacks'() {
+    def 'should be able to handle null single result'() {
         given:
         def observer = new TestObserver()
         observe(new Block<SingleResultCallback<Void>>(){
@@ -265,7 +265,7 @@ class SingleResultCallbackSubscriptionSpecification extends Specification {
 
         then:
         observer.assertNoErrors()
-        observer.assertReceivedOnNext([])
+        observer.assertReceivedOnNext([null])
         observer.assertTerminalEvent()
     }
 

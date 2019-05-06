@@ -68,7 +68,7 @@ class MongoIterableSubscriptionSpecification extends Specification {
 
         then:
         observer.assertNoErrors()
-        observer.assertReceivedOnNext([1, 2, 3, 4])
+        observer.assertReceivedOnNext([1, 2, 3, null])
         observer.assertTerminalEvent()
     }
 
@@ -85,7 +85,7 @@ class MongoIterableSubscriptionSpecification extends Specification {
 
         then:
         observer.assertNoErrors()
-        observer.assertReceivedOnNext([1, 2, 3, 4])
+        observer.assertReceivedOnNext([1, 2, 3, null])
         observer.assertTerminalEvent()
 
         cleanup:
@@ -293,7 +293,7 @@ class MongoIterableSubscriptionSpecification extends Specification {
         then: // check that the observer is finished
         observer.assertSubscribed()
         observer.assertNoErrors()
-        observer.assertReceivedOnNext([1, 2, 3, 4])
+        observer.assertReceivedOnNext([1, 2, 3, null])
         observer.assertTerminalEvent()
 
         when: // unsubscribe
@@ -466,7 +466,7 @@ class MongoIterableSubscriptionSpecification extends Specification {
 
     def getCursor() {
         Mock(AsyncBatchCursor) {
-            def cursorResults = [[1, 2], [3, 4]]
+            def cursorResults = [[1, 2], [3, null]]
             next(_) >> {
                 it[0].onResult(cursorResults.isEmpty() ? null : cursorResults.remove(0), null)
             }
