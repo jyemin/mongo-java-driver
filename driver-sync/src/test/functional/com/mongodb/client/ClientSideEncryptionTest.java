@@ -224,7 +224,6 @@ public class ClientSideEncryptionTest {
             String operationName = operation.getString("name").getValue();
             BsonValue expectedResult = operation.get("result");
             try {
-                System.out.println(operation);
                 BsonDocument actualOutcome = helper.getOperationResults(operation);
                 if (expectedResult != null) {
                     BsonValue actualResult = actualOutcome.get("result");
