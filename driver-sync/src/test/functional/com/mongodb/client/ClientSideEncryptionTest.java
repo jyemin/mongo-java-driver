@@ -16,9 +16,7 @@
 
 package com.mongodb.client;
 
-import com.mongodb.AutoEncryptionOptions;
-import com.mongodb.Block;
-import com.mongodb.MongoClientSettings;
+import com.mongodb.*;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationOptions;
@@ -53,7 +51,8 @@ import static com.mongodb.ClusterFixture.getConnectionString;
 import static com.mongodb.client.CommandMonitoringTestHelper.assertEventsEquality;
 import static com.mongodb.client.CommandMonitoringTestHelper.getExpectedEvents;
 import static com.mongodb.client.Fixture.getMongoClient;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 // See https://github.com/mongodb/specifications/tree/master/source/client-side-encryption/tests
@@ -80,6 +79,35 @@ public class ClientSideEncryptionTest {
         this.definition = definition;
         System.out.println(description);
     }
+
+    private boolean hasErrorContainsField(final BsonValue expectedResult) {
+        return hasErrorField(expectedResult, "errorContains");
+    }
+
+    private boolean hasErrorCodeNameField(final BsonValue expectedResult) {
+        return hasErrorField(expectedResult, "errorCodeName");
+    }
+
+    private boolean hasErrorField(final BsonValue expectedResult, final String key) {
+        return expectedResult != null && expectedResult.isDocument() && expectedResult.asDocument().containsKey(key);
+    }
+
+    private String getErrorField(final BsonValue expectedResult, final String key) {
+        if (hasErrorField(expectedResult, key)) {
+            return expectedResult.asDocument().getString(key).getValue();
+        } else {
+            return "";
+        }
+    }
+
+    private String getErrorContainsField(final BsonValue expectedResult) {
+        return getErrorField(expectedResult, "errorContains");
+    }
+
+    private String getErrorCodeNameField(final BsonValue expectedResult) {
+        return getErrorField(expectedResult, "errorCodeName");
+    }
+
 
     @Before
     public void setUp() {
@@ -146,7 +174,7 @@ public class ClientSideEncryptionTest {
 
             for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
                 final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();
-                namespaceToSchemaMap.put(entries.getKey(), autoEncryptOptionsDocument.getDocument("schema", null));
+                namespaceToSchemaMap.put(entries.getKey(), autoEncryptOptionsDocument);
             }
         }
 
@@ -193,12 +221,43 @@ public class ClientSideEncryptionTest {
     public void shouldPassAllOutcomes() {
         for (BsonValue cur : definition.getArray("operations")) {
             BsonDocument operation = cur.asDocument();
+            String operationName = operation.getString("name").getValue();
             BsonValue expectedResult = operation.get("result");
-            BsonDocument actualOutcome = helper.getOperationResults(operation);
-            if (expectedResult != null) {
-                BsonValue actualResult = actualOutcome.get("result");
-                assertEquals("Expected operation result differs from actual", expectedResult, actualResult);
+            try {
+                System.out.println(operation);
+                BsonDocument actualOutcome = helper.getOperationResults(operation);
+                if (expectedResult != null) {
+                    BsonValue actualResult = actualOutcome.get("result");
+                    assertEquals("Expected operation result differs from actual", expectedResult, actualResult);
+                }
+
+                assertFalse(String.format("Expected error '%s' but none thrown for operation %s",
+                        getErrorContainsField(expectedResult), operationName), hasErrorContainsField(expectedResult));
+                assertFalse(String.format("Expected error code '%s' but none thrown for operation %s",
+                        getErrorCodeNameField(expectedResult), operationName), hasErrorCodeNameField(expectedResult));
+            } catch (RuntimeException e) {
+                boolean passedAssertion = false;
+                if (hasErrorContainsField(expectedResult)) {
+                    String expectedError = getErrorContainsField(expectedResult);
+                    assertTrue(String.format("Expected '%s' but got '%s' for operation %s", expectedError, e.getMessage(),
+                            operationName), e.getMessage().toLowerCase().contains(expectedError.toLowerCase()));
+                    passedAssertion = true;
+                }
+                if (hasErrorCodeNameField(expectedResult)) {
+                    String expectedErrorCodeName = getErrorCodeNameField(expectedResult);
+                    if (e instanceof MongoCommandException) {
+                        assertEquals(expectedErrorCodeName, ((MongoCommandException) e).getErrorCodeName());
+                        passedAssertion = true;
+                    } else if (e instanceof MongoWriteConcernException) {
+                        assertEquals(expectedErrorCodeName, ((MongoWriteConcernException) e).getWriteConcernError().getCodeName());
+                        passedAssertion = true;
+                    }
+                }
+                if (!passedAssertion) {
+                    throw e;
+                }
             }
+
         }
 
         if (definition.containsKey("expectations")) {
