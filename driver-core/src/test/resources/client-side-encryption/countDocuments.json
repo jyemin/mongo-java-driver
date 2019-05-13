@@ -74,6 +74,26 @@
                     "bsonType": "string",
                     "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
                 }
+            },
+            "ssn_equivalent": {
+                "encrypt": {
+                    "keyId": [
+                        {
+                            "$binary": {
+                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+                                "subType": "04"
+                            }
+                        }
+                    ],
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+                    "initializationVector": {
+                        "$binary": {
+                            "base64": "aWlpaWlpaWlpaWlpaWlpaQ==",
+                            "subType": "00"
+                        }
+                    }
+                }
             }
         },
         "bsonType": "object"
@@ -92,7 +112,7 @@
                 "key": "arn:aws:kms:us-east-1:579766882180:key/89fcc2c4-08b0-4bd9-9f25-e30687b580d0",
                 "region": "us-east-1"
             },
-            "updatedDate": {
+            "updateDate": {
                 "$date": {
                     "$numberLong": "1552949630483"
                 }
@@ -119,8 +139,8 @@
             "description": "countDocuments with deterministic encryption",
             "skipReason": "waiting on SERVER-39395",
             "clientOptions": {
-                "auto_encrypt_opts": {
-                    "kms_providers": {
+                "autoEncryptOpts": {
+                    "kmsProviders": {
                         "aws": {}
                     }
                 }

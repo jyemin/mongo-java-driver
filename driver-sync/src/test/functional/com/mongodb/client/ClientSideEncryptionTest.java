@@ -165,14 +165,14 @@ public class ClientSideEncryptionTest {
         }
 
         BsonDocument clientOptions = definition.getDocument("clientOptions");
-        BsonDocument cryptOptions = clientOptions.getDocument("auto_encrypt_opts");
-        BsonDocument kmsProviders = cryptOptions.getDocument("kms_providers");
+        BsonDocument cryptOptions = clientOptions.getDocument("autoEncryptOpts");
+        BsonDocument kmsProviders = cryptOptions.getDocument("kmsProviders");
 
 
         Map<String, BsonDocument> namespaceToSchemaMap = new HashMap<String, BsonDocument>();
 
-        if (cryptOptions.containsKey("schema_map")) {
-            BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("schema_map");
+        if (cryptOptions.containsKey("schemaMap")) {
+            BsonDocument autoEncryptMapDocument = cryptOptions.getDocument("schemaMap");
 
             for (Map.Entry<String, BsonValue> entries : autoEncryptMapDocument.entrySet()) {
                 final BsonDocument autoEncryptOptionsDocument = entries.getValue().asDocument();

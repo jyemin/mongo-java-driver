@@ -9,6 +9,7 @@
     "data": [
         {
             "_id": 1,
+            "x": 1,
             "ssn": {
                 "$binary": {
                     "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
@@ -18,6 +19,7 @@
         },
         {
             "_id": 2,
+            "x": 2,
             "ssn": {
                 "$binary": {
                     "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
@@ -136,8 +138,8 @@
     ],
     "tests": [
         {
-            "description": "findOneAndDelete with deterministic encryption",
-            "skipReason": "Waiting on SERVER-40005",
+            "description": "mapReduce deterministic encryption",
+            "skipReason": "TODO: throw on unsupported commands in Java PoC",
             "clientOptions": {
                 "autoEncryptOpts": {
                     "kmsProviders": {
@@ -147,96 +149,23 @@
             },
             "operations": [
                 {
-                    "name": "findOneAndDelete",
+                    "name": "mapReduce",
                     "arguments": {
-                        "filter": {
-                            "ssn": "457-55-5462"
+                        "map": {
+                            "$code": "function inc() { return emit(0, this.x + 1) }"
+                        },
+                        "reduce": {
+                            "$code": "function sum(key, values) { return values.reduce((acc, x) => acc + x); }"
+                        },
+                        "out": {
+                            "inline": 1
                         }
+                    },
+                    "result": {
+                        "errorContains": "automatic encryption is not supported"
                     }
                 }
-            ],
-            "expectations": [
-                {
-                    "command_started_event": {
-                        "command": {
-                            "listCollections": 1,
-                            "cursor": {},
-                            "filter": {
-                                "name": "default"
-                            }
-                        },
-                        "command_name": "listCollections"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "listCollections": 1,
-                            "cursor": {},
-                            "filter": {
-                                "name": "datakeys"
-                            },
-                            "$db": "admin"
-                        },
-                        "command_name": "listCollections"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "datakeys",
-                            "filter": {
-                                "_id": {
-                                    "$in": [
-                                        {
-                                            "$binary": {
-                                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
-                                                "subType": "04"
-                                            }
-                                        }
-                                    ]
-                                }
-                            },
-                            "$db": "admin"
-                        },
-                        "command_name": "find"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "findAndModify": "default",
-                            "query": {
-                                "ssn": {
-                                    "$eq": {
-                                        "$binary": {
-                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                            "subType": "06"
-                                        }
-                                    }
-                                }
-                            },
-                            "remove": true
-                        },
-                        "command_name": "findAndModify"
-                    }
-                }
-            ],
-            "outcome": {
-                "collection": {
-                    "data": [
-                        {
-                            "_id": 2,
-                            "ssn": {
-                                "$binary": {
-                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
-                                    "subType": "06"
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
+            ]
         }
     ]
 }

@@ -164,11 +164,17 @@ class CryptConnection implements Connection {
     }
 
     private MongoNamespace getNamespace(final String database, final BsonDocument command, final String commandName) {
-        BsonValue collectionNameValue = command.get(commandName);
-        if (!collectionNameValue.isString()) {
+        BsonValue commandValue = command.get(commandName);
+        if (commandName.equals("explain")) {
+            if (!commandValue.isDocument()) {
+                throw new MongoClientException("Expected 'explain' value to be a document value");
+            }
+            return getNamespace(database, commandValue.asDocument(), commandValue.asDocument().getFirstKey());
+        }
+        if (!commandValue.isString()) {
             throw new MongoClientException("Expected collection name as the command value");
         }
-        return new MongoNamespace(database, collectionNameValue.asString().getValue());
+        return new MongoNamespace(database, commandValue.asString().getValue());
     }
 
     @Override

@@ -310,6 +310,9 @@ public final class CommandMonitoringTestHelper {
                     if (type.equals("binData")) {
                         assertEquals(BsonType.BINARY, actualValue.getBsonType());
                         expected.put(key, actualValue);
+                    } else if (type.equals("long")) {
+                        assertEquals(BsonType.INT64, actualValue.getBsonType());
+                        expected.put(key, actualValue);
                     } else {
                         throw new UnsupportedOperationException("Unsupported type: " + type);
                     }

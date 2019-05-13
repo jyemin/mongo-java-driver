@@ -11,7 +11,25 @@
             "_id": 1,
             "ssn": {
                 "$binary": {
-                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                    "subType": "00"
+                }
+            }
+        },
+        {
+            "_id": 2,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQ==",
+                    "subType": "06"
+                }
+            }
+        },
+        {
+            "_id": 3,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAa2V2aW4gYWxiZXJ0c29uCg==",
                     "subType": "06"
                 }
             }
@@ -127,7 +145,7 @@
     ],
     "tests": [
         {
-            "description": "replaceOne with encryption",
+            "description": "Wrong subtype",
             "clientOptions": {
                 "autoEncryptOpts": {
                     "kmsProviders": {
@@ -137,125 +155,71 @@
             },
             "operations": [
                 {
-                    "name": "replaceOne",
+                    "name": "find",
                     "arguments": {
                         "filter": {
-                            "ssn": "457-55-5462"
-                        },
-                        "replacement": {
-                            "ssn": "123-45-6789",
-                            "random": "abc"
+                            "_id": 1
                         }
                     },
-                    "result": {
-                        "matchedCount": 1,
-                        "modifiedCount": 1,
-                        "upsertedCount": 0
-                    }
-                }
-            ],
-            "expectations": [
-                {
-                    "command_started_event": {
-                        "command": {
-                            "listCollections": 1,
-                            "cursor": {},
-                            "filter": {
-                                "name": "default"
-                            }
-                        },
-                        "command_name": "listCollections"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "listCollections": 1,
-                            "cursor": {},
-                            "filter": {
-                                "name": "datakeys"
-                            },
-                            "$db": "admin"
-                        },
-                        "command_name": "listCollections"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "find": "datakeys",
-                            "filter": {
-                                "_id": {
-                                    "$in": [
-                                        {
-                                            "$binary": {
-                                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
-                                                "subType": "04"
-                                            }
-                                        }
-                                    ]
-                                }
-                            },
-                            "$db": "admin"
-                        },
-                        "command_name": "find"
-                    }
-                },
-                {
-                    "command_started_event": {
-                        "command": {
-                            "update": "default",
-                            "updates": [
-                                {
-                                    "q": {
-                                        "ssn": {
-                                            "$eq": {
-                                                "$binary": {
-                                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
-                                                    "subType": "06"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "u": {
-                                        "ssn": {
-                                            "$binary": {
-                                                "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
-                                                "subType": "06"
-                                            }
-                                        },
-                                        "random": {
-                                            "$$type": "binData"
-                                        }
-                                    },
-                                    "multi": false,
-                                    "upsert": false
-                                }
-                            ],
-                            "ordered": true
-                        },
-                        "command_name": "update"
-                    }
-                }
-            ],
-            "outcome": {
-                "collection": {
-                    "data": [
+                    "result": [
                         {
                             "_id": 1,
                             "ssn": {
                                 "$binary": {
                                     "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
-                                    "subType": "06"
+                                    "subType": "00"
                                 }
-                            },
-                            "random": {
-                                "$$type": "binData"
                             }
                         }
                     ]
                 }
-            }
+            ]
+        },
+        {
+            "description": "Empty data",
+            "clientOptions": {
+                "autoEncryptOpts": {
+                    "kmsProviders": {
+                        "aws": {}
+                    }
+                }
+            },
+            "operations": [
+                {
+                    "name": "find",
+                    "arguments": {
+                        "filter": {
+                            "_id": 2
+                        }
+                    },
+                    "result": {
+                        "errorContains": "malformed ciphertext"
+                    }
+                }
+            ]
+        },
+        {
+            "description": "Malformed data",
+            "clientOptions": {
+                "autoEncryptOpts": {
+                    "kmsProviders": {
+                        "aws": {}
+                    }
+                }
+            },
+            "operations": [
+                {
+                    "name": "find",
+                    "arguments": {
+                        "filter": {
+                            "_id": 3
+                        }
+                    },
+                    "result": {
+                        "errorContains": "client did not provide all keys"
+                    }
+                }
+            ]
         }
     ]
 }

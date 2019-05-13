@@ -6,9 +6,41 @@
     ],
     "database_name": "default",
     "collection_name": "default",
-    "data": [],
+    "data": [
+        {
+            "_id": 1,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
+                    "subType": "06"
+                }
+            }
+        },
+        {
+            "_id": 2,
+            "ssn": {
+                "$binary": {
+                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                    "subType": "06"
+                }
+            }
+        }
+    ],
     "json_schema": {
         "properties": {
+            "encrypted_w_altname": {
+                "encrypt": {
+                    "keyId": "/altname",
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+                    "initializationVector": {
+                        "$binary": {
+                            "base64": "aWlpaWlpaWlpaWlpaWlpaQ==",
+                            "subType": "00"
+                        }
+                    }
+                }
+            },
             "ssn": {
                 "encrypt": {
                     "keyId": [
@@ -42,68 +74,88 @@
                     "bsonType": "string",
                     "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
                 }
+            },
+            "ssn_equivalent": {
+                "encrypt": {
+                    "keyId": [
+                        {
+                            "$binary": {
+                                "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+                                "subType": "04"
+                            }
+                        }
+                    ],
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+                    "initializationVector": {
+                        "$binary": {
+                            "base64": "aWlpaWlpaWlpaWlpaWlpaQ==",
+                            "subType": "00"
+                        }
+                    }
+                }
             }
         },
         "bsonType": "object"
     },
     "key_vault_data": [
         {
+            "status": 1,
             "_id": {
                 "$binary": {
                     "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
                     "subType": "04"
                 }
             },
+            "masterKey": {
+                "provider": "aws",
+                "key": "arn:aws:kms:us-east-1:579766882180:key/89fcc2c4-08b0-4bd9-9f25-e30687b580d0",
+                "region": "us-east-1"
+            },
+            "updateDate": {
+                "$date": {
+                    "$numberLong": "1552949630483"
+                }
+            },
             "keyMaterial": {
                 "$binary": {
-                    "base64": "j8V54E0Yp0nnMI9fxTuUlXcNb496dRHeWvVDs/ESv9Iz3sbbD8mZQ3DUjkIIIgFu9NxiJy7INAI2BW50gpbnbESTD5qj7usHzNYdYTC3rrlWzrE/QZZhI1+q5rUQGjGhXFYwbb3zPuk2KngbuQzle3l6BUyK+SQJ5yD4n/2Sx5E=",
+                    "base64": "AQICAHhQNmWG2CzOm1dq3kWLM+iDUZhEqnhJwH9wZVpuZ94A8gEseZD3pQK21IQydtAgPuMjAAAAojCBnwYJKoZIhvcNAQcGoIGRMIGOAgEAMIGIBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDCRqOG6J3KQJ6fZH/AIBEIBbRtAOLl2PRknCve94T9OfEV+sLeE3Jn+Ewtsq1eGuj9Vldxxfq1lFSou7YwZVJyQpx5nZTsUVx3LgCk7B/WY/j4f6FWHteJ63zw6CNMPC5Gi1fubsu1tqwjwRLg==",
                     "subType": "00"
                 }
             },
             "creationDate": {
                 "$date": {
-                    "$numberLong": "1232739599082000"
+                    "$numberLong": "1552949630483"
                 }
             },
-            "updateDate": {
-                "$date": {
-                    "$numberLong": "1232739599082000"
-                }
-            },
-            "status": {
-                "$numberInt": "0"
-            },
-            "masterKey": {
-                "provider": "local"
-            }
+            "keyAltNames": [
+                "altname",
+                "another_altname"
+            ]
         }
     ],
     "tests": [
         {
-            "description": "Insert a document with auto encryption using local KMS provider",
+            "description": "Explain a find with deterministic encryption",
             "clientOptions": {
                 "autoEncryptOpts": {
                     "kmsProviders": {
-                        "aws": {},
-                        "local": {
-                            "key": {
-                                "$binary": {
-                                    "base64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-                                    "subType": "00"
-                                }
-                            }
-                        }
+                        "aws": {}
                     }
                 }
             },
             "operations": [
                 {
-                    "name": "insertOne",
+                    "name": "runCommand",
+                    "command_name": "explain",
                     "arguments": {
-                        "document": {
-                            "_id": 1,
-                            "ssn": "457-55-5462",
-                            "random": "abc"
+                        "command": {
+                            "explain": {
+                                "find": "default",
+                                "filter": {
+                                    "ssn": "123-45-6789"
+                                }
+                            }
                         }
                     }
                 }
@@ -158,24 +210,22 @@
                 {
                     "command_started_event": {
                         "command": {
-                            "insert": "default",
-                            "documents": [
-                                {
-                                    "_id": 1,
+                            "explain": {
+                                "find": "default",
+                                "filter": {
                                     "ssn": {
-                                        "$binary": {
-                                            "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpafBneFKswGbiqdun/OpV9uTCNSocPgh3jCyPOo/2fr4vkPdKsoeZHkeL9UQ+5a+9+V7CaJiLQlE448UCcTppaHU=",
-                                            "subType": "06"
+                                        "$eq": {
+                                            "$binary": {
+                                                "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                                "subType": "06"
+                                            }
                                         }
-                                    },
-                                    "random": {
-                                        "$$type": "binData"
                                     }
                                 }
-                            ],
-                            "ordered": true
+                            },
+                            "verbosity": "allPlansExecution"
                         },
-                        "command_name": "insert"
+                        "command_name": "explain"
                     }
                 }
             ],
@@ -186,12 +236,18 @@
                             "_id": 1,
                             "ssn": {
                                 "$binary": {
-                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpafBneFKswGbiqdun/OpV9uTCNSocPgh3jCyPOo/2fr4vkPdKsoeZHkeL9UQ+5a+9+V7CaJiLQlE448UCcTppaHU=",
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaZngC99HenjphHzhJ2/Be2QvqMgm8ZR+ZaLsoUyV1rwcdrAv7jdevtzpndaZDmFcr4vefVrXCssGizpxUtq8p24=",
                                     "subType": "06"
                                 }
-                            },
-                            "random": {
-                                "$$type": "binData"
+                            }
+                        },
+                        {
+                            "_id": 2,
+                            "ssn": {
+                                "$binary": {
+                                    "base64": "AQAAAAAAAAAAAAAAAAAAAAACaWlpaWlpaWlpaWlpaWlpaQz9fzDR15Wmpcyl9/g8vO1uzwbfeEM53LrLyItCVu+7WcmW8rx8VRF1zlDykXsCL+zm9jRE2+zuhv1ZQwzQlkI=",
+                                    "subType": "06"
+                                }
                             }
                         }
                     ]
