@@ -48,6 +48,7 @@ import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.connection.ClusterConnectionMode.MULTIPLE;
 import static com.mongodb.connection.ClusterConnectionMode.SINGLE;
 import static com.mongodb.connection.ServerType.SHARD_ROUTER;
+import static com.mongodb.connection.ServerType.STANDALONE;
 import static com.mongodb.internal.connection.BsonWriterHelper.writePayload;
 import static com.mongodb.internal.connection.ReadConcernHelper.getReadConcernDocument;
 import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WIRE_VERSION;
@@ -219,7 +220,9 @@ public final class CommandMessage extends RequestMessage {
     }
 
     private boolean isDirectConnectionToNonShardRouter() {
-        return clusterConnectionMode == SINGLE && getSettings().getServerType() != SHARD_ROUTER;
+        return clusterConnectionMode == SINGLE
+                && getSettings().getServerType() != SHARD_ROUTER
+                && getSettings().getServerType() != STANDALONE;
     }
 
     private boolean useOpMsg() {
