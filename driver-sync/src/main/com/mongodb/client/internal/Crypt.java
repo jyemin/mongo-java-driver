@@ -28,12 +28,9 @@ import com.mongodb.crypt.capi.MongoExplicitEncryptOptions;
 import com.mongodb.crypt.capi.MongoKeyDecryptor;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBinary;
-import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.RawBsonDocument;
-import org.bson.codecs.BsonDocumentCodec;
-import org.bson.codecs.DecoderContext;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -101,15 +98,7 @@ class Crypt implements Closeable {
                 namespaceToLocalSchemaDocumentMap.get(namespace.getFullName()));
 
         try {
-            RawBsonDocument encryptedDocument = executeStateMachine(encryptionContext, namespace.getDatabaseName(), command);
-
-            // TODO: hopefully remove this
-            BsonDocument clonedDocument = new BsonDocumentCodec()
-                    .decode(new BsonBinaryReader(encryptedDocument.getByteBuffer().asNIO()), DecoderContext.builder().build());
-            clonedDocument.remove("$readPreference");
-            clonedDocument.remove("$db");
-
-            return new RawBsonDocument(clonedDocument, new BsonDocumentCodec());
+            return executeStateMachine(encryptionContext, namespace.getDatabaseName(), command);
         } finally {
             encryptionContext.close();
         }

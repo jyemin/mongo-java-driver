@@ -64,27 +64,13 @@ class CryptConnection implements Connection {
             "aggregate",
             "count",
             "find",
+            "getMore",
             "insert",
             "update",
             "delete",
             "findAndModify",
-
-            /* TODO: should these be supported?  Or rejected if used? */
             "explain",
-            "distinct",
-            "group",
-            "mapReduce"));
-
-    private static final Set<String> DECRYPTED_RESPONSES = new HashSet<String>(asList(
-            "aggregate",
-            "find",
-            "findAndModify",
-            "getMore",
-
-            /* TODO: should these be supported?  Or rejected if used? */
-            "distinct",
-            "group",
-            "mapReduce"));
+            "distinct"));
 
     private final Connection wrapped;
     private final Crypt crypt;
@@ -124,9 +110,11 @@ class CryptConnection implements Connection {
         // TODO: This is not always efficient, e.g. when it's a BsonDocumentWrapper.  Consider just turning everything to raw first
         String commandName = command.getFirstKey();
 
-        if (!ENCRYPTED_COMMANDS.contains(commandName)) {
+        if (commandName.equals("listCollections")) {
             return wrapped.command(database, command, commandFieldNameValidator, readPreference, commandResultDecoder, sessionContext,
                     responseExpected, payload, payloadFieldNameValidator);
+        } else if (!ENCRYPTED_COMMANDS.contains(commandName)) {
+            throw new MongoClientException(String.format("Automatic encryption is not supported for the '%s' command", commandName));
         }
 
         // TODO: more efficient output buffer type?
@@ -145,22 +133,18 @@ class CryptConnection implements Connection {
 
         RawBsonDocument unencryptedCommand = new RawBsonDocument(bsonOutput.getInternalBuffer(), 0, bsonOutput.getSize());
 
-        BsonDocument encryptedCommand = crypt.encrypt(getNamespace(database, command, commandName), unencryptedCommand);
+        BsonDocument encryptedCommand = commandName.equals("getMore")
+                ? command
+                : crypt.encrypt(getNamespace(database, command, commandName), unencryptedCommand);
+        
+        RawBsonDocument encryptedResponse = wrapped.command(database, encryptedCommand, commandFieldNameValidator, readPreference,
+                new RawBsonDocumentCodec(), sessionContext, responseExpected, null, null);
 
-        // TODO: are there cases when the command isn't encrypted but the response still needs to be decrypted?
-        if (!DECRYPTED_RESPONSES.contains(commandName)) {
-            return wrapped.command(database, encryptedCommand, commandFieldNameValidator, readPreference, commandResultDecoder,
-                    sessionContext, responseExpected, null, null);
-        } else {
-            RawBsonDocument encryptedResponse = wrapped.command(database, encryptedCommand, commandFieldNameValidator, readPreference,
-                    new RawBsonDocumentCodec(), sessionContext, responseExpected, null, null);
+        RawBsonDocument decryptedResponse = crypt.decrypt(encryptedResponse);
 
-            RawBsonDocument decryptedResponse = crypt.decrypt(encryptedResponse);
+        BsonBinaryReader reader = new BsonBinaryReader(decryptedResponse.getByteBuffer().asNIO());
 
-            BsonBinaryReader reader = new BsonBinaryReader(decryptedResponse.getByteBuffer().asNIO());
-
-            return commandResultDecoder.decode(reader, DecoderContext.builder().build());
-        }
+        return commandResultDecoder.decode(reader, DecoderContext.builder().build());
     }
 
     private MongoNamespace getNamespace(final String database, final BsonDocument command, final String commandName) {
@@ -170,11 +154,12 @@ class CryptConnection implements Connection {
                 throw new MongoClientException("Expected 'explain' value to be a document value");
             }
             return getNamespace(database, commandValue.asDocument(), commandValue.asDocument().getFirstKey());
+        } else {
+            if (!commandValue.isString()) {
+                throw new MongoClientException("Automatic encryption is not supported for aggregate commands at the database level");
+            }
+            return new MongoNamespace(database, commandValue.asString().getValue());
         }
-        if (!commandValue.isString()) {
-            throw new MongoClientException("Expected collection name as the command value");
-        }
-        return new MongoNamespace(database, commandValue.asString().getValue());
     }
 
     @Override
