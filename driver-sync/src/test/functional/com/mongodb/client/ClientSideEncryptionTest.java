@@ -20,10 +20,12 @@ import com.mongodb.AutoEncryptionOptions;
 import com.mongodb.Block;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
+import com.mongodb.MongoNamespace;
 import com.mongodb.MongoWriteConcernException;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationOptions;
+import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.event.CommandEvent;
@@ -31,6 +33,7 @@ import com.mongodb.internal.connection.TestCommandListener;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
+import org.bson.codecs.BsonDocumentCodec;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,6 +73,7 @@ public class ClientSideEncryptionTest {
     private JsonPoweredCrudTestHelper helper;
     private TestCommandListener commandListener;
     private MongoClient mongoClient;
+    private CollectionHelper<BsonDocument> collectionHelper;
 
     public ClientSideEncryptionTest(final String filename,
                                     final String description, final BsonDocument specDocument,
@@ -119,6 +123,7 @@ public class ClientSideEncryptionTest {
 
         String databaseName = specDocument.getString("database_name").getValue();
         String collectionName = specDocument.getString("collection_name").getValue();
+        collectionHelper = new CollectionHelper<BsonDocument>(new BsonDocumentCodec(), new MongoNamespace(databaseName, collectionName));
         MongoDatabase database = getMongoClient().getDatabase(databaseName);
         MongoCollection<BsonDocument> collection = database
                 .getCollection(collectionName, BsonDocument.class);
@@ -268,6 +273,12 @@ public class ClientSideEncryptionTest {
             List<CommandEvent> events = commandListener.getCommandStartedEvents();
 
             assertEventsEquality(expectedEvents, events);
+        }
+
+        BsonDocument expectedOutcome = definition.getDocument("outcome", new BsonDocument());
+        if (expectedOutcome.containsKey("collection")) {
+            List<BsonDocument> collectionData = collectionHelper.find();
+            assertEquals(expectedOutcome.getDocument("collection").getArray("data").getValues(), collectionData);
         }
 
     }
