@@ -269,7 +269,7 @@
             }
         },
         {
-            "description": "Distinct fails when filtering on an encrypted field",
+            "description": "Distinct fails when filtering on a random encrypted field",
             "clientOptions": {
                 "autoEncryptOpts": {
                     "kmsProviders": {
