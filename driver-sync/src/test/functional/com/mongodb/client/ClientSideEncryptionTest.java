@@ -29,9 +29,11 @@ import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.event.CommandEvent;
+import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.internal.connection.TestCommandListener;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
 import org.junit.After;
@@ -277,10 +279,57 @@ public class ClientSideEncryptionTest {
 
         BsonDocument expectedOutcome = definition.getDocument("outcome", new BsonDocument());
         if (expectedOutcome.containsKey("collection")) {
+            /* TODO: Jeff pls help */
             List<BsonDocument> collectionData = collectionHelper.find();
-            assertEquals(expectedOutcome.getDocument("collection").getArray("data").getValues(), collectionData);
+            List<BsonValue> expectedData = expectedOutcome.getDocument("collection").getArray("data").getValues();
+            assertEquals (collectionData.size(), expectedData.size());
+            int count = collectionData.size();
+            for (int i = 0; i < count; i++) {
+                BsonDocument actual = collectionData.get(i);
+                BsonDocument expected = expectedData.get(i).asDocument();
+                replaceExpectedWithActualOutcome(expected, actual);
+                assertEquals(expected, actual);
+            }
         }
 
+    }
+
+    /* Necessary to support $$type in outcome documents */
+    private static void replaceExpectedWithActualOutcome(final BsonDocument expected, final BsonDocument actual) {
+        for (String key : expected.keySet()) {
+            BsonValue value = expected.get(key);
+            if (value.isDocument()) {
+                BsonDocument valueDocument = value.asDocument();
+                BsonValue actualValue = actual.get(key);
+                if (valueDocument.size() == 1 && valueDocument.getFirstKey().equals("$$type")) {
+                    String type = valueDocument.getString("$$type").getValue();
+                    if (type.equals("binData")) {
+                        assertEquals(BsonType.BINARY, actualValue.getBsonType());
+                        expected.put(key, actualValue);
+                    } else if (type.equals("long")) {
+                        assertEquals(BsonType.INT64, actualValue.getBsonType());
+                        expected.put(key, actualValue);
+                    } else {
+                        throw new UnsupportedOperationException("Unsupported type: " + type);
+                    }
+                } else {
+                    replaceExpectedWithActualOutcome(valueDocument, actualValue.asDocument());
+                }
+            } else if (value.isArray()) {
+                replaceExpectedWithActualOutcome(value.asArray(), actual.get(key).asArray());
+            }
+        }
+    }
+
+    private static void replaceExpectedWithActualOutcome(final BsonArray expected, final BsonArray actual) {
+        for (int i = 0; i < expected.size(); i++) {
+            BsonValue value = expected.get(i);
+            if (value.isDocument()) {
+                replaceExpectedWithActualOutcome(value.asDocument(), actual.get(i).asDocument());
+            } else if (value.isArray()) {
+                replaceExpectedWithActualOutcome(value.asArray(), actual.get(i).asArray());
+            }
+        }
     }
 
     @Parameterized.Parameters(name = "{0}: {1}")

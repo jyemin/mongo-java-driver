@@ -161,7 +161,6 @@ class Crypt implements Closeable {
                 new BsonDocument("v", value), MongoExplicitEncryptOptions.builder()
                         .keyId(options.getKeyId())
                         .algorithm(options.getAlgorithm())
-                        .initializationVector(options.getInitializationVector())
                         .build());
 
         try {

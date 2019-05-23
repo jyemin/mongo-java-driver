@@ -36,9 +36,6 @@ public class EncryptOptions {
     // Required: "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic" or "AEAD_AES_256_CBC_HMAC_SHA_512-Randomized"
     private final String algorithm;
 
-    // Optional: Only applicable for Deterministic encryption.
-    private byte[] initializationVector;
-
     /**
      * Construct an instance.
      *
@@ -76,15 +73,6 @@ public class EncryptOptions {
     }
 
     /**
-     * Gets the initialization vector
-     *
-     * @return the initialization vector
-     */
-    public byte[] getInitializationVector() {
-        return initializationVector;
-    }
-
-    /**
      * Sets the key identifier
      *
      * @param keyId the key identifier
@@ -106,24 +94,11 @@ public class EncryptOptions {
         return this;
     }
 
-    /**
-     * Sets the initialization vector
-     *
-     * @param initializationVector the initialization vector
-     * @return this
-     */
-    public EncryptOptions initializationVector(final byte[] initializationVector) {
-        this.initializationVector = initializationVector;
-        return this;
-    }
-
     @Override
     public String toString() {
         return "EncryptOptions{"
                 + "keyId=" + keyId
                 + ", keyAltName=" + keyAltName
-                + ", algorithm='" + algorithm + '\''
-                + ", initializationVector=" + Arrays.toString(initializationVector)
-                + '}';
+                + ", algorithm='" + algorithm + "'}";
     }
 }
