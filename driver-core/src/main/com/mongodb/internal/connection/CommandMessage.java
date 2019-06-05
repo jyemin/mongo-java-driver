@@ -216,10 +216,10 @@ public final class CommandMessage extends RequestMessage {
     }
 
     private boolean isSlaveOk() {
-        return (readPreference != null && readPreference.isSlaveOk()) || isDirectConnectionToNonShardRouter();
+        return (readPreference != null && readPreference.isSlaveOk()) || isDirectConnectionToReplicaSetMember();
     }
 
-    private boolean isDirectConnectionToNonShardRouter() {
+    private boolean isDirectConnectionToReplicaSetMember() {
         return clusterConnectionMode == SINGLE
                 && getSettings().getServerType() != SHARD_ROUTER
                 && getSettings().getServerType() != STANDALONE;
@@ -259,7 +259,7 @@ public final class CommandMessage extends RequestMessage {
         if (readPreference != null) {
             if (!readPreference.equals(primary())) {
                 extraElements.add(new BsonElement("$readPreference", readPreference.toDocument()));
-            } else if (isDirectConnectionToNonShardRouter()) {
+            } else if (isDirectConnectionToReplicaSetMember()) {
                 extraElements.add(new BsonElement("$readPreference", primaryPreferred().toDocument()));
             }
         }
