@@ -237,7 +237,7 @@ public class ClientSideEncryptionTest {
                 .autoEncryptionSettings(AutoEncryptionSettings.builder()
                         .keyVaultNamespace("admin.datakeys")
                         .kmsProviders(kmsProvidersMap)
-                        .namespaceToLocalSchemaDocumentMap(namespaceToSchemaMap)
+                        .schemaMap(namespaceToSchemaMap)
                         .bypassAutoEncryption(bypassAutoEncryption)
                         .extraOptions(extraOptions)
                         .build())

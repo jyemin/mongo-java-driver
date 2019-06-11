@@ -17,7 +17,7 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.AutoEncryptionSettings;
-import com.mongodb.KeyVaultEncryptionSettings;
+import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
@@ -38,7 +38,7 @@ final class Crypts {
 
     static Crypt createCrypt(final MongoClient client, final AutoEncryptionSettings options) {
         return new Crypt(MongoCrypts.create(createMongoCryptOptions(options.getKmsProviders(),
-                options.getNamespaceToLocalSchemaDocumentMap())),
+                options.getSchemaMap())),
                 new CollectionInfoRetriever(client),
                 new CommandMarker(options.getExtraOptions()),
                 createKeyRetriever(client, options.getKeyVaultMongoClientSettings(), options.getKeyVaultNamespace()),
@@ -46,7 +46,7 @@ final class Crypts {
                 options.isBypassAutoEncryption());
     }
 
-    static Crypt create(final MongoClient keyVaultClient, final KeyVaultEncryptionSettings options) {
+    static Crypt create(final MongoClient keyVaultClient, final ClientEncryptionSettings options) {
         return new Crypt(MongoCrypts.create(
                 createMongoCryptOptions(options.getKmsProviders(), null)),
                 createKeyRetriever(keyVaultClient, false, options.getKeyVaultNamespace()),
