@@ -206,6 +206,7 @@ class AggregatesFunctionalSpecification extends OperationFunctionalSpecification
         def outCollectionName = getCollectionName() + '.out'
         getCollectionHelper(new MongoNamespace(getDatabaseName(), outCollectionName))
                 .createUniqueIndex(new Document('x', 1))
+        getCollectionHelper(new MongoNamespace('db1', outCollectionName)).create()
 
         when:
         aggregate([merge(outCollectionName)])
