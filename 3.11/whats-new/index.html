@@ -259,41 +259,45 @@
 
 <h2 id="what-s-new-in-3-11">What&rsquo;s new in 3.11</h2>
 
-<p>This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.10 Java driver release include:</p>
+<p>This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.11 Java driver release include:</p>
 
 <h3 id="improved-transactions-support">Improved transactions support</h3>
 
 <ul>
-<li>Support added for MongoDB 4.2 distributed transactions with sharded clusters. Distributed transactions use the same API as replica set
-transactions.</li>
-<li>New method
+<li>The transactions API supports MongoDB 4.2 distributed transactions for use with sharded clusters. Distributed transactions use the same
+API as replica set transactions.</li>
+<li>The sessions API supports the
 <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/ClientSession.html#withTransaction(com.mongodb.client.TransactionBody) 
 "><code>ClientSession.withTransaction()</code></a>
-to support conveniently running a transaction in a session with automatic retries and at-most-once semantics.</li>
-<li>New transaction option
+method to conveniently run a transaction with automatic retries and at-most-once semantics.</li>
+<li>The transactions API supports the
 <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/TransactionOptions.html#getMaxCommitTime(java.util.concurrent.TimeUnit)
-"><code>maxCommitTime</code></a> to control the
+"><code>maxCommitTime</code></a> option to control the
 maximum amount of time to wait for a transaction to commit.</li>
 </ul>
 
 <h3 id="reliability-improvements">Reliability improvements</h3>
 
 <ul>
-<li>Support for <a href="https://github.com/mongodb/specifications/blob/master/source/retryable-reads/retryable-reads.rst">retryable reads</a> and the
-retryReads option, which is enabled by default. Supported read operations that fail with a retryable error are retried automatically and
-transparently.</li>
-<li>Support for <a href="https://docs.mongodb.com/manual/core/retryable-writes/">retryable writes</a> is now enabled by default. Supported write
+<li>Most read operations are by default
+<a href="https://github.com/mongodb/specifications/blob/master/source/retryable-reads/retryable-reads .rst">automatically retried</a>. Supported read
+operations that fail with a retryable error are retried automatically and transparently.</li>
+<li><a href="https://docs.mongodb.com/manual/core/retryable-writes/">Retryable writes</a> are now enabled by default. Supported write
 operations that fail with a retryable error are retried automatically and transparently, with at-most-once update semantics.</li>
-<li>Support for periodically polling DNS <a href="https://en.wikipedia.org/wiki/SRV_record">SRV</a> records to update the mongos proxy list without
+<li>DNS <a href="https://en.wikipedia.org/wiki/SRV_record">SRV</a> records are periodically polled in order to update the mongos proxy list without
 having to change client configuration or even restart the client application. This feature is particularly useful when used with a sharded
-cluster on <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>, which uses SRV records that dynamically change when you resize your Atlas
-cluster.</li>
+cluster on <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>, which dynamically updates SRV records whenever you resize your Atlas
+sharded cluster.</li>
 <li>Connections to the replica set primary are no longer closed after a step-down, allowing in progress read operations to complete.</li>
 </ul>
 
 <h3 id="security-improvements">Security improvements</h3>
 
-<p>Support for client-side encryption. See <a href="/mongo-java-driver/3.11/driver/reference/fle/">Client-side Encryption</a> for further details.</p>
+<p>Client-side encryption is supported. Automatic encryption and decryption is available for users of
+<a href="https://www.mongodb.com/products/mongodb-enterprise-advanced">MongoDB Enterprise Advanced</a>, while explicit encryption and decryption is
+available for users of MongoDB Community.</p>
+
+<p>See <a href="/mongo-java-driver/3.11/driver/reference/fle/">Client-side Encryption</a> for further details.</p>
 
 <h3 id="general-improvements">General improvements</h3>
 
