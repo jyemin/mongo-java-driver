@@ -259,33 +259,36 @@
 
 <h2 id="what-s-new-in-3-11">What&rsquo;s new in 3.11</h2>
 
-<p>This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.10 Java driver release:</p>
+<p>This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.10 Java driver release include:</p>
 
 <h3 id="improved-transactions-support">Improved transactions support</h3>
 
 <ul>
 <li>Support added for MongoDB 4.2 distributed transactions with sharded clusters. Distributed transactions use the same API as replica set
 transactions.</li>
-<li>New method <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/ClientSession.html#withTransaction
-"><code>ClientSession.withTransaction()</code></a> to support
-conveniently running a transaction in a session with automatic retries and at-most-once semantics.</li>
-<li>New transaction option <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/TransactionOptions.html#getMaxCommitTime
-"><code>maxCommitTime</code></a> to control the maximum
-amount of time to wait for a transaction to commit.</li>
+<li>New method
+<a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/ClientSession.html#withTransaction(com.mongodb.client.TransactionBody) 
+"><code>ClientSession.withTransaction()</code></a>
+to support conveniently running a transaction in a session with automatic retries and at-most-once semantics.</li>
+<li>New transaction option
+<a href="/mongo-java-driver/3.11/javadoc?com/mongodb/TransactionOptions.html#getMaxCommitTime(java.util.concurrent.TimeUnit)
+"><code>maxCommitTime</code></a> to control the
+maximum amount of time to wait for a transaction to commit.</li>
 </ul>
 
 <h3 id="reliability-improvements">Reliability improvements</h3>
 
 <ul>
-<li>Support for periodically polling DNS <a href="https://en.wikipedia.org/wiki/SRV_record">SRV</a> records to update the mongos proxy list without
-having to change client configuration or even restart the client application. This feature is particularly useful when used with a sharded
-cluster on <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>, which uses SRV records than dynamically change when you resize your Atlas
-cluster.</li>
 <li>Support for <a href="https://github.com/mongodb/specifications/blob/master/source/retryable-reads/retryable-reads.rst">retryable reads</a> and the
 retryReads option, which is enabled by default. Supported read operations that fail with a retryable error are retried automatically and
 transparently.</li>
 <li>Support for <a href="https://docs.mongodb.com/manual/core/retryable-writes/">retryable writes</a> is now enabled by default. Supported write
 operations that fail with a retryable error are retried automatically and transparently, with at-most-once update semantics.</li>
+<li>Support for periodically polling DNS <a href="https://en.wikipedia.org/wiki/SRV_record">SRV</a> records to update the mongos proxy list without
+having to change client configuration or even restart the client application. This feature is particularly useful when used with a sharded
+cluster on <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>, which uses SRV records that dynamically change when you resize your Atlas
+cluster.</li>
+<li>Connections to the replica set primary are no longer closed after a step-down, allowing in progress read operations to complete.</li>
 </ul>
 
 <h3 id="security-improvements">Security improvements</h3>
@@ -295,14 +298,24 @@ operations that fail with a retryable error are retried automatically and transp
 <h3 id="general-improvements">General improvements</h3>
 
 <ul>
-<li>New <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/MongoDatabase.html#aggregate
-"><code>aggregate</code></a> helper methods support running database-level
-aggregations.</li>
-<li>Aggregate helper methods now support the <code>$merge</code> pipeline stage, and an
-<a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/model/Aggregates.html#merge
-"><code>Aggregates.merge()</code></a> builder method support creation of the new pipeline
-stage.</li>
+<li>New <a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/MongoDatabase.html##aggregate(java.util.List)
+"><code>aggregate</code></a> helper methods support running
+database-level aggregations.</li>
+<li>Aggregate helper methods now support the <code>$merge</code> pipeline stage, and
+<a href="/mongo-java-driver/3.11/javadoc?com/mongodb/client/model/Aggregates.html#merge(java.lang.String)
+"><code>Aggregates.merge()</code></a> builder methods support creation of
+the new pipeline stage.</li>
 <li><a href="https://facebook.github.io/zstd/">Zstandard</a> for wire protocol compression is now suported in addition to Snappy and Zlib.</li>
+<li>Change stream helpers now support the <code>startAfter</code> option.</li>
+<li>Index creation helpers now support wildcard indexes.</li>
+</ul>
+
+<h3 id="full-list-of-changes">Full list of changes</h3>
+
+<ul>
+<li><a href="https://jira.mongodb.org/issues/?jql=project%20%3D%20JAVA%20AND%20issuetype%20%3D%20%22New%20Feature%22%20AND%20resolution%20%3D%20Fixed%20AND%20fixVersion%20%3D%203.11.0%20ORDER%20BY%20component%20DESC%2C%20key%20ASC">New Features</a></li>
+<li><a href="https://jira.mongodb.org/issues/?jql=project%20%3D%20JAVA%20AND%20issuetype%20%3D%20Improvement%20AND%20resolution%20%3D%20Fixed%20AND%20fixVersion%20%3D%203.11.0%20ORDER%20BY%20component%20DESC%2C%20key%20ASC">Improvements</a></li>
+<li><a href="https://jira.mongodb.org/issues/?jql=project%20%3D%20JAVA%20AND%20issuetype%20%3D%20Bug%20AND%20resolution%20%3D%20Fixed%20AND%20fixVersion%20%3D%203.11.0%20ORDER%20BY%20component%20DESC%2C%20key%20ASC">Bug Fixes</a></li>
 </ul>
 
 <h2 id="what-s-new-in-3-10">What&rsquo;s new in 3.10</h2>
@@ -335,7 +348,7 @@ for more details.</p>
 <p>The driver now offers a JNDI <code>ObjectFactory</code> implementation for creating instances of <code>com.mongodb.client.MongoClient</code>, the interface
 introduced in version 3.7 of the driver. See <a href="https://jira.mongodb.org/browse/JAVA-2883">JAVA-2883</a> for more details.</p>
 
-<h3 id="full-list-of-changes">Full list of changes</h3>
+<h3 id="full-list-of-changes-1">Full list of changes</h3>
 
 <ul>
 <li><a href="https://jira.mongodb.org/issues/?jql=project%20%3D%20JAVA%20AND%20issuetype%20%3D%20%22New%20Feature%22%20AND%20fixVersion%20%3D%203.10.0%20ORDER%20BY%20component%20DESC%2C%20key%20ASC">New Features</a></li>
@@ -780,6 +793,7 @@ collection.bulkWrite(Arrays.asList(
 <li><a href="#reliability-improvements">Reliability improvements</a></li>
 <li><a href="#security-improvements">Security improvements</a></li>
 <li><a href="#general-improvements">General improvements</a></li>
+<li><a href="#full-list-of-changes">Full list of changes</a></li>
 </ul></li>
 <li><a href="#what-s-new-in-3-10">What&rsquo;s new in 3.10</a>
 <ul>
@@ -787,7 +801,7 @@ collection.bulkWrite(Arrays.asList(
 <li><a href="#operational-improvements">Operational improvements</a></li>
 <li><a href="#codec-improvements">Codec Improvements</a></li>
 <li><a href="#jndi">JNDI</a></li>
-<li><a href="#full-list-of-changes">Full list of changes</a></li>
+<li><a href="#full-list-of-changes-1">Full list of changes</a></li>
 </ul></li>
 <li><a href="#what-s-new-in-3-9">What&rsquo;s new in 3.9</a>
 <ul>

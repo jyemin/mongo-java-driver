@@ -188,7 +188,7 @@ Prerequisites  The example below requires a restaurants collection in the test d
       <pubDate>Thu, 09 Jun 2016 12:47:43 -0400</pubDate>
       
       <guid>/mongo-java-driver/3.11/whats-new/</guid>
-      <description>What&amp;rsquo;s new in 3.11 This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.10 Java driver release:
+      <description>What&amp;rsquo;s new in 3.11 This release fully supports all MongoDB releases from versions 2.6 to 4.2. Key new features of the 3.10 Java driver release include:
 Improved transactions support  Support added for MongoDB 4.2 distributed transactions with sharded clusters. Distributed transactions use the same API as replica set transactions. New method ClientSession.withTransaction() to support conveniently running a transaction in a session with automatic retries and at-most-once semantics. New transaction option maxCommitTime to control the maximum amount of time to wait for a transaction to commit.</description>
     </item>
     
