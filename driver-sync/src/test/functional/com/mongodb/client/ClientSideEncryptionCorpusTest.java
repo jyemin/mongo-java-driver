@@ -19,6 +19,7 @@ package com.mongodb.client;
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
 import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.vault.ClientEncryption;
 import com.mongodb.client.vault.ClientEncryptions;
@@ -49,7 +50,6 @@ import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
@@ -149,8 +149,6 @@ public class ClientSideEncryptionCorpusTest {
 
             BsonDocument fieldDocument = corpus.getDocument(field).clone();
             String kms = fieldDocument.getString("kms").getValue();
-            // TODO: unused
-            String type = fieldDocument.getString("type").getValue();
             String abbreviatedAlgorithName = fieldDocument.getString("algo").getValue();
             String method = fieldDocument.getString("method").getValue();
             String identifier = fieldDocument.getString("identifier").getValue();
@@ -197,8 +195,10 @@ public class ClientSideEncryptionCorpusTest {
                 BsonValue encryptedValue = clientEncryption.encrypt(value, opts);
                 fieldDocument.put("value", encryptedValue);
                 corpusCopied.append(field, fieldDocument);
-            } catch (Exception e) {
-                assertFalse(allowed);
+            } catch (MongoException e) {
+                if (allowed) {
+                    throw e;
+                }
                 corpusCopied.append(field, fieldDocument);
             }
         }
@@ -222,21 +222,18 @@ public class ClientSideEncryptionCorpusTest {
                 continue;
             }
 
+            boolean allowed = corpusEncryptedActual.getDocument(field).getBoolean("allowed").getValue();
             String kms = corpusEncryptedActual.getDocument(field).getString("kms").getValue();
             String type = corpusEncryptedActual.getDocument(field).getString("type").getValue();
-            String algo = corpusEncryptedActual.getDocument(field).getString("algo").getValue();
-            String method = corpusEncryptedActual.getDocument(field).getString("method").getValue();
-            // TODO: unused
-            String identifier = corpusEncryptedActual.getDocument(field).getString("identifier").getValue();
-            boolean allowed = corpusEncryptedActual.getDocument(field).getBoolean("allowed").getValue();
+            String algorithm = corpusEncryptedActual.getDocument(field).getString("algo").getValue();
             BsonValue value = corpusEncryptedActual.getDocument(field).get("value");
 
             // All deterministic fields are an exact match.
-            if (algo.equals("det")) {
-                deterministicCheck(kms, type, corpusEncryptedExpected);
+            if (algorithm.equals("det")) {
+                deterministicCheck(value, kms, type, corpusEncryptedExpected);
             }
 
-            if (algo.equals("rand") && !method.equals("prohibited")) {
+            if (algorithm.equals("rand") && allowed) {
                 randomCheck(value, field, corpusEncryptedExpected);
             }
 
@@ -251,31 +248,34 @@ public class ClientSideEncryptionCorpusTest {
     }
 
     // Check that all values of document that are deterministic with the same kms + type match value
-    private static void deterministicCheck(final String matchKms, final String matchType, final BsonDocument document) {
-        for (String field : document.keySet()) {
+    private static void deterministicCheck(final BsonValue actualValue, final String actualKms, final String actualType,
+                                           final BsonDocument expectedDocument) {
+        for (String field : expectedDocument.keySet()) {
             if (field.equals("_id") || field.equals("altname_aws") || field.equals("altname_local")) {
                 continue;
             }
 
-            BsonDocument subDocument = document.getDocument(field);
+            BsonDocument subDocument = expectedDocument.getDocument(field);
 
             String kms = subDocument.getString("kms").getValue();
             String type = subDocument.getString("type").getValue();
-            String algo = subDocument.getString("algo").getValue();
-            BsonValue value = subDocument.get("value");
+            String algorithm = subDocument.getString("algo").getValue();
+            BsonValue expectedValue = subDocument.get("value");
 
-            if (kms.equals(matchKms) && type.equals(matchType) && algo.equals("det")) {
-                assertEquals(value, value);
+            if (kms.equals(actualKms) && type.equals(actualType) && algorithm.equals("det")) {
+                assertEquals(expectedValue, actualValue);
             }
         }
     }
 
-    private static void randomCheck(final BsonValue value, final String excludeField, final BsonDocument document) {
+    // Assert that the field value doesn't equal any other field value (except itself)
+    private static void randomCheck(BsonValue value, String fieldName, BsonDocument document) {
         for (String field : document.keySet()) {
-            if (field.equals(excludeField)) {
+            if (field.equals(fieldName) || field.equals("_id") || field.equals("altname_aws") || field.equals("altname_local")) {
                 continue;
             }
-            assertNotEquals(document.get(field), value);
+
+            assertNotEquals(document.getDocument(field).get("value"), value);
         }
     }
 
