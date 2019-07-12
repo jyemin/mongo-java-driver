@@ -217,7 +217,7 @@ public class ClientSideEncryptionCorpusTest {
         BsonDocument corpusEncryptedActual = (BsonDocument) coll.find(new BsonDocument()).first();
         BsonDocument corpusEncryptedExpected = bsonDocumentFromPath("corpus-encrypted.json");
 
-        for (String field : corpusEncryptedActual.keySet()) {
+        for (String field : corpusEncryptedExpected.keySet()) {
             if (field.equals("_id") || field.equals("altname_aws") || field.equals("altname_local")) {
                 continue;
             }
@@ -229,13 +229,7 @@ public class ClientSideEncryptionCorpusTest {
             BsonValue value = corpusEncryptedActual.getDocument(field).get("value");
 
             // All deterministic fields are an exact match.
-            if (algorithm.equals("det")) {
-                deterministicCheck(value, kms, type, corpusEncryptedExpected);
-            }
-
-            if (algorithm.equals("rand") && allowed) {
-                randomCheck(value, field, corpusEncryptedExpected);
-            }
+            check(value, kms, type, algorithm, allowed, corpusEncryptedExpected);
 
             if (allowed) {
                 BsonValue decrypted = clientEncryption.decrypt(value.asBinary());
@@ -247,9 +241,8 @@ public class ClientSideEncryptionCorpusTest {
         }
     }
 
-    // Check that all values of document that are deterministic with the same kms + type match value
-    private static void deterministicCheck(final BsonValue actualValue, final String actualKms, final String actualType,
-                                           final BsonDocument expectedDocument) {
+    private static void check(final BsonValue actualValue, final String actualKms, final String actualType,
+                              final String actualAlgorithm, final boolean allowed, final BsonDocument expectedDocument) {
         for (String field : expectedDocument.keySet()) {
             if (field.equals("_id") || field.equals("altname_aws") || field.equals("altname_local")) {
                 continue;
@@ -262,20 +255,19 @@ public class ClientSideEncryptionCorpusTest {
             String algorithm = subDocument.getString("algo").getValue();
             BsonValue expectedValue = subDocument.get("value");
 
-            if (kms.equals(actualKms) && type.equals(actualType) && algorithm.equals("det")) {
-                assertEquals(expectedValue, actualValue);
+            if (kms.equals(actualKms) && type.equals(actualType)) {
+                if (actualAlgorithm.equals("det")) {
+                    if (algorithm.equals("det")) {
+                        assertEquals(expectedValue, actualValue);
+                    }
+                } else if (actualAlgorithm.equals("rand")) {
+                    if (allowed) {
+                        assertNotEquals(expectedValue, actualValue);
+                    }
+                } else {
+                    throw new UnsupportedOperationException("Unsupported algorithm type: " + actualAlgorithm);
+                }
             }
-        }
-    }
-
-    // Assert that the field value doesn't equal any other field value (except itself)
-    private static void randomCheck(BsonValue value, String fieldName, BsonDocument document) {
-        for (String field : document.keySet()) {
-            if (field.equals(fieldName) || field.equals("_id") || field.equals("altname_aws") || field.equals("altname_local")) {
-                continue;
-            }
-
-            assertNotEquals(document.getDocument(field).get("value"), value);
         }
     }
 
