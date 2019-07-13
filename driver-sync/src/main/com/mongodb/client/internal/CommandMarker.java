@@ -76,6 +76,7 @@ class CommandMarker implements Closeable {
 
         try {
             try {
+                System.out.println(command);
                 return executeCommand(databaseName, command);
             } catch (MongoTimeoutException e) {
                 spawnIfNecesary();
