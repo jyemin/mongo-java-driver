@@ -29,7 +29,6 @@ import org.bson.BsonDocument
 import org.bson.BsonString
 
 import static com.mongodb.ClusterFixture.isNotAtLeastJava8
-import static com.mongodb.ClusterFixture.serverVersionAtLeast
 import static com.mongodb.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.client.Fixture.getMongoClient
 import static com.mongodb.client.Fixture.getMongoClientSettings
@@ -61,7 +60,6 @@ class ClientSideEncryptionProseTestSpecification extends FunctionalSpecification
 
     def setup() {
         assumeFalse(isNotAtLeastJava8())
-        assumeTrue(serverVersionAtLeast([4, 1, 10]))
         assumeTrue('Key vault tests disabled',
                 System.getProperty('org.mongodb.test.awsAccessKeyId') != null
                         && !System.getProperty('org.mongodb.test.awsAccessKeyId').isEmpty())
