@@ -16,6 +16,7 @@
 
 package com.mongodb.client.internal
 
+
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
@@ -98,7 +99,7 @@ class CryptConnectionSpecification extends Specification {
         response == rawToDocument(decryptedResponse)
     }
 
-    def 'should encrypt and decrypt a command with a splittable payload'() {
+    def 'should split at 2 MiB'() {
         given:
         def wrappedConnection = Mock(Connection)
         def crypt = Mock(Crypt)
@@ -150,6 +151,87 @@ class CryptConnectionSpecification extends Specification {
         }
         response == rawToBsonDocument(decryptedResponse)
         payload.getPosition() == 1
+    }
+
+    def 'should split at maxBatchCount'() {
+        given:
+        def wrappedConnection = Mock(Connection)
+        def crypt = Mock(Crypt)
+        def cryptConnection = new CryptConnection(wrappedConnection, crypt)
+        def codec = new DocumentCodec()
+        def maxBatchCount = 2
+        def payload = new SplittablePayload(INSERT, [
+                new BsonDocumentWrapper(new Document('_id', 1), codec),
+                new BsonDocumentWrapper(new Document('_id', 2), codec),
+                new BsonDocumentWrapper(new Document('_id', 3), codec)
+        ])
+        def encryptedCommand = toRaw(new BsonDocument('insert', new BsonString('test')).append('documents', new BsonArray(
+                [
+                        new BsonDocument('_id', new BsonInt32(1)),
+                        new BsonDocument('_id', new BsonInt32(2)),
+
+                ])))
+
+        def encryptedResponse = toRaw(new BsonDocument('ok', new BsonInt32(1)))
+        def decryptedResponse = encryptedResponse
+
+        when:
+        def response = cryptConnection.command('db',
+                new BsonDocumentWrapper(new Document('insert', 'test'), codec),
+                new NoOpFieldNameValidator(), ReadPreference.primary(), new BsonDocumentCodec(),
+                NoOpSessionContext.INSTANCE, true,
+                payload,
+                new NoOpFieldNameValidator())
+
+        then:
+        _ * wrappedConnection.getDescription() >> {
+            new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 8, STANDALONE,
+                    maxBatchCount, 1024 * 16_000, 1024 * 48_000, [])
+        }
+        1 * crypt.encrypt('db',
+                toRaw(new BsonDocument('insert', new BsonString('test')).append('documents',
+                        new BsonArray([
+                                new BsonDocument('_id', new BsonInt32(1)),
+                                new BsonDocument('_id', new BsonInt32(2))
+                        ])))) >> {
+            encryptedCommand
+        }
+        1 * wrappedConnection.command('db', encryptedCommand, _ as NoOpFieldNameValidator, ReadPreference.primary(),
+                _ as RawBsonDocumentCodec, NoOpSessionContext.INSTANCE, true, null, null) >> {
+            encryptedResponse
+        }
+        1 * crypt.decrypt(encryptedResponse) >> {
+            decryptedResponse
+        }
+        response == rawToBsonDocument(decryptedResponse)
+        payload.getPosition() == 2
+    }
+
+    def 'should throw if command document is large than 2 MiB'() {
+        given:
+        def wrappedConnection = Mock(Connection)
+        def crypt = Mock(Crypt)
+        def cryptConnection = new CryptConnection(wrappedConnection, crypt)
+        def codec = new DocumentCodec()
+        def bytes = new byte[2097152 - 84]
+        def payload = new SplittablePayload(INSERT, [
+                new BsonDocumentWrapper(new Document('_id', 1).append('ssid', '555-55-5555').append('b', bytes), codec),
+        ])
+
+        when:
+        cryptConnection.command('db',
+                new BsonDocumentWrapper(new Document('insert', 'test'), codec),
+                new NoOpFieldNameValidator(), ReadPreference.primary(), new BsonDocumentCodec(),
+                NoOpSessionContext.INSTANCE, true,
+                payload,
+                new NoOpFieldNameValidator())
+
+        then:
+        _ * wrappedConnection.getDescription() >> {
+            new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 8, STANDALONE,
+                    1000, 1024 * 16_000, 1024 * 48_000, [])
+        }
+        thrown(BsonMaximumSizeExceededException)
     }
 
     RawBsonDocument toRaw(BsonDocument document) {
