@@ -58,9 +58,6 @@ class CryptConnectionSpecification extends Specification {
         def crypt = Mock(Crypt)
         def cryptConnection = new CryptConnection(wrappedConnection, crypt)
         def codec = new DocumentCodec()
-        def maxBatchCount = 4
-        def maxDocumentSize = 1024 * 16_000
-        def maxMessageSize = 1024 * 16_000
         def encryptedCommand = toRaw(new BsonDocument('find', new BsonString('test'))
                 .append('ssid', new BsonBinary(6 as byte, new byte[10])))
 
@@ -85,7 +82,7 @@ class CryptConnectionSpecification extends Specification {
         then:
         _ * wrappedConnection.getDescription() >> {
             new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 8, STANDALONE,
-                    maxBatchCount, maxDocumentSize, maxMessageSize, [])
+                    1000, 1024 * 16_000, 1024 * 48_000, [])
         }
         1 * crypt.encrypt('db', toRaw(new BsonDocument('find', new BsonString('test'))
                 .append('filter', new BsonDocument('ssid', new BsonString('555-55-5555'))))) >> {
@@ -107,10 +104,7 @@ class CryptConnectionSpecification extends Specification {
         def crypt = Mock(Crypt)
         def cryptConnection = new CryptConnection(wrappedConnection, crypt)
         def codec = new DocumentCodec()
-        def maxBatchCount = 4
-        def maxDocumentSize = 1024 * 16_000
-        def maxMessageSize = 1024 * 16_000
-        def bytes = new byte[1024 * 10_000]
+        def bytes = new byte[2097152 - 85]
         def payload = new SplittablePayload(INSERT, [
                 new BsonDocumentWrapper(new Document('_id', 1).append('ssid', '555-55-5555').append('b', bytes), codec),
                 new BsonDocumentWrapper(new Document('_id', 2).append('ssid', '666-66-6666').append('b', bytes), codec)
@@ -124,6 +118,7 @@ class CryptConnectionSpecification extends Specification {
 
         def encryptedResponse = toRaw(new BsonDocument('ok', new BsonInt32(1)))
         def decryptedResponse = encryptedResponse
+
         when:
         def response = cryptConnection.command('db',
                 new BsonDocumentWrapper(new Document('insert', 'test'), codec),
@@ -135,7 +130,7 @@ class CryptConnectionSpecification extends Specification {
         then:
         _ * wrappedConnection.getDescription() >> {
             new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 8, STANDALONE,
-                    maxBatchCount, maxDocumentSize, maxMessageSize, [])
+                    1000, 1024 * 16_000, 1024 * 48_000, [])
         }
         1 * crypt.encrypt('db',
                 toRaw(new BsonDocument('insert', new BsonString('test')).append('documents',
