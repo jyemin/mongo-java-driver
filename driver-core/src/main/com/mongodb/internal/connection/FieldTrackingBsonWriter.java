@@ -29,7 +29,7 @@ import org.bson.types.ObjectId;
 // It's an imperfect check because we can't tell if the pipe method ended up writing any fields.
 // For the purposes of the check, it's better to assume that pipe does end up writing a field, in order to avoid
 // incorrectly reporting an error any time pipe is used
-public class FieldTrackingBsonWriter extends BsonWriterAdapter {
+public class FieldTrackingBsonWriter extends BsonWriterDecorator {
 
     private boolean hasWrittenField;
     private boolean topLevelDocumentWritten;
