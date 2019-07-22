@@ -17,10 +17,9 @@
 package com.mongodb.internal.connection;
 
 import org.bson.BsonBinaryWriter;
-import org.bson.BsonWriter;
 
 
-abstract class LevelCountingBsonWriter extends BsonWriterAdapter implements BsonWriter {
+abstract class LevelCountingBsonWriter extends BsonWriterDecorator {
     private int level = -1;
 
     LevelCountingBsonWriter(final BsonBinaryWriter bsonBinaryWriter) {

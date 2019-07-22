@@ -27,249 +27,249 @@ import org.bson.types.ObjectId;
 
 import static org.bson.assertions.Assertions.notNull;
 
-public class BsonWriterAdapter implements BsonWriter {
-    private final BsonWriter bsonBinaryWriter;
+public class BsonWriterDecorator implements BsonWriter {
+    private final BsonWriter bsonWriter;
 
-    BsonWriterAdapter(final BsonWriter bsonWriter) {
-        this.bsonBinaryWriter = notNull("bsonWriter", bsonWriter);
+    BsonWriterDecorator(final BsonWriter bsonWriter) {
+        this.bsonWriter = notNull("bsonWriter", bsonWriter);
     }
 
     BsonWriter getBsonWriter() {
-        return bsonBinaryWriter;
+        return bsonWriter;
     }
 
     @Override
     public void writeStartDocument(final String name) {
-        bsonBinaryWriter.writeStartDocument(name);
+        bsonWriter.writeStartDocument(name);
     }
 
     @Override
     public void writeStartDocument() {
-        bsonBinaryWriter.writeStartDocument();
+        bsonWriter.writeStartDocument();
     }
 
     @Override
     public void writeEndDocument() {
-        bsonBinaryWriter.writeEndDocument();
+        bsonWriter.writeEndDocument();
     }
 
     @Override
     public void writeStartArray(final String name) {
-        bsonBinaryWriter.writeStartArray(name);
+        bsonWriter.writeStartArray(name);
     }
 
     @Override
     public void writeStartArray() {
-        bsonBinaryWriter.writeStartArray();
+        bsonWriter.writeStartArray();
     }
 
     @Override
     public void writeEndArray() {
-        bsonBinaryWriter.writeEndArray();
+        bsonWriter.writeEndArray();
     }
 
     @Override
     public void writeBinaryData(final String name, final BsonBinary binary) {
-        bsonBinaryWriter.writeBinaryData(name, binary);
+        bsonWriter.writeBinaryData(name, binary);
     }
 
     @Override
     public void writeBinaryData(final BsonBinary binary) {
-        bsonBinaryWriter.writeBinaryData(binary);
+        bsonWriter.writeBinaryData(binary);
     }
 
     @Override
     public void writeBoolean(final String name, final boolean value) {
-        bsonBinaryWriter.writeBoolean(name, value);
+        bsonWriter.writeBoolean(name, value);
     }
 
     @Override
     public void writeBoolean(final boolean value) {
-        bsonBinaryWriter.writeBoolean(value);
+        bsonWriter.writeBoolean(value);
     }
 
     @Override
     public void writeDateTime(final String name, final long value) {
-        bsonBinaryWriter.writeDateTime(name, value);
+        bsonWriter.writeDateTime(name, value);
     }
 
     @Override
     public void writeDateTime(final long value) {
-        bsonBinaryWriter.writeDateTime(value);
+        bsonWriter.writeDateTime(value);
     }
 
     @Override
     public void writeDBPointer(final String name, final BsonDbPointer value) {
-        bsonBinaryWriter.writeDBPointer(name, value);
+        bsonWriter.writeDBPointer(name, value);
     }
 
     @Override
     public void writeDBPointer(final BsonDbPointer value) {
-        bsonBinaryWriter.writeDBPointer(value);
+        bsonWriter.writeDBPointer(value);
     }
 
     @Override
     public void writeDouble(final String name, final double value) {
-        bsonBinaryWriter.writeDouble(name, value);
+        bsonWriter.writeDouble(name, value);
     }
 
     @Override
     public void writeDouble(final double value) {
-        bsonBinaryWriter.writeDouble(value);
+        bsonWriter.writeDouble(value);
     }
 
     @Override
     public void writeInt32(final String name, final int value) {
-        bsonBinaryWriter.writeInt32(name, value);
+        bsonWriter.writeInt32(name, value);
     }
 
     @Override
     public void writeInt32(final int value) {
-        bsonBinaryWriter.writeInt32(value);
+        bsonWriter.writeInt32(value);
     }
 
     @Override
     public void writeInt64(final String name, final long value) {
-        bsonBinaryWriter.writeInt64(name, value);
+        bsonWriter.writeInt64(name, value);
     }
 
     @Override
     public void writeInt64(final long value) {
-        bsonBinaryWriter.writeInt64(value);
+        bsonWriter.writeInt64(value);
     }
 
     @Override
     public void writeDecimal128(final Decimal128 value) {
-        bsonBinaryWriter.writeDecimal128(value);
+        bsonWriter.writeDecimal128(value);
     }
 
     @Override
     public void writeDecimal128(final String name, final Decimal128 value) {
-        bsonBinaryWriter.writeDecimal128(name, value);
+        bsonWriter.writeDecimal128(name, value);
     }
 
     @Override
     public void writeJavaScript(final String name, final String code) {
-        bsonBinaryWriter.writeJavaScript(name, code);
+        bsonWriter.writeJavaScript(name, code);
     }
 
     @Override
     public void writeJavaScript(final String code) {
-        bsonBinaryWriter.writeJavaScript(code);
+        bsonWriter.writeJavaScript(code);
     }
 
     @Override
     public void writeJavaScriptWithScope(final String name, final String code) {
-        bsonBinaryWriter.writeJavaScriptWithScope(name, code);
+        bsonWriter.writeJavaScriptWithScope(name, code);
     }
 
     @Override
     public void writeJavaScriptWithScope(final String code) {
-        bsonBinaryWriter.writeJavaScriptWithScope(code);
+        bsonWriter.writeJavaScriptWithScope(code);
     }
 
     @Override
     public void writeMaxKey(final String name) {
-        bsonBinaryWriter.writeMaxKey(name);
+        bsonWriter.writeMaxKey(name);
     }
 
     @Override
     public void writeMaxKey() {
-        bsonBinaryWriter.writeMaxKey();
+        bsonWriter.writeMaxKey();
     }
 
     @Override
     public void writeMinKey(final String name) {
-        bsonBinaryWriter.writeMinKey(name);
+        bsonWriter.writeMinKey(name);
     }
 
     @Override
     public void writeMinKey() {
-        bsonBinaryWriter.writeMinKey();
+        bsonWriter.writeMinKey();
     }
 
     @Override
     public void writeName(final String name) {
-        bsonBinaryWriter.writeName(name);
+        bsonWriter.writeName(name);
     }
 
     @Override
     public void writeNull(final String name) {
-        bsonBinaryWriter.writeNull(name);
+        bsonWriter.writeNull(name);
     }
 
     @Override
     public void writeNull() {
-        bsonBinaryWriter.writeNull();
+        bsonWriter.writeNull();
     }
 
     @Override
     public void writeObjectId(final String name, final ObjectId objectId) {
-        bsonBinaryWriter.writeObjectId(name, objectId);
+        bsonWriter.writeObjectId(name, objectId);
     }
 
     @Override
     public void writeObjectId(final ObjectId objectId) {
-        bsonBinaryWriter.writeObjectId(objectId);
+        bsonWriter.writeObjectId(objectId);
     }
 
     @Override
     public void writeRegularExpression(final String name, final BsonRegularExpression regularExpression) {
-        bsonBinaryWriter.writeRegularExpression(name, regularExpression);
+        bsonWriter.writeRegularExpression(name, regularExpression);
     }
 
     @Override
     public void writeRegularExpression(final BsonRegularExpression regularExpression) {
-        bsonBinaryWriter.writeRegularExpression(regularExpression);
+        bsonWriter.writeRegularExpression(regularExpression);
     }
 
     @Override
     public void writeString(final String name, final String value) {
-        bsonBinaryWriter.writeString(name, value);
+        bsonWriter.writeString(name, value);
     }
 
     @Override
     public void writeString(final String value) {
-        bsonBinaryWriter.writeString(value);
+        bsonWriter.writeString(value);
     }
 
     @Override
     public void writeSymbol(final String name, final String value) {
-        bsonBinaryWriter.writeSymbol(name, value);
+        bsonWriter.writeSymbol(name, value);
     }
 
     @Override
     public void writeSymbol(final String value) {
-        bsonBinaryWriter.writeSymbol(value);
+        bsonWriter.writeSymbol(value);
     }
 
     @Override
     public void writeTimestamp(final String name, final BsonTimestamp value) {
-        bsonBinaryWriter.writeTimestamp(name, value);
+        bsonWriter.writeTimestamp(name, value);
     }
 
     @Override
     public void writeTimestamp(final BsonTimestamp value) {
-        bsonBinaryWriter.writeTimestamp(value);
+        bsonWriter.writeTimestamp(value);
     }
 
     @Override
     public void writeUndefined(final String name) {
-        bsonBinaryWriter.writeUndefined(name);
+        bsonWriter.writeUndefined(name);
     }
 
     @Override
     public void writeUndefined() {
-        bsonBinaryWriter.writeUndefined();
+        bsonWriter.writeUndefined();
     }
 
     @Override
     public void pipe(final BsonReader reader) {
-        bsonBinaryWriter.pipe(reader);
+        bsonWriter.pipe(reader);
     }
 
     @Override
     public void flush() {
-        bsonBinaryWriter.flush();
+        bsonWriter.flush();
     }
 }
