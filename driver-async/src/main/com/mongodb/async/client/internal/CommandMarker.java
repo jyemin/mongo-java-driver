@@ -86,8 +86,16 @@ class CommandMarker implements Closeable {
                     wrappedCallback.onResult(result, null);
                 } else if (t instanceof MongoTimeoutException && processBuilder != null) {
                     try {
-                        startProcess();
-                        runCommand(databaseName, command, wrappedCallback);
+                        startProcessAndContinue(new SingleResultCallback<Void>() {
+                            @Override
+                            public void onResult(final Void result, final Throwable t) {
+                                if (t != null) {
+                                    callback.onResult(null, t);
+                                } else {
+                                    runCommand(databaseName, command, wrappedCallback);
+                                }
+                            }
+                        });
                     } catch (Throwable t1) {
                         wrappedCallback.onResult(null, t);
                     }
@@ -109,6 +117,15 @@ class CommandMarker implements Closeable {
                 .withReadConcern(ReadConcern.DEFAULT)
                 .withReadPreference(ReadPreference.primary())
                 .runCommand(command, RawBsonDocument.class, callback);
+    }
+
+    private void startProcessAndContinue(final SingleResultCallback<Void> callback) {
+        try {
+            startProcess();
+            callback.onResult(null, null);
+        } catch (Throwable t) {
+            callback.onResult(null, t);
+        }
     }
 
     private void startProcess() {
