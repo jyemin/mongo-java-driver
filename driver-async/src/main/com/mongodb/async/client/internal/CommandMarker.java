@@ -30,7 +30,6 @@ import com.mongodb.connection.ClusterSettings;
 import org.bson.RawBsonDocument;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -85,20 +84,16 @@ class CommandMarker implements Closeable {
                 if (t == null) {
                     wrappedCallback.onResult(result, null);
                 } else if (t instanceof MongoTimeoutException && processBuilder != null) {
-                    try {
-                        startProcessAndContinue(new SingleResultCallback<Void>() {
-                            @Override
-                            public void onResult(final Void result, final Throwable t) {
-                                if (t != null) {
-                                    callback.onResult(null, t);
-                                } else {
-                                    runCommand(databaseName, command, wrappedCallback);
-                                }
+                    startProcessAndContinue(new SingleResultCallback<Void>() {
+                        @Override
+                        public void onResult(final Void result, final Throwable t) {
+                            if (t != null) {
+                                callback.onResult(null, t);
+                            } else {
+                                runCommand(databaseName, command, wrappedCallback);
                             }
-                        });
-                    } catch (Throwable t1) {
-                        wrappedCallback.onResult(null, t);
-                    }
+                        }
+                    });
                 } else {
                     wrappedCallback.onResult(null, t);
                 }
@@ -131,8 +126,8 @@ class CommandMarker implements Closeable {
     private void startProcess() {
         try {
             processBuilder.start();
-        } catch (IOException e) {
-            throw new MongoClientException("Exception starting mongocryptd process. Is `mongocryptd` on the system path?", e);
+        } catch (Throwable t) {
+            throw new MongoClientException("Exception starting mongocryptd process. Is `mongocryptd` on the system path?", t);
         }
     }
 }
