@@ -410,6 +410,14 @@ class BsonWriterSpecification extends Specification {
         FieldNameValidator getValidatorForField(final String fieldName) {
             new TestFieldNameValidator(badFieldName + '-child')
         }
+
+        @Override
+        void start() {
+        }
+
+        @Override
+        void end() {
+        }
     }
 
 }

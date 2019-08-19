@@ -56,4 +56,14 @@ public class MappedFieldNameValidator implements FieldNameValidator {
             return defaultValidator;
         }
     }
+
+    @Override
+    public void start() {
+        defaultValidator.start();
+    }
+
+    @Override
+    public void end() {
+        defaultValidator.end();
+    }
 }

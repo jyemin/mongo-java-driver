@@ -51,4 +51,12 @@ public class CollectibleDocumentFieldNameValidator implements FieldNameValidator
     public FieldNameValidator getValidatorForField(final String fieldName) {
         return this;
     }
+
+    @Override
+    public void start() {
+    }
+
+    @Override
+    public void end() {
+    }
 }
