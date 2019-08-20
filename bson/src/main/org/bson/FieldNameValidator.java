@@ -43,12 +43,14 @@ public interface FieldNameValidator {
      *
      * @since 4.0
      */
-    void start();
+    default void start() {
+    }
 
     /**
      * End validation of a single document.
      *
      * @since 4.0
      */
-    void end();
+    default void end() {
+    }
 }
