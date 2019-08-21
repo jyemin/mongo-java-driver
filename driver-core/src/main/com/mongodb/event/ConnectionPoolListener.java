@@ -29,54 +29,62 @@ public interface ConnectionPoolListener extends EventListener {
      *
      * @param event the event
      */
-    void connectionPoolOpened(ConnectionPoolOpenedEvent event);
+    default void connectionPoolOpened(ConnectionPoolOpenedEvent event) {
+    }
 
     /**
      * Invoked when a connection pool is closed.
      *
      * @param event the event
      */
-    void connectionPoolClosed(ConnectionPoolClosedEvent event);
+    default void connectionPoolClosed(ConnectionPoolClosedEvent event) {
+    }
 
     /**
      * Invoked when a connection is checked out of a pool.
      *
      * @param event the event
      */
-    void connectionCheckedOut(ConnectionCheckedOutEvent event);
+    default void connectionCheckedOut(ConnectionCheckedOutEvent event) {
+    }
 
     /**
      * Invoked when a connection is checked in to a pool.
      *
      * @param event the event
      */
-    void connectionCheckedIn(ConnectionCheckedInEvent event);
+    default void connectionCheckedIn(ConnectionCheckedInEvent event) {
+    }
 
     /**
      * Invoked when a connection pool's wait queue is entered.
      *
      * @param event the event
      */
-    void waitQueueEntered(ConnectionPoolWaitQueueEnteredEvent event);
+    default void waitQueueEntered(ConnectionPoolWaitQueueEnteredEvent event) {
+    }
 
     /**
      * Invoked when a connection pools wait queue is exited.
      *
      * @param event the event
      */
-    void waitQueueExited(ConnectionPoolWaitQueueExitedEvent event);
+    default void waitQueueExited(ConnectionPoolWaitQueueExitedEvent event) {
+    }
 
     /**
      * Invoked when a connection is added to a pool.
      *
      * @param event the event
      */
-    void connectionAdded(ConnectionAddedEvent event);
+    default void connectionAdded(ConnectionAddedEvent event) {
+    }
 
     /**
      * Invoked when a connection is removed from a pool.
      *
      * @param event the event
      */
-    void connectionRemoved(ConnectionRemovedEvent event);
+    default void connectionRemoved(ConnectionRemovedEvent event) {
+    }
 }
