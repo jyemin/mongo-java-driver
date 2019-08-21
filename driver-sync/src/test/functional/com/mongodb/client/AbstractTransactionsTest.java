@@ -107,6 +107,8 @@ public abstract class AbstractTransactionsTest {
         this.skipTest = skipTest;
     }
 
+    protected abstract MongoClient createMongoClient(MongoClientSettings settings);
+
     @Before
     public void setUp() {
         assumeFalse(skipTest);
@@ -170,7 +172,7 @@ public abstract class AbstractTransactionsTest {
                 }
             });
         }
-        mongoClient = MongoClients.create(builder.build());
+        mongoClient = createMongoClient(builder.build());
 
         MongoDatabase database = mongoClient.getDatabase(databaseName);
 
