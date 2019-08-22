@@ -22,5 +22,6 @@ package com.mongodb.event;
  *
  * @since 3.5
  */
+@Deprecated
 public class ConnectionPoolListenerAdapter implements ConnectionPoolListener {
 }

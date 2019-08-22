@@ -22,5 +22,6 @@ package com.mongodb.event;
  *
  * @since 3.3
  */
+@Deprecated
 public class ClusterListenerAdapter implements ClusterListener {
 }
