@@ -11,4 +11,4 @@ echo "Compiling java driver with jdk11"
 
 export JAVA_HOME="/opt/java/jdk11"
 ./gradlew -version
-./gradlew -PxmlReports.enabled=true --info -x test clean check jar testClasses docs
+./gradlew -PxmlReports.enabled=true --info -x test -x tckTest clean check jar testClasses docs
