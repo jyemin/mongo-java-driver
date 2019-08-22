@@ -16,6 +16,7 @@
 
 package com.mongodb.reactivestreams.client;
 
+import com.mongodb.ClusterFixture;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
@@ -59,13 +60,7 @@ public final class Fixture {
     }
 
     public static synchronized ConnectionString getConnectionString() {
-        if (connectionString == null) {
-            String mongoURIProperty = System.getProperty(MONGODB_URI_SYSTEM_PROPERTY_NAME);
-            String mongoURIString = mongoURIProperty == null || mongoURIProperty.isEmpty()
-                    ? DEFAULT_URI : mongoURIProperty;
-            connectionString = new ConnectionString(mongoURIString);
-        }
-        return connectionString;
+       return ClusterFixture.getConnectionString();
     }
 
     public static String getDefaultDatabaseName() {
