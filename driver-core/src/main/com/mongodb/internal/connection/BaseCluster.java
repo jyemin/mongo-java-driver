@@ -265,6 +265,10 @@ abstract class BaseCluster implements Cluster {
         return description;
     }
 
+    private synchronized void updatePhase() {
+        phase.getAndSet(new CountDownLatch(1)).countDown();
+    }
+
     private long getMaxWaitTimeNanos() {
         if (settings.getServerSelectionTimeout(NANOSECONDS) < 0) {
             return Long.MAX_VALUE;
@@ -461,6 +465,8 @@ abstract class BaseCluster implements Cluster {
                 waitQueueHandler = new Thread(new WaitQueueHandler(), "cluster-" + clusterId.getValue());
                 waitQueueHandler.setDaemon(true);
                 waitQueueHandler.start();
+            } else {
+                updatePhase();
             }
         }
     }
