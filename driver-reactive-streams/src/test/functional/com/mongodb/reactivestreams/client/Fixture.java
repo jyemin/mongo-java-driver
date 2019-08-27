@@ -17,7 +17,6 @@
 package com.mongodb.reactivestreams.client;
 
 import com.mongodb.ClusterFixture;
-import com.mongodb.ConnectionString;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoTimeoutException;
@@ -34,14 +33,13 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Helper class for asynchronous tests.
  */
 public final class Fixture {
-    private static final String DEFAULT_DATABASE_NAME = "JavaDriverReactiveTest";
-
     private static MongoClient mongoClient;
     private static ServerVersion serverVersion;
     private static ClusterType clusterType;
@@ -51,20 +49,12 @@ public final class Fixture {
 
     public static synchronized MongoClient getMongoClient() {
         if (mongoClient == null) {
-            mongoClient = MongoClients.create(getConnectionString());
+            mongoClient = MongoClients.create(ClusterFixture.getConnectionString());
             serverVersion = getServerVersion();
             clusterType = getClusterType();
             Runtime.getRuntime().addShutdownHook(new ShutdownHook());
         }
         return mongoClient;
-    }
-
-    public static synchronized ConnectionString getConnectionString() {
-       return ClusterFixture.getConnectionString();
-    }
-
-    public static String getDefaultDatabaseName() {
-        return DEFAULT_DATABASE_NAME;
     }
 
     public static MongoDatabase getDefaultDatabase() {
@@ -161,7 +151,7 @@ public final class Fixture {
         @Override
         public void run() {
             try {
-                dropDatabase(getDefaultDatabaseName());
+                dropDatabase(com.mongodb.client.Fixture.getDefaultDatabaseName());
             } catch (Throwable e) {
                 // ignore
             }
