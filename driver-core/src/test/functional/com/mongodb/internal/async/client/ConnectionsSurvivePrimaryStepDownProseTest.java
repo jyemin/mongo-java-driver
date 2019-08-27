@@ -27,6 +27,7 @@ import com.mongodb.async.FutureResultCallback;
 import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.event.ConnectionAddedEvent;
+import com.mongodb.event.ConnectionCreatedEvent;
 import com.mongodb.internal.connection.TestConnectionPoolListener;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
@@ -164,7 +165,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
 
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 10107}}");
-        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -178,14 +179,14 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
     }
 
     @Test
     public void testInterruptedAtShutdownResetsConnectionPool() throws InterruptedException {
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 11600}}");
-        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -198,14 +199,14 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
     }
 
     @Test
     public void testShutdownInProgressResetsConnectionPool() throws InterruptedException {
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 91}}");
-        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -218,7 +219,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
     }
 
 }

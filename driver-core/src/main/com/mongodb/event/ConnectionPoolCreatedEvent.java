@@ -16,55 +16,54 @@
 
 package com.mongodb.event;
 
-import com.mongodb.connection.ConnectionId;
+import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An event for checking in a connection to the pool.
+ * An event signifying that a connection pool was created.
  *
- * @since 3.5
+ * @since 4.0
  */
-public final class ConnectionCheckedInEvent {
+public final class ConnectionPoolCreatedEvent {
     private final ServerId serverId;
-    private final ConnectionId connectionId;
+    private final ConnectionPoolSettings settings;
 
     /**
-     * Construct an instance
+     * Constructs a new instance of the event.
      *
      * @param serverId the server id
-     * @param connectionId the connection id
+     * @param settings the connection pool settings
      */
-    public ConnectionCheckedInEvent(final ServerId serverId, final ConnectionId connectionId) {
+    public ConnectionPoolCreatedEvent(final ServerId serverId, final ConnectionPoolSettings settings) {
         this.serverId = notNull("serverId", serverId);
-        this.connectionId = notNull("connectionId", connectionId);
+        this.settings = notNull("settings", settings);
     }
 
     /**
      * Gets the server id
      *
      * @return the server id
-     * @since 4.0
      */
     public ServerId getServerId() {
         return serverId;
     }
 
     /**
-     * Gets the connection id
+     * Gets the connection pool settings.
      *
-     * @return the connection id
+     * @return the connection pool setttings.
      */
-    public ConnectionId getConnectionId() {
-        return connectionId;
+    public ConnectionPoolSettings getSettings() {
+        return settings;
     }
 
     @Override
     public String toString() {
-        return "ConnectionCheckedInEvent{"
+        return "ConnectionPoolCreatedEvent{"
                        + "serverId=" + serverId
-                       + " connectionId=" + connectionId
+                       + " settings=" + settings
                        + '}';
     }
 }

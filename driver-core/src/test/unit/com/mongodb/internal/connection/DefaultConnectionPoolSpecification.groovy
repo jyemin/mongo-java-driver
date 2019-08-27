@@ -339,7 +339,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         connectionFactory.createdConnections.get(0).opened()  // if the first one is opened, they all should be
     }
 
-    def 'should invoke connection pool opened event'() {
+    def 'should invoke connection pool created event'() {
         given:
         def listener = Mock(ConnectionPoolListener)
         def settings = builder().maxSize(10).minSize(5).addConnectionPoolListener(listener).build()
@@ -348,7 +348,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, settings)
 
         then:
-        1 * listener.connectionPoolOpened { it.serverId == SERVER_ID && it.settings == settings }
+        1 * listener.connectionPoolCreated { it.serverId == SERVER_ID && it.settings == settings }
     }
 
     def 'should invoke connection pool closed event'() {
@@ -363,7 +363,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         1 * listener.connectionPoolClosed { it.serverId == SERVER_ID }
     }
 
-    def 'should fire connection added to pool event'() {
+    def 'should fire connection created to pool event'() {
         given:
         def listener = Mock(ConnectionPoolListener)
         pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(10).maxWaitQueueSize(1)
@@ -373,7 +373,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         pool.get()
 
         then:
-        1 * listener.connectionAdded { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionCreated { it.connectionId.serverId == SERVER_ID }
     }
 
     def 'should fire connection removed from pool event'() {
@@ -388,7 +388,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         pool.close()
 
         then:
-        1 * listener.connectionRemoved { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionClosed { it.connectionId.serverId == SERVER_ID }
     }
 
     def 'should fire connection pool events on check out and check in'() {
@@ -426,7 +426,7 @@ class DefaultConnectionPoolSpecification extends Specification {
 
         then:
         1 * listener.connectionCheckedIn { it.connectionId.serverId == SERVER_ID }
-        1 * listener.connectionRemoved { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionClosed { it.connectionId.serverId == SERVER_ID }
     }
 
     def 'should select connection asynchronously if one is immediately available'() {

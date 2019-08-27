@@ -16,55 +16,40 @@
 
 package com.mongodb.event;
 
-import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An event for checking in a connection to the pool.
+ * An event for when the driver starts to checkout out a connection.
  *
- * @since 3.5
+ * @since 4.0
  */
-public final class ConnectionCheckedInEvent {
+public final class ConnectionCheckOutStartedEvent {
     private final ServerId serverId;
-    private final ConnectionId connectionId;
 
     /**
      * Construct an instance
      *
      * @param serverId the server id
-     * @param connectionId the connection id
      */
-    public ConnectionCheckedInEvent(final ServerId serverId, final ConnectionId connectionId) {
+    public ConnectionCheckOutStartedEvent(final ServerId serverId) {
         this.serverId = notNull("serverId", serverId);
-        this.connectionId = notNull("connectionId", connectionId);
     }
 
     /**
      * Gets the server id
      *
      * @return the server id
-     * @since 4.0
      */
     public ServerId getServerId() {
         return serverId;
     }
 
-    /**
-     * Gets the connection id
-     *
-     * @return the connection id
-     */
-    public ConnectionId getConnectionId() {
-        return connectionId;
-    }
-
     @Override
     public String toString() {
-        return "ConnectionCheckedInEvent{"
+        return "ConnectionCheckOutStartedEvent{"
                        + "serverId=" + serverId
-                       + " connectionId=" + connectionId
                        + '}';
     }
 }

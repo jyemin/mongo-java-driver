@@ -16,55 +16,65 @@
 
 package com.mongodb.event;
 
-import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An event for checking in a connection to the pool.
+ * An event for when checking out a connection fails.
  *
- * @since 3.5
+ * @since 4.0
  */
-public final class ConnectionCheckedInEvent {
+public final class ConnectionCheckOutFailedEvent {
+
+    /**
+     * An enumeration of the reasons checking out a connection failed
+     */
+    public enum Reason {
+        /**
+         * The pool was previously closed and cannot provide new connections
+         */
+        POOL_CLOSED,
+
+        /**
+         * The connection check out attempt exceeded the specific timeout
+         */
+        TIMEOUT,
+
+        /**
+         * The connection check out attempt experienced an error while setting up a new connection
+         */
+        CONNECTION_ERROR,
+    }
+
     private final ServerId serverId;
-    private final ConnectionId connectionId;
+    private final Reason reason;
 
     /**
      * Construct an instance
      *
      * @param serverId the server id
-     * @param connectionId the connection id
+     * @param reason the reason the connection check out failed
      */
-    public ConnectionCheckedInEvent(final ServerId serverId, final ConnectionId connectionId) {
+    public ConnectionCheckOutFailedEvent(final ServerId serverId, final Reason reason) {
         this.serverId = notNull("serverId", serverId);
-        this.connectionId = notNull("connectionId", connectionId);
+        this.reason = notNull("reason", reason);
     }
 
     /**
      * Gets the server id
      *
      * @return the server id
-     * @since 4.0
      */
     public ServerId getServerId() {
         return serverId;
     }
 
-    /**
-     * Gets the connection id
-     *
-     * @return the connection id
-     */
-    public ConnectionId getConnectionId() {
-        return connectionId;
-    }
-
     @Override
     public String toString() {
-        return "ConnectionCheckedInEvent{"
+        return "ConnectionCheckOutFailedEvent{"
                        + "serverId=" + serverId
-                       + " connectionId=" + connectionId
+                       + " reason=" + reason
                        + '}';
     }
 }

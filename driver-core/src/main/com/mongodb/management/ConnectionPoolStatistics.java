@@ -21,11 +21,13 @@ import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
 import com.mongodb.event.ConnectionCheckedOutEvent;
+import com.mongodb.event.ConnectionClosedEvent;
+import com.mongodb.event.ConnectionCreatedEvent;
+import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
 import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
-import com.mongodb.event.ConnectionRemovedEvent;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,7 +41,13 @@ final class ConnectionPoolStatistics implements ConnectionPoolListener, Connecti
     private final AtomicInteger checkedOutCount = new AtomicInteger();
     private final AtomicInteger waitQueueSize = new AtomicInteger();
 
+    @Deprecated
     ConnectionPoolStatistics(final ConnectionPoolOpenedEvent event) {
+        serverAddress = event.getServerId().getAddress();
+        settings = event.getSettings();
+    }
+
+    ConnectionPoolStatistics(final ConnectionPoolCreatedEvent event) {
         serverAddress = event.getServerId().getAddress();
         settings = event.getSettings();
     }
@@ -95,7 +103,12 @@ final class ConnectionPoolStatistics implements ConnectionPoolListener, Connecti
     }
 
     @Override
-    public void connectionRemoved(final ConnectionRemovedEvent event) {
+    public void connectionCreated(final ConnectionCreatedEvent event) {
+        size.incrementAndGet();
+    }
+
+    @Override
+    public void connectionClosed(final ConnectionClosedEvent event) {
         size.decrementAndGet();
     }
 

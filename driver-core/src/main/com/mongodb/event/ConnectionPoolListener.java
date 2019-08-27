@@ -28,8 +28,28 @@ public interface ConnectionPoolListener extends EventListener {
      * Invoked when a connection pool is opened.
      *
      * @param event the event
+     * @deprecated Prefer {@link #connectionPoolCreated}
      */
+    @Deprecated
     default void connectionPoolOpened(ConnectionPoolOpenedEvent event) {
+    }
+
+    /**
+     * Invoked when a connection pool is created.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionPoolCreated(ConnectionPoolCreatedEvent event) {
+    }
+
+    /**
+     * Invoked when a connection pool is cleared.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionPoolCleared(ConnectionPoolClearedEvent event) {
     }
 
     /**
@@ -41,11 +61,29 @@ public interface ConnectionPoolListener extends EventListener {
     }
 
     /**
+     * Invoked when attempting to check out a connection from a pool.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionCheckOutStarted(ConnectionCheckOutStartedEvent event) {
+    }
+
+    /**
      * Invoked when a connection is checked out of a pool.
      *
      * @param event the event
      */
     default void connectionCheckedOut(ConnectionCheckedOutEvent event) {
+    }
+
+    /**
+     * Invoked when an attempt to check out a connection from a pool fails.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionCheckOutFailed(ConnectionCheckOutFailedEvent event) {
     }
 
     /**
@@ -76,15 +114,46 @@ public interface ConnectionPoolListener extends EventListener {
      * Invoked when a connection is added to a pool.
      *
      * @param event the event
+     * @deprecated Prefer {@link #connectionCreated}
      */
+    @Deprecated
     default void connectionAdded(ConnectionAddedEvent event) {
+    }
+
+    /**
+     * Invoked when a connection is created.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionCreated(ConnectionCreatedEvent event) {
+    }
+
+    /**
+     * Invoked when a connection is ready for use.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionReady(ConnectionReadyEvent event) {
     }
 
     /**
      * Invoked when a connection is removed from a pool.
      *
      * @param event the event
+     * @deprecated Prefer {@link #connectionClosed}
      */
+    @Deprecated
     default void connectionRemoved(ConnectionRemovedEvent event) {
+    }
+
+    /**
+     * Invoked when a connection is removed from a pool.
+     *
+     * @param event the event
+     * @since 4.0
+     */
+    default void connectionClosed(ConnectionClosedEvent event) {
     }
 }

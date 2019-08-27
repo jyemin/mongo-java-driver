@@ -22,11 +22,11 @@ import com.mongodb.connection.ServerId;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
- * An event for checking in a connection to the pool.
+ * An event for when a connection in the pool has finished its setup and is ready for use.
  *
- * @since 3.5
+ * @since 4.0
  */
-public final class ConnectionCheckedInEvent {
+public final class ConnectionReadyEvent {
     private final ServerId serverId;
     private final ConnectionId connectionId;
 
@@ -36,7 +36,7 @@ public final class ConnectionCheckedInEvent {
      * @param serverId the server id
      * @param connectionId the connection id
      */
-    public ConnectionCheckedInEvent(final ServerId serverId, final ConnectionId connectionId) {
+    public ConnectionReadyEvent(final ServerId serverId, final ConnectionId connectionId) {
         this.serverId = notNull("serverId", serverId);
         this.connectionId = notNull("connectionId", connectionId);
     }
@@ -45,7 +45,6 @@ public final class ConnectionCheckedInEvent {
      * Gets the server id
      *
      * @return the server id
-     * @since 4.0
      */
     public ServerId getServerId() {
         return serverId;
@@ -62,7 +61,7 @@ public final class ConnectionCheckedInEvent {
 
     @Override
     public String toString() {
-        return "ConnectionCheckedInEvent{"
+        return "ConnectionReadyEvent{"
                        + "serverId=" + serverId
                        + " connectionId=" + connectionId
                        + '}';

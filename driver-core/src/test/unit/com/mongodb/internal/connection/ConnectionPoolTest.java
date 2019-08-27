@@ -22,14 +22,18 @@ import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerId;
-import com.mongodb.event.ConnectionAddedEvent;
+import com.mongodb.event.ConnectionCheckOutFailedEvent;
+import com.mongodb.event.ConnectionCheckOutStartedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
 import com.mongodb.event.ConnectionCheckedOutEvent;
+import com.mongodb.event.ConnectionClosedEvent;
+import com.mongodb.event.ConnectionCreatedEvent;
+import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolClosedEvent;
-import com.mongodb.event.ConnectionPoolOpenedEvent;
+import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
-import com.mongodb.event.ConnectionRemovedEvent;
+import com.mongodb.event.ConnectionReadyEvent;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -76,6 +80,7 @@ public class ConnectionPoolTest {
     private final Map<String, ExecutorService> executorServiceMap = new HashMap<String, ExecutorService>();
     private final Map<String, Future<Exception>> futureMap = new HashMap<String, Future<Exception>>();
     private final Map<String, InternalConnection> connectionMap = new HashMap<String, InternalConnection>();
+    private final ServerId serverId;
 
     public ConnectionPoolTest(final String fileName, final String description, final BsonDocument definition) {
         this.fileName = fileName;
@@ -103,7 +108,8 @@ public class ConnectionPoolTest {
         settingsBuilder.addConnectionPoolListener(listener);
         settings = settingsBuilder.build();
 
-        pool = new DefaultConnectionPool(new ServerId(new ClusterId(), serverAddress), new TestInternalConnectionFactory(),
+        serverId = new ServerId(new ClusterId(), serverAddress);
+        pool = new DefaultConnectionPool(serverId, new TestInternalConnectionFactory(),
                 settings);
         pool.start();
     }
@@ -135,8 +141,6 @@ public class ConnectionPoolTest {
                     }
                 } else if (name.equals("waitForEvent")) {
                     Class<?> eventClass = getEventClass(operation.getString("event").getValue());
-                    // TODO: In 4.0 we will support all event classes.  Until then, skipping tests where we need to wait on an
-                    // unsupported one
                     assumeNotNull(eventClass);
                     listener.waitForEvent(eventClass, operation.getNumber("count").intValue(), 5, TimeUnit.SECONDS);
                 } else if (name.equals("clear")) {
@@ -180,33 +184,37 @@ public class ConnectionPoolTest {
                 BsonDocument expectedEvent = cur.asDocument();
                 String type = expectedEvent.getString("type").getValue();
                 if (type.equals("ConnectionPoolCreated")) {
-                    ConnectionPoolOpenedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionPoolOpenedEvent.class);
+                    ConnectionPoolCreatedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionPoolCreatedEvent.class);
                     assertEquals(serverAddress, actualEvent.getServerId().getAddress());
                     assertEquals(settings, actualEvent.getSettings());
+                } else if (type.equals("ConnectionPoolCleared")) {
+                    ConnectionPoolClearedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionPoolClearedEvent.class);
+                    assertEquals(serverAddress, actualEvent.getServerId().getAddress());
                 } else if (type.equals("ConnectionPoolClosed")) {
                     ConnectionPoolClosedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionPoolClosedEvent.class);
                     assertEquals(serverAddress, actualEvent.getServerId().getAddress());
-                } else if (type.equals("ConnectionPoolCleared")) {
-                    // TODO in 4.0, when this event will be implemented
-                } else if (type.equals("ConnectionReady")) {
-                    // TODO in 4.0, when this event will be implemented
-                } else if (type.equals("ConnectionCheckOutStarted")) {
-                    // TODO in 4.0, when this event will be implemented
-                } else if (type.equals("ConnectionCheckOutFailed")) {
-                    // TODO in 4.0, when this event will be implemented
                 } else if (type.equals("ConnectionCreated")) {
-                    ConnectionAddedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionAddedEvent.class);
+                    ConnectionCreatedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionCreatedEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
+                } else if (type.equals("ConnectionReady")) {
+                    ConnectionReadyEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionReadyEvent.class);
+                    assertEquals(serverAddress, actualEvent.getServerId().getAddress());
+                } else if (type.equals("ConnectionClosed")) {
+                    ConnectionClosedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionClosedEvent.class);
+                    assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
+                    assertReasonMatch(expectedEvent, actualEvent);
+                } else if (type.equals("ConnectionCheckOutStarted")) {
+                    ConnectionCheckOutStartedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionCheckOutStartedEvent.class);
+                    assertEquals(serverAddress, actualEvent.getServerId().getAddress());
+                } else if (type.equals("ConnectionCheckOutFailed")) {
+                    ConnectionCheckOutFailedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionCheckOutFailedEvent.class);
+                    assertEquals(serverAddress, actualEvent.getServerId().getAddress());
                 } else if (type.equals("ConnectionCheckedOut")) {
                     ConnectionCheckedOutEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionCheckedOutEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
                 } else if (type.equals("ConnectionCheckedIn")) {
                     ConnectionCheckedInEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionCheckedInEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
-                } else if (type.equals("ConnectionClosed")) {
-                    ConnectionRemovedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionRemovedEvent.class);
-                    assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
-                    assertReasonMatch(expectedEvent, actualEvent);
                 } else {
                     throw new UnsupportedOperationException("Unsupported event type " + type);
                 }
@@ -214,17 +222,17 @@ public class ConnectionPoolTest {
         }
     }
 
-    private void assertReasonMatch(final BsonDocument expectedEvent, final ConnectionRemovedEvent connectionRemovedEvent) {
+    private void assertReasonMatch(final BsonDocument expectedEvent, final ConnectionClosedEvent connectionClosedEvent) {
         if (!expectedEvent.containsKey("reason")) {
             return;
         }
 
         String expectedReason = expectedEvent.getString("reason").getValue();
-        switch (connectionRemovedEvent.getReason()) {
+        switch (connectionClosedEvent.getReason()) {
             case STALE:
                 assertEquals(expectedReason, "stale");
                 break;
-            case MAX_IDLE_TIME_EXCEEDED:
+            case IDLE:
                 assertEquals(expectedReason, "idle");
                 break;
             case ERROR:
@@ -234,7 +242,7 @@ public class ConnectionPoolTest {
                 assertEquals(expectedReason, "poolClosed");
                 break;
             default:
-                fail("Unexpected reason to close connection " + connectionRemovedEvent.getReason());
+                fail("Unexpected reason to close connection " + connectionClosedEvent.getReason());
         }
     }
 
@@ -272,25 +280,25 @@ public class ConnectionPoolTest {
 
     private Class<?> getEventClass(final String type) {
         if (type.equals("ConnectionPoolCreated")) {
-             return ConnectionPoolOpenedEvent.class;
+             return ConnectionPoolCreatedEvent.class;
         } else if (type.equals("ConnectionPoolClosed")) {
             return ConnectionPoolClosedEvent.class;
         } else if (type.equals("ConnectionCreated")) {
-            return ConnectionAddedEvent.class;
+            return ConnectionCreatedEvent.class;
         } else if (type.equals("ConnectionCheckedOut")) {
             return ConnectionCheckedOutEvent.class;
         } else if (type.equals("ConnectionCheckedIn")) {
             return ConnectionCheckedInEvent.class;
         } else if (type.equals("ConnectionClosed")) {
-            return ConnectionRemovedEvent.class;
+            return ConnectionClosedEvent.class;
         } else if (type.equals("ConnectionPoolCleared")) {
-            return null;
+            return ConnectionPoolClearedEvent.class;
         } else if (type.equals("ConnectionReady")) {
-            return null;
+            return ConnectionReadyEvent.class;
         } else if (type.equals("ConnectionCheckOutStarted")) {
-            return null;
+            return ConnectionCheckOutStartedEvent.class;
         } else if (type.equals("ConnectionCheckOutFailed")) {
-            return null;
+            return ConnectionCheckOutFailedEvent.class;
         } else {
             throw new UnsupportedOperationException("Unsupported event type " + type);
         }
