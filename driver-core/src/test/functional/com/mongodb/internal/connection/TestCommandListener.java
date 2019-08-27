@@ -217,7 +217,8 @@ public class TestCommandListener implements CommandListener {
         lock.lock();
         try {
             assertTrue(events.size() > index);
-            assertEventEquivalence(events.get(index), expectedEvent);        } finally {
+            assertEventEquivalence(events.get(index), expectedEvent);
+        } finally {
             lock.unlock();
         }
     }
