@@ -51,8 +51,6 @@ class SingleResultSubscriber<T> implements Subscriber<T> {
 
     @Override
     public void onSubscribe(final Subscription s) {
-        // TODO: Discuss why it's necessary to request more than 1 in order to force a call to onComplete in the case where we're calling
-        // something like FindIterable.first() with a filter by _id.
         s.request(2);
     }
 

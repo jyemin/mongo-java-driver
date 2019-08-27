@@ -240,7 +240,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public AggregateIterable<T> aggregate(final List<? extends Bson> pipeline) {
-        // TODO: mismatch between sync and async APIs
         return new SyncAggregateIterable<>(wrapped.aggregate(pipeline, wrapped.getDocumentClass()));
     }
 
@@ -251,7 +250,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public AggregateIterable<T> aggregate(final ClientSession clientSession, final List<? extends Bson> pipeline) {
-        // TODO: mismatch between sync and async APIs
         return new SyncAggregateIterable<>(wrapped.aggregate(unwrap(clientSession), pipeline, wrapped.getDocumentClass()));
     }
 
@@ -263,7 +261,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public ChangeStreamIterable<T> watch() {
-        // TODO: mismatch between sync and async APIs
         return new SyncChangeStreamIterable<>(wrapped.watch(wrapped.getDocumentClass()));
     }
 
@@ -274,7 +271,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public ChangeStreamIterable<T> watch(final List<? extends Bson> pipeline) {
-        // TODO: mismatch between sync and async APIs
         return new SyncChangeStreamIterable<>(wrapped.watch(wrapped.getDocumentClass()));
     }
 
@@ -285,7 +281,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public ChangeStreamIterable<T> watch(final ClientSession clientSession) {
-        // TODO: mismatch between sync and async APIs
         return new SyncChangeStreamIterable<>(wrapped.watch(unwrap(clientSession), wrapped.getDocumentClass()));
     }
 
@@ -308,7 +303,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public MapReduceIterable<T> mapReduce(final String mapFunction, final String reduceFunction) {
-        // TODO: mismatch between sync and async APIs
         return new SyncMapReduceIterable<>(wrapped.mapReduce(mapFunction, reduceFunction, wrapped.getDocumentClass()));
     }
 
@@ -320,7 +314,6 @@ class SyncMongoCollection<T> implements MongoCollection<T> {
 
     @Override
     public MapReduceIterable<T> mapReduce(final ClientSession clientSession, final String mapFunction, final String reduceFunction) {
-        // TODO: mismatch between sync and async APIs
         return new SyncMapReduceIterable<>(wrapped.mapReduce(unwrap(clientSession), mapFunction, reduceFunction,
                 wrapped.getDocumentClass()));
     }

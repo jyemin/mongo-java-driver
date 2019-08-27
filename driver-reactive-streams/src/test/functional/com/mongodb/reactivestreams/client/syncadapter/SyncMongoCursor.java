@@ -77,7 +77,7 @@ class SyncMongoCursor<T> implements MongoCursor<T> {
         try {
             subscription.cancel();
         } catch (RuntimeException e) {
-            // TODO: ignoring exceptions now but not clear why sometimes cancel throws
+            // ignore
         }
     }
 
