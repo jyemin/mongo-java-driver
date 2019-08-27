@@ -22,7 +22,7 @@ import com.mongodb.MongoSocketReadException;
 import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.MongoSocketWriteException;
 import com.mongodb.ServerAddress;
-import com.mongodb.async.SingleResultCallback;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;

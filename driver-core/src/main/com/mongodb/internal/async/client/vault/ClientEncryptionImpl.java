@@ -18,7 +18,7 @@ package com.mongodb.internal.async.client.vault;
 
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.MongoNamespace;
-import com.mongodb.async.SingleResultCallback;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.internal.async.client.Crypt;

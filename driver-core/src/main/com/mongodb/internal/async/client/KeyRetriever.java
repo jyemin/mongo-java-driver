@@ -17,7 +17,7 @@
 package com.mongodb.internal.async.client;
 
 import com.mongodb.MongoNamespace;
-import com.mongodb.async.SingleResultCallback;
+import com.mongodb.internal.async.SingleResultCallback;
 import org.bson.BsonDocument;
 
 import java.io.Closeable;

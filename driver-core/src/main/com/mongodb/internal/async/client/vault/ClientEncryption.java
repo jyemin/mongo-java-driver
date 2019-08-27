@@ -17,7 +17,7 @@
 package com.mongodb.internal.async.client.vault;
 
 import com.mongodb.annotations.Beta;
-import com.mongodb.async.SingleResultCallback;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.client.model.vault.DataKeyOptions;
 import com.mongodb.client.model.vault.EncryptOptions;
 import org.bson.BsonBinary;
