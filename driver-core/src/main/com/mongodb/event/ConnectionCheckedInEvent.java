@@ -17,7 +17,6 @@
 package com.mongodb.event;
 
 import com.mongodb.connection.ConnectionId;
-import com.mongodb.connection.ServerId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -27,28 +26,15 @@ import static com.mongodb.assertions.Assertions.notNull;
  * @since 3.5
  */
 public final class ConnectionCheckedInEvent {
-    private final ServerId serverId;
     private final ConnectionId connectionId;
 
     /**
      * Construct an instance
      *
-     * @param serverId the server id
      * @param connectionId the connection id
      */
-    public ConnectionCheckedInEvent(final ServerId serverId, final ConnectionId connectionId) {
-        this.serverId = notNull("serverId", serverId);
+    public ConnectionCheckedInEvent(final ConnectionId connectionId) {
         this.connectionId = notNull("connectionId", connectionId);
-    }
-
-    /**
-     * Gets the server id
-     *
-     * @return the server id
-     * @since 4.0
-     */
-    public ServerId getServerId() {
-        return serverId;
     }
 
     /**
@@ -63,7 +49,6 @@ public final class ConnectionCheckedInEvent {
     @Override
     public String toString() {
         return "ConnectionCheckedInEvent{"
-                       + "serverId=" + serverId
                        + " connectionId=" + connectionId
                        + '}';
     }

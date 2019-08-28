@@ -198,7 +198,7 @@ public class ConnectionPoolTest {
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());
                 } else if (type.equals("ConnectionReady")) {
                     ConnectionReadyEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionReadyEvent.class);
-                    assertEquals(serverAddress, actualEvent.getServerId().getAddress());
+                    assertEquals(serverAddress, actualEvent.getConnectionId().getServerId().getAddress());
                 } else if (type.equals("ConnectionClosed")) {
                     ConnectionClosedEvent actualEvent = getNextEvent(actualEventsIterator, ConnectionClosedEvent.class);
                     assertConnectionIdMatch(expectedEvent, actualEvent.getConnectionId());

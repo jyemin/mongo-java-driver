@@ -301,8 +301,7 @@ class DefaultConnectionPool implements ConnectionPool {
             }
             throw e;
         }
-        connectionPoolListener.connectionCheckedOut(new ConnectionCheckedOutEvent(serverId,
-                internalConnection.getDescription().getConnectionId()));
+        connectionPoolListener.connectionCheckedOut(new ConnectionCheckedOutEvent(internalConnection.getDescription().getConnectionId()));
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("Checked out connection [%s] to server %s", getId(internalConnection), serverId.getAddress()));
         }
@@ -437,7 +436,7 @@ class DefaultConnectionPool implements ConnectionPool {
         public void close() {
             // All but the first call is a no-op
             if (!isClosed.getAndSet(true)) {
-                connectionPoolListener.connectionCheckedIn(new ConnectionCheckedInEvent(serverId, getId(wrapped)));
+                connectionPoolListener.connectionCheckedIn(new ConnectionCheckedInEvent(getId(wrapped)));
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(format("Checked in connection [%s] to server %s", getId(wrapped), serverId.getAddress()));
                 }
@@ -558,14 +557,13 @@ class DefaultConnectionPool implements ConnectionPool {
             if (initialize) {
                 internalConnection.open();
             }
-            connectionPoolListener.connectionCreated(new ConnectionCreatedEvent(serverId, getId(internalConnection)));
+            connectionPoolListener.connectionCreated(new ConnectionCreatedEvent(getId(internalConnection)));
             return internalConnection;
         }
 
         @Override
         public void close(final UsageTrackingInternalConnection connection) {
-            connectionPoolListener.connectionClosed(new ConnectionClosedEvent(serverId, getId(connection),
-                    getReasonForClosing(connection)));
+            connectionPoolListener.connectionClosed(new ConnectionClosedEvent(getId(connection), getReasonForClosing(connection)));
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(format("Closed connection [%s] to %s because %s.", getId(connection), serverId.getAddress(),
                                   getReasonStringForClosing(connection)));

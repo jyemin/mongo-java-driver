@@ -17,7 +17,6 @@
 package com.mongodb.event;
 
 import com.mongodb.connection.ConnectionId;
-import com.mongodb.connection.ServerId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -53,30 +52,18 @@ public final class ConnectionClosedEvent {
         POOL_CLOSED,
     }
 
-    private final ServerId serverId;
     private final ConnectionId connectionId;
     private final Reason reason;
 
     /**
      * Construct an instance
      *
-     * @param serverId the server id
      * @param connectionId the connection id
      * @param reason the reason the connection was closed
      */
-    public ConnectionClosedEvent(final ServerId serverId, final ConnectionId connectionId, final Reason reason) {
-        this.serverId = notNull("serverId", serverId);
+    public ConnectionClosedEvent(final ConnectionId connectionId, final Reason reason) {
         this.connectionId = notNull("connectionId", connectionId);
         this.reason = notNull("reason", reason);
-    }
-
-    /**
-     * Gets the server id
-     *
-     * @return the server id
-     */
-    public ServerId getServerId() {
-        return serverId;
     }
 
     /**
@@ -100,7 +87,6 @@ public final class ConnectionClosedEvent {
     @Override
     public String toString() {
         return "ConnectionClosedEvent{"
-                       + "serverId=" + serverId
                        + " connectionId=" + connectionId
                        + " reason=" + reason
                        + '}';
