@@ -140,31 +140,31 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     @Override
     public <NewTDocument> MongoCollection<NewTDocument> withDocumentClass(final Class<NewTDocument> clazz) {
-        return new MongoCollectionImpl<NewTDocument>(namespace, clazz, codecRegistry, readPreference, writeConcern, retryWrites,
+        return new MongoCollectionImpl<>(namespace, clazz, codecRegistry, readPreference, writeConcern, retryWrites,
                 retryReads, readConcern, executor);
     }
 
     @Override
     public MongoCollection<TDocument> withCodecRegistry(final CodecRegistry codecRegistry) {
-        return new MongoCollectionImpl<TDocument>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
+        return new MongoCollectionImpl<>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
                 retryReads, readConcern, executor);
     }
 
     @Override
     public MongoCollection<TDocument> withReadPreference(final ReadPreference readPreference) {
-        return new MongoCollectionImpl<TDocument>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
+        return new MongoCollectionImpl<>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
                 retryReads, readConcern, executor);
     }
 
     @Override
     public MongoCollection<TDocument> withWriteConcern(final WriteConcern writeConcern) {
-        return new MongoCollectionImpl<TDocument>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
+        return new MongoCollectionImpl<>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
                 retryReads, readConcern, executor);
     }
 
     @Override
     public MongoCollection<TDocument> withReadConcern(final ReadConcern readConcern) {
-        return new MongoCollectionImpl<TDocument>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
+        return new MongoCollectionImpl<>(namespace, documentClass, codecRegistry, readPreference, writeConcern, retryWrites,
                 retryReads, readConcern, executor);
     }
 
@@ -239,7 +239,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     private <TResult> DistinctIterable<TResult> createDistinctIterable(@Nullable final ClientSession clientSession, final String fieldName,
                                                                        final Bson filter, final Class<TResult> resultClass) {
-        return MongoIterables.distinctOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new DistinctIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, fieldName, filter, retryReads);
     }
 
@@ -290,7 +290,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     private <TResult> FindIterable<TResult> createFindIterable(@Nullable final ClientSession clientSession, final Bson filter,
                                                                final Class<TResult> resultClass) {
-        return MongoIterables.findOf(clientSession, namespace, this.documentClass, resultClass, codecRegistry,
+        return new FindIterableImpl<>(clientSession, namespace, this.documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, filter, retryReads);
     }
 
@@ -319,7 +319,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private <TResult> AggregateIterable<TResult> createAggregateIterable(@Nullable final ClientSession clientSession,
                                                                          final List<? extends Bson> pipeline,
                                                                          final Class<TResult> resultClass) {
-        return MongoIterables.aggregateOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new AggregateIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline, AggregationLevel.COLLECTION, retryReads);
     }
 
@@ -368,7 +368,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private <TResult> ChangeStreamIterable<TResult> createChangeStreamIterable(@Nullable final ClientSession clientSession,
                                                                                final List<? extends Bson> pipeline,
                                                                                final Class<TResult> resultClass) {
-        return MongoIterables.changeStreamOf(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
+        return new ChangeStreamIterableImpl<>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, ChangeStreamLevel.COLLECTION, retryReads);
     }
 
@@ -399,7 +399,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private <TResult> MapReduceIterable<TResult> createMapReduceIterable(@Nullable final ClientSession clientSession,
                                                                          final String mapFunction, final String reduceFunction,
                                                                          final Class<TResult> resultClass) {
-        return MongoIterables.mapReduceOf(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new MapReduceIterableImpl<>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, mapFunction, reduceFunction);
     }
 
@@ -859,7 +859,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     private <TResult> ListIndexesIterable<TResult> createListIndexesIterable(@Nullable final ClientSession clientSession,
                                                                              final Class<TResult> resultClass) {
-        return MongoIterables.listIndexesOf(clientSession, getNamespace(), resultClass, codecRegistry, ReadPreference.primary(),
+        return new ListIndexesIterableImpl<>(clientSession, getNamespace(), resultClass, codecRegistry, ReadPreference.primary(),
                 executor, retryReads);
     }
 
