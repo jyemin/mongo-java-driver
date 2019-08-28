@@ -37,26 +37,8 @@ import org.bson.conversions.Bson;
 
 import java.util.List;
 
-// Helper class for instantiating the right implementation class for each MongoIterable.  In proper Java 8 environments, which includes
-// the java.util.function.Consumer interface, it instantiates an implementation which overrides the default forEach(Consumer<TResult)
-// method that in Java 8 is defined as a default method on java.lang.Iterable.  Otherwise it instantiates an implementation which does not
-// override this method.
-// It does this by delegating to an implementation of MongoIterableFactory that is determined based on a runtime check for the existence of
-// the java.util.function.Consumer class.
 public final class MongoIterables {
-    private static MongoIterableFactory factory;
-
-    static {
-        try {
-            // Protect against running in an environment where Consumer is not available.  Either
-            // 1. Java version < 8
-            // 2. Android (which doesn't currently include Consumer even with its Java 8 support
-            Class.forName("java.util.function.Consumer");
-            factory = new Java8MongoIterableFactory();
-        } catch (ClassNotFoundException e) {
-            factory = new FallbackMongoIterableFactory();
-        }
-    }
+    private static MongoIterableFactory factory = new MongoIterableFactoryImpl();
 
     public static <TDocument, TResult>
     FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,

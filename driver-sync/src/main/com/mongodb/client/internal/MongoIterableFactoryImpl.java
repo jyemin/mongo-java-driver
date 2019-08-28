@@ -37,15 +37,14 @@ import org.bson.conversions.Bson;
 
 import java.util.List;
 
-class Java8MongoIterableFactory implements MongoIterableFactory {
+class MongoIterableFactoryImpl implements MongoIterableFactory {
     @Override
     public <TDocument, TResult>
     FindIterable<TResult> findOf(final @Nullable ClientSession clientSession, final MongoNamespace namespace,
-                                 final Class<TDocument> documentClass, final Class<TResult> resultClass,
-                                 final CodecRegistry codecRegistry, final ReadPreference readPreference,
-                                 final ReadConcern readConcern, final OperationExecutor executor,
+                                 final Class<TDocument> documentClass, final Class<TResult> resultClass, final CodecRegistry codecRegistry,
+                                 final ReadPreference readPreference, final ReadConcern readConcern, final OperationExecutor executor,
                                  final Bson filter, final boolean retryReads) {
-        return new Java8FindIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new FindIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, filter, retryReads);
     }
 
@@ -56,9 +55,8 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                                        final ReadPreference readPreference, final ReadConcern readConcern,
                                                                        final WriteConcern writeConcern, final OperationExecutor executor,
                                                                        final List<? extends Bson> pipeline,
-                                                                       final AggregationLevel aggregationLevel,
-                                                                       final boolean retryReads) {
-        return new Java8AggregateIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+                                                                       final AggregationLevel aggregationLevel, final boolean retryReads) {
+        return new AggregateIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline, aggregationLevel, retryReads);
     }
 
@@ -69,9 +67,8 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                                        final ReadPreference readPreference, final ReadConcern readConcern,
                                                                        final WriteConcern writeConcern, final OperationExecutor executor,
                                                                        final List<? extends Bson> pipeline,
-                                                                       final AggregationLevel aggregationLevel,
-                                                                       final boolean retryReads) {
-        return new Java8AggregateIterableImpl<TDocument, TResult>(clientSession, databaseName, documentClass, resultClass, codecRegistry,
+                                                                       final AggregationLevel aggregationLevel, final boolean retryReads) {
+        return new AggregateIterableImpl<TDocument, TResult>(clientSession, databaseName, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, pipeline, aggregationLevel, retryReads);
     }
 
@@ -82,7 +79,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                  final ReadConcern readConcern, final OperationExecutor executor,
                                                  final List<? extends Bson> pipeline, final Class<TResult> resultClass,
                                                  final ChangeStreamLevel changeStreamLevel, final boolean retryReads) {
-        return new Java8ChangeStreamIterableImpl<TResult>(clientSession, databaseName, codecRegistry, readPreference, readConcern, executor,
+        return new ChangeStreamIterableImpl<TResult>(clientSession, databaseName, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, changeStreamLevel, retryReads);
     }
 
@@ -93,9 +90,10 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                  final ReadConcern readConcern, final OperationExecutor executor,
                                                  final List<? extends Bson> pipeline, final Class<TResult> resultClass,
                                                  final ChangeStreamLevel changeStreamLevel, final boolean retryReads) {
-        return new Java8ChangeStreamIterableImpl<TResult>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
+        return new ChangeStreamIterableImpl<TResult>(clientSession, namespace, codecRegistry, readPreference, readConcern, executor,
                 pipeline, resultClass, changeStreamLevel, retryReads);
     }
+
 
     @Override
     public <TDocument, TResult>
@@ -104,7 +102,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                          final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                          final ReadConcern readConcern, final OperationExecutor executor, final String fieldName,
                                          final Bson filter, final boolean retryReads) {
-        return new Java8DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new DistinctIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, executor, fieldName, filter, retryReads);
     }
 
@@ -113,7 +111,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
     ListDatabasesIterable<TResult> listDatabasesOf(final @Nullable ClientSession clientSession, final Class<TResult> resultClass,
                                                    final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                                    final OperationExecutor executor, final boolean retryReads) {
-        return new Java8ListDatabasesIterableImpl<TResult>(clientSession, resultClass, codecRegistry, readPreference, executor, retryReads);
+        return new ListDatabasesIterableImpl<TResult>(clientSession, resultClass, codecRegistry, readPreference, executor, retryReads);
     }
 
     @Override
@@ -122,7 +120,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                        final boolean collectionNamesOnly, final Class<TResult> resultClass,
                                                        final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                                        final OperationExecutor executor, final boolean retryReads) {
-        return new Java8ListCollectionsIterableImpl<TResult>(clientSession, databaseName, collectionNamesOnly, resultClass, codecRegistry,
+        return new ListCollectionsIterableImpl<TResult>(clientSession, databaseName, collectionNamesOnly, resultClass, codecRegistry,
                 readPreference, executor, retryReads);
     }
 
@@ -132,7 +130,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                                final Class<TResult> resultClass, final CodecRegistry codecRegistry,
                                                final ReadPreference readPreference, final OperationExecutor executor,
                                                final boolean retryReads) {
-        return new Java8ListIndexesIterableImpl<TResult>(clientSession, namespace, resultClass, codecRegistry, readPreference,
+        return new ListIndexesIterableImpl<TResult>(clientSession, namespace, resultClass, codecRegistry, readPreference,
                 executor, retryReads);
     }
 
@@ -143,8 +141,7 @@ class Java8MongoIterableFactory implements MongoIterableFactory {
                                            final CodecRegistry codecRegistry, final ReadPreference readPreference,
                                            final ReadConcern readConcern, final WriteConcern writeConcern, final OperationExecutor executor,
                                            final String mapFunction, final String reduceFunction) {
-        return new Java8MapReduceIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
+        return new MapReduceIterableImpl<TDocument, TResult>(clientSession, namespace, documentClass, resultClass, codecRegistry,
                 readPreference, readConcern, writeConcern, executor, mapFunction, reduceFunction);
     }
 }
-

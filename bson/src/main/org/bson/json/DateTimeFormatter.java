@@ -17,32 +17,18 @@
 package org.bson.json;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 final class DateTimeFormatter {
-    private static final FormatterImpl FORMATTER_IMPL;
-
-    static {
-        FormatterImpl dateTimeHelper;
-        try {
-            dateTimeHelper = loadDateTimeFormatter("org.bson.json.DateTimeFormatter$Java8DateTimeFormatter");
-        } catch (LinkageError e) {
-            // this is expected if running on a release prior to Java 8: fallback to JAXB.
-            dateTimeHelper = loadDateTimeFormatter("org.bson.json.DateTimeFormatter$JaxbDateTimeFormatter");
-        }
-
-        FORMATTER_IMPL = dateTimeHelper;
-    }
+    private static final FormatterImpl FORMATTER_IMPL =
+            loadDateTimeFormatter("org.bson.json.DateTimeFormatter$DateTimeFormatterImpl");
 
     private static FormatterImpl loadDateTimeFormatter(final String className) {
         try {
@@ -76,52 +62,7 @@ final class DateTimeFormatter {
         String format(long dateTime);
     }
 
-    // Reflective use of DatatypeConverter avoids a compile-time dependency on the java.xml.bind module in Java 9
-    static class JaxbDateTimeFormatter implements FormatterImpl {
-
-        private static final Method DATATYPE_CONVERTER_PARSE_DATE_TIME_METHOD;
-        private static final Method DATATYPE_CONVERTER_PRINT_DATE_TIME_METHOD;
-
-        static {
-            try {
-                DATATYPE_CONVERTER_PARSE_DATE_TIME_METHOD = Class.forName("javax.xml.bind.DatatypeConverter")
-                                                                    .getDeclaredMethod("parseDateTime", String.class);
-                DATATYPE_CONVERTER_PRINT_DATE_TIME_METHOD = Class.forName("javax.xml.bind.DatatypeConverter")
-                                                                    .getDeclaredMethod("printDateTime", Calendar.class);
-            } catch (NoSuchMethodException e) {
-                throw new ExceptionInInitializerError(e);
-            } catch (ClassNotFoundException e) {
-                throw new ExceptionInInitializerError(e);
-            }
-        }
-
-        @Override
-        public long parse(final String dateTimeString) {
-            try {
-                return ((Calendar) DATATYPE_CONVERTER_PARSE_DATE_TIME_METHOD.invoke(null, dateTimeString)).getTimeInMillis();
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            } catch (InvocationTargetException e) {
-                throw (RuntimeException) e.getCause();
-            }
-        }
-
-        @Override
-        public String format(final long dateTime) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(dateTime);
-            calendar.setTimeZone(TimeZone.getTimeZone("Z"));
-            try {
-                return (String) DATATYPE_CONVERTER_PRINT_DATE_TIME_METHOD.invoke(null, calendar);
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException();
-            } catch (InvocationTargetException e) {
-                throw (RuntimeException) e.getCause();
-            }
-        }
-    }
-
-    static class Java8DateTimeFormatter implements FormatterImpl {
+    static class DateTimeFormatterImpl implements FormatterImpl {
 
         // if running on Java 8 or above then java.time.format.DateTimeFormatter will be available and initialization will succeed.
         // Otherwise it will fail.
