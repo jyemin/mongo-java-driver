@@ -12,19 +12,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package primer;
-
-import org.junit.Test;
+package reactivestreams.primer;
 
 // @import: start
-import com.mongodb.Block;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.internal.async.client.AggregateIterable;
+import com.mongodb.reactivestreams.client.AggregatePublisher;
 import org.bson.Document;
+import org.junit.Test;
+import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.PrintDocumentSubscriber;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 // @import: end
 
 public class AggregatePrimer extends PrimerTestCase {
@@ -34,23 +35,15 @@ public class AggregatePrimer extends PrimerTestCase {
 
         // @begin: group-documents-by-a-field-and-calculate-count
         // @code: start
-        AggregateIterable<Document> iterable = db.getCollection("restaurants").aggregate(asList(
+        AggregatePublisher<Document> publisher = db.getCollection("restaurants").aggregate(singletonList(
                 new Document("$group", new Document("_id", "$borough").append("count", new Document("$sum", 1)))));
         // @code: end
 
         // @pre: Iterate the results and apply a block to each resulting document
         // @code: start
-        iterable.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document.toJson());
-            }
-        }, new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                System.out.println("Operation Finished");
-            }
-        });
+        ObservableSubscriber<Document> aggregateSubscriber = new PrintDocumentSubscriber();
+        publisher.subscribe(aggregateSubscriber);
+        aggregateSubscriber.await();
         // @code: end
 
         /*
@@ -72,24 +65,16 @@ public class AggregatePrimer extends PrimerTestCase {
 
         // @begin: filter-and-group-documents
         // @code: start
-        AggregateIterable<Document> iterable = db.getCollection("restaurants").aggregate(asList(
+        AggregatePublisher<Document> publisher = db.getCollection("restaurants").aggregate(asList(
                 new Document("$match", new Document("borough", "Queens").append("cuisine", "Brazilian")),
                 new Document("$group", new Document("_id", "$address.zipcode").append("count", new Document("$sum", 1)))));
         // @code: end
 
         // @pre: Iterate the results and apply a block to each resulting document
         // @code: start
-        iterable.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document.toJson());
-            }
-        }, new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                System.out.println("Operation Finished");
-            }
-        });
+        ObservableSubscriber<Document> aggregateSubscriber = new PrintDocumentSubscriber();
+        publisher.subscribe(aggregateSubscriber);
+        aggregateSubscriber.await();
         // @code: end
 
         /*

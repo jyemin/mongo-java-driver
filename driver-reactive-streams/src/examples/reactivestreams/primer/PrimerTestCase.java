@@ -12,9 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-/**
- * This package contains the quick tour async examples
- */
-package tour;
+package reactivestreams.primer;
+
+
+import com.mongodb.reactivestreams.client.MongoDatabase;
+
+import static com.mongodb.reactivestreams.client.Fixture.getMongoClient;
+
+public class PrimerTestCase {
+    MongoDatabase db = getMongoClient().getDatabase("test");
+}

@@ -12,16 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package primer;
+package reactivestreams.primer;
 
-
-import com.mongodb.async.SingleResultCallback;
-import org.bson.Document;
-import org.junit.Test;
 
 // @imports: start
+import org.bson.Document;
+import org.junit.Test;
+import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.PrintSubscriber;
 // @imports: end
 
 public class IndexesPrimer extends PrimerTestCase {
@@ -31,12 +32,10 @@ public class IndexesPrimer extends PrimerTestCase {
 
         // @begin: single-field-index
         // @code: start
-        db.getCollection("restaurants").createIndex(new Document("cuisine", 1), new SingleResultCallback<String>() {
-            @Override
-            public void onResult(final String result, final Throwable t) {
-                System.out.println("Operation Finished");
-            }
-        });
+        ObservableSubscriber<String> indexSubscriber = new PrintSubscriber<>("Index created: %s");
+        db.getCollection("restaurants").createIndex(new Document("cuisine", 1))
+                .subscribe(indexSubscriber);
+        indexSubscriber.await();
         // @code: end
 
         // @post: The method does not return a result.
@@ -47,13 +46,10 @@ public class IndexesPrimer extends PrimerTestCase {
     public void  createCompoundIndex() {
         // @begin: create-compound-index
         // @code: start
-        db.getCollection("restaurants").createIndex(new Document("cuisine", 1).append("address.zipcode", 1),
-                new SingleResultCallback<String>() {
-                    @Override
-                    public void onResult(final String result, final Throwable t) {
-                        System.out.println("Operation Finished");
-                    }
-                });
+        ObservableSubscriber<String> indexSubscriber = new PrintSubscriber<>("Index created: %s");
+        db.getCollection("restaurants").createIndex(new Document("cuisine", 1).append("address.zipcode", 1))
+                .subscribe(indexSubscriber);
+        indexSubscriber.await();
         // @code: end
 
         // @post: The method does not return a result.

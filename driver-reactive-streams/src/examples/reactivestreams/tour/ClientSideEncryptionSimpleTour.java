@@ -12,22 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package tour;
+package reactivestreams.tour;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.internal.async.client.MongoClient;
-import com.mongodb.internal.async.client.MongoClients;
-import com.mongodb.internal.async.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.Success;
 import org.bson.Document;
+import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.OperationSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.PrintDocumentSubscriber;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * ClientSideEncryption Simple tour
@@ -41,9 +44,8 @@ public class ClientSideEncryptionSimpleTour {
      * Assumes the schema has already been created in MongoDB.
      *
      * @param args ignored args
-     * @throws InterruptedException if interrupting waiting on a latch
      */
-    public static void main(final String[] args) throws InterruptedException {
+    public static void main(final String[] args) {
 
         // This would have to be the same master key as was used to create the encryption key
         final byte[] localMasterKey = new byte[96];
@@ -68,35 +70,18 @@ public class ClientSideEncryptionSimpleTour {
 
         MongoClient mongoClient = MongoClients.create(clientSettings);
         MongoCollection<Document> collection = mongoClient.getDatabase("test").getCollection("coll");
-        final CountDownLatch dropLatch = new CountDownLatch(1);
-        collection.drop(new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                dropLatch.countDown();
-            }
-        });
-        dropLatch.await();
 
-        final CountDownLatch insertLatch = new CountDownLatch(1);
-        collection.insertOne(new Document("encryptedField", "123456789"),
-                new SingleResultCallback<Void>() {
-                    @Override
-                    public void onResult(final Void result, final Throwable t) {
-                        System.out.println("Inserted!");
-                        insertLatch.countDown();
-                    }
-                });
-        insertLatch.await();
+        ObservableSubscriber<Success> successSubscriber = new OperationSubscriber<>();
+        collection.drop().subscribe(successSubscriber);
+        successSubscriber.await();
 
-        final CountDownLatch findLatch = new CountDownLatch(1);
-        collection.find().first(new SingleResultCallback<Document>() {
-            @Override
-            public void onResult(final Document result, final Throwable t) {
-                System.out.println(result.toJson());
-                findLatch.countDown();
-            }
-        });
-        findLatch.await();
+        successSubscriber = new OperationSubscriber<>();
+        collection.insertOne(new Document("encryptedField", "123456789")).subscribe(successSubscriber);
+        successSubscriber.await();
+
+        ObservableSubscriber<Document> documentSubscriber = new PrintDocumentSubscriber();
+        collection.find().first().subscribe(documentSubscriber);
+        documentSubscriber.await();
 
         // release resources
         mongoClient.close();

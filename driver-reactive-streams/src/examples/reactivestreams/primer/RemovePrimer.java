@@ -12,16 +12,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package primer;
-
-import org.junit.Test;
+package reactivestreams.primer;
 
 // @import: start
-import org.bson.Document;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.reactivestreams.client.Success;
+import org.bson.Document;
+import org.junit.Test;
+import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.OperationSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.PrintSubscriber;
 // @import: end
 
 public class RemovePrimer extends PrimerTestCase {
@@ -29,14 +32,10 @@ public class RemovePrimer extends PrimerTestCase {
     @Test
     public void removeMatchingDocuments() {
         // @begin: remove-matching-documents
-        db.getCollection("restaurants").deleteMany(new Document("borough", "Manhattan"),
-                new SingleResultCallback<DeleteResult>() {
-                    @Override
-                    public void onResult(final DeleteResult result, final Throwable t) {
-                        System.out.println("Operation Finished");
-                        System.out.println(result);
-                    }
-                });
+        ObservableSubscriber<DeleteResult> deleteSubscriber = new PrintSubscriber<>("Update complete: %s");
+        db.getCollection("restaurants").deleteMany(new Document("borough", "Manhattan"))
+                .subscribe(deleteSubscriber);
+        deleteSubscriber.await();
 
         /*
         // @post: start
@@ -50,14 +49,10 @@ public class RemovePrimer extends PrimerTestCase {
     @Test
     public void removeAllDocuments() {
         // @begin: remove-all-documents
-        db.getCollection("restaurants").deleteMany(new Document(),
-                new SingleResultCallback<DeleteResult>() {
-                    @Override
-                    public void onResult(final DeleteResult result, final Throwable t) {
-                        System.out.println("Operation Finished");
-                        System.out.println(result);
-                    }
-                });
+        ObservableSubscriber<DeleteResult> deleteSubscriber = new PrintSubscriber<>("Update complete: %s");
+        db.getCollection("restaurants").deleteMany(new Document())
+                .subscribe(deleteSubscriber);
+        deleteSubscriber.await();
 
         /*
         // @post: start
@@ -71,12 +66,10 @@ public class RemovePrimer extends PrimerTestCase {
     @Test
     public void dropCollection() {
         // @begin: drop-collection
-        db.getCollection("restaurants").drop(new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                System.out.println("Operation Finished");
-            }
-        });
+        ObservableSubscriber<Success> successSubscriber = new OperationSubscriber<>();
+        db.getCollection("restaurants").drop()
+                .subscribe(successSubscriber);
+        successSubscriber.await();
         // @end: drop-collection
     }
 }

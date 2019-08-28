@@ -12,31 +12,33 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package tour;
+package reactivestreams.tour;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.internal.async.client.MongoClient;
-import com.mongodb.internal.async.client.MongoClients;
-import com.mongodb.internal.async.client.MongoCollection;
-import com.mongodb.internal.async.client.vault.ClientEncryption;
-import com.mongodb.internal.async.client.vault.ClientEncryptions;
 import com.mongodb.client.model.vault.DataKeyOptions;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.Success;
+import com.mongodb.reactivestreams.client.vault.ClientEncryption;
+import com.mongodb.reactivestreams.client.vault.ClientEncryptions;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.Document;
+import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.OperationSubscriber;
+import reactivestreams.helpers.SubscriberHelpers.PrintDocumentSubscriber;
 
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * ClientSideEncryption AutoEncryptionSettings tour
@@ -49,9 +51,8 @@ public class ClientSideEncryptionAutoEncryptionSettingsTour {
      * Requires the mongodb-crypt library in the class path and mongocryptd on the system path.
      *
      * @param args ignored args
-     * @throws InterruptedException if interrupting waiting on a latch
      */
-    public static void main(final String[] args) throws InterruptedException {
+    public static void main(final String[] args) {
 
         // This would have to be the same master key as was used to create the encryption key
         final byte[] localMasterKey = new byte[96];
@@ -74,16 +75,10 @@ public class ClientSideEncryptionAutoEncryptionSettingsTour {
 
         ClientEncryption clientEncryption = ClientEncryptions.create(clientEncryptionSettings);
 
-        final CountDownLatch createKeyLatch = new CountDownLatch(1);
-        final AtomicReference<String> base64DataKeyId = new AtomicReference<String>();
-        clientEncryption.createDataKey("local", new DataKeyOptions(), new SingleResultCallback<BsonBinary>() {
-            @Override
-            public void onResult(final BsonBinary dataKeyId, final Throwable t) {
-                base64DataKeyId.set(Base64.getEncoder().encodeToString(dataKeyId.getData()));
-                createKeyLatch.countDown();
-            }
-        });
-        createKeyLatch.await();
+        ObservableSubscriber<BsonBinary> dataKeySubscriber = new OperationSubscriber<>();
+        clientEncryption.createDataKey("local", new DataKeyOptions()).subscribe(dataKeySubscriber);
+        dataKeySubscriber.await();
+        String base64DataKeyId = Base64.getEncoder().encodeToString(dataKeySubscriber.getReceived().get(0).getData());
 
         final String dbName = "test";
         final String collName = "coll";
@@ -99,7 +94,7 @@ public class ClientSideEncryptionAutoEncryptionSettingsTour {
                                     + "      encrypt: {"
                                     + "        keyId: [{"
                                     + "          \"$binary\": {"
-                                    + "            \"base64\": \"" + base64DataKeyId.get() + "\","
+                                    + "            \"base64\": \"" + base64DataKeyId + "\","
                                     + "            \"subType\": \"04\""
                                     + "          }"
                                     + "        }],"
@@ -118,35 +113,18 @@ public class ClientSideEncryptionAutoEncryptionSettingsTour {
 
         MongoClient mongoClient = MongoClients.create(clientSettings);
         MongoCollection<Document> collection = mongoClient.getDatabase("test").getCollection("coll");
-        final CountDownLatch dropLatch = new CountDownLatch(1);
-        collection.drop(new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                dropLatch.countDown();
-            }
-        });
-        dropLatch.await();
 
-        final CountDownLatch insertLatch = new CountDownLatch(1);
-        collection.insertOne(new Document("encryptedField", "123456789"),
-                new SingleResultCallback<Void>() {
-                    @Override
-                    public void onResult(final Void result, final Throwable t) {
-                        System.out.println("Inserted!");
-                        insertLatch.countDown();
-                    }
-                });
-        insertLatch.await();
+        ObservableSubscriber<Success> successSubscriber = new OperationSubscriber<>();
+        collection.drop().subscribe(successSubscriber);
+        successSubscriber.await();
 
-        final CountDownLatch findLatch = new CountDownLatch(1);
-        collection.find().first(new SingleResultCallback<Document>() {
-            @Override
-            public void onResult(final Document result, final Throwable t) {
-                System.out.println(result.toJson());
-                findLatch.countDown();
-            }
-        });
-        findLatch.await();
+        successSubscriber = new OperationSubscriber<>();
+        collection.insertOne(new Document("encryptedField", "123456789")).subscribe(successSubscriber);
+        successSubscriber.await();
+
+        ObservableSubscriber<Document> documentSubscriber = new PrintDocumentSubscriber();
+        collection.find().first().subscribe(documentSubscriber);
+        documentSubscriber.await();
 
         // release resources
         mongoClient.close();
