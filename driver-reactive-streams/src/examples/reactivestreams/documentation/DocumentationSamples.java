@@ -17,7 +17,6 @@
 
 package reactivestreams.documentation;
 
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.FindPublisher;
@@ -25,12 +24,13 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
 import org.bson.BsonType;
 import org.bson.Document;
+import org.junit.Before;
 import org.junit.Test;
 import reactivestreams.helpers.SubscriberHelpers.ObservableSubscriber;
 import reactivestreams.helpers.SubscriberHelpers.OperationSubscriber;
 
 // imports required for filters, projections and updates
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.model.Filters.all;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.elemMatch;
@@ -54,17 +54,21 @@ import static com.mongodb.client.model.Updates.currentDate;
 import static com.mongodb.client.model.Updates.set;
 // end required filters, projections and updates imports
 
+import static com.mongodb.reactivestreams.client.Fixture.getMongoClient;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 
 public final class DocumentationSamples {
 
-    private final MongoCollection<Document> collection = initializeCollection();
+    private final MongoCollection<Document> collection =
+            getMongoClient().getDatabase(getDefaultDatabaseName()).getCollection("inventory");
 
-    private MongoCollection<Document> initializeCollection() {
-        // TODO!!!
-        return MongoClients.create().getDatabase(getDefaultDatabaseName()).getCollection("inventory");
+    @Before
+    public void setup() {
+        ObservableSubscriber<Success> dropSubscriber = new OperationSubscriber<>();
+        collection.drop().subscribe(dropSubscriber);
+        dropSubscriber.await();
     }
 
     @Test
