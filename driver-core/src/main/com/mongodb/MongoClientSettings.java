@@ -29,6 +29,7 @@ import com.mongodb.connection.SslSettings;
 import com.mongodb.connection.StreamFactoryFactory;
 import com.mongodb.event.CommandListener;
 import com.mongodb.lang.Nullable;
+import org.bson.UuidRepresentation;
 import org.bson.codecs.BsonCodecProvider;
 import org.bson.codecs.BsonValueCodecProvider;
 import org.bson.codecs.DocumentCodecProvider;
@@ -88,6 +89,7 @@ public final class MongoClientSettings {
     private final SslSettings sslSettings;
     private final String applicationName;
     private final List<MongoCompressor> compressorList;
+    private final UuidRepresentation uuidRepresentation;
 
     private final AutoEncryptionSettings autoEncryptionSettings;
 
@@ -156,6 +158,7 @@ public final class MongoClientSettings {
         private MongoCredential credential;
         private String applicationName;
         private List<MongoCompressor> compressorList = Collections.emptyList();
+        private UuidRepresentation uuidRepresentation = UuidRepresentation.JAVA_LEGACY;
 
         private AutoEncryptionSettings autoEncryptionSettings;
 
@@ -174,6 +177,7 @@ public final class MongoClientSettings {
             retryReads = settings.getRetryReads();
             readConcern = settings.getReadConcern();
             credential = settings.getCredential();
+            uuidRepresentation = settings.getUuidRepresentation();
             streamFactoryFactory = settings.getStreamFactoryFactory();
             autoEncryptionSettings = settings.getAutoEncryptionSettings();
             clusterSettingsBuilder.applySettings(settings.getClusterSettings());
@@ -210,6 +214,10 @@ public final class MongoClientSettings {
             if (connectionString.getRetryWritesValue() != null) {
                 retryWrites = connectionString.getRetryWrites();
             }
+            // TODO
+//            if (connectionString.getUuidRepresentation() != null) {
+//                uuidRepresentation = connectionString.getUuidRepresentation();
+//            }
             serverSettingsBuilder.applyConnectionString(connectionString);
             socketSettingsBuilder.applyConnectionString(connectionString);
             sslSettingsBuilder.applyConnectionString(connectionString);
@@ -437,6 +445,11 @@ public final class MongoClientSettings {
             return this;
         }
 
+        public Builder uuidRepresentation(final UuidRepresentation uuidRepresentation) {
+            this.uuidRepresentation = notNull("uuidRepresentation", uuidRepresentation);
+            return this;
+        }
+
         /**
          * Sets the auto-encryption settings
          *
@@ -589,6 +602,10 @@ public final class MongoClientSettings {
         return Collections.unmodifiableList(compressorList);
     }
 
+    public UuidRepresentation getUuidRepresentation() {
+        return uuidRepresentation;
+    }
+
     /**
      * Gets the auto-encryption settings.
      * <p>
@@ -702,6 +719,7 @@ public final class MongoClientSettings {
         connectionPoolSettings = builder.connectionPoolSettingsBuilder.build();
         sslSettings = builder.sslSettingsBuilder.build();
         compressorList = builder.compressorList;
+        uuidRepresentation = builder.uuidRepresentation;
         autoEncryptionSettings = builder.autoEncryptionSettings;
 
         SocketSettings.Builder heartbeatSocketSettingsBuilder = SocketSettings.builder()

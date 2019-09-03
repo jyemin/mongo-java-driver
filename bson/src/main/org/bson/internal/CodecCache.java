@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecConfigurationException;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 
-final class CodecCache {
+public final class CodecCache {
     private final ConcurrentMap<Class<?>, Optional<? extends Codec<?>>> codecCache =
             new ConcurrentHashMap<Class<?>, Optional<? extends Codec<?>>>();
 

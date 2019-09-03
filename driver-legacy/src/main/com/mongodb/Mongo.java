@@ -324,7 +324,9 @@ public class Mongo {
         this.credentialsList = unmodifiableList(credentialsList);
 
         AutoEncryptionSettings autoEncryptionSettings = options.getAutoEncryptionSettings();
-        this.delegate = new MongoClientDelegate(cluster, credentialsList, this,
+        this.delegate = new MongoClientDelegate(cluster,
+                options.getCodecRegistry(), // TODO: add UuidRepresentation to MongoClientOptions
+                credentialsList, this,
                 autoEncryptionSettings == null ? null : createCrypt(asSimpleMongoClient(), autoEncryptionSettings));
 
         cursorCleaningService = options.isCursorFinalizerEnabled() ? createCursorCleaningService() : null;

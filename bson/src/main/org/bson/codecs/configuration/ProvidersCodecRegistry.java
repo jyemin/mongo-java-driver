@@ -17,13 +17,14 @@
 package org.bson.codecs.configuration;
 
 import org.bson.codecs.Codec;
+import org.bson.internal.CodecCache;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.bson.assertions.Assertions.isTrueArgument;
 
-final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider {
+final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider, CycleDetectingCodecRegistry {
     private final List<CodecProvider> codecProviders;
     private final CodecCache codecCache = new CodecCache();
 
@@ -37,7 +38,7 @@ final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider {
         return get(new ChildCodecRegistry<T>(this, clazz));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     public <T> Codec<T> get(final Class<T> clazz, final CodecRegistry registry) {
         for (CodecProvider provider : codecProviders) {
             Codec<T> codec = provider.get(clazz, registry);
@@ -49,7 +50,7 @@ final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    <T> Codec<T> get(final ChildCodecRegistry context) {
+    public <T> Codec<T> get(final ChildCodecRegistry context) {
         if (!codecCache.containsKey(context.getCodecClass())) {
             for (CodecProvider provider : codecProviders) {
                 Codec<T> codec = provider.get(context.getCodecClass(), context);

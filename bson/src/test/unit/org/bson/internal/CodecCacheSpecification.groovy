@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration
+package org.bson.internal
 
 import org.bson.codecs.MinKeyCodec
+import org.bson.codecs.configuration.CodecConfigurationException
 import org.bson.types.MinKey
 import spock.lang.Specification
 

@@ -19,14 +19,19 @@ package org.bson.codecs.configuration;
 
 import org.bson.codecs.Codec;
 
-// An implementation of CodecRegistry that is used to detect cyclic dependencies between Codecs
-class ChildCodecRegistry<T> implements CodecRegistry {
+/**
+ * An implementation of CodecRegistry that is used to detect cyclic dependencies between Codecs
+ *
+ * @param <T> the {@code Codec} type
+ * @since 3.12
+ */
+public class ChildCodecRegistry<T> implements CodecRegistry {
 
     private final ChildCodecRegistry<?> parent;
-    private final ProvidersCodecRegistry registry;
+    private final CycleDetectingCodecRegistry registry;
     private final Class<T> codecClass;
 
-    ChildCodecRegistry(final ProvidersCodecRegistry registry, final Class<T> codecClass) {
+    public ChildCodecRegistry(final CycleDetectingCodecRegistry registry, final Class<T> codecClass) {
         this.codecClass = codecClass;
         this.parent = null;
         this.registry = registry;
