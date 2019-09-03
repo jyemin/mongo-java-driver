@@ -46,6 +46,7 @@ import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
+import org.bson.internal.UuidRepresentationOverridingCodecRegistry;
 
 import java.util.Collections;
 import java.util.List;

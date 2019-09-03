@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.codecs.Codec;
-import org.bson.internal.CodecCache;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.bson.assertions.Assertions.isTrueArgument;
 
-final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider, CycleDetectingCodecRegistry {
+public final class ProvidersCodecRegistry implements CodecRegistry, CodecProvider, CycleDetectingCodecRegistry {
     private final List<CodecProvider> codecProviders;
     private final CodecCache codecCache = new CodecCache();
 
-    ProvidersCodecRegistry(final List<? extends CodecProvider> codecProviders) {
+    public ProvidersCodecRegistry(final List<? extends CodecProvider> codecProviders) {
         isTrueArgument("codecProviders must not be null or empty", codecProviders != null && codecProviders.size() > 0);
         this.codecProviders = new ArrayList<CodecProvider>(codecProviders);
     }

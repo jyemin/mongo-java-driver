@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecRegistry;
 
 /**
  * A marker interface for {@code CodecRegistry} implementations that are able to detect cycles.
  *
  * @since 3.12
  */
-public interface CycleDetectingCodecRegistry extends CodecRegistry {
+interface CycleDetectingCodecRegistry extends CodecRegistry {
     /**
      * Get the Codec using the given context.
      *

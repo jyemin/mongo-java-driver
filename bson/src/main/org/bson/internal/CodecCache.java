@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 
-public final class CodecCache {
+final class CodecCache {
     private final ConcurrentMap<Class<?>, Optional<? extends Codec<?>>> codecCache =
             new ConcurrentHashMap<Class<?>, Optional<? extends Codec<?>>>();
 

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.mongodb.client.internal;
+package org.bson.internal;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.Codec;
 import org.bson.codecs.UuidRepresentationOverridingCodec;
-import org.bson.codecs.configuration.ChildCodecRegistry;
-import org.bson.internal.CodecCache;
 import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CycleDetectingCodecRegistry;
 
-import static com.mongodb.assertions.Assertions.notNull;
+import static org.bson.assertions.Assertions.notNull;
 
 public class UuidRepresentationOverridingCodecRegistry implements CycleDetectingCodecRegistry {
 
@@ -32,7 +29,7 @@ public class UuidRepresentationOverridingCodecRegistry implements CycleDetecting
     private final CodecCache codecCache = new CodecCache();
     private final UuidRepresentation uuidRepresentation;
 
-    UuidRepresentationOverridingCodecRegistry(final CodecProvider wrapped, final UuidRepresentation uuidRepresentation) {
+    public UuidRepresentationOverridingCodecRegistry(final CodecProvider wrapped, final UuidRepresentation uuidRepresentation) {
         this.uuidRepresentation = notNull("uuidRepresentation", uuidRepresentation);
         this.wrapped = wrapped;
     }
@@ -43,7 +40,7 @@ public class UuidRepresentationOverridingCodecRegistry implements CycleDetecting
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> Codec<T> get(final ChildCodecRegistry context) {
         if (!codecCache.containsKey(context.getCodecClass())) {
             Codec<T> codec = wrapped.get(context.getCodecClass(), context);
