@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-archivesBaseName = 'bson'
-description = 'The BSON library'
+package org.bson.internal;
 
-ext {
-    pomName = 'BSON'
-    pomURL = 'https://bsonspec.org'
-}
+import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecRegistry;
 
-clirr {
-    excludeFilter = new File("$configDir/clirr-exclude.yml")
-    baseline 'org.mongodb:bson:3.8.0'
-    failOnErrors = false
-}
-
-jar {
-    manifest {
-        instruction 'Automatic-Module-Name', 'org.mongodb.bson'
-        instruction 'Build-Version', project.gitVersion
-        instruction 'Import-Package',
-                    'javax.xml.bind.*',
-                    'org.slf4j;resolution:=optional'
-    }
+/**
+ * A marker interface for {@code CodecRegistry} implementations that are able to detect cycles.
+ *
+ * @since 3.12
+ */
+interface CycleDetectingCodecRegistry extends CodecRegistry {
+    /**
+     * Get the Codec using the given context.
+     *
+     * @param context the child context
+     * @param <T> the value type
+     * @return the Codec
+     */
+    <T> Codec<T> get(ChildCodecRegistry<T> context);
 }

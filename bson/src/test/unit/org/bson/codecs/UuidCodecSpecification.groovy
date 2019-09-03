@@ -27,6 +27,8 @@ import spock.lang.Specification
 
 import java.nio.ByteBuffer
 
+import static org.bson.UuidRepresentation.JAVA_LEGACY
+
 /**
  *
  */
@@ -38,6 +40,11 @@ class UuidCodecSpecification extends Specification {
     def setup() {
         uuidCodec = new UuidCodec();
         outputBuffer = new BasicOutputBuffer();
+    }
+
+    def 'should default to Java legacy representation'() {
+        expect:
+        new UuidCodec().getUuidRepresentation() == JAVA_LEGACY
     }
 
     def 'should decode different types of UUID'(UuidCodec codec, byte[] list) throws IOException {
