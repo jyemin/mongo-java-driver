@@ -36,6 +36,7 @@ import com.mongodb.connection.ServerType
 import com.mongodb.connection.ServerVersion
 import org.bson.BsonDocument
 import org.bson.Document
+import org.bson.UuidRepresentation
 import spock.lang.Specification
 
 import static com.mongodb.CustomMatchers.isTheSameAs
@@ -43,6 +44,7 @@ import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry
 import static com.mongodb.ReadPreference.primary
 import static com.mongodb.ReadPreference.secondary
 import static com.mongodb.client.internal.TestHelper.execute
+import static org.bson.UuidRepresentation.JAVA_LEGACY
 import static spock.util.matcher.HamcrestSupport.expect
 
 class MongoClientSpecification extends Specification {
@@ -65,7 +67,7 @@ class MongoClientSpecification extends Specification {
 
         where:
         expectedDatabase << new MongoDatabaseImpl('name', getDefaultCodecRegistry(), secondary(),
-                WriteConcern.MAJORITY, true, true, ReadConcern.MAJORITY, new TestOperationExecutor([]))
+                WriteConcern.MAJORITY, true, true, ReadConcern.MAJORITY, JAVA_LEGACY, new TestOperationExecutor([]))
     }
 
     def 'should use ListDatabasesIterableImpl correctly'() {

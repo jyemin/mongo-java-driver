@@ -21,10 +21,12 @@ import com.mongodb.ReadPreference
 import com.mongodb.WriteConcern
 import com.mongodb.client.internal.MongoDatabaseImpl
 import com.mongodb.client.internal.OperationExecutor
+import org.bson.UuidRepresentation
 import org.bson.codecs.configuration.CodecRegistry
 import spock.lang.Specification
 
 import static com.mongodb.CustomMatchers.isTheSameAs
+import static org.bson.UuidRepresentation.JAVA_LEGACY
 import static spock.util.matcher.HamcrestSupport.expect
 
 class GridFSBucketsSpecification extends Specification {
@@ -34,7 +36,7 @@ class GridFSBucketsSpecification extends Specification {
     def 'should create a GridFSBucket with default bucket name'() {
         given:
         def database = new MongoDatabaseImpl('db', Stub(CodecRegistry), Stub(ReadPreference), Stub(WriteConcern), false, true, readConcern,
-                Stub(OperationExecutor))
+                JAVA_LEGACY, Stub(OperationExecutor))
 
         when:
         def gridFSBucket = GridFSBuckets.create(database)
@@ -47,7 +49,7 @@ class GridFSBucketsSpecification extends Specification {
     def 'should create a GridFSBucket with custom bucket name'() {
         given:
         def database = new MongoDatabaseImpl('db', Stub(CodecRegistry), Stub(ReadPreference), Stub(WriteConcern), false, true, readConcern,
-                Stub(OperationExecutor))
+                JAVA_LEGACY, Stub(OperationExecutor))
         def customName = 'custom'
 
         when:

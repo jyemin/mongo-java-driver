@@ -28,6 +28,7 @@ import com.mongodb.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.Document;
+import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
@@ -552,7 +553,9 @@ public class MongoClient extends Mongo implements Closeable {
         MongoClientOptions clientOptions = getMongoClientOptions();
         return new MongoDatabaseImpl(databaseName, clientOptions.getCodecRegistry(), clientOptions.getReadPreference(),
                 clientOptions.getWriteConcern(), clientOptions.getRetryWrites(), clientOptions.getRetryReads(),
-                clientOptions.getReadConcern(), createOperationExecutor());
+                clientOptions.getReadConcern(),
+                UuidRepresentation.JAVA_LEGACY, // TODO: Use uuidRepresentation from MongoClientOptions
+                createOperationExecutor());
     }
 
     /**

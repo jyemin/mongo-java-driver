@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.mongodb.assertions.Assertions.notNull;
+import static com.mongodb.client.internal.CodecRegistryHelper.createRegistry;
 import static com.mongodb.client.internal.Crypts.createCrypt;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
 import static java.util.Collections.singletonList;
@@ -69,17 +70,8 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         AutoEncryptionSettings autoEncryptionSettings = settings.getAutoEncryptionSettings();
-        CodecRegistry codecRegistry = settings.getCodecRegistry();
-        if (settings.getUuidRepresentation() != UuidRepresentation.JAVA_LEGACY) {
-            if (settings.getCodecRegistry() instanceof CodecProvider) {
-                codecRegistry = new UuidRepresentationOverridingCodecRegistry((CodecProvider) settings.getCodecRegistry(),
-                        settings.getUuidRepresentation());
-            } else {
-                throw new MongoClientException("Changing the default UuidRepresentation requires a CodecRegistry that also implements the" +
-                        " CodecProvider interface");
-            }
-        }
-        this.delegate = new MongoClientDelegate(notNull("cluster", cluster), codecRegistry,
+        this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
+                createRegistry(settings.getCodecRegistry(), settings.getUuidRepresentation()),
                 singletonList(settings.getCredential()), this, operationExecutor,
                 autoEncryptionSettings == null ? null : createCrypt(SimpleMongoClients.create(this), autoEncryptionSettings));
     }
@@ -87,7 +79,8 @@ public final class MongoClientImpl implements MongoClient {
     @Override
     public MongoDatabase getDatabase(final String databaseName) {
         return new MongoDatabaseImpl(databaseName, delegate.getCodecRegistry(), settings.getReadPreference(), settings.getWriteConcern(),
-                settings.getRetryWrites(), settings.getRetryReads(), settings.getReadConcern(), delegate.getOperationExecutor());
+                settings.getRetryWrites(), settings.getRetryReads(), settings.getReadConcern(),
+                settings.getUuidRepresentation(), delegate.getOperationExecutor());
     }
 
     @Override
