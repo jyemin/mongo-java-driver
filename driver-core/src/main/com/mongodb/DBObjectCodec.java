@@ -366,7 +366,7 @@ public class DBObjectCodec implements CollectibleCodec<DBObject>, UuidRepresenta
                     }
                     break;
                 case 4:
-                    if (uuidRepresentation == UuidRepresentation.STANDARD) {
+                    if (uuidRepresentation == UuidRepresentation.JAVA_LEGACY || uuidRepresentation == UuidRepresentation.STANDARD) {
                         codec = codecRegistry.get(UUID.class);
                     }
                     break;

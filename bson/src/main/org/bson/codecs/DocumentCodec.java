@@ -242,7 +242,7 @@ public class DocumentCodec implements CollectibleCodec<Document>, UuidRepresenta
                         }
                         break;
                     case 4:
-                        if (uuidRepresentation == UuidRepresentation.STANDARD) {
+                        if (uuidRepresentation == UuidRepresentation.JAVA_LEGACY || uuidRepresentation == UuidRepresentation.STANDARD) {
                             codec = registry.get(UUID.class);
                         }
                         break;

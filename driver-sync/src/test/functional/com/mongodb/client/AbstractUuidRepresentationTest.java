@@ -184,8 +184,13 @@ public abstract class AbstractUuidRepresentationTest {
             assertEquals(Binary.class, document.get("legacy").getClass());
             assertEquals(new Binary(BsonBinarySubType.UUID_LEGACY, standardEncodedValue), document.get("legacy"));
         } else {
-            assertEquals(Binary.class, document.get("standard").getClass());
-            assertEquals(new Binary(BsonBinarySubType.UUID_STANDARD, standardEncodedValue), document.get("standard"));
+            if (uuidRepresentation == UuidRepresentation.JAVA_LEGACY) {
+                assertEquals(UUID.class, document.get("standard").getClass());
+                assertEquals(uuid, document.get("standard"));
+            } else {
+                assertEquals(Binary.class, document.get("standard").getClass());
+                assertEquals(new Binary(BsonBinarySubType.UUID_STANDARD, standardEncodedValue), document.get("standard"));
+            }
 
             assertEquals(UUID.class, document.get("legacy").getClass());
             assertEquals(uuid, document.get("legacy"));
@@ -217,9 +222,14 @@ public abstract class AbstractUuidRepresentationTest {
             assertEquals(Binary.class, document.get("legacy").getClass());
             assertEquals(new Binary(BsonBinarySubType.UUID_LEGACY, standardEncodedValue), document.get("legacy"));
         } else {
-            assertEquals(Binary.class, document.get("standard").getClass());
-            assertEquals(new Binary(BsonBinarySubType.UUID_STANDARD, standardEncodedValue), document.get("standard"));
-
+            if (uuidRepresentation == UuidRepresentation.JAVA_LEGACY) {
+                assertEquals(UUID.class, document.get("standard").getClass());
+                assertEquals(uuid, document.get("standard"));
+            } else {
+                assertEquals(Binary.class, document.get("standard").getClass());
+                assertEquals(new Binary(BsonBinarySubType.UUID_STANDARD, standardEncodedValue), document.get("standard"));
+            }
+            
             assertEquals(UUID.class, document.get("legacy").getClass());
             assertEquals(uuid, document.get("legacy"));
         }
@@ -244,9 +254,9 @@ public abstract class AbstractUuidRepresentationTest {
     public void shouldDecodePojoWithLegacyUuidRepresentation() {
 
         bsonDocumentCollection.insertOne(new BsonDocument("_id", new BsonBinary(uuid,
-                        uuidRepresentation == UuidRepresentation.UNSPECIFIED || uuidRepresentation == UuidRepresentation.STANDARD
-                                ? UuidRepresentation.PYTHON_LEGACY
-                                : uuidRepresentation)));
+                uuidRepresentation == UuidRepresentation.UNSPECIFIED || uuidRepresentation == UuidRepresentation.STANDARD
+                        ? UuidRepresentation.PYTHON_LEGACY
+                        : uuidRepresentation)));
 
         try {
             UuidIdPojo document = uuidIdPojoCollection.find().first();
