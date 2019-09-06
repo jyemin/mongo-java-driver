@@ -22,6 +22,7 @@ import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerId;
+import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCheckOutFailedEvent;
 import com.mongodb.event.ConnectionCheckOutStartedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
@@ -31,9 +32,11 @@ import com.mongodb.event.ConnectionCreatedEvent;
 import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolClosedEvent;
 import com.mongodb.event.ConnectionPoolCreatedEvent;
+import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
+import com.mongodb.event.ConnectionRemovedEvent;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -68,6 +71,7 @@ import static org.junit.Assume.assumeNotNull;
 // Implementation of
 // https://github.com/mongodb/specifications/blob/master/source/connection-monitoring-and-pooling/connection-monitoring-and-pooling.rst
 // specification tests
+@SuppressWarnings("deprecation")
 @RunWith(Parameterized.class)
 public class ConnectionPoolTest {
     private final String fileName;
@@ -268,6 +272,9 @@ public class ConnectionPoolTest {
         Set<Class<?>> ignoredEventClasses = new HashSet<Class<?>>();
         ignoredEventClasses.add(ConnectionPoolWaitQueueEnteredEvent.class);
         ignoredEventClasses.add(ConnectionPoolWaitQueueExitedEvent.class);
+        ignoredEventClasses.add(ConnectionPoolOpenedEvent.class);
+        ignoredEventClasses.add(ConnectionAddedEvent.class);
+        ignoredEventClasses.add(ConnectionRemovedEvent.class);
         for (BsonValue cur : definition.getArray("ignore", new BsonArray())) {
             String type = cur.asString().getValue();
             Class<?> eventClass = getEventClass(type);

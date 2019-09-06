@@ -39,7 +39,7 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.isTrue;
 import static java.lang.String.format;
 
-
+@SuppressWarnings("deprecation")
 final class ConnectionPoolListenerMulticaster implements ConnectionPoolListener {
     private static final Logger LOGGER = Loggers.getLogger("protocol.event");
 

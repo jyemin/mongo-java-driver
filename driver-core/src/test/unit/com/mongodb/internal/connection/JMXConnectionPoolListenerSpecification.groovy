@@ -55,7 +55,7 @@ class JMXConnectionPoolListenerSpecification extends Specification {
             port == SERVER_ID.address.port
             minSize == 0
             maxSize == 5
-            size == 2
+            size == 4
             checkedOutCount == 1
             waitQueueSize == 0
         }

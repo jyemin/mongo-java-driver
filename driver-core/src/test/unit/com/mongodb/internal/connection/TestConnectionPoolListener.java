@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCheckOutFailedEvent;
 import com.mongodb.event.ConnectionCheckOutStartedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
@@ -26,6 +27,7 @@ import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolClosedEvent;
 import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
+import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
@@ -38,6 +40,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@SuppressWarnings("deprecation")
 public class TestConnectionPoolListener implements ConnectionPoolListener {
 
     private final List<Object> events = new ArrayList<Object>();
@@ -114,6 +117,11 @@ public class TestConnectionPoolListener implements ConnectionPoolListener {
     }
 
     @Override
+    public void connectionPoolOpened(final ConnectionPoolOpenedEvent event) {
+        addEvent(event);
+    }
+
+    @Override
     public void connectionPoolCleared(final ConnectionPoolClearedEvent event) {
         addEvent(event);
     }
@@ -155,6 +163,11 @@ public class TestConnectionPoolListener implements ConnectionPoolListener {
 
     @Override
     public void connectionCreated(final ConnectionCreatedEvent event) {
+        addEvent(event);
+    }
+
+    @Override
+    public void connectionAdded(final ConnectionAddedEvent event) {
         addEvent(event);
     }
 

@@ -36,10 +36,8 @@ import com.mongodb.event.ConnectionCheckOutStartedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
 import com.mongodb.event.ConnectionCheckedOutEvent;
 import com.mongodb.event.ConnectionClosedEvent;
-import com.mongodb.event.ConnectionCreatedEvent;
 import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolClosedEvent;
-import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
@@ -59,6 +57,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
+import static com.mongodb.event.ConnectionEventAdapter.connectionClosed;
+import static com.mongodb.event.ConnectionEventAdapter.connectionCreated;
+import static com.mongodb.event.ConnectionEventAdapter.connectionPoolCreated;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.event.EventListenerHelper.getConnectionPoolListener;
 import static java.lang.String.format;
@@ -89,7 +90,7 @@ class DefaultConnectionPool implements ConnectionPool {
         this.connectionPoolListener = getConnectionPoolListener(settings);
         maintenanceTask = createMaintenanceTask();
         sizeMaintenanceTimer = createMaintenanceTimer();
-        connectionPoolListener.connectionPoolCreated(new ConnectionPoolCreatedEvent(serverId, settings));
+        connectionPoolCreated(connectionPoolListener, serverId, settings);
     }
 
     @Override
@@ -557,13 +558,13 @@ class DefaultConnectionPool implements ConnectionPool {
             if (initialize) {
                 internalConnection.open();
             }
-            connectionPoolListener.connectionCreated(new ConnectionCreatedEvent(getId(internalConnection)));
+            connectionCreated(connectionPoolListener, getId(internalConnection));
             return internalConnection;
         }
 
         @Override
         public void close(final UsageTrackingInternalConnection connection) {
-            connectionPoolListener.connectionClosed(new ConnectionClosedEvent(getId(connection), getReasonForClosing(connection)));
+            connectionClosed(connectionPoolListener, getId(connection), getReasonForClosing(connection));
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(format("Closed connection [%s] to %s because %s.", getId(connection), serverId.getAddress(),
                                   getReasonStringForClosing(connection)));

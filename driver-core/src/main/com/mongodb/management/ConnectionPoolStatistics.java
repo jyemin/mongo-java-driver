@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * An MBean implementation for connection pool statistics.
  */
+@SuppressWarnings("deprecation")
 final class ConnectionPoolStatistics implements ConnectionPoolListener, ConnectionPoolStatisticsMBean {
     private final ServerAddress serverAddress;
     private final ConnectionPoolSettings settings;

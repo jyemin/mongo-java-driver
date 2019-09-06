@@ -45,6 +45,7 @@ import static java.util.Arrays.asList;
  *
  * @since 3.5
  */
+@SuppressWarnings("deprecation")
 public class JMXConnectionPoolListener implements ConnectionPoolListener {
     private final ConcurrentMap<ServerId, ConnectionPoolStatistics> map =
         new ConcurrentHashMap<ServerId, ConnectionPoolStatistics>();
