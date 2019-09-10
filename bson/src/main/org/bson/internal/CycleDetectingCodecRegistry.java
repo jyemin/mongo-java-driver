@@ -32,5 +32,5 @@ interface CycleDetectingCodecRegistry extends CodecRegistry {
      * @param <T> the value type
      * @return the Codec
      */
-    <T> Codec<T> get(final ChildCodecRegistry context);
+    <T> Codec<T> get(final ChildCodecRegistry<T> context);
 }

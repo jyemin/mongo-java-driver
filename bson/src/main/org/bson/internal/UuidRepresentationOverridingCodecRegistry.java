@@ -41,7 +41,7 @@ public class UuidRepresentationOverridingCodecRegistry implements CycleDetecting
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> Codec<T> get(final ChildCodecRegistry context) {
+    public <T> Codec<T> get(final ChildCodecRegistry<T> context) {
         if (!codecCache.containsKey(context.getCodecClass())) {
             Codec<T> codec = wrapped.get(context.getCodecClass(), context);
             if (codec instanceof UuidRepresentationOverridingCodec) {
