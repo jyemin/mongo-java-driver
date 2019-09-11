@@ -371,7 +371,7 @@ public class DBObjectCodec implements CollectibleCodec<DBObject>, UuidRepresenta
                     }
                     break;
                 default:
-                    throw new UnsupportedOperationException("Unkown UUID binary subtype " + bsonBinarySubType);
+                    throw new UnsupportedOperationException("Unknown UUID binary subtype " + bsonBinarySubType);
             }
         } else if (bsonBinarySubType == BINARY.getValue() || bsonBinarySubType == OLD_BINARY.getValue()) {
             codec = codecRegistry.get(byte[].class);
