@@ -18,19 +18,23 @@ package com.mongodb.client;
 
 import org.bson.BsonBinarySubType;
 import org.bson.UuidRepresentation;
+import org.bson.codecs.UuidCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.After;
 
 import java.util.UUID;
 
-public class UuidRepresentationTest extends AbstractUuidRepresentationTest{
+public class ExplicitUuidCodecUuidRepresentationTest extends AbstractExplicitUuidCodecUuidRepresentationTest {
     private MongoClient mongoClient;
 
-    public UuidRepresentationTest(final UuidRepresentation uuidRepresentation, final BsonBinarySubType subType,
-                                  final UUID uuid, final byte[] encodedValue, final byte[] standardEncodedValue) {
-        super(uuidRepresentation, subType, uuid, encodedValue, standardEncodedValue);
+    public ExplicitUuidCodecUuidRepresentationTest(final UuidRepresentation uuidRepresentationForClient,
+                                                   final UuidRepresentation uuidRepresentationForExplicitEncoding,
+                                                   final BsonBinarySubType subType,
+                                                   final UuidCodec uuidCodec, final UUID uuid, final byte[] encodedValue,
+                                                   final byte[] standardEncodedValue) {
+        super(uuidRepresentationForClient, uuidRepresentationForExplicitEncoding, subType, uuidCodec, uuid, encodedValue,
+                standardEncodedValue);
     }
-
 
     @Override
     protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecRegistry codecRegistry) {
@@ -51,6 +55,4 @@ public class UuidRepresentationTest extends AbstractUuidRepresentationTest{
             mongoClient.close();
         }
     }
-
-
 }

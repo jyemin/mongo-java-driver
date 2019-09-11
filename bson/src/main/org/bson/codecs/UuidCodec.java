@@ -34,7 +34,7 @@ import static org.bson.assertions.Assertions.notNull;
  *
  * @since 3.0
  */
-public class UuidCodec implements Codec<UUID>, UuidRepresentationOverridingCodec<UUID> {
+public class UuidCodec implements Codec<UUID> {
 
     private final UuidRepresentation uuidRepresentation;
 
@@ -54,6 +54,16 @@ public class UuidCodec implements Codec<UUID>, UuidRepresentationOverridingCodec
      */
     public UuidCodec() {
         this.uuidRepresentation = UuidRepresentation.JAVA_LEGACY;
+    }
+
+    /**
+     * The {@code UuidRepresentation} with which this instance is configured
+     *
+     * @return the uuid representation
+     * @since 3.12
+     */
+    public UuidRepresentation getUuidRepresentation() {
+        return uuidRepresentation;
     }
 
     @Override
@@ -89,7 +99,9 @@ public class UuidCodec implements Codec<UUID>, UuidRepresentationOverridingCodec
     }
 
     @Override
-    public Codec<UUID> withUuidRepresentation(final UuidRepresentation uuidRepresentation) {
-        return new UuidCodec(uuidRepresentation);
+    public String toString() {
+        return "UuidCodec{" +
+                "uuidRepresentation=" + uuidRepresentation +
+                '}';
     }
 }
