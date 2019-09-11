@@ -23,6 +23,12 @@ import com.mongodb.MongoSocketException;
 import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.MongoWaitQueueFullException;
+import com.mongodb.event.ConnectionAddedEvent;
+import com.mongodb.event.ConnectionCreatedEvent;
+import com.mongodb.event.ConnectionPoolCreatedEvent;
+import com.mongodb.event.ConnectionPoolOpenedEvent;
+import com.mongodb.event.ConnectionReadyEvent;
+import com.mongodb.event.ConnectionRemovedEvent;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
@@ -57,9 +63,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.event.ConnectionEventAdapter.connectionClosed;
-import static com.mongodb.event.ConnectionEventAdapter.connectionCreated;
-import static com.mongodb.event.ConnectionEventAdapter.connectionPoolCreated;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.event.EventListenerHelper.getConnectionPoolListener;
 import static java.lang.String.format;
@@ -120,6 +123,8 @@ class DefaultConnectionPool implements ConnectionPool {
                         pooledConnection.open();
                     } catch (Throwable t) {
                         pool.release(pooledConnection.wrapped, true);
+                        connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
+                                Reason.CONNECTION_ERROR));
                         if (t instanceof MongoException) {
                             throw (MongoException) t;
                         } else {
@@ -217,6 +222,8 @@ class DefaultConnectionPool implements ConnectionPool {
                             LOGGER.trace(format("Pooled connection %s to server %s failed to open",
                                                        pooledConnection.getDescription().getConnectionId(), serverId));
                         }
+                        connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
+                                Reason.CONNECTION_ERROR));
                         callback.onResult(null, t);
                         pool.release(pooledConnection.wrapped, true);
                     } else {
@@ -274,39 +281,31 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private PooledConnection getPooledConnection(final long timeout, final TimeUnit timeUnit) {
-        UsageTrackingInternalConnection internalConnection = null;
         try {
+            UsageTrackingInternalConnection internalConnection = null;
             connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
             internalConnection = pool.get(timeout, timeUnit);
             while (shouldPrune(internalConnection)) {
                 pool.release(internalConnection, true);
                 internalConnection = pool.get(timeout, timeUnit);
             }
+            connectionPoolListener.connectionReady(new ConnectionReadyEvent(internalConnection.getDescription().getConnectionId()));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("Checked out connection [%s] to server %s", getId(internalConnection), serverId.getAddress()));
+            }
+            connectionPoolListener.connectionCheckedOut(
+                    new ConnectionCheckedOutEvent(internalConnection.getDescription().getConnectionId()));
+            return new PooledConnection(internalConnection);
         } catch (Exception e) {
             if (e instanceof MongoTimeoutException) {
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.TIMEOUT));
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(format("Connection check out to server %s failed due to a timeout", serverId.getAddress()));
-                }
             } else if (e instanceof IllegalStateException && e.getMessage().equals("The pool is closed")) {
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.POOL_CLOSED));
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(format("Connection check out to server %s failed because the connection pool is closed",
-                            serverId.getAddress()));
-                }
             } else {
-                connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.CONNECTION_ERROR));
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(format("Connection check out to server %s failed due to a connection error", serverId.getAddress()));
-                }
+                connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.UNKNOWN));
             }
             throw e;
         }
-        connectionPoolListener.connectionCheckedOut(new ConnectionCheckedOutEvent(internalConnection.getDescription().getConnectionId()));
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("Checked out connection [%s] to server %s", getId(internalConnection), serverId.getAddress()));
-        }
-        return new PooledConnection(internalConnection);
     }
 
     private MongoTimeoutException createTimeoutException() {
@@ -390,6 +389,44 @@ class DefaultConnectionPool implements ConnectionPool {
 
     private boolean expired(final long startTime, final long curTime, final long maxTime) {
         return maxTime != 0 && curTime - startTime > maxTime;
+    }
+
+    private void connectionPoolCreated(final ConnectionPoolListener connectionPoolListener, final ServerId serverId,
+                                             final ConnectionPoolSettings settings) {
+        connectionPoolListener.connectionPoolCreated(new ConnectionPoolCreatedEvent(serverId, settings));
+        connectionPoolListener.connectionPoolOpened(new ConnectionPoolOpenedEvent(serverId, settings));
+    }
+
+    private void connectionCreated(final ConnectionPoolListener connectionPoolListener, final ConnectionId connectionId) {
+        connectionPoolListener.connectionAdded(new ConnectionAddedEvent(connectionId));
+        connectionPoolListener.connectionCreated(new ConnectionCreatedEvent(connectionId));
+    }
+
+    private void connectionClosed(final ConnectionPoolListener connectionPoolListener, final ConnectionId connectionId,
+                                  final ConnectionClosedEvent.Reason reason) {
+        connectionPoolListener.connectionRemoved(new ConnectionRemovedEvent(connectionId, getReasonForRemoved(reason)));
+        connectionPoolListener.connectionClosed(new ConnectionClosedEvent(connectionId, reason));
+    }
+
+    private ConnectionRemovedEvent.Reason getReasonForRemoved(final ConnectionClosedEvent.Reason reason) {
+        ConnectionRemovedEvent.Reason removedReason = ConnectionRemovedEvent.Reason.UNKNOWN;
+        switch (reason) {
+            case STALE:
+                removedReason = ConnectionRemovedEvent.Reason.STALE;
+                break;
+            case IDLE:
+                removedReason = ConnectionRemovedEvent.Reason.MAX_IDLE_TIME_EXCEEDED;
+                break;
+            case ERROR:
+                removedReason = ConnectionRemovedEvent.Reason.ERROR;
+                break;
+            case POOL_CLOSED:
+                removedReason = ConnectionRemovedEvent.Reason.POOL_CLOSED;
+                break;
+            default:
+                break;
+        }
+        return removedReason;
     }
 
     /**

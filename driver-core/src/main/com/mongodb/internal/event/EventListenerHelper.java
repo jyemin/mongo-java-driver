@@ -94,13 +94,13 @@ public final class EventListenerHelper {
     public static final ServerListener NO_OP_SERVER_LISTENER = new ServerListener() {
     };
 
-    public static final ServerMonitorListener NO_OP_SERVER_MONITOR_LISTENER = new ServerMonitorListener() {
+    private static final ServerMonitorListener NO_OP_SERVER_MONITOR_LISTENER = new ServerMonitorListener() {
     };
 
     public static final ClusterListener NO_OP_CLUSTER_LISTENER = new ClusterListener() {
     };
 
-    public static final ConnectionPoolListener NO_OP_CONNECTION_POOL_LISTENER = new ConnectionPoolListener() {
+    private static final ConnectionPoolListener NO_OP_CONNECTION_POOL_LISTENER = new ConnectionPoolListener() {
     };
 
     private EventListenerHelper() {

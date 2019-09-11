@@ -18,7 +18,6 @@ package com.mongodb.management;
 
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
-import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
 import com.mongodb.event.ConnectionCheckedOutEvent;
 import com.mongodb.event.ConnectionClosedEvent;
@@ -27,7 +26,6 @@ import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolClosedEvent;
 import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
-import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
@@ -45,17 +43,9 @@ import static java.util.Arrays.asList;
  *
  * @since 3.5
  */
-@SuppressWarnings("deprecation")
 public class JMXConnectionPoolListener implements ConnectionPoolListener {
     private final ConcurrentMap<ServerId, ConnectionPoolStatistics> map =
         new ConcurrentHashMap<ServerId, ConnectionPoolStatistics>();
-
-    @Override
-    public void connectionPoolOpened(final ConnectionPoolOpenedEvent event) {
-        ConnectionPoolStatistics statistics = new ConnectionPoolStatistics(event);
-        map.put(event.getServerId(), statistics);
-        MBeanServerFactory.getMBeanServer().registerMBean(statistics, getMBeanObjectName(event.getServerId()));
-    }
 
     @Override
     public void connectionPoolCreated(final ConnectionPoolCreatedEvent event) {
@@ -107,14 +97,6 @@ public class JMXConnectionPoolListener implements ConnectionPoolListener {
         ConnectionPoolListener statistics = getStatistics(event.getServerId());
         if (statistics != null) {
             statistics.waitQueueExited(event);
-        }
-    }
-
-    @Override
-    public void connectionAdded(final ConnectionAddedEvent event) {
-        ConnectionPoolStatistics statistics = getStatistics(event.getConnectionId());
-        if (statistics != null) {
-            statistics.connectionAdded(event);
         }
     }
 

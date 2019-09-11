@@ -31,7 +31,7 @@ public final class ConnectionCheckedInEvent {
     /**
      * Construct an instance
      *
-     * @param connectionId the connection id
+     * @param connectionId the connectionId
      */
     public ConnectionCheckedInEvent(final ConnectionId connectionId) {
         this.connectionId = notNull("connectionId", connectionId);
@@ -49,7 +49,7 @@ public final class ConnectionCheckedInEvent {
     @Override
     public String toString() {
         return "ConnectionCheckedInEvent{"
-                       + " connectionId=" + connectionId
+                       + "connectionId=" + connectionId
                        + '}';
     }
 }

@@ -376,6 +376,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         then:
         1 * listener.connectionCreated { it.connectionId.serverId == SERVER_ID }
         1 * listener.connectionAdded { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionReady { it.connectionId.serverId == SERVER_ID }
     }
 
     def 'should fire connection removed from pool event'() {

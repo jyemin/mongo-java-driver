@@ -18,14 +18,12 @@ package com.mongodb.management;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionPoolSettings;
-import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCheckedInEvent;
 import com.mongodb.event.ConnectionCheckedOutEvent;
 import com.mongodb.event.ConnectionClosedEvent;
 import com.mongodb.event.ConnectionCreatedEvent;
 import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
-import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 
@@ -34,19 +32,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * An MBean implementation for connection pool statistics.
  */
-@SuppressWarnings("deprecation")
 final class ConnectionPoolStatistics implements ConnectionPoolListener, ConnectionPoolStatisticsMBean {
     private final ServerAddress serverAddress;
     private final ConnectionPoolSettings settings;
     private final AtomicInteger size = new AtomicInteger();
     private final AtomicInteger checkedOutCount = new AtomicInteger();
     private final AtomicInteger waitQueueSize = new AtomicInteger();
-
-    @Deprecated
-    ConnectionPoolStatistics(final ConnectionPoolOpenedEvent event) {
-        serverAddress = event.getServerId().getAddress();
-        settings = event.getSettings();
-    }
 
     ConnectionPoolStatistics(final ConnectionPoolCreatedEvent event) {
         serverAddress = event.getServerId().getAddress();
@@ -96,11 +87,6 @@ final class ConnectionPoolStatistics implements ConnectionPoolListener, Connecti
     @Override
     public void connectionCheckedIn(final ConnectionCheckedInEvent event) {
         checkedOutCount.decrementAndGet();
-    }
-
-    @Override
-    public void connectionAdded(final ConnectionAddedEvent event) {
-        size.incrementAndGet();
     }
 
     @Override

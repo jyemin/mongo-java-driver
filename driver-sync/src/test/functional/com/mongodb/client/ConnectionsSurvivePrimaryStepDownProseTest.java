@@ -26,6 +26,7 @@ import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.event.ConnectionAddedEvent;
 import com.mongodb.event.ConnectionCreatedEvent;
+import com.mongodb.event.ConnectionReadyEvent;
 import com.mongodb.internal.connection.TestConnectionPoolListener;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
@@ -101,6 +102,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
 
         int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
         MongoCursor<Document> cursor = collection.find().batchSize(2).iterator();
         assertEquals(asList(documents.get(0), documents.get(1)), asList(cursor.next(), cursor.next()));
 
@@ -109,6 +111,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         assertEquals(asList(documents.get(2), documents.get(3), documents.get(4)), asList(cursor.next(), cursor.next(), cursor.next()));
         assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
@@ -119,6 +122,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
                 + "errorCode: 10107}}");
         int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         try {
             collection.insertOne(new Document());
@@ -130,6 +134,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.insertOne(new Document());
         assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
@@ -140,6 +145,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
                 + "errorCode: 10107}}");
         int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         try {
             collection.insertOne(new Document());
@@ -151,6 +157,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.insertOne(new Document());
         assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
@@ -159,6 +166,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
                 + "errorCode: 11600}}");
         int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         try {
             collection.insertOne(new Document());
@@ -170,6 +178,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.insertOne(new Document());
         assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
@@ -178,6 +187,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
                 + "errorCode: 91}}");
         int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         try {
             collection.insertOne(new Document());
@@ -189,6 +199,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.insertOne(new Document());
         assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
 }

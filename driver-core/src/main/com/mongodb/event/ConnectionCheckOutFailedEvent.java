@@ -45,6 +45,11 @@ public final class ConnectionCheckOutFailedEvent {
          * The connection check out attempt experienced an error while setting up a new connection
          */
         CONNECTION_ERROR,
+
+        /**
+         * Reason unknown
+         */
+        UNKNOWN,
     }
 
     private final ServerId serverId;
