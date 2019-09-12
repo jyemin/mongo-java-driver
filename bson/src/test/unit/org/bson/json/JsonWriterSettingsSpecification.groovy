@@ -68,25 +68,24 @@ class JsonWriterSettingsSpecification extends Specification {
         settings.getMaxLength() == 100
     }
 
-    @SuppressWarnings('deprecation')
-    def 'should use legacy extended json converters for strict mode'() {
+    def 'should use extended json converters for relaxed mode'() {
         when:
-        def settings = JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build()
+        def settings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build()
 
         then:
-        settings.binaryConverter.class == LegacyExtendedJsonBinaryConverter
+        settings.binaryConverter.class == ExtendedJsonBinaryConverter
         settings.booleanConverter.class == JsonBooleanConverter
-        settings.dateTimeConverter.class == LegacyExtendedJsonDateTimeConverter
+        settings.dateTimeConverter.class == RelaxedExtendedJsonDateTimeConverter
         settings.decimal128Converter.class == ExtendedJsonDecimal128Converter
-        settings.doubleConverter.class == JsonDoubleConverter
+        settings.doubleConverter.class == RelaxedExtendedJsonDoubleConverter
         settings.int32Converter.class == JsonInt32Converter
-        settings.int64Converter.class == ExtendedJsonInt64Converter
+        settings.int64Converter.class == RelaxedExtendedJsonInt64Converter
         settings.javaScriptConverter.class == JsonJavaScriptConverter
         settings.maxKeyConverter.class == ExtendedJsonMaxKeyConverter
         settings.minKeyConverter.class == ExtendedJsonMinKeyConverter
         settings.nullConverter.class == JsonNullConverter
         settings.objectIdConverter.class == ExtendedJsonObjectIdConverter
-        settings.regularExpressionConverter.class == LegacyExtendedJsonRegularExpressionConverter
+        settings.regularExpressionConverter.class == ExtendedJsonRegularExpressionConverter
         settings.stringConverter.class == JsonStringConverter
         settings.symbolConverter.class == JsonSymbolConverter
         settings.timestampConverter.class == ExtendedJsonTimestampConverter
