@@ -736,7 +736,7 @@ buildvariants:
     - name: "reactive-streams-tck-test"
 
 - matrix_name: "scala-tests"
-  matrix_spec: { version: ["4.2"], topology: "standalone", scala: "*", os: "ubuntu" }
+  matrix_spec: { auth: "noauth", ssl: "nossl", jdk: "jdk11", version: ["4.2"], topology: "standalone", scala: "*", os: "ubuntu" }
   display_name: "${scala} ${version} ${topology} ${os}"
   tags: ["test-scala-variant"]
   tasks:
