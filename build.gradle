@@ -117,6 +117,10 @@ configure(scalaProjects) {
     }
     compileScala.dependsOn('spotlessApply')
 
+    tasks.withType(ScalaCompile) {
+        scalaCompileOptions.deprecation = false
+    }
+
 }
 
 configure(javaMainProjects) {
