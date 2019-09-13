@@ -33,7 +33,6 @@ buildscript {
 
         // Scala plugins
         classpath "com.adtran:scala-multiversion-plugin:1.+"
-        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:0.23"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:3.24.2"
     }
 }
