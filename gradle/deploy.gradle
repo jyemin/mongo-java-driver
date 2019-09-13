@@ -49,7 +49,7 @@ configure(deployedProjects) {
         def gitVersionMatch = project.gitVersion == version
 
         doFirst { 
-            if (gitVersionMatch) {
+            if (!gitVersionMatch) {
                 def cause = """
                 | Version mismatch:
                 | =================
