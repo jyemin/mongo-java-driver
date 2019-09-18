@@ -74,11 +74,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
 
         then:
         reader.readName() == 'int64'
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 52
-        } else {
-            reader.readInt64() == 52L
-        }
+        reader.readInt64() == 52L
         reader.readStartArray()
 
         when:
@@ -89,11 +85,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
 
         then:
         reader.readName() == 'int64'
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 52
-        } else {
-            reader.readInt64() == 52L
-        }
+        reader.readInt64() == 52L
 
         when:
         // make sure it's possible to reset to a mark after getting a new mark
@@ -105,19 +97,11 @@ class LimitedLookaheadMarkSpecification extends Specification {
 
         then:
         reader.readName() == 'int64'
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 52
-        } else {
-            reader.readInt64() == 52L
-        }
+        reader.readInt64() == 52L
         reader.readName() == 'array'
         reader.readStartArray()
         reader.readInt32() == 1
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 2
-        } else {
-            reader.readInt64() == 2L
-        }
+        reader.readInt64() == 2
         reader.readStartArray()
         reader.readInt32() == 3
         reader.readInt32() == 4
@@ -141,11 +125,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
 
         then:
         reader.readName() == 'int64'
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 52
-        } else {
-            reader.readInt64() == 52L
-        }
+        reader.readInt64() == 52L
         reader.readName() == 'array'
 
         when:
@@ -155,11 +135,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         then:
         reader.readStartArray()
         reader.readInt32() == 1
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 2
-        } else {
-            reader.readInt64() == 2L
-        }
+        reader.readInt64() == 2
         reader.readStartArray()
 
         when:
@@ -171,11 +147,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         then:
         reader.readStartArray()
         reader.readInt32() == 1
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 2
-        } else {
-            reader.readInt64() == 2L
-        }
+        reader.readInt64() == 2
         reader.readStartArray()
         reader.readInt32() == 3
 
@@ -186,11 +158,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         then:
         reader.readStartArray()
         reader.readInt32() == 1
-        if (writer instanceof JsonWriter) {
-            reader.readInt32() == 2
-        } else {
-            reader.readInt64() == 2L
-        }
+        reader.readInt64() == 2
         reader.readStartArray()
         reader.readInt32() == 3
         reader.readInt32() == 4
@@ -246,8 +214,8 @@ class LimitedLookaheadMarkSpecification extends Specification {
         writer | useAlternateReader
         new BsonDocumentWriter(new BsonDocument()) | false
         new BsonBinaryWriter(new BasicOutputBuffer()) | false
-        new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build()) | false
-        new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build()) | true
+        new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build()) | false
+        new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build()) | true
     }
 
     def 'should peek binary subtype and size'(BsonWriter writer) {
@@ -267,7 +235,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
             BasicOutputBuffer buffer = (BasicOutputBuffer) writer.getBsonOutput()
             reader = new BsonBinaryReader(new ByteBufferBsonInput(buffer.getByteBuffers().get(0)))
         } else if (writer instanceof JsonWriter) {
-            reader = new JsonReader(writer.writer.toString());
+            reader = new JsonReader(writer.writer.toString())
         }
 
         reader.readStartDocument()
@@ -275,12 +243,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         def subType = reader.peekBinarySubType()
         def size = reader.peekBinarySize()
         def binary = reader.readBinaryData()
-        def longValue = 0L
-        if (writer instanceof JsonWriter) {
-            longValue = reader.readInt32('int64')
-        } else {
-            longValue = reader.readInt64('int64')
-        }
+        def longValue = reader.readInt64('int64')
         reader.readEndDocument()
 
         then:
@@ -293,7 +256,7 @@ class LimitedLookaheadMarkSpecification extends Specification {
         writer << [
                 new BsonDocumentWriter(new BsonDocument()),
                 new BsonBinaryWriter(new BasicOutputBuffer()),
-                new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build())
+                new JsonWriter(new StringWriter(), JsonWriterSettings.builder().outputMode(JsonMode.STRICT).build())
         ]
     }
 }
