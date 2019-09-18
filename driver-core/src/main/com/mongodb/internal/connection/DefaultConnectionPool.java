@@ -132,6 +132,8 @@ class DefaultConnectionPool implements ConnectionPool {
                         }
                     }
                 }
+                connectionPoolListener.connectionCheckedOut(
+                        new ConnectionCheckedOutEvent(pooledConnection.getDescription().getConnectionId()));
 
                 return pooledConnection;
             } finally {
@@ -232,6 +234,8 @@ class DefaultConnectionPool implements ConnectionPool {
                                                        pooledConnection.getDescription().getConnectionId(), serverId));
                         }
                         callback.onResult(pooledConnection, null);
+                        connectionPoolListener.connectionCheckedOut(
+                                new ConnectionCheckedOutEvent(pooledConnection.getDescription().getConnectionId()));
                     }
                 }
             });
@@ -282,19 +286,15 @@ class DefaultConnectionPool implements ConnectionPool {
 
     private PooledConnection getPooledConnection(final long timeout, final TimeUnit timeUnit) {
         try {
-            UsageTrackingInternalConnection internalConnection = null;
             connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
-            internalConnection = pool.get(timeout, timeUnit);
+            UsageTrackingInternalConnection internalConnection = pool.get(timeout, timeUnit);
             while (shouldPrune(internalConnection)) {
                 pool.release(internalConnection, true);
                 internalConnection = pool.get(timeout, timeUnit);
             }
-            connectionPoolListener.connectionReady(new ConnectionReadyEvent(internalConnection.getDescription().getConnectionId()));
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("Checked out connection [%s] to server %s", getId(internalConnection), serverId.getAddress()));
             }
-            connectionPoolListener.connectionCheckedOut(
-                    new ConnectionCheckedOutEvent(internalConnection.getDescription().getConnectionId()));
             return new PooledConnection(internalConnection);
         } catch (Exception e) {
             if (e instanceof MongoTimeoutException) {
@@ -462,12 +462,14 @@ class DefaultConnectionPool implements ConnectionPool {
         public void open() {
             isTrue("open", !isClosed.get());
             wrapped.open();
+            connectionPoolListener.connectionReady(new ConnectionReadyEvent(getDescription().getConnectionId()));
         }
 
         @Override
         public void openAsync(final SingleResultCallback<Void> callback) {
             isTrue("open", !isClosed.get());
             wrapped.openAsync(callback);
+            connectionPoolListener.connectionReady(new ConnectionReadyEvent(getDescription().getConnectionId()));
         }
 
         @Override

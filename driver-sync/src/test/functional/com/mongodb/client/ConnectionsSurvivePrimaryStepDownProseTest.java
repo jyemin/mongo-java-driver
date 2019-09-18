@@ -111,7 +111,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         assertEquals(asList(documents.get(2), documents.get(3), documents.get(4)), asList(cursor.next(), cursor.next(), cursor.next()));
         assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.insertOne(new Document());
         assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionReadyCount * 2, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test
