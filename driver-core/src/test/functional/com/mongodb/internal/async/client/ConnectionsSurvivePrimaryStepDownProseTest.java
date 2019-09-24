@@ -116,7 +116,8 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.withWriteConcern(WriteConcern.MAJORITY).insertMany(documents, callback);
         callback.get(30, TimeUnit.SECONDS);
 
-        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         FutureResultCallback<AsyncBatchCursor<Document>> batchCursorCallback = new FutureResultCallback<AsyncBatchCursor<Document>>();
@@ -136,7 +137,8 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         batchCallback = new FutureResultCallback<List<Document>>();
         cursor.next(batchCallback);
         assertEquals(singletonList(documents.get(4)), batchCallback.get(30, TimeUnit.SECONDS));
-        assertEquals(connectionCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
@@ -146,7 +148,8 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
 
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 10107}}");
-        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
+        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
         int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
 
         try {
@@ -161,7 +164,8 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
+        assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
         assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 

@@ -154,11 +154,13 @@ class DefaultConnectionPool implements ConnectionPool {
         PooledConnection connection = null;
 
         try {
+            connectionPoolListener.waitQueueEntered(new ConnectionPoolWaitQueueEnteredEvent(serverId));
             connection = getPooledConnection(0, MILLISECONDS);
         } catch (MongoTimeoutException e) {
             // fall through
         } catch (Throwable t) {
             callback.onResult(null, t);
+            connectionPoolListener.waitQueueExited(new ConnectionPoolWaitQueueExitedEvent(serverId));
             return;
         }
 
@@ -167,7 +169,20 @@ class DefaultConnectionPool implements ConnectionPool {
                 LOGGER.trace(format("Asynchronously opening pooled connection %s to server %s",
                                            connection.getDescription().getConnectionId(), serverId));
             }
-            openAsync(connection, errHandlingCallback);
+            openAsync(connection, new SingleResultCallback<InternalConnection>() {
+                @Override
+                public void onResult(final InternalConnection result, final Throwable t) {
+                    if (t != null) {
+                        connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
+                                Reason.CONNECTION_ERROR));
+                        errHandlingCallback.onResult(null, t);
+                    } else {
+                        connectionPoolListener.connectionCheckedOut(
+                                new ConnectionCheckedOutEvent(result.getDescription().getConnectionId()));
+                        errHandlingCallback.onResult(result, null);
+                    }
+                }
+            });
         } else if (waitQueueSize.incrementAndGet() > settings.getMaxWaitQueueSize()) {
             waitQueueSize.decrementAndGet();
             if (LOGGER.isTraceEnabled()) {
@@ -186,7 +201,20 @@ class DefaultConnectionPool implements ConnectionPool {
                             errHandlingCallback.onResult(null, createTimeoutException());
                         } else {
                             PooledConnection connection = getPooledConnection(getRemainingWaitTime(), MILLISECONDS);
-                            openAsync(connection, errHandlingCallback);
+                            openAsync(connection, new SingleResultCallback<InternalConnection>() {
+                                @Override
+                                public void onResult(final InternalConnection result, final Throwable t) {
+                                    if (t != null) {
+                                        connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
+                                                Reason.CONNECTION_ERROR));
+                                        errHandlingCallback.onResult(null, t);
+                                    } else {
+                                        connectionPoolListener.connectionCheckedOut(
+                                                new ConnectionCheckedOutEvent(result.getDescription().getConnectionId()));
+                                        errHandlingCallback.onResult(result, null);
+                                    }
+                                }
+                            });
                         }
                     } catch (Throwable t) {
                         errHandlingCallback.onResult(null, t);
@@ -468,8 +496,19 @@ class DefaultConnectionPool implements ConnectionPool {
         @Override
         public void openAsync(final SingleResultCallback<Void> callback) {
             isTrue("open", !isClosed.get());
-            wrapped.openAsync(callback);
-            connectionPoolListener.connectionReady(new ConnectionReadyEvent(getDescription().getConnectionId()));
+            wrapped.openAsync(new SingleResultCallback<Void>() {
+                @Override
+                public void onResult(final Void result, final Throwable t) {
+                    if (t != null) {
+                        connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
+                                Reason.CONNECTION_ERROR));
+                        callback.onResult(null, t);
+                    } else {
+                        connectionPoolListener.connectionReady(new ConnectionReadyEvent(getDescription().getConnectionId()));
+                        callback.onResult(result, null);
+                    }
+                }
+            });
         }
 
         @Override

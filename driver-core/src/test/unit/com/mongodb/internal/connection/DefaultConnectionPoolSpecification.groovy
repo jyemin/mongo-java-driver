@@ -379,12 +379,43 @@ class DefaultConnectionPoolSpecification extends Specification {
         1 * listener.connectionReady { it.connectionId.serverId == SERVER_ID }
     }
 
+    def 'should fire asynchronous connection created to pool event'() {
+        given:
+        def listener = Mock(ConnectionPoolListener)
+        pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(10).maxWaitQueueSize(1)
+                .addConnectionPoolListener(listener).build())
+
+        when:
+        selectConnectionAsync(pool)
+
+        then:
+        1 * listener.connectionCreated { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionAdded { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionReady { it.connectionId.serverId == SERVER_ID }
+    }
+
     def 'should fire connection removed from pool event'() {
         given:
         def listener = Mock(ConnectionPoolListener)
         pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(10).maxWaitQueueSize(1)
                 .addConnectionPoolListener(listener).build())
         def connection = pool.get()
+        connection.close()
+
+        when:
+        pool.close()
+
+        then:
+        1 * listener.connectionClosed { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionRemoved { it.connectionId.serverId == SERVER_ID }
+    }
+
+    def 'should fire asynchronous connection removed from pool event'() {
+        given:
+        def listener = Mock(ConnectionPoolListener)
+        pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(10).maxWaitQueueSize(1)
+                .addConnectionPoolListener(listener).build())
+        def connection = selectConnectionAsyncAndGet(pool)
         connection.close()
 
         when:
@@ -418,11 +449,49 @@ class DefaultConnectionPoolSpecification extends Specification {
         1 * listener.connectionCheckedIn { it.connectionId.serverId == SERVER_ID }
     }
 
+    def 'should fire asynchronous connection pool events on check out and check in'() {
+        given:
+        def listener = Mock(ConnectionPoolListener)
+        pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(1).maxWaitQueueSize(1)
+                .addConnectionPoolListener(listener).build())
+        def connection = selectConnectionAsyncAndGet(pool)
+        connection.close()
+
+        when:
+        connection = pool.get()
+
+        then:
+        1 * listener.waitQueueEntered { it.serverId == SERVER_ID }
+        1 * listener.connectionCheckedOut { it.connectionId.serverId == SERVER_ID }
+        1 * listener.waitQueueExited { it.serverId == SERVER_ID }
+
+        when:
+        connection.close()
+
+        then:
+        1 * listener.connectionCheckedIn { it.connectionId.serverId == SERVER_ID }
+    }
+
     def 'should continue to fire events after pool is closed'() {
         def listener = Mock(ConnectionPoolListener)
         pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(1).maxWaitQueueSize(1)
                 .addConnectionPoolListener(listener).build())
         def connection = pool.get()
+        pool.close()
+
+        when:
+        connection.close()
+
+        then:
+        1 * listener.connectionCheckedIn { it.connectionId.serverId == SERVER_ID }
+        1 * listener.connectionClosed { it.connectionId.serverId == SERVER_ID }
+    }
+
+    def 'should continue to fire events after pool is closed (asynchronous)'() {
+        def listener = Mock(ConnectionPoolListener)
+        pool = new DefaultConnectionPool(SERVER_ID, connectionFactory, builder().maxSize(1).maxWaitQueueSize(1)
+                .addConnectionPoolListener(listener).build())
+        def connection = selectConnectionAsyncAndGet(pool)
         pool.close()
 
         when:
