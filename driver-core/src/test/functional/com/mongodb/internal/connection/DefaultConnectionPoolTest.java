@@ -262,7 +262,7 @@ public class DefaultConnectionPoolTest {
             provider.get();
             fail();
         } catch (MongoWaitQueueFullException e) {
-            assertEquals(1, listener.getWaitQueueSize());
+            assertEquals(0, listener.getWaitQueueSize());
         }
 
         // when

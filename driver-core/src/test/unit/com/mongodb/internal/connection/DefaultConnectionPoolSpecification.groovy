@@ -438,9 +438,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         connection = pool.get()
 
         then:
-        1 * listener.waitQueueEntered { it.serverId == SERVER_ID }
         1 * listener.connectionCheckedOut { it.connectionId.serverId == SERVER_ID }
-        1 * listener.waitQueueExited { it.serverId == SERVER_ID }
 
         when:
         connection.close()
@@ -461,9 +459,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         connection = pool.get()
 
         then:
-        1 * listener.waitQueueEntered { it.serverId == SERVER_ID }
         1 * listener.connectionCheckedOut { it.connectionId.serverId == SERVER_ID }
-        1 * listener.waitQueueExited { it.serverId == SERVER_ID }
 
         when:
         connection.close()
