@@ -109,11 +109,17 @@ class DefaultConnectionPool implements ConnectionPool {
 
     @Override
     public InternalConnection get(final long timeout, final TimeUnit timeUnit) {
+        PooledConnection pooledConnection;
         try {
             if (waitQueueSize.incrementAndGet() > settings.getMaxWaitQueueSize()) {
                 throw createWaitQueueFullException();
             }
-            PooledConnection pooledConnection = getPooledConnection(timeout, timeUnit, true);
+            try {
+                pooledConnection = getPooledConnection(timeout, timeUnit, true);
+            } catch (Throwable t) {
+                emitCheckOutFailedEvent(t);
+                throw (MongoException) t;
+            }
             if (!pooledConnection.opened()) {
                 try {
                     pooledConnection.open();
@@ -151,6 +157,7 @@ class DefaultConnectionPool implements ConnectionPool {
         } catch (MongoTimeoutException e) {
             // fall through
         } catch (Throwable t) {
+            emitCheckOutFailedEvent(t);
             callback.onResult(null, t);
             return;
         }
@@ -181,6 +188,7 @@ class DefaultConnectionPool implements ConnectionPool {
                             openAsync(connection, errHandlingCallback);
                         }
                     } catch (Throwable t) {
+                        emitCheckOutFailedEvent(t);
                         errHandlingCallback.onResult(null, t);
                     } finally {
                         waitQueueSize.decrementAndGet();
@@ -194,6 +202,16 @@ class DefaultConnectionPool implements ConnectionPool {
         }
     }
 
+    private void emitCheckOutFailedEvent(final Throwable t) {
+        if (t instanceof MongoTimeoutException) {
+            connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.TIMEOUT));
+        } else if (t instanceof IllegalStateException && t.getMessage().equals("The pool is closed")) {
+            connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.POOL_CLOSED));
+        } else {
+            connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.UNKNOWN));
+        }
+    }
+
     private void openAsync(final PooledConnection pooledConnection,
                            final SingleResultCallback<InternalConnection> callback) {
         if (pooledConnection.opened()) {
@@ -201,6 +219,8 @@ class DefaultConnectionPool implements ConnectionPool {
                 LOGGER.trace(format("Pooled connection %s to server %s is already open",
                                            pooledConnection.getDescription().getConnectionId(), serverId));
             }
+            connectionPoolListener.connectionCheckedOut(
+                    new ConnectionCheckedOutEvent(pooledConnection.getDescription().getConnectionId()));
             callback.onResult(pooledConnection, null);
         } else {
             if (LOGGER.isTraceEnabled()) {
@@ -290,13 +310,6 @@ class DefaultConnectionPool implements ConnectionPool {
             }
             return new PooledConnection(internalConnection);
         } catch (Exception e) {
-            if (e instanceof MongoTimeoutException) {
-                connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.TIMEOUT));
-            } else if (e instanceof IllegalStateException && e.getMessage().equals("The pool is closed")) {
-                connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.POOL_CLOSED));
-            } else {
-                connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId, Reason.UNKNOWN));
-            }
             throw e;
         }
     }

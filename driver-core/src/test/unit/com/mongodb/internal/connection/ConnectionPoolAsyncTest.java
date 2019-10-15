@@ -377,18 +377,9 @@ public class ConnectionPoolAsyncTest {
     public static Collection<Object[]> data() throws URISyntaxException, IOException {
         List<Object[]> data = new ArrayList<Object[]>();
         for (File file : JsonPoweredTestHelper.getTestFiles("/connection-monitoring-and-pooling")) {
-            if (!ignoreTestFile(file)) {
-                BsonDocument testDocument = JsonPoweredTestHelper.getTestDocument(file);
-                data.add(new Object[]{file.getName(), testDocument.getString("description").getValue(), testDocument});
-            }
+            BsonDocument testDocument = JsonPoweredTestHelper.getTestDocument(file);
+            data.add(new Object[]{file.getName(), testDocument.getString("description").getValue(), testDocument});
         }
         return data;
-    }
-
-    private static boolean ignoreTestFile(final File file) {
-        return file.getName().equals("pool-create-min-size.json")
-                || file.getName().equals("pool-checkin-make-available.json")
-                || file.getName().equals("wait-queue-fairness.json")
-                || file.getName().equals("pool-create-max-size.json");
     }
 }
