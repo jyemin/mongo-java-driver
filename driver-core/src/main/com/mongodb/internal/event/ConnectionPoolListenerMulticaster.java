@@ -32,6 +32,7 @@ import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
+import com.mongodb.event.ConnectionRemovedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,6 +137,19 @@ final class ConnectionPoolListenerMulticaster implements ConnectionPoolListener 
             } catch (Exception e) {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.warn(format("Exception thrown raising connection pool checked in event to listener %s", cur), e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void connectionRemoved(final ConnectionRemovedEvent event) {
+        for (ConnectionPoolListener cur : connectionPoolListeners) {
+            try {
+                cur.connectionRemoved(event);
+            } catch (Exception e) {
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.warn(format("Exception thrown raising connection pool connection removed event to listener %s", cur), e);
                 }
             }
         }

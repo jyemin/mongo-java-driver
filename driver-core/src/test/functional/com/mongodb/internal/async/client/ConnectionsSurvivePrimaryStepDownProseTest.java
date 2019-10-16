@@ -137,9 +137,6 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         batchCallback = new FutureResultCallback<List<Document>>();
         cursor.next(batchCallback);
         assertEquals(singletonList(documents.get(4)), batchCallback.get(30, TimeUnit.SECONDS));
-        assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
-        assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
     }
 
     @Test

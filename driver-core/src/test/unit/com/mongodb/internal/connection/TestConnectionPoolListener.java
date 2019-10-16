@@ -31,6 +31,7 @@ import com.mongodb.event.ConnectionPoolOpenedEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueEnteredEvent;
 import com.mongodb.event.ConnectionPoolWaitQueueExitedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
+import com.mongodb.event.ConnectionRemovedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -168,6 +169,11 @@ public class TestConnectionPoolListener implements ConnectionPoolListener {
 
     @Override
     public void connectionAdded(final ConnectionAddedEvent event) {
+        addEvent(event);
+    }
+
+    @Override
+    public void connectionRemoved(final ConnectionRemovedEvent event) {
         addEvent(event);
     }
 
