@@ -22,13 +22,11 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.WriteConcern;
-import com.mongodb.event.ConnectionReadyEvent;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.async.FutureResultCallback;
 import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.event.ConnectionAddedEvent;
-import com.mongodb.event.ConnectionCreatedEvent;
 import com.mongodb.internal.connection.TestConnectionPoolListener;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
@@ -51,7 +49,6 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 // See https://github.com/mongodb/specifications/tree/master/source/connections-survive-step-down/tests
-@SuppressWarnings("deprecation")
 public class ConnectionsSurvivePrimaryStepDownProseTest {
     private static final String COLLECTION_NAME = "step-down";
 
@@ -116,9 +113,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         collection.withWriteConcern(WriteConcern.MAJORITY).insertMany(documents, callback);
         callback.get(30, TimeUnit.SECONDS);
 
-        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
-        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
-        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
 
         FutureResultCallback<AsyncBatchCursor<Document>> batchCursorCallback = new FutureResultCallback<AsyncBatchCursor<Document>>();
         collection.find().batchSize(2).batchCursor(batchCursorCallback);
@@ -137,6 +132,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         batchCallback = new FutureResultCallback<List<Document>>();
         cursor.next(batchCallback);
         assertEquals(singletonList(documents.get(4)), batchCallback.get(30, TimeUnit.SECONDS));
+        assertEquals(connectionCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
     }
 
     @Test
@@ -145,9 +141,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
 
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 10107}}");
-        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
-        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
-        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -161,9 +155,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionAddedCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionCreatedCount, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
-        assertEquals(connectionReadyCount, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionCount, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
     }
 
     @Test
@@ -172,9 +164,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
 
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 10107}}");
-        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
-        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
-        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -188,18 +178,14 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
-        assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionReadyCount + 1, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
     }
 
     @Test
     public void testInterruptedAtShutdownResetsConnectionPool() throws InterruptedException {
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 11600}}");
-        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
-        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
-        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -212,18 +198,14 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
-        assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionReadyCount + 1, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
     }
 
     @Test
     public void testShutdownInProgressResetsConnectionPool() throws InterruptedException {
         collectionHelper.runAdminCommand("{configureFailPoint: 'failCommand',  mode: {times: 1}, data: {failCommands: ['insert'], "
                 + "errorCode: 91}}");
-        int connectionCreatedCount = connectionPoolListener.countEvents(ConnectionCreatedEvent.class);
-        int connectionAddedCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
-        int connectionReadyCount = connectionPoolListener.countEvents(ConnectionReadyEvent.class);
+        int connectionCount = connectionPoolListener.countEvents(ConnectionAddedEvent.class);
 
         try {
             FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
@@ -236,9 +218,7 @@ public class ConnectionsSurvivePrimaryStepDownProseTest {
         FutureResultCallback<Void> callback = new FutureResultCallback<Void>();
         collection.insertOne(new Document(), callback);
         callback.get(30, TimeUnit.SECONDS);
-        assertEquals(connectionCreatedCount + 1, connectionPoolListener.countEvents(ConnectionCreatedEvent.class));
-        assertEquals(connectionAddedCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
-        assertEquals(connectionReadyCount + 1, connectionPoolListener.countEvents(ConnectionReadyEvent.class));
+        assertEquals(connectionCount + 1, connectionPoolListener.countEvents(ConnectionAddedEvent.class));
     }
 
 }
