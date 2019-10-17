@@ -33,6 +33,7 @@ import org.bson.codecs.pojo.entities.GenericTreeModel;
 import org.bson.codecs.pojo.entities.InterfaceBasedModel;
 import org.bson.codecs.pojo.entities.InterfaceModelImpl;
 import org.bson.codecs.pojo.entities.InterfaceUpperBoundsModelAbstractImpl;
+import org.bson.codecs.pojo.entities.InterfaceWithDefaultMethodModelImpl;
 import org.bson.codecs.pojo.entities.MultipleBoundsModel;
 import org.bson.codecs.pojo.entities.MultipleLevelGenericModel;
 import org.bson.codecs.pojo.entities.NestedFieldReusingClassTypeParameter;
@@ -145,6 +146,11 @@ public final class PojoRoundTripTest extends PojoTestCase {
         data.add(new TestData("Interfaced based model", new InterfaceModelImpl("a", "b"),
                 getPojoCodecProviderBuilder(InterfaceModelImpl.class),
                 "{'propertyA': 'a', 'propertyB': 'b'}"));
+
+        data.add(new TestData("Interfaced based model with default method", new InterfaceWithDefaultMethodModelImpl("a",
+                "c"),
+                getPojoCodecProviderBuilder(InterfaceWithDefaultMethodModelImpl.class),
+                "{'propertyA': 'a', 'propertyC': 'c'}"));
 
         data.add(new TestData("Interfaced based model with bound", new InterfaceUpperBoundsModelAbstractImpl("someName",
                 new InterfaceModelImpl("a", "b")),
