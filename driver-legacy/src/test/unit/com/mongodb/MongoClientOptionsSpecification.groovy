@@ -219,7 +219,7 @@ class MongoClientOptionsSpecification extends Specification {
         options.getServerSettings().getHeartbeatFrequency(MILLISECONDS) == 5
         options.getServerSettings().getMinHeartbeatFrequency(MILLISECONDS) == 11
 
-        options.connectionPoolSettings == ConnectionPoolSettings.builder().maxSize(500).minSize(30).maxWaitQueueSize(1000)
+        options.connectionPoolSettings == ConnectionPoolSettings.builder().maxSize(500).minSize(30)
                                                                 .maxWaitTime(200, MILLISECONDS).maxConnectionLifeTime(400, MILLISECONDS)
                                                                 .maxConnectionIdleTime(300, MILLISECONDS).build()
         options.socketSettings == SocketSettings.builder().connectTimeout(100, MILLISECONDS).readTimeout(700, MILLISECONDS)

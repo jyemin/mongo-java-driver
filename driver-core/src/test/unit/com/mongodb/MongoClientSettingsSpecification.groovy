@@ -284,7 +284,6 @@ class MongoClientSettingsSpecification extends Specification {
                         .mode(ClusterConnectionMode.MULTIPLE)
                         .requiredReplicaSetName('test')
                         .serverSelectionTimeout(25000, TimeUnit.MILLISECONDS)
-                        .maxWaitQueueSize(10 * 7) // maxPoolSize * waitQueueMultiple
                         .localThreshold(30, TimeUnit.MILLISECONDS)
             }
         })
@@ -293,7 +292,6 @@ class MongoClientSettingsSpecification extends Specification {
             void apply(final ConnectionPoolSettings.Builder builder) {
                 builder.minSize(5)
                         .maxSize(10)
-                        .maxWaitQueueSize(10 * 7) // maxPoolSize * waitQueueMultiple
                         .maxWaitTime(150, TimeUnit.MILLISECONDS)
                         .maxConnectionLifeTime(300, TimeUnit.MILLISECONDS)
                         .maxConnectionIdleTime(200, TimeUnit.MILLISECONDS)
@@ -350,7 +348,6 @@ class MongoClientSettingsSpecification extends Specification {
             void apply(final ConnectionPoolSettings.Builder builder) {
                 builder.minSize(5)
                         .maxSize(10)
-                        .maxWaitQueueSize(10 * 7) // maxPoolSize * waitQueueMultiple
                         .maxWaitTime(150, TimeUnit.MILLISECONDS)
                         .maxConnectionLifeTime(300, TimeUnit.MILLISECONDS)
                         .maxConnectionIdleTime(200, TimeUnit.MILLISECONDS)

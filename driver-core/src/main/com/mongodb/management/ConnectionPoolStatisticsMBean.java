@@ -66,11 +66,4 @@ public interface ConnectionPoolStatisticsMBean {
      * @return count of in-use connections
      */
     int getCheckedOutCount();
-
-    /**
-     * Gets the size of the wait queue for a connection from this pool. *
-     *
-     * @return size of the wait queue
-     */
-    int getWaitQueueSize();
 }
