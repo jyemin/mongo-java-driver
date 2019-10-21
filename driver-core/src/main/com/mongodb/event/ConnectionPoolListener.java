@@ -97,22 +97,6 @@ public interface ConnectionPoolListener extends EventListener {
     }
 
     /**
-     * Invoked when a connection pool's wait queue is entered. The default implementation does nothing.
-     *
-     * @param event the event
-     */
-    default void waitQueueEntered(ConnectionPoolWaitQueueEnteredEvent event) {
-    }
-
-    /**
-     * Invoked when a connection pools wait queue is exited. The default implementation does nothing.
-     *
-     * @param event the event
-     */
-    default void waitQueueExited(ConnectionPoolWaitQueueExitedEvent event) {
-    }
-
-    /**
      * Invoked when a connection is added to a pool. The default implementation does nothing.
      *
      * @param event the event
