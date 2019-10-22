@@ -258,7 +258,7 @@ class MongoClientSettingsSpecification extends Specification {
         when:
         ConnectionString connectionString = new ConnectionString('mongodb://user:pass@host1:1,host2:2/'
                 + '?authMechanism=SCRAM-SHA-1&authSource=test'
-                + '&minPoolSize=5&maxPoolSize=10&waitQueueMultiple=7'
+                + '&minPoolSize=5&maxPoolSize=10'
                 + '&waitQueueTimeoutMS=150&maxIdleTimeMS=200&maxLifeTimeMS=300'
                 + '&connectTimeoutMS=2500'
                 + '&socketTimeoutMS=5500'

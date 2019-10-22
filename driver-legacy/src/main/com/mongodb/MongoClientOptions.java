@@ -64,7 +64,6 @@ public class MongoClientOptions {
 
     private final int minConnectionsPerHost;
     private final int maxConnectionsPerHost;
-    private final int threadsAllowedToBlockForConnectionMultiplier;
     private final int serverSelectionTimeout;
     private final int maxWaitTime;
     private final int maxConnectionIdleTime;
@@ -102,7 +101,6 @@ public class MongoClientOptions {
         compressorList = builder.compressorList;
         minConnectionsPerHost = builder.minConnectionsPerHost;
         maxConnectionsPerHost = builder.maxConnectionsPerHost;
-        threadsAllowedToBlockForConnectionMultiplier = builder.threadsAllowedToBlockForConnectionMultiplier;
         serverSelectionTimeout = builder.serverSelectionTimeout;
         maxWaitTime = builder.maxWaitTime;
         maxConnectionIdleTime = builder.maxConnectionIdleTime;
@@ -233,7 +231,6 @@ public class MongoClientOptions {
      * <p>Default is 100.</p>
      *
      * @return the maximum size of the connection pool per host
-     * @see MongoClientOptions#getThreadsAllowedToBlockForConnectionMultiplier()
      */
     public int getConnectionsPerHost() {
         return maxConnectionsPerHost;
@@ -249,19 +246,6 @@ public class MongoClientOptions {
      */
     public int getMinConnectionsPerHost() {
         return minConnectionsPerHost;
-    }
-
-    /**
-     * <p>This multiplier, multiplied with the connectionsPerHost setting, gives the maximum number of threads that may be waiting for a
-     * connection to become available from the pool. All further threads will get an exception right away. For example if connectionsPerHost
-     * is 10 and threadsAllowedToBlockForConnectionMultiplier is 5, then up to 50 threads can wait for a connection.</p>
-     *
-     * <p>Default is 5.</p>
-     *
-     * @return the multiplier
-     */
-    public int getThreadsAllowedToBlockForConnectionMultiplier() {
-        return threadsAllowedToBlockForConnectionMultiplier;
     }
 
     /**
@@ -751,9 +735,6 @@ public class MongoClientOptions {
         if (sslContext != null ? !sslContext.equals(that.sslContext) : that.sslContext != null) {
             return false;
         }
-        if (threadsAllowedToBlockForConnectionMultiplier != that.threadsAllowedToBlockForConnectionMultiplier) {
-            return false;
-        }
         if (dbDecoderFactory != null ? !dbDecoderFactory.equals(that.dbDecoderFactory) : that.dbDecoderFactory != null) {
             return false;
         }
@@ -819,7 +800,6 @@ public class MongoClientOptions {
         result = 31 * result + commandListeners.hashCode();
         result = 31 * result + minConnectionsPerHost;
         result = 31 * result + maxConnectionsPerHost;
-        result = 31 * result + threadsAllowedToBlockForConnectionMultiplier;
         result = 31 * result + serverSelectionTimeout;
         result = 31 * result + maxWaitTime;
         result = 31 * result + maxConnectionIdleTime;
@@ -860,7 +840,6 @@ public class MongoClientOptions {
                + ", commandListeners=" + commandListeners
                + ", minConnectionsPerHost=" + minConnectionsPerHost
                + ", maxConnectionsPerHost=" + maxConnectionsPerHost
-               + ", threadsAllowedToBlockForConnectionMultiplier=" + threadsAllowedToBlockForConnectionMultiplier
                + ", serverSelectionTimeout=" + serverSelectionTimeout
                + ", maxWaitTime=" + maxWaitTime
                + ", maxConnectionIdleTime=" + maxConnectionIdleTime
@@ -912,7 +891,6 @@ public class MongoClientOptions {
         private ServerSelector serverSelector;
         private int minConnectionsPerHost;
         private int maxConnectionsPerHost = 100;
-        private int threadsAllowedToBlockForConnectionMultiplier = 5;
         private int serverSelectionTimeout = 1000 * 30;
         private int maxWaitTime = 1000 * 60 * 2;
         private int maxConnectionIdleTime;
@@ -957,7 +935,6 @@ public class MongoClientOptions {
             compressorList = options.getCompressorList();
             minConnectionsPerHost = options.getMinConnectionsPerHost();
             maxConnectionsPerHost = options.getConnectionsPerHost();
-            threadsAllowedToBlockForConnectionMultiplier = options.getThreadsAllowedToBlockForConnectionMultiplier();
             serverSelectionTimeout = options.getServerSelectionTimeout();
             maxWaitTime = options.getMaxWaitTime();
             maxConnectionIdleTime = options.getMaxConnectionIdleTime();
@@ -1053,20 +1030,6 @@ public class MongoClientOptions {
         public Builder connectionsPerHost(final int connectionsPerHost) {
             isTrueArgument("connectionPerHost must be > 0", connectionsPerHost > 0);
             this.maxConnectionsPerHost = connectionsPerHost;
-            return this;
-        }
-
-        /**
-         * Sets the multiplier for number of threads allowed to block waiting for a connection.
-         *
-         * @param threadsAllowedToBlockForConnectionMultiplier the multiplier
-         * @return {@code this}
-         * @throws IllegalArgumentException if {@code threadsAllowedToBlockForConnectionMultiplier < 1}
-         * @see MongoClientOptions#getThreadsAllowedToBlockForConnectionMultiplier()
-         */
-        public Builder threadsAllowedToBlockForConnectionMultiplier(final int threadsAllowedToBlockForConnectionMultiplier) {
-            isTrueArgument("threadsAllowedToBlockForConnectionMultiplier must be > 0", threadsAllowedToBlockForConnectionMultiplier > 0);
-            this.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;
             return this;
         }
 

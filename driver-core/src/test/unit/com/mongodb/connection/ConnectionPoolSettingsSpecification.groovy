@@ -133,7 +133,7 @@ class ConnectionPoolSettingsSpecification extends Specification {
     def 'should apply connection string'() {
         when:
         def settings = ConnectionPoolSettings.builder().applyConnectionString(
-                new ConnectionString('mongodb://localhost/?waitQueueTimeoutMS=100&minPoolSize=5&maxPoolSize=10&waitQueueMultiple=7&'
+                new ConnectionString('mongodb://localhost/?waitQueueTimeoutMS=100&minPoolSize=5&maxPoolSize=10&'
                                              + 'maxIdleTimeMS=200&maxLifeTimeMS=300'))
                                              .build()
 

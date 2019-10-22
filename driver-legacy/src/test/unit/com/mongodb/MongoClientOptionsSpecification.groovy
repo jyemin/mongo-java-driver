@@ -53,7 +53,6 @@ class MongoClientOptionsSpecification extends Specification {
         options.getConnectTimeout() == 10000
         options.getReadPreference() == ReadPreference.primary()
         options.getServerSelector() == null;
-        options.getThreadsAllowedToBlockForConnectionMultiplier() == 5
         !options.isSslEnabled()
         !options.isSslInvalidHostNameAllowed()
         options.getSslContext() == null
@@ -128,11 +127,6 @@ class MongoClientOptionsSpecification extends Specification {
         thrown(IllegalArgumentException)
 
         when:
-        builder.threadsAllowedToBlockForConnectionMultiplier(0)
-        then:
-        thrown(IllegalArgumentException)
-
-        when:
         builder.dbDecoderFactory(null)
         then:
         thrown(IllegalArgumentException)
@@ -171,7 +165,6 @@ class MongoClientOptionsSpecification extends Specification {
                                         .maxWaitTime(200)
                                         .maxConnectionIdleTime(300)
                                         .maxConnectionLifeTime(400)
-                                        .threadsAllowedToBlockForConnectionMultiplier(2)
                                         .sslEnabled(true)
                                         .sslInvalidHostNameAllowed(true)
                                         .sslContext(SSLContext.getDefault())
@@ -203,7 +196,6 @@ class MongoClientOptionsSpecification extends Specification {
         options.getConnectionsPerHost() == 500
         options.getConnectTimeout() == 100
         options.getSocketTimeout() == 700
-        options.getThreadsAllowedToBlockForConnectionMultiplier() == 2
         options.isSslEnabled()
         options.isSslInvalidHostNameAllowed()
         options.getSslContext() == SSLContext.getDefault()
@@ -256,7 +248,6 @@ class MongoClientOptionsSpecification extends Specification {
                 .maxWaitTime(200)
                 .maxConnectionIdleTime(300)
                 .maxConnectionLifeTime(400)
-                .threadsAllowedToBlockForConnectionMultiplier(2)
                 .sslEnabled(true)
                 .sslInvalidHostNameAllowed(true)
                 .sslContext(SSLContext.getDefault())
@@ -553,7 +544,6 @@ class MongoClientOptionsSpecification extends Specification {
                 .maxWaitTime(200)
                 .maxConnectionIdleTime(300)
                 .maxConnectionLifeTime(400)
-                .threadsAllowedToBlockForConnectionMultiplier(2)
                 .sslEnabled(true)
                 .sslInvalidHostNameAllowed(true)
                 .sslContext(SSLContext.getDefault())
@@ -593,7 +583,7 @@ class MongoClientOptionsSpecification extends Specification {
                         'minHeartbeatFrequency', 'readConcern', 'readPreference', 'requiredReplicaSetName', 'retryReads', 'retryWrites',
                         'serverListeners', 'serverMonitorListeners', 'serverSelectionTimeout', 'serverSelector',
                         'socketKeepAlive', 'socketTimeout', 'sslContext', 'sslEnabled', 'sslInvalidHostNameAllowed',
-                        'threadsAllowedToBlockForConnectionMultiplier', 'writeConcern']
+                        'writeConcern']
 
         then:
         actual == expected

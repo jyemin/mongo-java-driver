@@ -357,10 +357,6 @@ public class MongoClientURI {
         if (maxWaitTime != null) {
             builder.maxWaitTime(maxWaitTime);
         }
-        Integer threadsAllowedToBlockForConnectionMultiplier = proxied.getThreadsAllowedToBlockForConnectionMultiplier();
-        if (threadsAllowedToBlockForConnectionMultiplier != null) {
-            builder.threadsAllowedToBlockForConnectionMultiplier(threadsAllowedToBlockForConnectionMultiplier);
-        }
         Integer maxConnectionIdleTime = proxied.getMaxConnectionIdleTime();
         if (maxConnectionIdleTime != null) {
             builder.maxConnectionIdleTime(maxConnectionIdleTime);
