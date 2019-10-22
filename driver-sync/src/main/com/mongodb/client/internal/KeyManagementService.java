@@ -27,17 +27,17 @@ import java.nio.ByteBuffer;
 
 class KeyManagementService {
     private final SSLContext sslContext;
-    private final int port;
+    private final int defaultPort;
     private final int timeoutMillis;
 
-    KeyManagementService(final SSLContext sslContext, final int port, final int timeoutMillis) {
+    KeyManagementService(final SSLContext sslContext, final int defaultPort, final int timeoutMillis) {
         this.sslContext = sslContext;
-        this.port = port;
+        this.defaultPort = defaultPort;
         this.timeoutMillis = timeoutMillis;
     }
 
     public InputStream stream(final String host, final ByteBuffer message) throws IOException {
-        ServerAddress serverAddress = host.contains(":") ? new ServerAddress(host) : new ServerAddress(host, port);
+        ServerAddress serverAddress = host.contains(":") ? new ServerAddress(host) : new ServerAddress(host, defaultPort);
         Socket socket = sslContext.getSocketFactory().createSocket();
 
         try {
@@ -68,8 +68,8 @@ class KeyManagementService {
         }
     }
 
-    public int getPort() {
-        return port;
+    public int getDefaultPort() {
+        return defaultPort;
     }
 
     private void closeSocket(final Socket socket) {

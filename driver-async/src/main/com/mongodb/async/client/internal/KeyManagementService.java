@@ -39,11 +39,11 @@ import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 class KeyManagementService {
-    private final int port;
+    private final int defaultPort;
     private final StreamFactory streamFactory;
 
-    KeyManagementService(final SSLContext sslContext, final int port, final int timeoutMillis) {
-        this.port = port;
+    KeyManagementService(final SSLContext sslContext, final int defaultPort, final int timeoutMillis) {
+        this.defaultPort = defaultPort;
         this.streamFactory = new TlsChannelStreamFactoryFactory().create(SocketSettings.builder()
                         .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
                         .readTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
@@ -58,7 +58,7 @@ class KeyManagementService {
     private void streamOpen(final MongoKeyDecryptor keyDecryptor, final SingleResultCallback<Void> callback) {
         ServerAddress serverAddress = keyDecryptor.getHostName().contains(":")
                 ? new ServerAddress(keyDecryptor.getHostName())
-                : new ServerAddress(keyDecryptor.getHostName(), port);
+                : new ServerAddress(keyDecryptor.getHostName(), defaultPort);
         final Stream stream = streamFactory.create(serverAddress);
         stream.openAsync(new AsyncCompletionHandler<Void>() {
             @Override
@@ -69,7 +69,7 @@ class KeyManagementService {
             @Override
             public void failed(final Throwable t) {
                 stream.close();
-                callback.onResult(null, t instanceof MongoSocketException ? t.getCause() : t);
+                callback.onResult(null, wrapException(t));
             }
         });
     }
@@ -85,7 +85,7 @@ class KeyManagementService {
             @Override
             public void failed(final Throwable t) {
                 stream.close();
-                callback.onResult(null, t instanceof MongoSocketException ? t.getCause() : t);
+                callback.onResult(null, wrapException(t));
             }
         });
     }
@@ -114,12 +114,16 @@ class KeyManagementService {
                         public void failed(final Throwable t, final Void aVoid) {
                             buffer.release();
                             stream.close();
-                            callback.onResult(null, t instanceof MongoSocketException ? t.getCause() : t);
+                            callback.onResult(null, wrapException(t));
                         }
                     });
         } else {
             stream.close();
             callback.onResult(null, null);
         }
+    }
+
+    private Throwable wrapException(final Throwable t) {
+        return t instanceof MongoSocketException ? t.getCause() : t;
     }
 }
