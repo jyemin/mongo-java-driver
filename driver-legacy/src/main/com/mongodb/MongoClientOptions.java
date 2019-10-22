@@ -16,7 +16,6 @@
 
 package com.mongodb;
 
-import com.mongodb.annotations.Beta;
 import com.mongodb.annotations.Immutable;
 import com.mongodb.annotations.NotThreadSafe;
 import com.mongodb.connection.ConnectionPoolSettings;
@@ -164,15 +163,15 @@ public class MongoClientOptions {
         connectionPoolSettings = connectionPoolSettingsBuilder.build();
 
         socketSettings = SocketSettings.builder()
-                                       .connectTimeout(getConnectTimeout(), MILLISECONDS)
-                                       .readTimeout(getSocketTimeout(), MILLISECONDS)
-                                       .keepAlive(isSocketKeepAlive())
-                                       .build();
+                .connectTimeout(getConnectTimeout(), MILLISECONDS)
+                .readTimeout(getSocketTimeout(), MILLISECONDS)
+                .keepAlive(isSocketKeepAlive())
+                .build();
         heartbeatSocketSettings = SocketSettings.builder()
-                                                .connectTimeout(getHeartbeatConnectTimeout(), MILLISECONDS)
-                                                .readTimeout(getHeartbeatSocketTimeout(), MILLISECONDS)
-                                                .keepAlive(isSocketKeepAlive())
-                                                .build();
+                .connectTimeout(getHeartbeatConnectTimeout(), MILLISECONDS)
+                .readTimeout(getHeartbeatSocketTimeout(), MILLISECONDS)
+                .keepAlive(isSocketKeepAlive())
+                .build();
 
         ServerSettings.Builder serverSettingsBuilder = ServerSettings.builder()
                 .heartbeatFrequency(getHeartbeatFrequency(), MILLISECONDS)
@@ -190,15 +189,15 @@ public class MongoClientOptions {
 
         try {
             sslSettings = SslSettings.builder()
-                                     .enabled(sslEnabled)
-                                     .invalidHostNameAllowed(sslInvalidHostNameAllowed)
-                                     .context(sslContext)
-                                     .build();
+                    .enabled(sslEnabled)
+                    .invalidHostNameAllowed(sslInvalidHostNameAllowed)
+                    .context(sslContext)
+                    .build();
         } catch (MongoInternalException e) {
             // The error message from SslSettings needs to be translated to make sense for users of MongoClientOptions
             throw new MongoInternalException("By default, SSL connections are only supported on Java 7 or later.  If the application "
-                                             + "must run on Java 6, you must set the MongoClientOptions.sslInvalidHostNameAllowed "
-                                             + "property to true");
+                    + "must run on Java 6, you must set the MongoClientOptions.sslInvalidHostNameAllowed "
+                    + "property to true");
         }
     }
 
@@ -243,8 +242,8 @@ public class MongoClientOptions {
      * <p>Default is null.</p>
      *
      * @return the application name, which may be null
-     * @since 3.4
      * @mongodb.server.release 3.4
+     * @since 3.4
      */
     public String getApplicationName() {
         return applicationName;
@@ -257,8 +256,8 @@ public class MongoClientOptions {
      * <p>Default is the empty list.</p>
      *
      * @return the compressors
-     * @since 3.6
      * @mongodb.server.release 3.4
+     * @since 3.6
      */
     public List<MongoCompressor> getCompressorList() {
         return compressorList;
@@ -383,9 +382,9 @@ public class MongoClientOptions {
      * <p>Default is {@code true}.</p>
      *
      * @return whether keep-alive is enabled on each socket
-     * @deprecated configuring keep-alive has been deprecated. It now defaults to true and disabling it is not recommended.
      * @see <a href="https://docs.mongodb.com/manual/faq/diagnostics/#does-tcp-keepalive-time-affect-mongodb-deployments">
-     *     Does TCP keep-alive time affect MongoDB Deployments?</a>
+     * Does TCP keep-alive time affect MongoDB Deployments?</a>
+     * @deprecated configuring keep-alive has been deprecated. It now defaults to true and disabling it is not recommended.
      */
     @Deprecated
     public boolean isSocketKeepAlive() {
@@ -456,8 +455,8 @@ public class MongoClientOptions {
      * <p>Default is 15 milliseconds.</p>
      *
      * @return the local threshold, in milliseconds
-     * @since 2.13.0
      * @mongodb.driver.manual reference/program/mongos/#cmdoption--localThreshold Local Threshold
+     * @since 2.13.0
      */
     public int getLocalThreshold() {
         return localThreshold;
@@ -545,8 +544,8 @@ public class MongoClientOptions {
      * <p>Starting with the 3.11.0 release, the default value is true</p>
      *
      * @return the retryWrites value
-     * @since 3.6
      * @mongodb.server.release 3.6
+     * @since 3.6
      */
     public boolean getRetryWrites() {
         return retryWrites;
@@ -556,8 +555,8 @@ public class MongoClientOptions {
      * Returns true if reads should be retried if they fail due to a network error or other retryable error.
      *
      * @return the retryReads value
-     * @since 3.11
      * @mongodb.server.release 3.6
+     * @since 3.11
      */
     public boolean getRetryReads() {
         return retryReads;
@@ -567,9 +566,9 @@ public class MongoClientOptions {
      * <p>The read concern to use.</p>
      *
      * @return the read concern
-     * @since 3.2
      * @mongodb.server.release 3.2
      * @mongodb.driver.manual reference/readConcern/ Read Concern
+     * @since 3.2
      */
     public ReadConcern getReadConcern() {
         return readConcern;
@@ -742,14 +741,10 @@ public class MongoClientOptions {
     /**
      * Gets the auto-encryption settings
      *
-     * <p>
-     * Note: support for client side encryption is in beta.  Backwards-breaking changes may be made before the final release.
-     * </p>
      * @return the auto-encryption settings, which may be null
      * @since 3.11
      */
     @Nullable
-    @Beta
     public AutoEncryptionSettings getAutoEncryptionSettings() {
         return autoEncryptionSettings;
     }
@@ -885,7 +880,7 @@ public class MongoClientOptions {
             return false;
         }
         if (requiredReplicaSetName != null ? !requiredReplicaSetName.equals(that.requiredReplicaSetName)
-                                           : that.requiredReplicaSetName != null) {
+                : that.requiredReplicaSetName != null) {
             return false;
         }
         if (socketFactory != null ? !socketFactory.equals(that.socketFactory) : that.socketFactory != null) {
@@ -947,48 +942,48 @@ public class MongoClientOptions {
     @Override
     public String toString() {
         return "MongoClientOptions{"
-               + "description='" + description + '\''
-               + ", applicationName='" + applicationName + '\''
-               + ", compressors='" + compressorList + '\''
-               + ", readPreference=" + readPreference
-               + ", writeConcern=" + writeConcern
-               + ", retryWrites=" + retryWrites
-               + ", retryReads=" + retryReads
-               + ", readConcern=" + readConcern
-               + ", codecRegistry=" + codecRegistry
-               + ", serverSelector=" + serverSelector
-               + ", clusterListeners=" + clusterListeners
-               + ", commandListeners=" + commandListeners
-               + ", minConnectionsPerHost=" + minConnectionsPerHost
-               + ", maxConnectionsPerHost=" + maxConnectionsPerHost
-               + ", threadsAllowedToBlockForConnectionMultiplier=" + threadsAllowedToBlockForConnectionMultiplier
-               + ", serverSelectionTimeout=" + serverSelectionTimeout
-               + ", maxWaitTime=" + maxWaitTime
-               + ", maxConnectionIdleTime=" + maxConnectionIdleTime
-               + ", maxConnectionLifeTime=" + maxConnectionLifeTime
-               + ", connectTimeout=" + connectTimeout
-               + ", socketTimeout=" + socketTimeout
-               + ", socketKeepAlive=" + socketKeepAlive
-               + ", sslEnabled=" + sslEnabled
-               + ", sslInvalidHostNamesAllowed=" + sslInvalidHostNameAllowed
-               + ", sslContext=" + sslContext
-               + ", alwaysUseMBeans=" + alwaysUseMBeans
-               + ", heartbeatFrequency=" + heartbeatFrequency
-               + ", minHeartbeatFrequency=" + minHeartbeatFrequency
-               + ", heartbeatConnectTimeout=" + heartbeatConnectTimeout
-               + ", heartbeatSocketTimeout=" + heartbeatSocketTimeout
-               + ", localThreshold=" + localThreshold
-               + ", requiredReplicaSetName='" + requiredReplicaSetName + '\''
-               + ", dbDecoderFactory=" + dbDecoderFactory
-               + ", dbEncoderFactory=" + dbEncoderFactory
-               + ", socketFactory=" + socketFactory
-               + ", cursorFinalizerEnabled=" + cursorFinalizerEnabled
-               + ", connectionPoolSettings=" + connectionPoolSettings
-               + ", socketSettings=" + socketSettings
-               + ", serverSettings=" + serverSettings
-               + ", heartbeatSocketSettings=" + heartbeatSocketSettings
-               + ", autoEncryptionSettings="  + autoEncryptionSettings
-               + '}';
+                + "description='" + description + '\''
+                + ", applicationName='" + applicationName + '\''
+                + ", compressors='" + compressorList + '\''
+                + ", readPreference=" + readPreference
+                + ", writeConcern=" + writeConcern
+                + ", retryWrites=" + retryWrites
+                + ", retryReads=" + retryReads
+                + ", readConcern=" + readConcern
+                + ", codecRegistry=" + codecRegistry
+                + ", serverSelector=" + serverSelector
+                + ", clusterListeners=" + clusterListeners
+                + ", commandListeners=" + commandListeners
+                + ", minConnectionsPerHost=" + minConnectionsPerHost
+                + ", maxConnectionsPerHost=" + maxConnectionsPerHost
+                + ", threadsAllowedToBlockForConnectionMultiplier=" + threadsAllowedToBlockForConnectionMultiplier
+                + ", serverSelectionTimeout=" + serverSelectionTimeout
+                + ", maxWaitTime=" + maxWaitTime
+                + ", maxConnectionIdleTime=" + maxConnectionIdleTime
+                + ", maxConnectionLifeTime=" + maxConnectionLifeTime
+                + ", connectTimeout=" + connectTimeout
+                + ", socketTimeout=" + socketTimeout
+                + ", socketKeepAlive=" + socketKeepAlive
+                + ", sslEnabled=" + sslEnabled
+                + ", sslInvalidHostNamesAllowed=" + sslInvalidHostNameAllowed
+                + ", sslContext=" + sslContext
+                + ", alwaysUseMBeans=" + alwaysUseMBeans
+                + ", heartbeatFrequency=" + heartbeatFrequency
+                + ", minHeartbeatFrequency=" + minHeartbeatFrequency
+                + ", heartbeatConnectTimeout=" + heartbeatConnectTimeout
+                + ", heartbeatSocketTimeout=" + heartbeatSocketTimeout
+                + ", localThreshold=" + localThreshold
+                + ", requiredReplicaSetName='" + requiredReplicaSetName + '\''
+                + ", dbDecoderFactory=" + dbDecoderFactory
+                + ", dbEncoderFactory=" + dbEncoderFactory
+                + ", socketFactory=" + socketFactory
+                + ", cursorFinalizerEnabled=" + cursorFinalizerEnabled
+                + ", connectionPoolSettings=" + connectionPoolSettings
+                + ", socketSettings=" + socketSettings
+                + ", serverSettings=" + serverSettings
+                + ", heartbeatSocketSettings=" + heartbeatSocketSettings
+                + ", autoEncryptionSettings=" + autoEncryptionSettings
+                + '}';
     }
 
     /**
@@ -1123,9 +1118,9 @@ public class MongoClientOptions {
          * @param applicationName the logical name of the application using this MongoClient.  It may be null.
          *                        The UTF-8 encoding may not exceed 128 bytes.
          * @return {@code this}
+         * @mongodb.server.release 3.4
          * @see #getApplicationName()
          * @since 3.4
-         * @mongodb.server.release 3.4
          */
         public Builder applicationName(final String applicationName) {
             if (applicationName != null) {
@@ -1142,9 +1137,9 @@ public class MongoClientOptions {
          *
          * @param compressorList the list of compressors to request
          * @return {@code this}
+         * @mongodb.server.release 3.4
          * @see #getCompressorList()
          * @since 3.6
-         * @mongodb.server.release 3.4
          */
         public Builder compressorList(final List<MongoCompressor> compressorList) {
             notNull("compressorList", compressorList);
@@ -1258,8 +1253,8 @@ public class MongoClientOptions {
          * Sets the connection timeout.
          *
          * @param connectTimeout the connection timeout, in milliseconds, which must be &gt; 0
-         * @throws IllegalArgumentException if {@code connectTimeout <= 0}
          * @return {@code this}
+         * @throws IllegalArgumentException if {@code connectTimeout <= 0}
          * @see com.mongodb.MongoClientOptions#getConnectTimeout()
          */
         public Builder connectTimeout(final int connectTimeout) {
@@ -1285,9 +1280,9 @@ public class MongoClientOptions {
          *
          * @param socketKeepAlive keep-alive
          * @return {@code this}
-         * @deprecated configuring keep-alive has been deprecated. It now defaults to true and disabling it is not recommended.
          * @see <a href="https://docs.mongodb.com/manual/faq/diagnostics/#does-tcp-keepalive-time-affect-mongodb-deployments">
-         *     Does TCP keep-alive time affect MongoDB Deployments?</a>
+         * Does TCP keep-alive time affect MongoDB Deployments?</a>
+         * @deprecated configuring keep-alive has been deprecated. It now defaults to true and disabling it is not recommended.
          */
         @Deprecated
         public Builder socketKeepAlive(final boolean socketKeepAlive) {
@@ -1372,9 +1367,9 @@ public class MongoClientOptions {
          *
          * @param retryWrites sets if writes should be retried if they fail due to a network error.
          * @return {@code this}
+         * @mongodb.server.release 3.6
          * @see #getRetryWrites()
          * @since 3.6
-         * @mongodb.server.release 3.6
          */
         public Builder retryWrites(final boolean retryWrites) {
             this.retryWrites = retryWrites;
@@ -1386,9 +1381,9 @@ public class MongoClientOptions {
          *
          * @param retryReads sets if reads should be retried if they fail due to a network error.
          * @return {@code this}
+         * @mongodb.server.release 3.6
          * @see #getRetryReads()
          * @since 3.11
-         * @mongodb.server.release 3.6
          */
         public Builder retryReads(final boolean retryReads) {
             this.retryReads = retryReads;
@@ -1400,10 +1395,10 @@ public class MongoClientOptions {
          *
          * @param readConcern the read concern.
          * @return this
-         * @see MongoClientOptions#getReadConcern()
-         * @since 3.2
          * @mongodb.server.release 3.2
          * @mongodb.driver.manual reference/readConcern/ Read Concern
+         * @see MongoClientOptions#getReadConcern()
+         * @since 3.2
          */
         public Builder readConcern(final ReadConcern readConcern) {
             this.readConcern = notNull("readConcern", readConcern);
@@ -1415,6 +1410,7 @@ public class MongoClientOptions {
          *
          * <p>Note that instances of {@code DB} and {@code DBCollection} do not use the registry, so it's not necessary to include a
          * codec for DBObject in the registry.</p>
+         *
          * @param codecRegistry the codec registry
          * @return {@code this}
          * @see MongoClientOptions#getCodecRegistry()
@@ -1431,13 +1427,14 @@ public class MongoClientOptions {
          *
          * @param serverSelector the server selector
          * @return this
-         * @since 3.6
          * @see #getServerSelector()
+         * @since 3.6
          */
         public Builder serverSelector(final ServerSelector serverSelector) {
             this.serverSelector = serverSelector;
             return this;
         }
+
         /**
          * Adds the given command listener.
          *
@@ -1658,14 +1655,10 @@ public class MongoClientOptions {
         /**
          * Set options for auto-encryption.
          *
-         * <p>
-         * Note: support for client side encryption is in beta.  Backwards-breaking changes may be made before the final release.
-         * </p>
          * @param autoEncryptionSettings auto encryption settings
          * @return this
          * @since 3.11
          */
-        @Beta
         public Builder autoEncryptionSettings(final AutoEncryptionSettings autoEncryptionSettings) {
             this.autoEncryptionSettings = autoEncryptionSettings;
             return this;
