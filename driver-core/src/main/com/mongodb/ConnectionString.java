@@ -1209,7 +1209,9 @@ public class ConnectionString {
     /**
      * Gets the multiplier for the number of threads allowed to block waiting for a connection specified in the connection string.
      * @return the multiplier for the number of threads allowed to block waiting for a connection
+     @deprecated in the next major release, wait queue size limitations will be removed
      */
+    @Deprecated
     @Nullable
     public Integer getThreadsAllowedToBlockForConnectionMultiplier() {
         return threadsAllowedToBlockForConnectionMultiplier;
