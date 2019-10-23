@@ -61,17 +61,17 @@ final class PropertyReflectionUtils {
         List<Method> setters = new ArrayList<Method>();
         List<Method> getters = new ArrayList<Method>();
 
-        // get all the default method from interface
+        for (Method method : clazz.getDeclaredMethods()) {
+            verifyAddMethodToList(method, getters, setters);
+        }
+
+        // get all the default methods from interfaces
         for (Class<?> i : clazz.getInterfaces()) {
             for (Method method : i.getDeclaredMethods()) {
                 if (method.isDefault()) {
                     verifyAddMethodToList(method, getters, setters);
                 }
             }
-        }
-
-        for (Method method : clazz.getDeclaredMethods()) {
-            verifyAddMethodToList(method, getters, setters);
         }
 
         return new PropertyMethods(getters, setters);
