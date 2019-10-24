@@ -104,7 +104,7 @@ object MongoCredential {
    * @since 4.0
    */
   val JAVA_SASL_CLIENT_PROPERTIES_KEY: String = JMongoCredential.JAVA_SASL_CLIENT_PROPERTIES_KEY
-MONGODB-CR
+
   /**
    * Mechanism property key for overriding the `javax.security.auth.Subject` under which GSSAPI authentication executes.
    *

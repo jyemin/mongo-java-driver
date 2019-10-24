@@ -11,7 +11,7 @@ title = "Quick Start"
 # MongoDB Reactive Streams Driver Quick Start
 
 The following code snippets come from the [`QuickTour.java`]({{< srcref "driver-reactive-streams/src/examples/reactivestreams/tour/QuickTour.java">}}) example code
-that can be found with the async driver source on github.
+that can be found with the reactive streams driver source on github.
 
 {{% note %}}
 See the [installation guide]({{< relref "driver-reactive/getting-started/installation.md" >}}) for instructions on how to install the MongoDB Reactive Streams Java Driver.
@@ -69,7 +69,7 @@ import static java.util.Collections.singletonList;
 
 Use [`MongoClients.create()`]({{< apiref "com/mongodb/reactivestreams/client/MongoClients.html">}}) to make a connection to a running MongoDB instance.
 
-The `MongoClient` instance represents a pool of connections to the database; you will only need one instance of class `MongoClient` even with multiple threads.
+The `MongoClient` instance represents a pool of connections to the database; you will only need one instance of class `MongoClient` even with concurrent operations threads.
 
 {{% note class="important" %}}
 
@@ -116,7 +116,7 @@ MongoClient mongoClient = MongoClients.create(
 - You can specify the [`ConnectionString`]({{< apiref "com/mongodb/ConnectionString.html">}}):
 
 ```java
-MongoClient mongoClient = MongoClients.create("mongodb://hostOne:27017,hostTwo:27018");
+MongoClient mongoClient = MongoClients.create("mongodb://hostOne:27017");
 ```
 
 ## Access a Database
@@ -381,7 +381,7 @@ To update at most a single document, use the [`updateOne`]({{<apiref "com/mongod
 The following example updates the first document that meets the filter ``i`` equals ``10`` and sets the value of ``i`` to ``110``:
 
 ```java
-collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)))
+collection.updateOne(eq("i", 10), set("i", 110))
     .subscribe(new PrintSubscriber<UpdateResult>("Update Result: %s"));
 ```
 

@@ -113,7 +113,7 @@ MongoClient mongoClient = MongoClients.create(
 - You can specify the [`ConnectionString`]({{< apiref "com/mongodb/ConnectionString.html">}}):
 
 ```java
-MongoClient mongoClient = MongoClients.create("mongodb://hostOne:27017,hostTwo:27018");
+MongoClient mongoClient = MongoClients.create("mongodb://hostOne:27017");
 ```
 
 
@@ -399,7 +399,7 @@ To update at most a single document, use the [`updateOne`]({{<apiref "com/mongod
 The following example updates the first document that meets the filter ``i`` equals ``10`` and sets the value of ``i`` to ``110``:
 
 ```java
-collection.updateOne(eq("i", 10), new Document("$set", new Document("i", 110)));
+collection.updateOne(eq("i", 10), set("i", 110));
 ```
 
 
