@@ -37,7 +37,7 @@ public class Decimal128LegacyAPIQuickTour {
      *
      * @param args takes an optional single argument for the connection string
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) {      
         MongoClient mongoClient;
 
         if (args.length == 0) {
