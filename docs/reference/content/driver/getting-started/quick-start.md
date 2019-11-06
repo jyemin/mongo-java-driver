@@ -198,7 +198,7 @@ For example, consider the following JSON document:
 ```
 
 To create the document using the Java driver, instantiate a `Document` object with a field and value, and use its
- [`append()`]({{< apiref "org/bson/Document.html#append" >}}) method to include additional fields and values to the document object. The value can be another `Document` object to specify an embedded document:
+ [`append()`]({{< apiref "org/bson/Document.html#append()" >}}) method to include additional fields and values to the document object. The value can be another `Document` object to specify an embedded document:
 
  ```java
  Document doc = new Document("name", "MongoDB")
