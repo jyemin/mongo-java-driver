@@ -193,7 +193,7 @@ Or use a connection string that explicitly specifies the `authMechanism=MONGODB-
 val mongoClient: MongoClient = MongoClient("mongodb://subjectName@host1/?authMechanism=MONGODB-X509&ssl=true")
 ```
 
-See the MongoDB server [x.509 tutorial]({{<apiref "tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user">}})
+See the MongoDB server [x.509 tutorial]({{<docsref "tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user">}})
 for more information about determining the subject
 name from the certificate.
 
@@ -201,8 +201,8 @@ name from the certificate.
 
 [MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy
 authentication through Kerberos service. To create a credential of type
-[Kerberos (GSSAPI)]({{<apiref "core/authentication/#kerberos-authentication">}}), use the
-[`createGSSAPICredential`]({{<apiref "/org/mongodb/scala/MongoCredential$.html#createGSSAPICredential(userName:String):com.mongodb.MongoCredential">}})
+[Kerberos (GSSAPI)]({{<docsref "core/authentication/#kerberos-authentication">}}), use the
+[`createGSSAPICredential`]({{<apiref "org/mongodb/scala/MongoCredential$.html#createGSSAPICredential(userName:String):com.mongodb.MongoCredential">}})
 helper method:
 
 ```scala
@@ -278,7 +278,7 @@ interoperability with Windows Active Directory and in particular the ability to 
 
 ## LDAP (PLAIN)
 
-[MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type [LDAP]({{<apiref "core/authentication/#ldap-proxy-authority-authentication">}}) use the
+[MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type [LDAP]({{<docsref "core/authentication/#ldap-proxy-authority-authentication">}}) use the
 [`createPlainCredential`]({{<scapiref "org/mongodb/scala/MongoCredential$.html#createPlainCredential(userName:String,source:String,password:Array[Char]):com.mongodb.MongoCredential">}}) helper method:
 
 ```scala

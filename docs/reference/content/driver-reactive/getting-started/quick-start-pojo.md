@@ -188,7 +188,7 @@ MongoCollection<Person> collection = database.getCollection("people", Person.cla
 
 ### Insert a Person
 
-To insert a Person into the collection, you can use the collection's [`insertOne()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#insertOne-TDocument-" >}}) method.
+To insert a Person into the collection, you can use the collection's [`insertOne()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#insertOne(TDocument)" >}}) method.
 
 ```java
 Person ada = new Person("Ada Byron", 20, new Address("St James Square", "London", "W1"));
@@ -198,7 +198,7 @@ collection.insertOne(ada).subscribe(new OperationSubscriber<Success>());
 
 ### Insert Many Persons
 
-To add multiple Person instances, you can use the collection's [`insertMany()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#insertMany-java.util.List-" >}}) method 
+To add multiple Person instances, you can use the collection's [`insertMany()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#insertMany(java.util.List)" >}}) method 
 which takes a list of `Person`.
 
 The following example will add multiple Person instances into the collection:
@@ -215,7 +215,7 @@ collection.insertMany(people).subscribe(new OperationSubscriber<Success>());
 
 ## Query the Collection
 
-To query the collection, you can use the collection's [`find()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#find--">}}) method. 
+To query the collection, you can use the collection's [`find()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#find()">}}) method. 
 
 The following example prints all the Person instances in the collection:
 ```java
@@ -235,7 +235,7 @@ Person{id='591dbc2550852fa685b3ad1a', name='Timothy Berners-Lee', age=61, addres
 
 ## Specify a Query Filter
 
-To query for Person instance that match certain conditions, pass a filter object to the [`find()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#find--">}}) method. 
+To query for Person instance that match certain conditions, pass a filter object to the [`find()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#find()">}}) method. 
 To facilitate creating filter objects, the Java driver provides the [`Filters`]({{< apiref "com/mongodb/client/model/Filters.html">}}) helper.
 
 {{% note class="important" %}}
@@ -246,7 +246,7 @@ By default they are the same but it is possible to change how POJO property name
 
 ### Get A Single Person That Matches a Filter
 
-For example, to find the first `Person` in the database that lives in `Wimborne` pass an [`eq`]({{<apiref  "com/mongodb/client/model/Filters.html#eq-java.lang.String-TItem-">}}) 
+For example, to find the first `Person` in the database that lives in `Wimborne` pass an [`eq`]({{<apiref  "com/mongodb/client/model/Filters.html#eq(java.lang.String,TItem)">}}) 
 filter object to specify the equality condition:
 
 ```java
@@ -273,7 +273,7 @@ personSubscriber.await();
 
 ## Update Documents
 
-To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne-org.bson.conversions.Bson-org.bson.conversions.Bson-">}})  and  [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany-org.bson.conversions.Bson-org.bson.conversions.Bson-">}}) methods.
+To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}})  and  [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) methods.
 
 Pass to the methods:
 
@@ -285,7 +285,7 @@ The update methods return an [`UpdateResult`]({{<apiref "com/mongodb/client/resu
 
 ### Update a Single Person
 
-To update at most a single `Person`, use the [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne-org.bson.conversions.Bson-org.bson.conversions.Bson-">}}) method.
+To update at most a single `Person`, use the [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
 
 The following example updates `Ada Byron` setting their age to `23` and name to `Ada Lovelace`:
 
@@ -298,7 +298,7 @@ updateSubscriber.await();
 
 ### Update Multiple Persons
 
-To update all Persons that match a filter, use the [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany-org.bson.conversions.Bson-org.bson.conversions.Bson-">}}) method.
+To update all Persons that match a filter, use the [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
 
 The following example sets the zip field to `null` for all documents that have a `zip` value:
 
@@ -311,7 +311,7 @@ updateSubscriber.await();
 
 ### Replace a Single Person
 
-An alternative method to change an existing `Person`, would be to use the [`replaceOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#replaceOne-org.bson.conversions.Bson-TDocument-">}}) method.
+An alternative method to change an existing `Person`, would be to use the [`replaceOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#replaceOne(org.bson.conversions.Bson,TDocument)">}}) method.
 
 The following example replaces the `Ada Lovelace` back to the original document:
 
@@ -323,7 +323,7 @@ updateSubscriber.await();
 
 ## Delete Documents
 
-To delete documents from a collection, you can use the collection's [`deleteOne`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteOne-org.bson.conversions.Bson-">}}) and [`deleteMany`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteMany-org.bson.conversions.Bson-">}}) methods.
+To delete documents from a collection, you can use the collection's [`deleteOne`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteOne(org.bson.conversions.Bson)">}}) and [`deleteMany`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteMany(org.bson.conversions.Bson)">}}) methods.
 
 Pass to the methods a filter object to determine the document or documents to delete. To facilitate creating filter objects, the Java driver provides the [`Filters`]({{< apiref "com/mongodb/client/model/Filters.html">}}) helper. To specify an empty filter (i.e. match all documents in a collection), use an empty [`Document`]({{< apiref "org/bson/Document.html" >}}) object.
 
@@ -332,7 +332,7 @@ which provides information about the operation including the number of documents
 
 ### Delete a Single Person That Matches a Filter
 
-To delete at most a single `Person` that matches a filter, use the [`deleteOne`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteOne-org.bson.conversions.Bson-">}}) method:
+To delete at most a single `Person` that matches a filter, use the [`deleteOne`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteOne(org.bson.conversions.Bson)">}}) method:
 
 The following example deletes at most one `Person` who lives in `Wimborne`:
 
@@ -344,7 +344,7 @@ deleteSubscriber.await();
 
 ### Delete All Persons That Match a Filter
 
-To delete multiple Persons matching a filter use the [`deleteMany`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteMany-org.bson.conversions.Bson-">}}) method.
+To delete multiple Persons matching a filter use the [`deleteMany`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#deleteMany(org.bson.conversions.Bson)">}}) method.
 
 The following example deletes all Persons that live in `London`:
 

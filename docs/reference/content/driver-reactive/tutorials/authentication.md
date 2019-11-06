@@ -36,7 +36,7 @@ In MongoDB 3.0, MongoDB changed the default authentication mechanism from [`MONG
 
 To create a credential that will authenticate using the default
 authentication mechanism regardless of server version, create a
-credential using the [`createCredential`]({{<apiref "com/mongodb/MongoCredential.html#createCredential-java.lang.String-java.lang.String-char:A-">}})
+credential using the [`createCredential`]({{<apiref "com/mongodb/MongoCredential.html#createCredential(java.lang.String,java.lang.String,char[])">}})
 static factory method:
 
 ```java
@@ -79,7 +79,7 @@ which uses the `SHA-256` hashing function.
 Requires MongoDB 4.0 and `featureCompatibilityVersion` to be set to 4.0.
 
 To explicitly create a credential of type [`SCRAM-SHA-256`]({{<docsref "core/security-scram/">}}), use the
-[`createScramSha256Credential`]({{<apiref "com/mongodb/MongoCredential.html#createScramSha256Credential-java.lang.String-java.lang.String-char:A-">}})
+[`createScramSha256Credential`]({{<apiref "com/mongodb/MongoCredential.html#createScramSha256Credential(java.lang.String,java.lang.String,char[])">}})
 method:
 
 ```java
@@ -106,7 +106,7 @@ MongoClient mongoClient = MongoClients.create("mongodb://user1:pwd1@host1/?authS
 ### SCRAM-SHA-1
 
 To explicitly create a credential of type [`SCRAM-SHA-1`]({{<docsref "core/security-scram/">}}), use the 
-[`createScramSha1Credential`]({{<apiref "com/mongodb/MongoCredential.html#createScramSha1Credential-java.lang.String-java.lang.String-char:A-">}}) 
+[`createScramSha1Credential`]({{<apiref "com/mongodb/MongoCredential.html#createScramSha1Credential(java.lang.String,java.lang.String,char[])">}}) 
 method:
 
 ```java
@@ -140,7 +140,7 @@ For information on upgrading to `SCRAM`, see Upgrade to [SCRAM]({{<docsref "rele
 {{% /note %}}
 
 
-To explicitly create a credential of type [`MONGODB-CR`]({{<docsref "core/security-mongodb-cr">}}) use the [`createMongCRCredential`]({{<apiref "com/mongodb/MongoCredential.html#createMongoCRCredential-java.lang.String-java.lang.String-char:A-">}})
+To explicitly create a credential of type [`MONGODB-CR`]({{<docsref "core/security-mongodb-cr">}}) use the [`createMongCRCredential`]({{<apiref "com/mongodb/MongoCredential.html#createMongoCRCredential(java.lang.String,java.lang.String,char[])">}})
 static factory method:
 
 ```java
@@ -179,7 +179,7 @@ of the X.509 certificate.
 X.509 authentication requires the use of SSL connections with
 certificate validation and is available in MongoDB 2.6 and later. To
 create a credential of this type use the
-[`createMongoX509Credential`]({{<apiref "com/mongodb/MongoCredential.html#createMongoX509Credential-java.lang.String-">}}) static factory method:
+[`createMongoX509Credential`]({{<apiref "com/mongodb/MongoCredential.html#createMongoX509Credential(java.lang.String)">}}) static factory method:
 
 ```java
 String user;     // The X.509 certificate derived user name, e.g. "CN=user,OU=OrgUnit,O=myOrg,..."
@@ -200,7 +200,7 @@ Or use a connection string that explicitly specifies the `authMechanism=MONGODB-
 MongoClient mongoClient = MongoClients.create("mongodb://subjectName@host1/?authMechanism=MONGODB-X509&ssl=true");
 ```
 
-See the MongoDB server [x.509 tutorial]({{<apiref "tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user">}})
+See the MongoDB server [x.509 tutorial]({{<docsref "tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user">}})
 for more information about determining the subject
 name from the certificate.
 
@@ -208,8 +208,8 @@ name from the certificate.
 
 [MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy
 authentication through Kerberos service. To create a credential of type
-[Kerberos (GSSAPI)]({{<apiref "core/authentication/#kerberos-authentication">}}), use the
-[`createGSSAPICredential`]({{<apiref "com/mongodb/MongoCredential.html#createGSSAPICredential-java.lang.String-">}})
+[Kerberos (GSSAPI)]({{<docsref "core/authentication/#kerberos-authentication">}}), use the
+[`createGSSAPICredential`]({{<apiref "com/mongodb/MongoCredential.html#createGSSAPICredential(java.lang.String)">}})
 static factory method:
 
 ```java
@@ -248,7 +248,7 @@ java.security.krb5.realm=MYREALM.ME
 java.security.krb5.kdc=mykdc.myrealm.me
 ```
 
-Depending on the Kerberos setup, additional property specifications may be required, either via the application code or, in some cases, the [withMechanismProperty()]({{<apiref "com/mongodb/MongoCredential.html#withMechanismProperty-java.lang.String-T-">}}) method of the `MongoCredential` instance:
+Depending on the Kerberos setup, additional property specifications may be required, either via the application code or, in some cases, the [withMechanismProperty()]({{<apiref "com/mongodb/MongoCredential.html#withMechanismProperty(java.lang.String,T)">}}) method of the `MongoCredential` instance:
 
 - **[`SERVICE_NAME`]({{< apiref "com/mongodb/MongoCredential.html#SERVICE_NAME_KEY" >}})**
 
@@ -286,8 +286,8 @@ interoperability with Windows Active Directory and in particular the ability to 
 
 ## LDAP (PLAIN)
 
-[MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type [LDAP]({{<apiref "core/authentication/#ldap-proxy-authority-authentication">}}) use the
-[`createPlainCredential`]({{<apiref "com/mongodb/MongoCredential.html#createPlainCredential-java.lang.String-java.lang.String-char:A-">}}) static factory method:
+[MongoDB Enterprise](http://www.mongodb.com/products/mongodb-enterprise) supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type [LDAP]({{<docsref "core/authentication/#ldap-proxy-authority-authentication">}}) use the
+[`createPlainCredential`]({{<apiref "com/mongodb/MongoCredential.html#createPlainCredential(java.lang.String,java.lang.String,char[])">}}) static factory method:
 
 ```java
 String user;          // The LDAP user name

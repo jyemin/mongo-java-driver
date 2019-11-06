@@ -64,7 +64,7 @@ collection.aggregate(Seq(
 
 ### Use Aggregation Expressions
 
-For [$group accumulator expressions]({{< docsref "reference/operator/aggregation-group/" >}}), the Scala driver provides [`Accumulators`]({{< apiref "com/mongodborg/mongodb/scala/model/Accumulators$.html">}}) helper class. For other [aggregation expressions]({{< docsref "meta/aggregation-quick-reference/#aggregation-expressions" >}}), manually build the expression `Document`.
+For [$group accumulator expressions]({{< docsref "reference/operator/aggregation-group/" >}}), the Scala driver provides [`Accumulators`]({{< scapiref "org/mongodb/scala/model/Accumulators$.html">}}) helper class. For other [aggregation expressions]({{< docsref "meta/aggregation-quick-reference/#aggregation-expressions" >}}), manually build the expression `Document`.
 
 In the following example, the aggregation pipeline uses a [`$project`]({{< docsref "reference/operator/aggregation/project/" >}}) stage to return only the `name` field and the calculated field `firstCategory` whose value is the first element in the `categories` array. The example uses [`Aggregates.project`]({{< relref "builders/aggregation.md#project" >}}) and various
 [`Projections`]({{<scapiref "org/mongodb/scala/model/Projections$.html">}}) methods to build the `$project` stage.

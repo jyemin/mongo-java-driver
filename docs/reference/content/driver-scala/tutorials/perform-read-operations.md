@@ -130,7 +130,7 @@ collection.find(and(gte("stars", 2), lt("stars", 5), equal("categories", "Bakery
           .printResults()
 ```
 
-In the projection document, you can also specify a projection expression using a [projection operator]({{<apiref "reference/operator/projection/">}})
+In the projection document, you can also specify a projection expression using a [projection operator]({{<docsref "reference/operator/projection/">}})
 
 For an example on using the [`Projections.metaTextScore`]({{<scapiref "org/mongodb/scala/model/Projections$.html#metaTextScore(fieldName:String):org.mongodb.scala.bson.conversions.Bson">}}),
 see the [Text Search tutorial]({{<relref "driver-scala/tutorials/text-search.md">}}).

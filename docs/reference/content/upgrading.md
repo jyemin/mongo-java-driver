@@ -15,7 +15,7 @@ wish to adjust any custom retry logic in order to prevent applications from retr
 In the upcoming 4.0 release, all deprecated API elements except those documented as "not currently scheduled for removal" will be removed.
 Currently the only deprecated API elements _not_ scheduled for removal are:
 
-* [`Mongo.getDB`]({{<apiref "com/mongodb/Mongo.html#getDB-java.lang.String-">}})
+* [`Mongo.getDB`]({{<apiref "com/mongodb/Mongo.html#getDB(java.lang.String)">}})
 * [`JsonMode.STRICT`]({{<apiref "org/bson/json/JsonMode.html#STRICT">}})
 
 To prepare for the 4.0 release, please compile with deprecation warnings enabled and replace all usage of deprecated API elements with their
@@ -42,7 +42,7 @@ to exist as an implementation artifact).
 In the upcoming 4.0 release, all deprecated API elements except those documented as "not currently scheduled for removal" will be removed. 
 Currently the only deprecated API elements _not_ scheduled for removal are:
 
-* [`Mongo.getDB`]({{<apiref "com/mongodb/Mongo.html#getDB-java.lang.String-">}})
+* [`Mongo.getDB`]({{<apiref "com/mongodb/Mongo.html#getDB(java.lang.String)">}})
 * [`JsonMode.STRICT`]({{<apiref "org/bson/json/JsonMode.html#STRICT">}}) 
 
 To prepare for the 4.0 release, please compile with deprecation warnings enabled and replace all usage of deprecated API elements with their

@@ -55,7 +55,7 @@ collection.createIndex(Indexes.geo2dsphere("contact.location")).printResults()
 
 ## Query for Locations Near a GeoJSON Point
 
-MongoDB provides various [geospatial query operators]({{<apiref "reference/operator/query-geospatial">}}). To facilitate the creation of geospatial queries filters, the Scala driver provides the [`Filters`]({{< scapiref "org/mongodb/scala/model/Filters$.html">}}) class and the ``org.mongodb.scala.model.geojson`` package.
+MongoDB provides various [geospatial query operators]({{<docsref "reference/operator/query-geospatial">}}). To facilitate the creation of geospatial queries filters, the Scala driver provides the [`Filters`]({{< scapiref "org/mongodb/scala/model/Filters$.html">}}) class and the ``org.mongodb.scala.model.geojson`` package.
 
 The following example returns documents that are at least 1000 meters from and at most 5000 meters from the specified GeoJSON point ``org.mongodb.scala.model.geojson.Point``, sorted from nearest to farthest:
 
