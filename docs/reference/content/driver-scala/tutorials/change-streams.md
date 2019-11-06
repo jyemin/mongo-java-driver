@@ -101,7 +101,7 @@ New in the 3.8 driver and MongoDB 4.0, applications can open a single change str
 in a MongoDB deployment. To create such a change stream use one of the 
 [`MongoClient.watch()`]({{<scapiref "org/mongodb/scala/MongoClient.html#watch[C]()(implicite:org.mongodb.scala.bson.DefaultHelper.DefaultsTo[C,org.mongodb.scala.Document],implicitct:scala.reflect.ClassTag[C]):org.mongodb.scala.ChangeStreamObservable[C]">}}) methods.
 
-In the following example, the change stream prints out all the changes it observes on the deployement to which the `MongoClient` is
+In the following example, the change stream prints out all the changes it observes on the deployment to which the `MongoClient` is
 connected
 
 ```scala

@@ -261,9 +261,7 @@ To insert these documents to the collection, pass the list of documents to the
 [`insertMany()`]({{< apiref "com/mongodb/reactivestreams/client/MongoCollection.html#insertMany(java.util.List)" >}}) method.
 
 ```java
-subscriber = new ObservableSubscriber<Success>();
-collection.insertMany(documents).subscribe(subscriber);
-subscriber.await();
+collection.insertMany(documents).subscribe(new ObservableSubscriber<Success>());
 ```
 
 Here we block on the `Publisher` to finish so that when we call the next operation we know the data has been inserted into the database!
@@ -324,9 +322,7 @@ The following code retrieves all documents in the collection and prints them out
 (101 documents):
 
 ```java
-subscriber = new PrintDocumentSubscriber();
-collection.find().subscribe(subscriber);
-subscriber.await();
+collection.find().subscribe(new PrintDocumentSubscriber());
 ```
 
 ## Specify a Query Filter
