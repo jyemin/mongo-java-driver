@@ -360,7 +360,7 @@ collection.find(and(gt("i", 50), lte("i", 100))).subscribe(new PrintDocumentSubs
 
 ## Update Documents
 
-To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}})  and  [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) methods.
+To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}})  and  [`updateMany`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) methods.
 
 Pass to the methods:
 
@@ -384,7 +384,7 @@ collection.updateOne(eq("i", 10), set("i", 110))
 
 ### Update Multiple Documents
 
-To update all documents matching the filter, use the [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
+To update all documents matching the filter, use the [`updateMany`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
 
 The following example increments the value of ``i`` by ``100`` for all documents where  =``i`` is less than ``100``:
 

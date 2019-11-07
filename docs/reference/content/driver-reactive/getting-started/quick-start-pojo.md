@@ -222,7 +222,7 @@ The following example prints all the Person instances in the collection:
 collection.find().subscribe(new PrintToStringSubscriber<>());
 ```
 
-The example uses will eventually output the following:
+The example will eventually output the following:
 
 ```bash
 Person{id='591dbc2550852fa685b3ad17', name='Ada Byron', age=20, address=Address{street='St James Square', city='London', zip='W1'}}
@@ -259,7 +259,7 @@ Person{id='591dbc2550852fa685b3ad1a', name='Timothy Berners-Lee', age=61,
 
 ### Get All Person Instances That Match a Filter
 
-The following example returns and prints everyone where ``"age" > 30``:
+The following example prints ever document where ``"age" > 30``:
 
 ```java
 collection.find(gt("age", 30)).subscribe(new PrintToStringSubscriber<>());
@@ -267,7 +267,7 @@ collection.find(gt("age", 30)).subscribe(new PrintToStringSubscriber<>());
 
 ## Update Documents
 
-To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}})  and  [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) methods.
+To update documents in a collection, you can use the collection's [`updateOne`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateOne(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) and [`updateMany`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) methods.
 
 Pass to the methods:
 
@@ -290,7 +290,7 @@ collection.updateOne(eq("name", "Ada Byron"), combine(set("age", 23), set("name"
 
 ### Update Multiple Persons
 
-To update all Persons that match a filter, use the [`updateMany`]({{<apiref "com/mongodb/async/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
+To update all Persons that match a filter, use the [`updateMany`]({{<apiref "com/mongodb/reactivestreams/client/MongoCollection.html#updateMany(org.bson.conversions.Bson,org.bson.conversions.Bson)">}}) method.
 
 The following example sets the zip field to `null` for all documents that have a `zip` value:
 
