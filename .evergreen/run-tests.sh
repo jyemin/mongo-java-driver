@@ -10,6 +10,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #       TOPOLOGY                Allows you to modify variables and the MONGODB_URI based on test topology
 #                               Supported values: "server", "replica_set", "sharded_cluster"
 #       COMPRESSOR              Set to enable compression. Values are "snappy" and "zlib" (default is no compression)
+#       STREAM_TYPE             Set the stream type.  Values are "nio2" or "netty".  Defaults to "nio2".
 #       JDK                     Set the version of java to be used.  Java versions can be set from the java toolchain /opt/java
 #                               "jdk5", "jdk6", "jdk7", "jdk8", "jdk9"
 #       SLOW_TESTS_ONLY         Set to true to only run the slow tests
@@ -24,11 +25,8 @@ TOPOLOGY=${TOPOLOGY:-server}
 COMPRESSOR=${COMPRESSOR:-}
 SLOW_TESTS_ONLY=${SLOW_TESTS_ONLY:-false}
 
-# JDK6 needs async.type=netty
-if [ "$JDK" == "jdk6" ]; then
-  export ASYNC_TYPE="-Dorg.mongodb.async.type=netty"
-else
-  export ASYNC_TYPE="-Dorg.mongodb.async.type=nio2"
+if [ "$STREAM_TYPE" == "netty" ]; then
+  export ASYNC_TYPE="-Dorg.mongodb.test.async.type=netty"
 fi
 
 export JAVA_HOME="/opt/java/jdk11"
