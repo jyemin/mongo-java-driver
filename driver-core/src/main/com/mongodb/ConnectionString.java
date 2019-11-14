@@ -414,7 +414,6 @@ public class ConnectionString {
 
         GENERAL_OPTIONS_KEYS.add("replicaset");
         GENERAL_OPTIONS_KEYS.add("readconcernlevel");
-        GENERAL_OPTIONS_KEYS.add("streamtype");
 
         GENERAL_OPTIONS_KEYS.add("serverselectiontimeoutms");
         GENERAL_OPTIONS_KEYS.add("localthresholdms");
@@ -506,9 +505,6 @@ public class ConnectionString {
                 initializeSslEnabled("ssl", value);
             } else if (key.equals("tls")) {
                 initializeSslEnabled("tls", value);
-            } else if (key.equals("streamtype")) {
-                LOGGER.warn("The streamType query parameter is deprecated and support for it will be removed"
-                        + " in the next major release.");
             } else if (key.equals("replicaset")) {
                 requiredReplicaSetName = value;
             } else if (key.equals("readconcernlevel")) {
