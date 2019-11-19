@@ -23,11 +23,10 @@ MONGODB_URI=${MONGODB_URI:-}
 JDK=${JDK:-jdk}
 TOPOLOGY=${TOPOLOGY:-server}
 COMPRESSOR=${COMPRESSOR:-}
+ASYNC_TYPE=${STREAM_TYPE:-nio2}
 SLOW_TESTS_ONLY=${SLOW_TESTS_ONLY:-false}
 
-if [ "$STREAM_TYPE" == "netty" ]; then
-  export ASYNC_TYPE="-Dorg.mongodb.test.async.type=netty"
-fi
+export ASYNC_TYPE="-Dorg.mongodb.test.async.type=${STREAM_TYPE}"
 
 export JAVA_HOME="/opt/java/jdk11"
 
