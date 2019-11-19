@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mongodb.session;
+package com.mongodb.internal.session;
 
 import com.mongodb.ReadConcern;
 import org.bson.BsonDocument;
@@ -22,8 +22,6 @@ import org.bson.BsonTimestamp;
 
 /**
  * The session context.
- *
- * @since 3.6
  */
 public interface SessionContext {
 
@@ -38,7 +36,6 @@ public interface SessionContext {
      * Returns true if the session is implicit, and false if the application started the session explicity.
      *
      * @return true if the session is implicit
-     * @since 3.8
      */
     boolean isImplicitSession();
 
@@ -52,7 +49,7 @@ public interface SessionContext {
     /**
      * Gets whether this context is associated with a causally consistent session.
      *
-     * @return true ift his context is associated with a causally consistent session
+     * @return true if this context is associated with a causally consistent session
      */
     boolean isCausallyConsistent();
 
@@ -60,7 +57,6 @@ public interface SessionContext {
      * Gets the current transaction number.
      *
      * @return the current transaction number
-     * @since 3.8
      */
     long getTransactionNumber();
 
@@ -75,7 +71,6 @@ public interface SessionContext {
      *  Notify the session context that a message has been sent.
      *
      * @return true if this is the first message sent, false otherwise
-     * @since 3.8
      */
     boolean notifyMessageSent();
 
@@ -111,8 +106,6 @@ public interface SessionContext {
      * Gets whether the session has an active transaction
      *
      * @return true if the session has an active transaction
-     * @since 3.8
-     * @mongodb.server.release 4.0
      */
     boolean hasActiveTransaction();
 
@@ -120,7 +113,6 @@ public interface SessionContext {
      * Gets the read concern to apply to operations on this binding.
      *
      * @return the read concern to apply to operations on this binding
-     * @since 3.8
      */
     ReadConcern getReadConcern();
 
@@ -128,14 +120,11 @@ public interface SessionContext {
      * Sets the recovery token in the session.
      *
      * @param recoveryToken the recovery token
-     * @since 3.11
      */
     void setRecoveryToken(BsonDocument recoveryToken);
 
     /**
      * Unpin a mongos from a session.
-     *
-     * @since 3.11
      */
     void unpinServerAddress();
 }
