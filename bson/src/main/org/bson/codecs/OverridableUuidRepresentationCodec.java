@@ -19,15 +19,13 @@ package org.bson.codecs;
 import org.bson.UuidRepresentation;
 
 /**
- * A marker interface for {@code Codec} implementations that can derive a new instance of itself that overrides the default
- * {@code UuidRepresentation}.
- *
+ * A marker interface for {@code Codec} implementations that can derive a new instance that overrides the {@code UuidRepresentation}.
  * @param <T> the value type
  * @since 3.12
  */
 public interface OverridableUuidRepresentationCodec<T> {
     /**
-     * Implementations must return a copy of itself with the default {@code UuidRepresentation} overridden with the given value.
+     * Implementations must return a new instance with the {@code UuidRepresentation} overridden with the given value.
      *
      * @param uuidRepresentation the UuidRepresentation
      * @return a new instance equivalent to this but with the given UuidRepresentation
