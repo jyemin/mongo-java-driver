@@ -18,8 +18,11 @@ package org.bson.codecs
 
 import org.bson.BsonBinaryReader
 import org.bson.BsonBinaryWriter
+import org.bson.BsonDocument
+import org.bson.BsonDocumentWriter
 import org.bson.ByteBufNIO
 import org.bson.UuidRepresentation
+import org.bson.codecs.configuration.CodecConfigurationException
 import org.bson.io.BasicOutputBuffer
 import org.bson.io.ByteBufferBsonInput
 import spock.lang.Shared
@@ -155,5 +158,16 @@ class UuidCodecSpecification extends Specification {
                 UUID.fromString('01020304-0506-0708-090a-0b0c0d0e0f10'), // simulated Python UUID
                 UUID.fromString('04030201-0605-0807-090a-0b0c0d0e0f10') // simulated C# UUID
         ]
+    }
+
+    def 'should throw if representation is unspecified'() {
+        given:
+        def codec = new UuidCodec(UuidRepresentation.UNSPECIFIED)
+
+        when:
+        codec.encode(new BsonDocumentWriter(new BsonDocument()), UUID.randomUUID(), EncoderContext.builder().build())
+
+        then:
+        thrown(CodecConfigurationException)
     }
 }

@@ -22,9 +22,9 @@ import org.bson.BSONException;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonDocument;
-import org.bson.BsonSerializationException;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecConfigurationException;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.types.Binary;
@@ -105,7 +105,7 @@ public abstract class AbstractUuidRepresentationTest {
             try {
                 documentCollection.insertOne(new Document("_id", uuid));
                 fail();
-            } catch (BsonSerializationException e) {
+            } catch (CodecConfigurationException e) {
                 // all good
             }
         } else {
@@ -126,7 +126,7 @@ public abstract class AbstractUuidRepresentationTest {
             try {
                 dbObjectCollection.insertOne(new BasicDBObject("_id", uuid));
                 fail();
-            } catch (BsonSerializationException e) {
+            } catch (CodecConfigurationException e) {
                 // all good
             }
         } else {
@@ -147,7 +147,7 @@ public abstract class AbstractUuidRepresentationTest {
             try {
                 uuidIdPojoCollection.insertOne(new UuidIdPojo(uuid));
                 fail();
-            } catch (BsonSerializationException e) {
+            } catch (CodecConfigurationException e) {
                 // all good
             }
         } else {

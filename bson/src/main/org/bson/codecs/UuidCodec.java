@@ -20,9 +20,9 @@ import org.bson.BSONException;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonReader;
-import org.bson.BsonSerializationException;
 import org.bson.BsonWriter;
 import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecConfigurationException;
 import org.bson.internal.UuidHelper;
 
 import java.util.UUID;
@@ -69,7 +69,7 @@ public class UuidCodec implements Codec<UUID> {
     @Override
     public void encode(final BsonWriter writer, final UUID value, final EncoderContext encoderContext) {
         if (uuidRepresentation == UuidRepresentation.UNSPECIFIED) {
-            throw new BsonSerializationException("The UuidRepresentation has not been specified, so the UUID cannot be encoded.");
+            throw new CodecConfigurationException("The uuidRepresentation has not been specified, so the UUID cannot be encoded.");
         }
         byte[] binaryData = UuidHelper.encodeUuidToBinary(value, uuidRepresentation);
         // changed the default subtype to STANDARD since 3.0
