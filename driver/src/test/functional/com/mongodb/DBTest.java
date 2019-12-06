@@ -39,6 +39,7 @@ import static com.mongodb.ClusterFixture.isAuthenticated;
 import static com.mongodb.ClusterFixture.isDiscoverableReplicaSet;
 import static com.mongodb.ClusterFixture.isSharded;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.ClusterFixture.serverVersionLessThan;
 import static com.mongodb.DBObjectMatchers.hasFields;
 import static com.mongodb.DBObjectMatchers.hasSubdocument;
 import static com.mongodb.Fixture.getDefaultDatabaseName;
@@ -143,6 +144,7 @@ public class DBTest extends DatabaseTestCase {
 
     @Test(expected = MongoCommandException.class)
     public void shouldErrorIfCreatingACollectionThatAlreadyExists() {
+        assumeThat(isSharded(), is(false));
         // given
         database.createCollection(collectionName, new BasicDBObject());
 
@@ -233,6 +235,7 @@ public class DBTest extends DatabaseTestCase {
     @Test
     public void shouldDoEval() {
         assumeThat(isAuthenticated(), is(false));
+        assumeThat(serverVersionLessThan("4.2"), is(true));
         String code = "function(name, incAmount) {\n"
                       + "var doc = db.myCollection.findOne( { name : name } );\n"
                       + "doc = doc || { name : name , num : 0 , total : 0 , avg : 0 , _id: 1 };\n"
@@ -260,6 +263,7 @@ public class DBTest extends DatabaseTestCase {
 
     @Test
     public void shouldInsertDocumentsUsingEval() {
+        assumeThat(serverVersionLessThan("4.2"), is(true));
         assumeThat(isAuthenticated(), is(false));
         // when
         database.eval("db." + collectionName + ".insert({name: 'Bob'})");
@@ -301,7 +305,7 @@ public class DBTest extends DatabaseTestCase {
 
     @Test
     public void shouldNotThrowAnExceptionOnCommandFailure() {
-        CommandResult commandResult = database.command(new BasicDBObject("collStats", "a" + System.currentTimeMillis()));
+        CommandResult commandResult = database.command(new BasicDBObject("nonExistentCommand", 1));
         assertThat(commandResult, hasFields(new String[]{"ok", "errmsg"}));
     }
 

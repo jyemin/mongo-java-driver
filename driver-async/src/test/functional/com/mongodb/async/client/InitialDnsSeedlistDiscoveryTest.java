@@ -150,7 +150,7 @@ public class InitialDnsSeedlistDiscoveryTest {
 
                             }
                         }).build())
-                .sslSettings(sslSettings)
+                .sslSettings(SslSettings.builder().enabled(sslSettings.isEnabled()).invalidHostNameAllowed(true).build())
                 .build();
 
         MongoClient client = MongoClients.create(settings);

@@ -16,7 +16,7 @@
 
 package com.mongodb.operation
 
-import com.mongodb.MongoServerException
+
 import com.mongodb.MongoWriteConcernException
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.WriteConcern
@@ -24,6 +24,7 @@ import com.mongodb.WriteConcernException
 import com.mongodb.client.model.ValidationAction
 import com.mongodb.client.model.ValidationLevel
 import org.bson.BsonDocument
+import org.bson.BsonInt32
 import org.bson.BsonString
 import org.bson.Document
 import org.bson.codecs.BsonDocumentCodec
@@ -102,30 +103,13 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
         where:
         async << [true, false]
     }
-
-    def 'should error when creating a collection that already exists'() {
-        given:
-        assert !collectionNameExists(getCollectionName())
-        def operation = new CreateCollectionOperation(getDatabaseName(), getCollectionName())
-        execute(operation, async)
-
-        when:
-        execute(operation, async)
-
-        then:
-        thrown(MongoServerException)
-
-        where:
-        async << [true, false]
-    }
-
+    
     @IgnoreIf({ !serverVersionAtLeast(3, 0) })
     def 'should pass through storage engine options'() {
         given:
         def operation = new CreateCollectionOperation(getDatabaseName(), getCollectionName())
                 .storageEngineOptions(new BsonDocument('wiredTiger',
-                                                       new BsonDocument('configString', new BsonString('block_compressor=zlib')))
-                                              .append('mmapv1', new BsonDocument()))
+                                                       new BsonDocument('configString', new BsonString('block_compressor=zlib'))))
 
         when:
         execute(operation, async)
@@ -139,6 +123,7 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
         async << [true, false]
     }
 
+    @IgnoreIf( {serverVersionAtLeast(4, 2) })
     def 'should set flags for use power of two sizes'() {
         given:
         assert !collectionNameExists(getCollectionName())
@@ -162,7 +147,6 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
         assert !collectionNameExists(getCollectionName())
         def operation = new CreateCollectionOperation(getDatabaseName(), getCollectionName())
                 .capped(true)
-                .autoIndex(false)
                 .maxDocuments(100)
                 .sizeInBytes(40 * 1024)
 
@@ -173,14 +157,16 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
         collectionNameExists(getCollectionName())
 
         when:
-        def stats = new CommandWriteOperation<Document>(getDatabaseName(),
-                                                        new BsonDocument('collStats', new BsonString(getCollectionName())),
-                                                        new DocumentCodec()).execute(getBinding())
+        def stats = new CommandWriteOperation<BsonDocument>(getDatabaseName(),
+                new BsonDocument('collStats', new BsonString(getCollectionName())),
+                new BsonDocumentCodec()).execute(getBinding())
+
         then:
-        stats.getBoolean('capped')
-        stats.getInteger('max') == 100
+        stats.getBoolean('capped').getValue()
+        stats.getNumber('max').intValue() == 100
         // Starting in 3.0, the size in bytes moved from storageSize to maxSize
-        stats.getInteger('maxSize') == 40 * 1024 || stats.getInteger('storageSize') == 40 * 1024
+        stats.getNumber('maxSize', new BsonInt32(0)).intValue() == 40 * 1024 ||
+                stats.getNumber('storageSize', new BsonInt32(0)).intValue() == 40 * 1024
 
         where:
         async << [true, false]
@@ -205,11 +191,9 @@ class CreateCollectionOperationSpecification extends OperationFunctionalSpecific
         autoIndex | expectedNumberOfIndexes | async
         true      | 1                       | true
         true      | 1                       | false
-        false     | 0                       | true
-        false     | 0                       | false
     }
 
-    @IgnoreIf({ !serverVersionAtLeast(3, 2) })
+    @IgnoreIf({ !serverVersionAtLeast(3, 2) || serverVersionAtLeast(4, 2)})
     def 'should allow indexOptionDefaults'() {
         given:
         assert !collectionNameExists(getCollectionName())

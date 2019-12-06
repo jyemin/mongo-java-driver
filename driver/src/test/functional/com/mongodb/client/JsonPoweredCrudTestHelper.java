@@ -53,6 +53,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -195,12 +196,55 @@ public class JsonPoweredCrudTestHelper {
         if (arguments.containsKey("sort")) {
             iterable.sort(arguments.getDocument("sort"));
         }
-        if (arguments.containsKey("modifiers")) {
-            iterable.modifiers(arguments.getDocument("modifiers"));
+        if (arguments.containsKey("collation")) {
+            iterable.collation(getCollation(arguments.getDocument("collation")));
+        }
+        if (arguments.containsKey("comment")) {
+            iterable.comment(arguments.getString("comment").getValue());
+        }
+        if (arguments.containsKey("hint")) {
+            iterable.hint(arguments.getDocument("hint"));
+        }
+        if (arguments.containsKey("max")) {
+            iterable.max(arguments.getDocument("max"));
+        }
+        if (arguments.containsKey("min")) {
+            iterable.min(arguments.getDocument("min"));
+        }
+        if (arguments.containsKey("maxTimeMS")) {
+            iterable.maxTime(arguments.getNumber("maxTimeMS").intValue(), TimeUnit.MILLISECONDS);
+        }
+        if (arguments.containsKey("showRecordId")) {
+            iterable.showRecordId(arguments.getBoolean("showRecordId").getValue());
+        }
+        if (arguments.containsKey("returnKey")) {
+            iterable.returnKey(arguments.getBoolean("returnKey").getValue());
         }
         if (arguments.containsKey("collation")) {
             iterable.collation(getCollation(arguments.getDocument("collation")));
         }
+        if (arguments.containsKey("comment")) {
+            iterable.comment(arguments.getString("comment").getValue());
+        }
+        if (arguments.containsKey("hint")) {
+            iterable.hint(arguments.getDocument("hint"));
+        }
+        if (arguments.containsKey("max")) {
+            iterable.max(arguments.getDocument("max"));
+        }
+        if (arguments.containsKey("min")) {
+            iterable.min(arguments.getDocument("min"));
+        }
+        if (arguments.containsKey("maxTimeMS")) {
+            iterable.maxTime(arguments.getNumber("maxTimeMS").intValue(), TimeUnit.MILLISECONDS);
+        }
+        if (arguments.containsKey("showRecordId")) {
+            iterable.showRecordId(arguments.getBoolean("showRecordId").getValue());
+        }
+        if (arguments.containsKey("returnKey")) {
+            iterable.returnKey(arguments.getBoolean("returnKey").getValue());
+        }
+
         return toResult(iterable);
     }
 

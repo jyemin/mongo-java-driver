@@ -131,7 +131,7 @@ public class UpdateUserOperation implements AsyncWriteOperation<Void>, WriteOper
     }
 
     private BsonDocument getCommand(final ConnectionDescription description) {
-        BsonDocument commandDocument = asCommandDocument(credential, readOnly, "updateUser");
+        BsonDocument commandDocument = asCommandDocument(credential, description, readOnly, "updateUser");
         appendWriteConcernToCommand(writeConcern, commandDocument, description);
         return commandDocument;
     }

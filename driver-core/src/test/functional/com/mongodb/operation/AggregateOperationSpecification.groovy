@@ -209,6 +209,7 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         then:
         def next = next(cursor, async).collect { doc ->
             doc.remove('_id')
+            doc.remove('clusterTime')
             doc
         }
         next == expected
@@ -329,7 +330,7 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         def result = execute(operation, async)
 
         then:
-        result.containsKey('stages')
+        result.containsKey('stages') || result.containsKey('queryPlanner')
 
         where:
         async << [true, false]
@@ -352,7 +353,7 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         [async, options] << [[true, false], [defaultCollation, null, Collation.builder().build()]].combinations()
     }
 
-    @IgnoreIf({ !serverVersionAtLeast(3, 6) })
+    @IgnoreIf({ !serverVersionAtLeast(3, 6) || serverVersionAtLeast(4, 1) })
     def 'should apply $hint'() {
         given:
         def hint = new BsonDocument('a', new BsonInt32(1))
@@ -418,30 +419,24 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         async << [true, false]
     }
 
-    @IgnoreIf({ isSharded() || !serverVersionAtLeast(3, 2) })
+    @IgnoreIf({ isStandalone() || !serverVersionAtLeast(3, 2) })
     def 'should be able to respect maxAwaitTime with pipeline'() {
         given:
-        enableMaxTimeFailPoint()
-        AggregateOperation operation = new AggregateOperation<Document>(getNamespace(), [], new DocumentCodec())
+        AggregateOperation operation = new AggregateOperation<Document>(getNamespace(), [
+                new BsonDocument('$changeStream', new BsonDocument())
+        ], new DocumentCodec())
                 .batchSize(2)
                 .maxAwaitTime(10, MILLISECONDS)
 
         when:
         def cursor = execute(operation, async)
-        next(cursor, async)
+        tryNext(cursor, async)
 
         then:
-        notThrown(MongoExecutionTimeoutException)
-
-        when:
-        next(cursor, async)
-
-        then:
-        thrown(MongoExecutionTimeoutException)
+        noExceptionThrown()
 
         cleanup:
-        cursor.close()
-        disableMaxTimeFailPoint()
+        cursor?.close()
 
         where:
         async << [true, false]

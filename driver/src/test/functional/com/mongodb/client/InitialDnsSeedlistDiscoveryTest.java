@@ -70,10 +70,8 @@ public class InitialDnsSeedlistDiscoveryTest {
 
     @Test
     public void shouldResolve() {
-        MongoClientOptions.Builder builder = MongoClientOptions.builder();
-        if (System.getProperty("java.version").startsWith("1.6.")) {
-            builder.sslInvalidHostNameAllowed(true);
-        }
+        MongoClientOptions.Builder builder = MongoClientOptions.builder()
+                .sslInvalidHostNameAllowed(true);
 
         if (isError) {
             try {

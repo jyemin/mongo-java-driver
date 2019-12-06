@@ -297,15 +297,6 @@ functions:
           ${PREPARE_SHELL}
           echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > ${PROJECT_DIRECTORY}/test-results.json
 
-  "install dependencies":
-    type: test
-    params:
-      working_dir: "src"
-      script: |
-        ${PREPARE_SHELL}
-        file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
-        [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
-
 # Anchors
 
 hosts: &hosts
@@ -318,7 +309,6 @@ pre:
   - func: "fix absolute paths"
   - func: "init test-results"
   - func: "make files executable"
-  - func: "install dependencies"
 
 post:
   # Removed, causing timeouts
@@ -338,24 +328,15 @@ tasks:
         - func: "upload build"
 
     - name: "test"
-      depends_on:
-        - variant: "static-checks"
-          name: "static-analysis"
       commands:
         - func: "bootstrap mongo-orchestration"
         - func: "run tests"
 
     - name: "plain-auth-test"
-      depends_on:
-        - variant: "static-checks"
-          name: "static-analysis"
       commands:
         - func: "run plain auth test"
 
     - name: "gssapi-auth-test"
-      depends_on:
-        - variant: "static-checks"
-          name: "static-analysis"
       commands:
         - func: "run gssapi auth test"
 
@@ -372,6 +353,14 @@ axes:
   - id: version
     display_name: MongoDB Version
     values:
+      - id: "4.2"
+        display_name: "4.2"
+        variables:
+          VERSION: "4.2"
+      - id: "4.0"
+        display_name: "4.0"
+        variables:
+          VERSION: "4.0"
       - id: "3.6"
         display_name: "3.6"
         variables:
@@ -473,7 +462,7 @@ buildvariants:
     - name: "static-analysis"
 
 - matrix_name: "tests-zlib-compression"
-  matrix_spec: { compressor : "zlib", auth: "noauth", ssl: "nossl", jdk: "jdk6", version: ["3.6"], topology: "standalone", os:
+  matrix_spec: { compressor : "zlib", auth: "noauth", ssl: "nossl", jdk: "jdk6", version: ["3.6", "4.0", "4.2"], topology: "standalone", os:
   "linux" }
   display_name: "${version} ${compressor} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
@@ -481,33 +470,40 @@ buildvariants:
      - name: "test"
 
 - matrix_name: "tests-snappy-compression"
-  matrix_spec: { compressor : "snappy", auth: "noauth", ssl: "nossl", jdk: "jdk7", version: ["3.4", "3.6"], topology: "standalone", os: "linux" }
+  matrix_spec: { compressor : "snappy", auth: "noauth", ssl: "nossl", jdk: "jdk7", version: ["3.4", "3.6", "4.0", "4.2"], topology: "standalone", os: "linux" }
   display_name: "${version} ${compressor} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
   tasks:
      - name: "test"
 
 - matrix_name: "tests-jdk6-unsecure"
-  matrix_spec: { auth: "noauth", ssl: "nossl", jdk: "jdk6", version: "*", topology: "*", os: "*" }
+  matrix_spec: { auth: "noauth", ssl: "nossl", jdk: "jdk6", version: "*", topology: "*", os: "linux" }
   display_name: "${version} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
   tasks:
-     - name: "test"
+    - name: "test"
 
 - matrix_name: "tests-jdk6-secure"
-  matrix_spec: { auth: "auth", ssl: "ssl", jdk: "jdk6", version: "*", topology: "*", os: "*" }
+  matrix_spec:  { auth: "auth", ssl: "ssl", jdk: "jdk6", version: "*", topology: "*", os: "linux" }
+  exclude_spec: { auth: "auth", ssl: "ssl", jdk: "jdk6", version: ["4.0", "4.2"], topology: "*", os: "linux" }
   display_name: "${version} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
   tasks:
-     - name: "test"
+    - name: "test"
 
-- matrix_name: "tests-jdk-other"
-  matrix_spec: { auth: "auth", ssl: "ssl", jdk: "*", version: "3.6", topology: "standalone", os: "linux" }
-  exclude_spec: { jdk: "jdk6", auth: "*", ssl: "*", version: "*", topology: "*", os: "*" }
+- matrix_name: "tests-jdk-newer-secure"
+  matrix_spec: { auth: "auth", ssl: "ssl", jdk: ["jdk8"], version: ["4.0", "4.2"], topology: "*", os: "linux" }
   display_name: "${version} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
   tasks:
-     - name: "test"
+    - name: "test"
+
+- matrix_name: "tests-jdk7-secure"
+  matrix_spec: { auth: "auth", ssl: "ssl", jdk: "jdk7", version: "3.6", topology: "standalone", os: "linux" }
+  display_name: "${version} ${topology} ${auth} ${ssl} ${jdk} ${os} "
+  tags: ["tests-variant"]
+  tasks:
+    - name: "test"
 
 - name: plain-auth-test
   display_name: "PLAIN (LDAP) Auth test"

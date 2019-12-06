@@ -16,7 +16,7 @@
 
 package com.mongodb.operation
 
-import com.mongodb.MongoChangeStreamException
+import com.mongodb.MongoException
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.ReadConcern
 import com.mongodb.WriteConcern
@@ -280,14 +280,15 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
 
         when:
         def cursor = execute(operation, async)
-        insertDocuments(helper, [1, 2])
+        insertDocuments(helper, [11, 22])
         nextAndClean(cursor, async)
 
         then:
-        thrown(MongoChangeStreamException)
+        thrown(MongoException)
 
         cleanup:
         cursor?.close()
+        waitForLastRelease(async ? getAsyncCluster() : getCluster())
 
         where:
         async << [true, false]
@@ -346,9 +347,13 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
         when:
         helper.killCursor(helper.getNamespace(), cursor.getWrapped().getServerCursor())
         expected = insertDocuments(helper, [3, 4])
+        def results = nextAndClean(cursor, async)
+        if (results.size() < expected.size()) {
+            results.addAll(nextAndClean(cursor, async))
+        }
 
         then:
-        nextAndClean(cursor, async) == expected
+        results == expected
 
         then:
         tryNextAndClean(cursor, async) == null
@@ -357,8 +362,13 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
         expected = insertDocuments(helper, [5, 6])
         helper.killCursor(helper.getNamespace(), cursor.getWrapped().getServerCursor())
 
+        results = nextAndClean(cursor, async)
+        if (results.size() < expected.size()) {
+            results.addAll(nextAndClean(cursor, async))
+        }
+
         then:
-        nextAndClean(cursor, async) == expected
+        results == expected
 
         cleanup:
         cursor?.close()
@@ -368,12 +378,13 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
         async << [true, false]
     }
 
-    def 'should work with a resumeToken'() {
+    def 'should work with a resumeAfter resumeToken'() {
         given:
         def helper = getHelper()
 
         def pipeline = [BsonDocument.parse('{$match: {operationType: "insert"}}')]
         def operation = new ChangeStreamOperation<BsonDocument>(helper.getNamespace(), FullDocument.DEFAULT, pipeline, CODEC)
+
         def cursor = execute(operation, async)
 
         when:
@@ -439,18 +450,18 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
     }
 
     def tryNextAndClean(cursor, boolean async) {
-        removeId(tryNext(cursor, async))
+        removeExtra(tryNext(cursor, async))
     }
 
     def nextAndClean(cursor, boolean async) {
-        removeId(next(cursor, async))
+        removeExtra(next(cursor, async))
     }
 
-    def removeId(List<BsonDocument> next) {
+    def removeExtra(List<BsonDocument> next) {
         next?.collect { doc ->
             doc.remove('_id')
+            doc.remove('clusterTime')
             doc
         }
     }
-
 }

@@ -439,6 +439,22 @@ public final class ClusterFixture {
         }
     }
 
+    public static void configureFailPoint(final BsonDocument failPointDocument) {
+        assumeThat(isSharded(), is(false));
+        boolean failsPointsSupported = true;
+        if (!isSharded()) {
+            try {
+                new CommandWriteOperation<BsonDocument>("admin", failPointDocument, new BsonDocumentCodec())
+                        .execute(getBinding());
+            } catch (MongoCommandException e) {
+                if (e.getErrorCode() == COMMAND_NOT_FOUND_ERROR_CODE) {
+                    failsPointsSupported = false;
+                }
+            }
+            assumeTrue("configureFailPoint is not enabled", failsPointsSupported);
+        }
+    }
+
     public static <T> T executeSync(final WriteOperation<T> op) throws Throwable {
         return executeSync(op, getBinding());
     }

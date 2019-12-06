@@ -35,6 +35,7 @@ import org.bson.BsonInt32
 import org.bson.BsonString
 import org.bson.Document
 import org.bson.codecs.BsonDocumentCodec
+import org.bson.codecs.BsonValueCodecProvider
 import org.bson.codecs.DocumentCodec
 import spock.lang.IgnoreIf
 
@@ -45,12 +46,15 @@ import static com.mongodb.ClusterFixture.getBinding
 import static com.mongodb.ClusterFixture.isDiscoverableReplicaSet
 import static com.mongodb.ClusterFixture.isSharded
 import static com.mongodb.ClusterFixture.serverVersionAtLeast
+import static com.mongodb.WriteConcern.ACKNOWLEDGED
 import static com.mongodb.client.model.Filters.gte
 import static com.mongodb.operation.QueryOperationHelper.getKeyPattern
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders
 
 class AggregateToCollectionOperationSpecification extends OperationFunctionalSpecification {
+    def registry = fromProviders([new BsonValueCodecProvider()])
 
     def aggregateCollectionNamespace = new MongoNamespace(getDatabaseName(), 'aggregateCollectionName')
 
@@ -292,13 +296,14 @@ class AggregateToCollectionOperationSpecification extends OperationFunctionalSpe
         async << [true, false]
     }
 
-    @IgnoreIf({ !serverVersionAtLeast(3, 6) })
+    @IgnoreIf({ !serverVersionAtLeast(3, 6) || (serverVersionAtLeast(4, 1) && isSharded()) })
     def 'should apply $hint'() {
         given:
         def hint = new BsonDocument('a', new BsonInt32(1))
         collectionHelper.createIndex(hint)
 
-        def operation = new AggregateToCollectionOperation(getNamespace(), [Aggregates.out('outputCollection')])
+        def operation = new AggregateToCollectionOperation(getNamespace(),
+                [Aggregates.out('outputCollection').toBsonDocument(BsonDocument, registry)], ACKNOWLEDGED)
                 .hint(hint)
 
         when:

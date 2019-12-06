@@ -17,6 +17,7 @@
 package com.mongodb;
 
 
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +31,7 @@ import static com.mongodb.ClusterFixture.disableMaxTimeFailPoint;
 import static com.mongodb.ClusterFixture.enableMaxTimeFailPoint;
 import static com.mongodb.ClusterFixture.isSharded;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.ClusterFixture.serverVersionLessThan;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -308,6 +310,7 @@ public class DBCursorTest extends DatabaseTestCase {
 
     @Test
     public void testMaxScan() {
+        assumeThat(serverVersionLessThan("4.2"), CoreMatchers.is(true));
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
                      .addSpecial("$maxScan", 4), 4);
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary()).maxScan(4), 4);
@@ -315,6 +318,7 @@ public class DBCursorTest extends DatabaseTestCase {
 
     @Test
     public void testMax() {
+        assumeThat(serverVersionLessThan("4.2"), CoreMatchers.is(true));
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
                      .addSpecial("$max", new BasicDBObject("x", 4)), 4);
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
@@ -323,6 +327,7 @@ public class DBCursorTest extends DatabaseTestCase {
 
     @Test
     public void testMin() {
+        assumeThat(serverVersionLessThan("4.2"), CoreMatchers.is(true));
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
                      .addSpecial("$min", new BasicDBObject("x", 4)), 6);
         countResults(new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
@@ -380,6 +385,7 @@ public class DBCursorTest extends DatabaseTestCase {
 
     @Test
     public void testSnapshot() {
+        assumeThat(serverVersionLessThan("4.2"), CoreMatchers.is(true));
         DBCursor cursor = new DBCursor(collection, new BasicDBObject(), new BasicDBObject(), ReadPreference.primary())
                           .addSpecial("$snapshot", true);
         try {

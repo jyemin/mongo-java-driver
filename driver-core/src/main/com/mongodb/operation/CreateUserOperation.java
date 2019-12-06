@@ -131,7 +131,7 @@ public class CreateUserOperation implements AsyncWriteOperation<Void>, WriteOper
     }
 
     private BsonDocument getCommand(final ConnectionDescription description) {
-        BsonDocument commandDocument = asCommandDocument(credential, readOnly, "createUser");
+        BsonDocument commandDocument = asCommandDocument(credential, description, readOnly, "createUser");
         appendWriteConcernToCommand(writeConcern, commandDocument, description);
         return commandDocument;
     }

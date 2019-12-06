@@ -247,10 +247,14 @@ public class CommandMonitoringTest {
             response.getArray("cursorsUnknown").set(0, new BsonInt64(42));
         } else if (isWriteCommand(actual.getCommandName())) {
             if (response.containsKey("writeErrors")) {
-                for (Iterator<BsonValue> iter = response.getArray("writeErrors").iterator(); iter.hasNext();) {
-                    BsonDocument cur = iter.next().asDocument();
-                    cur.put("code", new BsonInt32(42));
-                    cur.put("errmsg", new BsonString(""));
+                for (BsonValue bsonValue : response.getArray("writeErrors")) {
+                    BsonDocument cur = bsonValue.asDocument();
+                    BsonDocument newWriteErrorDocument =
+                            new BsonDocument().append("index", cur.get("index"))
+                                    .append("code", new BsonInt32(42))
+                                    .append("errmsg", new BsonString(""));
+                    cur.clear();
+                    cur.putAll(newWriteErrorDocument);
                 }
             }
             if (actual.getCommandName().equals("update")) {
