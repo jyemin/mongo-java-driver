@@ -21,8 +21,9 @@ process is as seamless as possible.  Breaking changes are as follows:
     to remove usage from your application. Most of these API elements are unlikely to be used by normal applications, but one bears
     mentioning explicitly: the entire callback-baked asynchronous driver has been removed. Applications relying on this driver must either
     port their application to the Reactive Streams driver, or else must remain on a 3.x driver release.
-  * The insert helper methods now return an insert result object instead of void. While this does not break source compatibility, it does
-    break binary compatibility, so any class that calls one of the insert helper methods must be recompiled with the 4.0 driver.
+    * Note that while the `com.mongodb.MongoClient#getDB` method is deprecated in 3.x drivers, it has not been removed in this release. 
+      It will remain at least until the next major release cycle.
+  * The insert helper methods now return an insert result object instead of void.
   * The various `toJson` methods on `BsonDocument`, `Document`, and `DBObject` now return "relaxed" JSON instead of "strict" JSON.  This
     creates more readable JSON documents at the cost of a loss of some BSON type information (e.g., differentiating between 32 and 64 bit
     integers).
@@ -38,6 +39,8 @@ process is as seamless as possible.  Breaking changes are as follows:
     must switch to either `mongodb-driver-sync` or `mongodb-driver-legacy`, depending on which API is being used. Care should be taken to
     ensure that neither of the uber-jars are included via a transitive dependency, as that could introduce versioning conflicts.
   * Java 8 is now the minimum supported version. Applications using older versions of Java must remain on a 3.x driver release.
+  * Several binary compatibility breaks were introduced (in particular, the change to the signature of the insert helper methods), so any
+    classes that link to the driver must be recompiled in order to work with this release.
         
 ## Upgrading from the 1.12 Reactive Streams driver
 
