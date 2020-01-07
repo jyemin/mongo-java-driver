@@ -17,7 +17,6 @@
 package org.bson.internal;
 
 import org.bson.UuidRepresentation;
-import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
 public final class CodecRegistryHelper {
@@ -26,7 +25,7 @@ public final class CodecRegistryHelper {
         if (uuidRepresentation == UuidRepresentation.UNSPECIFIED) {
             return codecRegistry;
         } else {
-            return new OverridableUuidRepresentationCodecRegistry((CodecProvider) codecRegistry, uuidRepresentation);
+            return new OverridableUuidRepresentationCodecRegistry(codecRegistry, uuidRepresentation);
         }
     }
 
