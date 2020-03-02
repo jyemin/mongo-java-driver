@@ -105,4 +105,7 @@ public final class MongoCryptHelper {
                         ? connectionString : "mongodb://localhost:27020"))
                 .build();
     }
+
+    private MongoCryptHelper() {
+    }
 }
