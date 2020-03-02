@@ -5,11 +5,11 @@ import com.mongodb.MongoCommandException
 import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
 import com.mongodb.async.FutureResultCallback
+import com.mongodb.connection.AsynchronousSocketChannelStreamFactory
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SocketStreamFactory
-import com.mongodb.connection.netty.NettyStreamFactory
 import org.bson.BsonDocument
 import org.bson.BsonString
 import spock.lang.IgnoreIf
@@ -64,7 +64,7 @@ class AwsAuthenticationSpecification extends Specification {
     private static InternalStreamConnection createConnection(final boolean async, final MongoCredential credential) {
         new InternalStreamConnection(
                 new ServerId(new ClusterId(), new ServerAddress(getConnectionString().getHosts().get(0))),
-                async ? new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings())
+                async ? new AsynchronousSocketChannelStreamFactory(SocketSettings.builder().build(), getSslSettings())
                         : new SocketStreamFactory(SocketSettings.builder().build(), getSslSettings()), [], null,
                 new InternalStreamConnectionInitializer(createAuthenticator(credential), null, []))
     }
@@ -75,9 +75,9 @@ class AwsAuthenticationSpecification extends Specification {
 
     private static void openConnection(final InternalConnection connection, final boolean async) {
         if (async) {
-            FutureResultCallback<Void> futureResultCallback = new FutureResultCallback<Void>();
+            FutureResultCallback<Void> futureResultCallback = new FutureResultCallback<Void>()
             connection.openAsync(futureResultCallback)
-            futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS);
+            futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS)
         } else {
             connection.open()
         }
