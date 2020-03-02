@@ -79,6 +79,7 @@ public final class MongoCryptHelper {
             spawnArgs.add("60");
         }
         if (!spawnArgs.contains("--logpath")) {
+            spawnArgs.add("--logappend");
             spawnArgs.add("--logpath");
             spawnArgs.add(System.getProperty("os.name").startsWith("Windows") ? "NUL" : "/dev/null");
         }
