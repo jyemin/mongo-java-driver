@@ -98,7 +98,6 @@ class AsyncQueryBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
         this.count.addAndGet(firstBatch.getResults().size());
         if (result != null) {
             this.operationTime = result.getTimestamp(OPERATION_TIME, null);
-            this.postBatchResumeToken = getPostBatchResumeTokenFromResponse(result);
         }
 
         firstBatchEmpty = firstBatch.getResults().isEmpty();

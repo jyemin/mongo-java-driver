@@ -23,6 +23,8 @@ import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
+import com.mongodb.internal.connection.AsyncConnection;
+import com.mongodb.internal.operation.OperationHelper.AsyncCallableWithConnectionAndSource;
 import com.mongodb.internal.operation.OperationHelper.AsyncCallableWithSource;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -204,12 +206,21 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
                 if (t == null) {
                     endOperationInProgress();
                     callback.onResult(result, null);
-                } else if (isRetryableError(t)) {
-                    wrapped.close();
-                    retryOperation(asyncBlock, callback, tryNext);
                 } else {
-                    endOperationInProgress();
-                    callback.onResult(null, t);
+                    withAsyncReadConnection(binding, new AsyncCallableWithConnectionAndSource() {
+                        @Override
+                        public void call(final AsyncConnectionSource source, final AsyncConnection connection, final Throwable t1) {
+                            if (isRetryableError(t, connection.getDescription())) {
+                                wrapped.close();
+                                retryOperation(asyncBlock, callback, tryNext);
+                            } else {
+                                endOperationInProgress();
+                                callback.onResult(null, t);
+                            }
+                            source.release();
+                            connection.release();
+                        }
+                    });
                 }
             }
         });

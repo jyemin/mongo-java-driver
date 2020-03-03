@@ -23,6 +23,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.operation.OperationHelper.CallableWithSource;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -164,22 +165,28 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         while (true) {
             try {
                 return function.apply(wrapped);
-            } catch (Throwable t) {
-                if (!isRetryableError(t)) {
-                    throw MongoException.fromThrowableNonNull(t);
-                }
+            } catch (final Throwable t) {
+                withReadConnectionSource(binding, new CallableWithSource<Void>() {
+                    @Override
+                    public Void call(final ConnectionSource connectionSource) {
+                        Connection connection = connectionSource.getConnection();
+                        try {
+                            if (isRetryableError(t, connection.getDescription())) {
+                                wrapped.close();
+                                changeStreamOperation.setChangeStreamOptionsForResume(resumeToken,
+                                        connectionSource.getServerDescription().getMaxWireVersion());
+                                wrapped = ((ChangeStreamBatchCursor<T>) changeStreamOperation.execute(binding)).getWrapped();
+                                binding.release(); // release the new change stream batch cursor's reference to the binding
+                            } else {
+                                throw MongoException.fromThrowableNonNull(t);
+                            }
+                            return null;
+                        } finally {
+                            connection.release();
+                        }
+                    }
+                });
             }
-            wrapped.close();
-
-            withReadConnectionSource(binding, new CallableWithSource<Void>() {
-                @Override
-                public Void call(final ConnectionSource source) {
-                    changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, source.getServerDescription().getMaxWireVersion());
-                    return null;
-                }
-            });
-            wrapped = ((ChangeStreamBatchCursor<T>) changeStreamOperation.execute(binding)).getWrapped();
-            binding.release(); // release the new change stream batch cursor's reference to the binding
         }
     }
 }

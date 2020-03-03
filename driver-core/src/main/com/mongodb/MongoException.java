@@ -17,6 +17,8 @@
 package com.mongodb;
 
 import com.mongodb.lang.Nullable;
+import org.bson.BsonDocument;
+import org.bson.BsonValue;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -117,6 +119,21 @@ public class MongoException extends RuntimeException {
         if (t instanceof MongoException) {
             for (final String errorLabel : ((MongoException) t).getErrorLabels()) {
                 addLabel(errorLabel);
+            }
+        }
+    }
+
+    /**
+     * @param code     the error code
+     * @param msg      the message
+     * @param response the response
+     */
+    public MongoException(final int code, final String msg, final BsonDocument response) {
+        super(msg);
+        this.code = code;
+        if (response.containsKey("errorLabels")) {
+            for (final BsonValue errorLabel : response.getArray("errorLabels").getValues()) {
+                addLabel(errorLabel.asString().getValue());
             }
         }
     }

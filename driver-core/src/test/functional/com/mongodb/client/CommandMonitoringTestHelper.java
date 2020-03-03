@@ -253,9 +253,40 @@ public final class CommandMonitoringTestHelper {
                 command.remove(key);
             } else if (command.isDocument(key) && expectedCommand.isDocument(key)) {
                 massageActualCommand(command.getDocument(key), expectedCommand.getDocument(key));
+            } else if (command.containsKey("pipeline") && expectedCommand.containsKey("pipeline")) {
+                massagePipeline(command, expectedCommand);
             }
         }
 
+    }
+
+    // SPEC-1350 introduced a change that made the fullDocument field optional. In some change stream tests, the
+    // expected $changeStream document in a pipeline is an empty document whereas the Java driver adds
+    // FullDocument.DEFAULT by default to the $changeStream document. This method will remove the fullDocument
+    // field from the $changeStream document in the pipeline.
+    private static void massagePipeline(final BsonDocument command, final BsonDocument expectedCommand) {
+        if (expectedCommand.containsKey("pipeline") && command.containsKey("pipeline")) {
+            BsonArray pipeline = expectedCommand.getArray("pipeline");
+            for (BsonValue expectedPipelineDocument : pipeline) {
+                if (expectedPipelineDocument.asDocument().containsKey("$changeStream")) {
+                    BsonDocument changeStream = expectedPipelineDocument.asDocument().getDocument("$changeStream");
+                    if (!changeStream.containsKey("fullDocument")) {
+                        clearChangeStreamDocument(command);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void clearChangeStreamDocument(final BsonDocument command) {
+        BsonArray pipeline = command.getArray("pipeline");
+        for (BsonValue pipelineDocument : pipeline) {
+            if (pipelineDocument.asDocument().containsKey("$changeStream")) {
+                pipelineDocument.asDocument().getDocument("$changeStream").remove("fullDocument");
+                pipelineDocument.asDocument().getDocument("$changeStream").remove("startAtOperationTime");
+                break;
+            }
+        }
     }
 
     private static CommandStartedEvent massageExpectedCommandStartedEvent(final CommandStartedEvent event,
