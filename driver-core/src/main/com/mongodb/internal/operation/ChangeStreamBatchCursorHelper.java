@@ -22,27 +22,26 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.MongoSocketException;
-import com.mongodb.connection.ConnectionDescription;
 
 import java.util.Collections;
 import java.util.List;
 
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionFourDotFour;
+import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_FOUR_WIRE_VERSION;
 import static java.util.Arrays.asList;
 
 final class ChangeStreamBatchCursorHelper {
     private static final List<Integer> RETRYABLE_SERVER_ERROR_CODES =
-            asList(6, 7, 63, 89, 91, 133, 150, 189, 216, 234, 262, 9001, 10107, 11600, 11602, 13388, 13435, 13436);
+            asList(6, 7, 63, 89, 91, 133, 150, 189, 234, 262, 9001, 10107, 11600, 11602, 13388, 13435, 13436);
     private static final List<String> NONRESUMABLE_CHANGE_STREAM_ERROR_LABELS = asList("NonResumableChangeStreamError");
     private static final String RESUMABLE_CHANGE_STREAM_ERROR_LABEL = "ResumableChangeStreamError";
 
-    static boolean isRetryableError(final Throwable t, final ConnectionDescription description) {
+    static boolean isRetryableError(final Throwable t, final int maxWireVersion) {
         if (!(t instanceof MongoException) || t instanceof MongoChangeStreamException || t instanceof MongoInterruptedException) {
             return false;
         } else if (t instanceof MongoNotPrimaryException || t instanceof MongoCursorNotFoundException
                 || t instanceof MongoSocketException) {
             return true;
-        } else if (serverIsAtLeastVersionFourDotFour(description)) {
+        } else if (maxWireVersion >= FOUR_DOT_FOUR_WIRE_VERSION) {
             return ((MongoException) t).getErrorLabels().contains(RESUMABLE_CHANGE_STREAM_ERROR_LABEL);
         } else {
             return RETRYABLE_SERVER_ERROR_CODES.contains(((MongoException) t).getCode())

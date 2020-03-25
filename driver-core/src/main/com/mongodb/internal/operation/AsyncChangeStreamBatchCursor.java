@@ -23,8 +23,6 @@ import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
-import com.mongodb.internal.connection.AsyncConnection;
-import com.mongodb.internal.operation.OperationHelper.AsyncCallableWithConnectionAndSource;
 import com.mongodb.internal.operation.OperationHelper.AsyncCallableWithSource;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -42,6 +40,7 @@ import static java.lang.String.format;
 final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
     private final AsyncReadBinding binding;
     private final ChangeStreamOperation<T> changeStreamOperation;
+    private final int maxWireVersion;
 
     private volatile BsonDocument resumeToken;
     private volatile AsyncAggregateResponseBatchCursor<RawBsonDocument> wrapped;
@@ -55,12 +54,14 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
     AsyncChangeStreamBatchCursor(final ChangeStreamOperation<T> changeStreamOperation,
                                  final AsyncAggregateResponseBatchCursor<RawBsonDocument> wrapped,
                                  final AsyncReadBinding binding,
-                                 final BsonDocument resumeToken) {
+                                 final BsonDocument resumeToken,
+                                 final int maxWireVersion) {
         this.changeStreamOperation = changeStreamOperation;
         this.wrapped = wrapped;
         this.binding = binding;
         binding.retain();
         this.resumeToken = resumeToken;
+        this.maxWireVersion = maxWireVersion;
     }
 
     AsyncAggregateResponseBatchCursor<RawBsonDocument> getWrapped() {
@@ -206,21 +207,12 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
                 if (t == null) {
                     endOperationInProgress();
                     callback.onResult(result, null);
+                } else if (isRetryableError(t, maxWireVersion)) {
+                    wrapped.close();
+                    retryOperation(asyncBlock, callback, tryNext);
                 } else {
-                    withAsyncReadConnection(binding, new AsyncCallableWithConnectionAndSource() {
-                        @Override
-                        public void call(final AsyncConnectionSource source, final AsyncConnection connection, final Throwable t1) {
-                            if (isRetryableError(t, connection.getDescription())) {
-                                wrapped.close();
-                                retryOperation(asyncBlock, callback, tryNext);
-                            } else {
-                                endOperationInProgress();
-                                callback.onResult(null, t);
-                            }
-                            source.release();
-                            connection.release();
-                        }
-                    });
+                    endOperationInProgress();
+                    callback.onResult(null, t);
                 }
             }
         });
