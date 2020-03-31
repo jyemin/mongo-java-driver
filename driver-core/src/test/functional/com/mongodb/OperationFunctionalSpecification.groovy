@@ -35,12 +35,14 @@ import com.mongodb.internal.binding.AsyncReadBinding
 import com.mongodb.internal.binding.AsyncReadWriteBinding
 import com.mongodb.internal.binding.AsyncSessionBinding
 import com.mongodb.internal.binding.AsyncSingleConnectionBinding
+import com.mongodb.internal.binding.AsyncSingleConnectionReadBinding
 import com.mongodb.internal.binding.AsyncWriteBinding
 import com.mongodb.internal.binding.ConnectionSource
 import com.mongodb.internal.binding.ReadBinding
 import com.mongodb.internal.binding.ReadWriteBinding
 import com.mongodb.internal.binding.SessionBinding
 import com.mongodb.internal.binding.SingleConnectionBinding
+import com.mongodb.internal.binding.SingleConnectionReadBinding
 import com.mongodb.internal.binding.WriteBinding
 import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.connection.AsyncConnection
@@ -207,18 +209,20 @@ class OperationFunctionalSpecification extends Specification {
 
     void testOperation(operation, List<Integer> serverVersion, BsonDocument expectedCommand, boolean async, result = null,
                        boolean checkCommand = true, boolean checkSlaveOk = false, ReadPreference readPreference = ReadPreference.primary(),
-                       boolean retryable = false, ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false) {
+                       boolean retryable = false, ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false,
+                       boolean useSingleConnectionBinding = false) {
         testOperation(operation, serverVersion, ReadConcern.DEFAULT, expectedCommand, async, result, checkCommand, checkSlaveOk,
-        readPreference, retryable, serverType, activeTransaction)
+                readPreference, retryable, serverType, activeTransaction, useSingleConnectionBinding)
     }
 
     void testOperation(operation, List<Integer> serverVersion, ReadConcern readConcern, BsonDocument expectedCommand, boolean async,
                        result = null, boolean checkCommand = true, boolean checkSlaveOk = false,
                        ReadPreference readPreference = ReadPreference.primary(), boolean retryable = false,
-                       ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false) {
+                       ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false,
+                       boolean useSingleConnectionBinding = false) {
         def test = async ? this.&testAsyncOperation : this.&testSyncOperation
         test(operation, serverVersion, readConcern, result, checkCommand, expectedCommand, checkSlaveOk, readPreference, retryable,
-                serverType, activeTransaction)
+                serverType, activeTransaction, useSingleConnectionBinding)
     }
 
     void testOperationRetries(operation, List<Integer> serverVersion, BsonDocument expectedCommand, boolean async, result = null,
@@ -251,42 +255,50 @@ class OperationFunctionalSpecification extends Specification {
     def testSyncOperation(operation, List<Integer> serverVersion, ReadConcern readConcern, result, Boolean checkCommand=true,
                           BsonDocument expectedCommand=null, Boolean checkSlaveOk=false,
                           ReadPreference readPreference=ReadPreference.primary(), Boolean retryable = false,
-                          ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false) {
+                          ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false,
+                          boolean useSingleConnectionBinding = false) {
         def connection = Mock(Connection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
                 getServerType() >> serverType
             }
         }
+        connection.retain() >> connection
+
+        def serverDescriptionBuilder = ServerDescription.builder().address(Stub(ServerAddress))
+                .state(ServerConnectionState.CONNECTED)
+        if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
+            serverDescriptionBuilder.logicalSessionTimeoutMinutes(42)
+        }
+        def serverDescription = serverDescriptionBuilder.build()
+
+        def sessionContext = Stub(SessionContext) {
+            hasSession() >> true
+            hasActiveTransaction() >> activeTransaction
+            getReadConcern() >> readConcern
+        }
 
         def connectionSource = Stub(ConnectionSource) {
-            getConnection() >> {
-                connection
-            }
-            getServerDescription() >> {
-                def builder = ServerDescription.builder().address(Stub(ServerAddress)).state(ServerConnectionState.CONNECTED)
-                if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
-                    builder.logicalSessionTimeoutMinutes(42)
-                }
-                builder.build()
-            }
+            getConnection() >> connection
+            getServerDescription() >> serverDescription
         }
         def readBinding = Stub(ReadBinding) {
             getReadConnectionSource() >> connectionSource
             getReadPreference() >> readPreference
-            getSessionContext() >> Stub(SessionContext) {
-                hasSession() >> true
-                hasActiveTransaction() >> activeTransaction
-                getReadConcern() >> readConcern
-            }
+            getSessionContext() >> sessionContext
         }
         def writeBinding = Stub(WriteBinding) {
             getWriteConnectionSource() >> connectionSource
-            getSessionContext() >> Stub(SessionContext) {
-                hasSession() >> true
-                hasActiveTransaction() >> activeTransaction
-                getReadConcern() >> readConcern
-            }
+            getSessionContext() >> sessionContext
+        }
+
+        if (useSingleConnectionBinding) {
+            def singleConnectionBinding = Spy(SingleConnectionReadBinding,
+                    constructorArgs: [readBinding, serverDescription, connection])
+
+            singleConnectionBinding.getReadPreference() >> readPreference
+            singleConnectionBinding.getConnectionSource() >> connectionSource
+            singleConnectionBinding.getSessionContext() >> sessionContext
         }
 
         if (retryable) {
@@ -314,11 +326,12 @@ class OperationFunctionalSpecification extends Specification {
             result
         }
 
-        if (retryable) {
+        if (retryable || useSingleConnectionBinding) {
             2 * connection.release()
         } else {
             1 * connection.release()
         }
+
         if (operation instanceof ReadOperation) {
             operation.execute(readBinding)
         } else if (operation instanceof WriteOperation) {
@@ -329,42 +342,53 @@ class OperationFunctionalSpecification extends Specification {
     def testAsyncOperation(operation = operation, List<Integer> serverVersion = serverVersion, ReadConcern readConcern, result = null,
                            Boolean checkCommand = true, BsonDocument expectedCommand = null, Boolean checkSlaveOk = false,
                            ReadPreference readPreference = ReadPreference.primary(), Boolean retryable = false,
-                           ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false) {
+                           ServerType serverType = ServerType.STANDALONE, Boolean activeTransaction = false,
+                           boolean useSingleConnectionBinding = false) {
         def connection = Mock(AsyncConnection) {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getMaxWireVersion() >> getMaxWireVersionForServerVersion(serverVersion)
                 getServerType() >> serverType
             }
         }
+        connection.retain() >> connection
+
+        def serverDescriptionBuilder = ServerDescription.builder().address(Stub(ServerAddress))
+                .state(ServerConnectionState.CONNECTED)
+        if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
+            serverDescriptionBuilder.logicalSessionTimeoutMinutes(42)
+        }
+        def serverDescription = serverDescriptionBuilder.build()
+
+        def sessionContext = Stub(SessionContext) {
+            hasSession() >> true
+            hasActiveTransaction() >> activeTransaction
+            getReadConcern() >> readConcern
+        }
 
         def connectionSource = Stub(AsyncConnectionSource) {
             getConnection(_) >> { it[0].onResult(connection, null) }
-            getServerDescription() >> {
-                def builder = ServerDescription.builder().address(Stub(ServerAddress)).state(ServerConnectionState.CONNECTED)
-                if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
-                    builder.logicalSessionTimeoutMinutes(42)
-                }
-                builder.build()
-            }
+            getServerDescription() >> serverDescription
+            getSessionContext() >> sessionContext
         }
         def readBinding = Stub(AsyncReadBinding) {
             getReadConnectionSource(_) >> { it[0].onResult(connectionSource, null) }
             getReadPreference() >> readPreference
-            getSessionContext() >> Stub(SessionContext) {
-                hasSession() >> true
-                hasActiveTransaction() >> activeTransaction
-                getReadConcern() >> readConcern
-            }
+            getSessionContext() >> sessionContext
         }
         def writeBinding = Stub(AsyncWriteBinding) {
             getWriteConnectionSource(_) >> { it[0].onResult(connectionSource, null) }
-            getSessionContext() >> Stub(SessionContext) {
-                hasSession() >> true
-                hasActiveTransaction() >> activeTransaction
-                getReadConcern() >> readConcern
-            }
+            getSessionContext() >> sessionContext
         }
         def callback = new FutureResultCallback()
+
+        if (useSingleConnectionBinding) {
+            def singleConnectionBinding = Spy(AsyncSingleConnectionReadBinding,
+                    constructorArgs: [readBinding, serverDescription, connection])
+
+            singleConnectionBinding.getReadConnectionSource(_) >> { it[0].onResult(connectionSource, null) }
+            singleConnectionBinding.getReadPreference() >> readPreference
+            singleConnectionBinding.getSessionContext() >> sessionContext
+        }
 
         if (retryable) {
             1 * connection.commandAsync(*_) >> {
@@ -393,7 +417,7 @@ class OperationFunctionalSpecification extends Specification {
             it[5].onResult(result, null)
         }
 
-        if (retryable) {
+        if (retryable || useSingleConnectionBinding) {
             2 * connection.release()
         } else {
             1 * connection.release()

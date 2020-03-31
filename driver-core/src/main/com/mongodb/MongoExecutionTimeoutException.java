@@ -43,6 +43,7 @@ public class MongoExecutionTimeoutException extends MongoException {
      * @param code the error code
      * @param message the error message
      * @param response the response
+     * @since 4.1
      */
     public MongoExecutionTimeoutException(final int code, final String message, final BsonDocument response) {
         super(code, message, response);

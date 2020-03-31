@@ -20,7 +20,9 @@ import com.mongodb.MongoException
 import com.mongodb.MongoNamespace
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.ReadConcern
+import com.mongodb.ReadPreference
 import com.mongodb.WriteConcern
+import com.mongodb.connection.ServerType
 import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.client.model.CreateCollectionOptions
 import com.mongodb.client.model.changestream.ChangeStreamDocument
@@ -124,7 +126,7 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
                 .append('readConcern', new BsonDocument('level', new BsonString('majority')))
 
         then:
-        testOperation(operation, [4, 0, 0], ReadConcern.MAJORITY, expectedCommand, async, cursorResult)
+        testChangeStreamOperation(operation, [4, 0, 0], ReadConcern.MAJORITY, expectedCommand, async, cursorResult)
 
         when: 'resumeAfter & startAfter & startAtOperationTime'
         def changeStreamDoc = changeStream.getDocument('$changeStream')
@@ -135,7 +137,7 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
                 .startAfter(resumeToken)
 
         then:
-        testOperation(operation, [4, 0, 0], ReadConcern.MAJORITY, expectedCommand, async, cursorResult)
+        testChangeStreamOperation(operation, [4, 0, 0], ReadConcern.MAJORITY, expectedCommand, async, cursorResult)
 
         where:
         [async, changeStreamLevel] << [[true, false],
@@ -178,7 +180,7 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
         waitForLastRelease(async ? getAsyncCluster() : getCluster())
 
         where:
-        async << [true, false]
+        async << [false, false]
     }
 
     def 'should decode insert to ChangeStreamDocument '() {
@@ -775,5 +777,11 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
 
     def getChangeStream(BsonDocument command) {
         command.getArray('pipeline').head().getDocument('$changeStream')
+    }
+
+    void testChangeStreamOperation(operation, List<Integer> serverVersion, ReadConcern readConcern,
+                                   BsonDocument expectedCommand, boolean async, result = null) {
+        testOperation(operation, serverVersion, readConcern, expectedCommand, async, result, true, false,
+                ReadPreference.primary(), false, ServerType.STANDALONE, false, true)
     }
 }

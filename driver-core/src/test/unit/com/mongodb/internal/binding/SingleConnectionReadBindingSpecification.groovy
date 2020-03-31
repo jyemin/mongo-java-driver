@@ -20,6 +20,8 @@ import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ServerDescription
 import com.mongodb.internal.connection.Connection
+import com.mongodb.internal.connection.NoOpSessionContext
+import com.mongodb.internal.session.SessionContext
 import spock.lang.Specification
 
 import static com.mongodb.connection.ServerConnectionState.CONNECTED
@@ -29,6 +31,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
                                                                          .address(new ServerAddress())
                                                                          .state(CONNECTED)
                                                                          .build()
+    private final SessionContext sessionContext = NoOpSessionContext.INSTANCE;
 
     def 'binding should get read preference'() {
         given:
@@ -37,7 +40,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         when:
         def binding = new SingleConnectionReadBinding(ReadPreference.secondary(),
                                                       serverDescription,
-                                                      connection)
+                                                      connection, sessionContext)
 
         then:
         binding.getReadPreference() == ReadPreference.secondary()
@@ -50,7 +53,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         when:
         def binding = new SingleConnectionReadBinding(ReadPreference.primary(),
                                                       serverDescription,
-                                                      connection)
+                                                      connection, sessionContext)
 
         then:
         binding.getCount() == 1
@@ -80,7 +83,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         def connection = Stub(Connection)
         def binding = new SingleConnectionReadBinding(ReadPreference.primary(),
                                                       serverDescription,
-                                                      connection)
+                                                      connection, sessionContext)
 
         when:
         def source = binding.readConnectionSource
@@ -96,7 +99,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         when:
         def binding = new SingleConnectionReadBinding(ReadPreference.primary(),
                                                       serverDescription,
-                                                      connection)
+                                                      connection, sessionContext)
 
         then:
         1 * connection.retain() >> connection
@@ -134,5 +137,18 @@ class SingleConnectionReadBindingSpecification extends Specification {
         then:
         source.count == 0
         binding.count == 1
+    }
+
+    def 'binding should get the session context'() {
+        given:
+        def connection = Stub(Connection)
+
+        when:
+        def binding = new SingleConnectionReadBinding(ReadPreference.secondary(),
+                serverDescription,
+                connection, sessionContext)
+
+        then:
+        binding.getSessionContext() == sessionContext
     }
 }

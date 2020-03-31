@@ -19,7 +19,6 @@ package com.mongodb.internal.binding;
 import com.mongodb.ReadPreference;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.Connection;
-import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.internal.session.SessionContext;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -31,27 +30,27 @@ import static com.mongodb.assertions.Assertions.notNull;
  */
 public class SingleConnectionReadBinding extends AbstractReferenceCounted implements ReadBinding {
 
-    private final ReadPreference readPreference;
+    private final ReadBinding wrapped;
     private final ServerDescription serverDescription;
     private final Connection connection;
 
     /**
      * Construct an instance.
      *
-     * @param readPreference the read preference of this binding
+     * @param binding the read binding
      * @param serverDescription the description of the server
      * @param connection the connection to bind to.
      */
-    public SingleConnectionReadBinding(final ReadPreference readPreference, final ServerDescription serverDescription,
+    public SingleConnectionReadBinding(final ReadBinding binding, final ServerDescription serverDescription,
                                        final Connection connection) {
-        this.readPreference = notNull("readPreference", readPreference);
+        this.wrapped = binding.retain();
         this.serverDescription = notNull("serverDescription", serverDescription);
         this.connection = notNull("connection", connection).retain();
     }
 
     @Override
     public ReadPreference getReadPreference() {
-        return readPreference;
+        return wrapped.getReadPreference();
     }
 
     @Override
@@ -61,7 +60,7 @@ public class SingleConnectionReadBinding extends AbstractReferenceCounted implem
 
     @Override
     public SessionContext getSessionContext() {
-        return NoOpSessionContext.INSTANCE;
+        return wrapped.getSessionContext();
     }
 
     @Override
@@ -75,6 +74,7 @@ public class SingleConnectionReadBinding extends AbstractReferenceCounted implem
         super.release();
         if (getCount() == 0) {
             connection.release();
+            wrapped.release();
         }
     }
 
@@ -91,7 +91,7 @@ public class SingleConnectionReadBinding extends AbstractReferenceCounted implem
 
         @Override
         public SessionContext getSessionContext() {
-            return NoOpSessionContext.INSTANCE;
+            return wrapped.getSessionContext();
         }
 
         @Override

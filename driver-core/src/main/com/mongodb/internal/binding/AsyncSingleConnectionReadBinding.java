@@ -20,7 +20,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.AsyncConnection;
-import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.internal.session.SessionContext;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -31,32 +30,32 @@ import static com.mongodb.assertions.Assertions.notNull;
  * @since 3.2
  */
 public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted implements AsyncReadBinding {
-    private final ReadPreference readPreference;
     private final ServerDescription serverDescription;
     private final AsyncConnection connection;
+    private final AsyncReadBinding wrapped;
 
     /**
      * Construct an instance.
      *
-     * @param readPreference the read preferenced of this binding
+     * @param binding the read binding
      * @param serverDescription the description of the server
      * @param connection the connection to bind to.
      */
-    public AsyncSingleConnectionReadBinding(final ReadPreference readPreference, final ServerDescription serverDescription,
+    public AsyncSingleConnectionReadBinding(final AsyncReadBinding binding, final ServerDescription serverDescription,
                                             final AsyncConnection connection) {
-        this.readPreference = notNull("readPreference", readPreference);
+        this.wrapped = binding.retain();
         this.serverDescription = notNull("serverDescription", serverDescription);
         this.connection = notNull("connection", connection).retain();
     }
 
     @Override
     public ReadPreference getReadPreference() {
-        return readPreference;
+        return wrapped.getReadPreference();
     }
 
     @Override
     public SessionContext getSessionContext() {
-        return NoOpSessionContext.INSTANCE;
+        return wrapped.getSessionContext();
     }
 
     @Override
@@ -75,6 +74,7 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
         super.release();
         if (getCount() == 0) {
             connection.release();
+            wrapped.release();
         }
     }
 
@@ -90,7 +90,7 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
 
         @Override
         public SessionContext getSessionContext() {
-            return NoOpSessionContext.INSTANCE;
+            return wrapped.getSessionContext();
         }
 
         @Override
