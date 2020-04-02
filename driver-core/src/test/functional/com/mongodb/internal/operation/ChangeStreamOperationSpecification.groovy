@@ -21,9 +21,8 @@ import com.mongodb.MongoNamespace
 import com.mongodb.OperationFunctionalSpecification
 import com.mongodb.ReadConcern
 import com.mongodb.ReadPreference
+import com.mongodb.ServerAddress
 import com.mongodb.WriteConcern
-import com.mongodb.connection.ServerType
-import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.client.model.CreateCollectionOptions
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import com.mongodb.client.model.changestream.FullDocument
@@ -31,6 +30,10 @@ import com.mongodb.client.model.changestream.OperationType
 import com.mongodb.client.model.changestream.UpdateDescription
 import com.mongodb.client.test.CollectionHelper
 import com.mongodb.connection.ConnectionDescription
+import com.mongodb.connection.ServerConnectionState
+import com.mongodb.connection.ServerDescription
+import com.mongodb.connection.ServerType
+import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.internal.binding.AsyncConnectionSource
 import com.mongodb.internal.binding.AsyncReadBinding
 import com.mongodb.internal.binding.ConnectionSource
@@ -636,25 +639,38 @@ class ChangeStreamOperationSpecification extends OperationFunctionalSpecificatio
     def 'should set the startAtOperationTime on the sync cursor'() {
         given:
         def changeStream
-        def binding = Stub(ReadBinding) {
-            getSessionContext() >> Stub(SessionContext) {
-                getReadConcern() >> ReadConcern.DEFAULT
-                getOperationTime() >> new BsonTimestamp()
+        def sessionContext = Stub(SessionContext) {
+            getReadConcern() >> ReadConcern.DEFAULT
+            getOperationTime() >> new BsonTimestamp()
+        }
+        def connection = Stub(Connection) {
+            command(*_) >> {
+                changeStream = getChangeStream(it[1])
+                new BsonDocument('cursor', new BsonDocument('id', new BsonInt64(1))
+                        .append('ns', new BsonString(getNamespace().getFullName()))
+                        .append('firstBatch', new BsonArrayWrapper([])))
             }
-            getReadConnectionSource() >> Stub(ConnectionSource) {
-                getConnection() >> Stub(Connection) {
-                     command(*_) >> {
-                         changeStream = getChangeStream(it[1])
-                         new BsonDocument('cursor', new BsonDocument('id', new BsonInt64(1))
-                                 .append('ns', new BsonString(getNamespace().getFullName()))
-                                 .append('firstBatch', new BsonArrayWrapper([])))
-                     }
-                    getDescription() >> Stub(ConnectionDescription) {
-                        getMaxWireVersion() >> getMaxWireVersionForServerVersion([4, 0])
-                    }
-                }
+            getDescription() >> Stub(ConnectionDescription) {
+                getMaxWireVersion() >> getMaxWireVersionForServerVersion([4, 0])
             }
         }
+        def source = Stub(ConnectionSource) {
+            getSessionContext() >> sessionContext
+            getServerDescription() >> ServerDescription.builder()
+                    .address(new ServerAddress())
+                    .type(ServerType.STANDALONE)
+                    .state(ServerConnectionState.CONNECTED)
+                    .build()
+            getConnection() >> connection
+        }
+        def binding = Stub(ReadBinding) {
+            getSessionContext() >> sessionContext
+            getReadPreference() >> ReadPreference.primary()
+            getReadConnectionSource() >> source
+        }
+        binding.retain() >> binding
+        source.retain() >> source
+        connection.retain() >> connection
 
         when: 'set resumeAfter'
         new ChangeStreamOperation<BsonDocument>(helper.getNamespace(), FullDocument.DEFAULT, [], CODEC)
