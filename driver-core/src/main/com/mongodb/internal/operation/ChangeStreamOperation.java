@@ -17,12 +17,12 @@
 package com.mongodb.internal.operation;
 
 import com.mongodb.MongoNamespace;
-import com.mongodb.internal.async.AsyncAggregateResponseBatchCursor;
-import com.mongodb.internal.async.AsyncBatchCursor;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.async.AsyncAggregateResponseBatchCursor;
+import com.mongodb.internal.async.AsyncBatchCursor;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.AsyncSingleConnectionReadBinding;
@@ -33,7 +33,7 @@ import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.operation.OperationHelper.AsyncCallableWithConnectionAndSource;
-import com.mongodb.internal.operation.OperationHelper.CallableWithSource;
+import com.mongodb.internal.operation.OperationHelper.CallableWithConnectionAndSource;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncReadConnection;
-import static com.mongodb.internal.operation.OperationHelper.withReadConnectionSource;
+import static com.mongodb.internal.operation.OperationHelper.withConnection;
 
 /**
  * An operation that executes an {@code $changeStream} aggregation.
@@ -323,26 +323,19 @@ public class ChangeStreamOperation<T> implements AsyncReadOperation<AsyncBatchCu
 
     @Override
     public BatchCursor<T> execute(final ReadBinding binding) {
-        return withReadConnectionSource(binding, new CallableWithSource<BatchCursor<T>>() {
+        return withConnection(binding, new CallableWithConnectionAndSource<BatchCursor<T>>() {
             @Override
-            public BatchCursor<T> call(final ConnectionSource source) {
-                Connection connection = source.getConnection();
+            public BatchCursor<T> call(final ConnectionSource source, final Connection connection) {
                 SingleConnectionReadBinding singleConnectionBinding =
                         new SingleConnectionReadBinding(binding, source.getServerDescription(), connection);
                 try {
-                    return withReadConnectionSource(singleConnectionBinding, new CallableWithSource<BatchCursor<T>>() {
-                        @Override
-                        public BatchCursor<T> call(final ConnectionSource singleReadConnectionSource) {
-                            AggregateResponseBatchCursor<RawBsonDocument> cursor =
-                                    (AggregateResponseBatchCursor<RawBsonDocument>) wrapped.execute(singleConnectionBinding);
-                            int maxWireVersion = singleReadConnectionSource.getServerDescription().getMaxWireVersion();
-                            return new ChangeStreamBatchCursor<T>(ChangeStreamOperation.this, cursor, singleConnectionBinding,
-                                    setChangeStreamOptions(cursor.getPostBatchResumeToken(), cursor.getOperationTime(), maxWireVersion,
-                                            cursor.isFirstBatchEmpty()), maxWireVersion);
-                        }
-                    });
+                    AggregateResponseBatchCursor<RawBsonDocument> cursor =
+                            (AggregateResponseBatchCursor<RawBsonDocument>) wrapped.execute(singleConnectionBinding);
+                    int maxWireVersion = connection.getDescription().getMaxWireVersion();
+                    return new ChangeStreamBatchCursor<T>(ChangeStreamOperation.this, cursor, binding,
+                            setChangeStreamOptions(cursor.getPostBatchResumeToken(), cursor.getOperationTime(), maxWireVersion,
+                                    cursor.isFirstBatchEmpty()), maxWireVersion);
                 } finally {
-                    connection.release();
                     singleConnectionBinding.release();
                 }
             }
@@ -354,7 +347,7 @@ public class ChangeStreamOperation<T> implements AsyncReadOperation<AsyncBatchCu
         withAsyncReadConnection(binding, new AsyncCallableWithConnectionAndSource() {
             @Override
             public void call(final AsyncConnectionSource source, final AsyncConnection connection, final Throwable t) {
-                final SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback = releasingCallback(callback, source, connection);
+                SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback = releasingCallback(callback, source, connection);
                 if (t != null) {
                     wrappedCallback.onResult(null, t);
                 } else {
@@ -373,27 +366,20 @@ public class ChangeStreamOperation<T> implements AsyncReadOperation<AsyncBatchCu
         wrapped.executeAsync(singleConnectionBinding, new SingleResultCallback<AsyncBatchCursor<RawBsonDocument>>() {
             @Override
             public void onResult(final AsyncBatchCursor<RawBsonDocument> result, final Throwable t) {
-                if (t != null) {
-                    callback.onResult(null, t);
-                } else {
-                    final AsyncAggregateResponseBatchCursor<RawBsonDocument> cursor =
-                            (AsyncAggregateResponseBatchCursor<RawBsonDocument>) result;
-                    singleConnectionBinding.getReadConnectionSource(new SingleResultCallback<AsyncConnectionSource>() {
-                        @Override
-                        public void onResult(final AsyncConnectionSource connectionSource, final Throwable t) {
-                            final SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback = releasingCallback(callback, connectionSource);
-                            if (t != null) {
-                                wrappedCallback.onResult(null, t);
-                            } else {
-                                int maxWireVersion = connectionSource.getServerDescription().getMaxWireVersion();
-                                wrappedCallback.onResult(new AsyncChangeStreamBatchCursor<T>(ChangeStreamOperation.this,
-                                        cursor, singleConnectionBinding, setChangeStreamOptions(cursor.getPostBatchResumeToken(),
-                                        cursor.getOperationTime(), maxWireVersion, cursor.isFirstBatchEmpty()), maxWireVersion), null);
-                            }
-                        }
-                    });
+                try {
+                    if (t != null) {
+                        callback.onResult(null, t);
+                    } else {
+                        AsyncAggregateResponseBatchCursor<RawBsonDocument> cursor =
+                                (AsyncAggregateResponseBatchCursor<RawBsonDocument>) result;
+                        int maxWireVersion = connection.getDescription().getMaxWireVersion();
+                        callback.onResult(new AsyncChangeStreamBatchCursor<T>(ChangeStreamOperation.this,
+                                cursor, binding, setChangeStreamOptions(cursor.getPostBatchResumeToken(),
+                                cursor.getOperationTime(), maxWireVersion, cursor.isFirstBatchEmpty()), maxWireVersion), null);
+                    }
+                } finally {
+                    singleConnectionBinding.release();
                 }
-                singleConnectionBinding.release();
             }
         });
     }
