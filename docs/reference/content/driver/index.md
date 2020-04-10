@@ -7,11 +7,11 @@ title = "Java Driver"
   pre = "<i class='fa fa-arrows-h'></i>"
 +++
 
-## MongoDB Driver 4.0 Documentation
+## MongoDB Driver 4.1 Documentation
 
-The following guide provides information on using the synchronous MongoDB Java Driver 4.0.
+The following guide provides information on using the synchronous MongoDB Java Driver 4.1.
 
-### What's New in 4.0
+### What's New in 4.1
 
 The [What's New]({{< relref "whats-new.md" >}}) guide explains the major new features of the driver.
 
