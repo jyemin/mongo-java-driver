@@ -117,7 +117,7 @@ class GridFSPublisherSpecification extends FunctionalSpecification {
 
     def 'should round trip with small chunks'() {
         given:
-        def contentSize = 1024 * 500
+        def contentSize = 1024 * 10
         def chunkSize = 10
         def contentBytes = new byte[contentSize]
         new SecureRandom().nextBytes(contentBytes)
