@@ -141,7 +141,6 @@ public class InternalStreamConnection implements InternalConnection {
         stream = streamFactory.create(serverId.getAddress());
         try {
             stream.open();
-            LOGGER.debug("Done opening stream to " + serverId.toString());
             InternalConnectionInitializationDescription initializationDescription = connectionInitializer.initialize(this);
             description = initializationDescription.getConnectionDescription();
             initialServerDescription = initializationDescription.getServerDescription();
