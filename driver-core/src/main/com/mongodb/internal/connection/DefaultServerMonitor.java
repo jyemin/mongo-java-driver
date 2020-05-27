@@ -242,13 +242,13 @@ class DefaultServerMonitor implements ServerMonitor {
         }
 
         private CommandMessage createCommandMessage(final BsonDocument ismaster, final InternalConnection connection,
-                                                    final ServerDescription serverDescription) {
+                                                    final ServerDescription currentServerDescription) {
             return new CommandMessage(new MongoNamespace("admin", COMMAND_COLLECTION_NAME), ismaster,
                     new NoOpFieldNameValidator(), primary(),
                     MessageSettings.builder()
                             .maxWireVersion(connection.getDescription().getMaxWireVersion())
                             .build(),
-                    shouldStreamResponses(serverDescription));
+                    shouldStreamResponses(currentServerDescription));
         }
 
         private void logStateChange(final ServerDescription previousServerDescription,
