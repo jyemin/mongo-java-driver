@@ -146,7 +146,9 @@ public class InternalStreamConnection implements InternalConnection {
             initialServerDescription = initializationDescription.getServerDescription();
             opened.set(true);
             sendCompressor = findSendCompressor(description);
-            LOGGER.info(format("Opened connection [%s] to %s", getId(), serverId.getAddress()));
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(format("Opened connection [%s] to %s", getId(), serverId.getAddress()));
+            }
         } catch (Throwable t) {
             close();
             if (t instanceof MongoException) {
