@@ -176,6 +176,7 @@ class DefaultServerMonitor implements ServerMonitor {
         private ServerDescription lookupServerDescription(final ServerDescription currentServerDescription) {
             try {
                 if (connection == null || connection.isClosed()) {
+                    currentCheckCancelled = false;
                     connection = internalConnectionFactory.create(serverId);
                     connection.open();
                     averageRoundTripTime.addSample(connection.getInitialServerDescription().getRoundTripTimeNanos());
