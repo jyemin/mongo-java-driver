@@ -16,7 +16,6 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoSocketException;
 import com.mongodb.annotations.ThreadSafe;
@@ -387,14 +386,13 @@ class DefaultServerMonitor implements ServerMonitor {
                         if (connection == null) {
                             initialize();
                         } else {
-                            try {
-                                pingServer(connection);
-                            } catch (MongoSocketException | MongoCommandException e) {
-                                connection.close();
-                                connection = null;
-                            }
+                            pingServer(connection);
                         }
-                    } catch (Throwable ignored) {
+                    } catch (Throwable t) {
+                        if (connection != null) {
+                            connection.close();
+                            connection = null;
+                        }
                         averageRoundTripTime.reset();
                     }
                     waitForNext();
