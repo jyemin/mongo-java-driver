@@ -106,7 +106,11 @@ public class ClientSideEncryptionSessionTest {
                         .schemaMap(schemaMap).build())
                 .build();
         clientEncrypted = MongoClients.create(clientSettings);
-        new CollectionHelper<>(new BsonDocumentCodec(), new MongoNamespace(getDefaultDatabaseName(), COLLECTION_NAME)).drop();
+
+        CollectionHelper<BsonDocument> collectionHelper =
+        new CollectionHelper<>(new BsonDocumentCodec(), new MongoNamespace(getDefaultDatabaseName(), COLLECTION_NAME));
+        collectionHelper.drop();
+        collectionHelper.create();
     }
 
     @After
