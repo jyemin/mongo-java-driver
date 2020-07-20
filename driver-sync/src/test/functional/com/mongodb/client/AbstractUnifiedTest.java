@@ -370,7 +370,7 @@ public abstract class AbstractUnifiedTest {
     @Test
     public void shouldPassAllOutcomes() {
         try {
-                executeOperations(definition.getArray("operations"), false);
+            executeOperations(definition.getArray("operations"), false);
         } finally {
             closeAllSessions();
             shutdownAllExecutors();
