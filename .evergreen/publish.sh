@@ -30,6 +30,8 @@ else
   TASK="publishSnapshots"
 fi
 
+SYSTEM_PROPERTIES="-Dorg.gradle.internal.publish.checksums.insecure=true -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000"
+
 ./gradlew -version
-./gradlew --stacktrace --info ${TASK}
-./gradlew --stacktrace --info :bson-scala:${TASK} :driver-scala:${TASK} -PdefaultScalaVersions=2.11.12,2.12.10
+./gradlew ${SYSTEM_PROPERTIES} --stacktrace --info  ${TASK}
+./gradlew ${SYSTEM_PROPERTIES} --stacktrace --info :bson-scala:${TASK} :driver-scala:${TASK} -PdefaultScalaVersions=2.11.12,2.12.10
