@@ -25,6 +25,7 @@ import com.mongodb.connection.BufferProvider;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.connection.Stream;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.ByteBuf;
 
 import javax.net.SocketFactory;
@@ -36,6 +37,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -93,6 +95,13 @@ public class SocketStream implements Stream {
         return bufferProvider.getBuffer(size);
     }
 
+    // TODO: blocking write operations using SocketOutputStream don't accept a timeout.  The only way is to use non-blocking I/O.
+    // TODO: see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4031100
+    @Override
+    public boolean supportsWriteTimeout() {
+        return false;
+    }
+
     @Override
     public void write(final List<ByteBuf> buffers) throws IOException {
         for (final ByteBuf cur : buffers) {
@@ -102,10 +111,24 @@ public class SocketStream implements Stream {
 
     @Override
     public ByteBuf read(final int numBytes) throws IOException {
+        return readWithTimeout(numBytes, 0);
+    }
+
+    @Override
+    public boolean supportsReadTimeout() {
+        return true;
+    }
+
+    @Override
+    public ByteBuf readWithTimeout(final int numBytes, final int timeoutMS) throws IOException {
+        Deadline deadline = Deadline.min(Deadline.of(timeoutMS, TimeUnit.MILLISECONDS),
+                Deadline.of(socket.getSoTimeout(), TimeUnit.MILLISECONDS));
         ByteBuf buffer = bufferProvider.getBuffer(numBytes);
         int totalBytesRead = 0;
         byte[] bytes = buffer.array();
         while (totalBytesRead < buffer.limit()) {
+            // TODO: dangerous cast from long to int?
+            socket.setSoTimeout((int) deadline.getTimeRemaining(TimeUnit.MILLISECONDS));
             int bytesRead = inputStream.read(bytes, totalBytesRead, buffer.limit() - totalBytesRead);
             if (bytesRead == -1) {
                 buffer.release();

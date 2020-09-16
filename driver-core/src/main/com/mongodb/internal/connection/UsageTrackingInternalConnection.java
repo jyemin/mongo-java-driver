@@ -22,6 +22,7 @@ import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
 
@@ -96,8 +97,9 @@ class UsageTrackingInternalConnection implements InternalConnection {
     }
 
     @Override
-    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
-        T result = wrapped.sendAndReceive(message, decoder, sessionContext);
+    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
+                                final Deadline deadline) {
+        T result = wrapped.sendAndReceive(message, decoder, sessionContext, deadline);
         lastUsedAt = System.currentTimeMillis();
         return result;
     }

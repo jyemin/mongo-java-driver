@@ -40,6 +40,7 @@ import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.internal.session.ServerSessionPool;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import com.mongodb.selector.ServerSelector;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -167,8 +168,14 @@ public class MongoClientDelegate {
         @Override
         public <T> T execute(final ReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern,
                              @Nullable final ClientSession session) {
+            return execute(operation, readPreference, readConcern, Deadline.infinite(), session);
+        }
+
+        @Override
+        public <T> T execute(final ReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern,
+                             final Deadline deadline, @Nullable final ClientSession session) {
             ClientSession actualClientSession = getClientSession(session);
-            ReadBinding binding = getReadBinding(readPreference, readConcern, actualClientSession,
+            ReadBinding binding = getReadBinding(readPreference, readConcern, deadline, actualClientSession,
                     session == null && actualClientSession != null);
 
             try {
@@ -203,18 +210,19 @@ public class MongoClientDelegate {
         }
 
         WriteBinding getWriteBinding(final ReadConcern readConcern, @Nullable final ClientSession session, final boolean ownsSession) {
-            return getReadWriteBinding(primary(), readConcern, session, ownsSession);
+            return getReadWriteBinding(primary(), readConcern, Deadline.infinite(), session, ownsSession);
         }
 
         ReadBinding getReadBinding(final ReadPreference readPreference, final ReadConcern readConcern,
-                                   @Nullable final ClientSession session, final boolean ownsSession) {
-            return getReadWriteBinding(readPreference, readConcern, session, ownsSession);
+                                   final Deadline deadline, @Nullable final ClientSession session, final boolean ownsSession) {
+            return getReadWriteBinding(readPreference, readConcern, deadline, session, ownsSession);
         }
 
         ReadWriteBinding getReadWriteBinding(final ReadPreference readPreference, final ReadConcern readConcern,
-                                             @Nullable final ClientSession session, final boolean ownsSession) {
+                                             final Deadline deadline, @Nullable final ClientSession session,
+                                             final boolean ownsSession) {
             ClusterAwareReadWriteBinding readWriteBinding = new ClusterBinding(cluster,
-                    getReadPreferenceForBinding(readPreference, session), readConcern);
+                    getReadPreferenceForBinding(readPreference, session), readConcern, deadline);
 
             if (crypt != null) {
                 readWriteBinding = new CryptBinding(readWriteBinding, crypt);

@@ -21,6 +21,7 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.internal.validator.MappedFieldNameValidator;
 import org.bson.BsonArray;
 import org.bson.BsonBinaryWriter;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.ReadPreference.primary;
 import static com.mongodb.ReadPreference.primaryPreferred;
@@ -66,32 +68,34 @@ public final class CommandMessage extends RequestMessage {
     private final FieldNameValidator payloadFieldNameValidator;
     private final boolean responseExpected;
     private final ClusterConnectionMode clusterConnectionMode;
+    private final Deadline deadline;
 
     CommandMessage(final MongoNamespace namespace, final BsonDocument command, final FieldNameValidator commandFieldNameValidator,
                    final ReadPreference readPreference, final MessageSettings settings) {
         this(namespace, command, commandFieldNameValidator, readPreference, settings, true, null, null,
-                MULTIPLE);
+                MULTIPLE, Deadline.infinite());
     }
 
     CommandMessage(final MongoNamespace namespace, final BsonDocument command, final FieldNameValidator commandFieldNameValidator,
                    final ReadPreference readPreference, final MessageSettings settings, final boolean exhaustAllowed) {
         this(namespace, command, commandFieldNameValidator, readPreference, settings, true, exhaustAllowed, null, null,
-                MULTIPLE);
+                MULTIPLE, Deadline.infinite());
     }
 
     CommandMessage(final MongoNamespace namespace, final BsonDocument command, final FieldNameValidator commandFieldNameValidator,
                    final ReadPreference readPreference, final MessageSettings settings, final boolean responseExpected,
                    final SplittablePayload payload, final FieldNameValidator payloadFieldNameValidator,
-                   final ClusterConnectionMode clusterConnectionMode) {
+                   final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
         this(namespace, command, commandFieldNameValidator, readPreference, settings, responseExpected, false, payload,
-                payloadFieldNameValidator, clusterConnectionMode);
+                payloadFieldNameValidator, clusterConnectionMode, deadline);
     }
 
     CommandMessage(final MongoNamespace namespace, final BsonDocument command, final FieldNameValidator commandFieldNameValidator,
                    final ReadPreference readPreference, final MessageSettings settings,
                    final boolean responseExpected, final boolean exhaustAllowed,
                    final SplittablePayload payload, final FieldNameValidator payloadFieldNameValidator,
-                   final ClusterConnectionMode clusterConnectionMode) {
+                   final ClusterConnectionMode clusterConnectionMode,
+                   final Deadline deadline) {
         super(namespace.getFullName(), getOpCode(settings), settings);
         this.namespace = namespace;
         this.command = command;
@@ -102,6 +106,7 @@ public final class CommandMessage extends RequestMessage {
         this.payload = payload;
         this.payloadFieldNameValidator = payloadFieldNameValidator;
         this.clusterConnectionMode = clusterConnectionMode;
+        this.deadline = deadline;
     }
 
     BsonDocument getCommandDocument(final ByteBufferBsonOutput bsonOutput) {
@@ -279,6 +284,15 @@ public final class CommandMessage extends RequestMessage {
                 extraElements.add(new BsonElement("$readPreference", readPreference.toDocument()));
             } else if (isDirectConnectionToReplicaSetMember()) {
                 extraElements.add(new BsonElement("$readPreference", primaryPreferred().toDocument()));
+            }
+        }
+        if (!deadline.isInfinite()) {
+            long timeRemaining = deadline.getTimeRemaining(TimeUnit.MILLISECONDS);
+            if (timeRemaining > 0) {
+                // TODO: is it safe to always add this? Seems like we will need some cooperation with Operation implementations
+                // TODO: or at least operation creators, to not set maxTimeMS if timeout is non-infinite
+                // TODO: deal with RTT somehow.  Where to get it from?
+                extraElements.add(new BsonElement("maxTimeMS", new BsonInt64(timeRemaining)));
             }
         }
         return extraElements;

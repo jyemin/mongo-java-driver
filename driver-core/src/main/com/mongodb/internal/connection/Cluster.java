@@ -17,9 +17,10 @@
 package com.mongodb.internal.connection;
 
 
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ClusterDescription;
 import com.mongodb.connection.ClusterSettings;
+import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import com.mongodb.selector.ServerSelector;
 import org.bson.BsonTimestamp;
@@ -73,6 +74,8 @@ public interface Cluster extends Closeable {
      * @throws com.mongodb.MongoTimeoutException if the timeout has been reached before a server matching the selector is available
      */
     Server selectServer(ServerSelector serverSelector);
+
+    Server selectServer(ServerSelector serverSelector, Deadline deadline);
 
     /**
      * Asynchronously gets a MongoDB server that matches the criteria defined by the serverSelector.

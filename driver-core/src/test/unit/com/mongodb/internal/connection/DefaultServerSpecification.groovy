@@ -43,6 +43,7 @@ import com.mongodb.event.ServerListener
 import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.session.SessionContext
+import com.mongodb.internal.timeout.Deadline
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -78,16 +79,16 @@ class DefaultServerSpecification extends Specification {
         def clusterTime = new ClusterClock()
 
         serverMonitorFactory.create(_, _) >> { serverMonitor }
-        connectionPool.get() >> { internalConnection }
+        connectionPool.get(Deadline.infinite()) >> { internalConnection }
         def server = new DefaultServer(serverId, mode, connectionPool, connectionFactory, serverMonitorFactory,
                 NO_OP_SERVER_DESCRIPTION_CHANGED_LISTENER, NO_OP_SERVER_LISTENER, null, clusterTime)
 
         when:
-        def receivedConnection = server.getConnection()
+        def receivedConnection = server.getConnection(Deadline.infinite(), Deadline.infinite())
 
         then:
         receivedConnection
-        1 * connectionFactory.create(internalConnection, _, mode) >> connection
+        1 * connectionFactory.create(internalConnection, _, mode, Deadline.infinite()) >> connection
 
         where:
         mode << [SINGLE, MULTIPLE]
@@ -181,14 +182,14 @@ class DefaultServerSpecification extends Specification {
         def connectionFactory = Mock(ConnectionFactory)
         def serverMonitorFactory = Stub(ServerMonitorFactory)
         def serverMonitor = Mock(ServerMonitor)
-        connectionPool.get() >> { throw exceptionToThrow }
+        connectionPool.get(_) >> { throw exceptionToThrow }
         serverMonitorFactory.create(_) >> { serverMonitor }
 
         def server = new DefaultServer(serverId, SINGLE, connectionPool, connectionFactory, serverMonitorFactory,
                 NO_OP_SERVER_DESCRIPTION_CHANGED_LISTENER, NO_OP_SERVER_LISTENER, null, clusterTime)
 
         when:
-        server.getConnection()
+        server.getConnection(Deadline.infinite(), Deadline.infinite())
 
         then:
         def e = thrown(MongoException)
@@ -212,14 +213,14 @@ class DefaultServerSpecification extends Specification {
         def connectionFactory = Mock(ConnectionFactory)
         def serverMonitorFactory = Stub(ServerMonitorFactory)
         def serverMonitor = Mock(ServerMonitor)
-        connectionPool.get() >> { throw exceptionToThrow }
+        connectionPool.get(_) >> { throw exceptionToThrow }
         serverMonitorFactory.create(_) >> { serverMonitor }
 
         def server = new DefaultServer(serverId, SINGLE, connectionPool, connectionFactory, serverMonitorFactory,
                 NO_OP_SERVER_DESCRIPTION_CHANGED_LISTENER, NO_OP_SERVER_LISTENER, null, clusterTime)
 
         when:
-        server.getConnection()
+        server.getConnection(Deadline.infinite(), Deadline.infinite())
 
         then:
         def e = thrown(MongoSecurityException)
@@ -311,14 +312,14 @@ class DefaultServerSpecification extends Specification {
             getDescription() >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 6,
                     ServerType.STANDALONE, 1000, 16777216, 48000000, [])
         }
-        connectionPool.get() >> { internalConnection }
+        connectionPool.get(_) >> { internalConnection }
         serverMonitorFactory.create(_) >> { serverMonitor }
 
         TestConnectionFactory connectionFactory = new TestConnectionFactory()
 
         def server = new DefaultServer(serverId, SINGLE, connectionPool, connectionFactory, serverMonitorFactory,
                 NO_OP_SERVER_DESCRIPTION_CHANGED_LISTENER, NO_OP_SERVER_LISTENER, null, clusterTime)
-        def testConnection = (TestConnection) server.getConnection()
+        def testConnection = (TestConnection) server.getConnection(Deadline.infinite(), Deadline.infinite())
 
         when:
         testConnection.enqueueProtocol(new TestLegacyProtocol(new MongoNotPrimaryException(new BsonDocument(), serverId.address)))
@@ -364,7 +365,7 @@ class DefaultServerSpecification extends Specification {
             getDescription() >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 6,
                     ServerType.STANDALONE, 1000, 16777216, 48000000, [])
         }
-        connectionPool.get() >> { internalConnection }
+        connectionPool.get(_) >> { internalConnection }
         serverMonitorFactory.create(_) >> { serverMonitor }
 
         TestConnectionFactory connectionFactory = new TestConnectionFactory()
@@ -396,7 +397,7 @@ class DefaultServerSpecification extends Specification {
             getDescription() >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 6,
                     ServerType.STANDALONE, 1000, 16777216, 48000000, [])
         }
-        connectionPool.get() >> { internalConnection }
+        connectionPool.get(_) >> { internalConnection }
         serverMonitorFactory.create(_) >> { serverMonitor }
 
         TestConnectionFactory connectionFactory = new TestConnectionFactory()
@@ -438,14 +439,14 @@ class DefaultServerSpecification extends Specification {
             getDescription() >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())), 6,
                     ServerType.STANDALONE, 1000, 16777216, 48000000, [])
         }
-        connectionPool.get() >> { internalConnection }
+        connectionPool.get(Deadline.infinite()) >> { internalConnection }
         serverMonitorFactory.create(_, _) >> { serverMonitor }
 
         TestConnectionFactory connectionFactory = new TestConnectionFactory()
 
         def server = new DefaultServer(serverId, SINGLE, connectionPool, connectionFactory, serverMonitorFactory,
                 NO_OP_SERVER_DESCRIPTION_CHANGED_LISTENER, NO_OP_SERVER_LISTENER, null, clusterTime)
-        def testConnection = (TestConnection) server.getConnection()
+        def testConnection = (TestConnection) server.getConnection(Deadline.infinite(), Deadline.infinite())
 
         when:
         testConnection.enqueueProtocol(new TestLegacyProtocol(new MongoSocketReadTimeoutException('socket timeout', new ServerAddress(),
@@ -611,7 +612,7 @@ class DefaultServerSpecification extends Specification {
         }
 
         @Override
-        BsonDocument execute(final InternalConnection connection) {
+        BsonDocument execute(final InternalConnection connection, Deadline deadline) {
             commandResult
         }
 

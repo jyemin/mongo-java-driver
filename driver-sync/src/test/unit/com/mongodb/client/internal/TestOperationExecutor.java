@@ -21,6 +21,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 
 import java.util.ArrayList;
@@ -60,6 +61,12 @@ public class TestOperationExecutor implements OperationExecutor {
         readPreferences.add(readPreference);
         readConcerns.add(readConcern);
         return getResponse();
+    }
+
+    @Override
+    public <T> T execute(final ReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern,
+                         final Deadline deadline, @Nullable final ClientSession session) {
+        return execute(operation, readPreference, readConcern, session);
     }
 
     @Override

@@ -28,7 +28,10 @@ import com.mongodb.internal.selector.ReadPreferenceServerSelector;
 import com.mongodb.internal.selector.ServerAddressSelector;
 import com.mongodb.internal.selector.WritableServerSelector;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.selector.ServerSelector;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -42,18 +45,30 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
     private final Cluster cluster;
     private final ReadPreference readPreference;
     private final ReadConcern readConcern;
+    private final Deadline connectionSelectionDeadline;
+    private final Deadline operationDeadline;
 
     /**
      * Creates an instance.
      * @param cluster        a non-null Cluster which will be used to select a server to bind to
      * @param readPreference a non-null ReadPreference for read operations
      * @param readConcern    a non-null read concern
+     * @param deadline       the deadline, which may be null
      * @since 3.8
      */
-    public ClusterBinding(final Cluster cluster, final ReadPreference readPreference, final ReadConcern readConcern) {
+    public ClusterBinding(final Cluster cluster, final ReadPreference readPreference, final ReadConcern readConcern,
+                          final Deadline deadline) {
         this.cluster = notNull("cluster", cluster);
         this.readPreference = notNull("readPreference", readPreference);
         this.readConcern = notNull("readConcern", readConcern);
+        if (deadline.isInfinite()) {
+            this.connectionSelectionDeadline = deadline;
+        } else {
+            // TODO: server selection timeout of 0 is documented to mean not to wait, but Deadline.of will treat it as infinite
+            this.connectionSelectionDeadline = Deadline.min(deadline,
+                    Deadline.of(cluster.getSettings().getServerSelectionTimeout(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS));
+        }
+        this.operationDeadline = deadline;
     }
 
     /**
@@ -100,7 +115,7 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
         private final Server server;
 
         private ClusterBindingConnectionSource(final ServerSelector serverSelector) {
-            this.server = cluster.selectServer(serverSelector);
+            this.server = cluster.selectServer(serverSelector, connectionSelectionDeadline);
             ClusterBinding.this.retain();
         }
 
@@ -116,7 +131,7 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
 
         @Override
         public Connection getConnection() {
-            return server.getConnection();
+            return server.getConnection(connectionSelectionDeadline, operationDeadline);
         }
 
         public ConnectionSource retain() {

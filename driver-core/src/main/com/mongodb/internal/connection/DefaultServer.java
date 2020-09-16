@@ -36,6 +36,7 @@ import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerOpeningEvent;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 
 import java.util.List;
 
@@ -91,9 +92,15 @@ class DefaultServer implements ClusterableServer {
 
     @Override
     public Connection getConnection() {
+        return getConnection(Deadline.infinite(), Deadline.infinite());
+    }
+
+    @Override
+    public Connection getConnection(final Deadline connectionSelectionDeadline, final Deadline operationDeadline) {
         isTrue("open", !isClosed());
         try {
-            return connectionFactory.create(connectionPool.get(), new DefaultServerProtocolExecutor(), clusterConnectionMode);
+            return connectionFactory.create(connectionPool.get(connectionSelectionDeadline), new DefaultServerProtocolExecutor(),
+                    clusterConnectionMode, operationDeadline);
         } catch (MongoSecurityException e) {
             connectionPool.invalidate();
             throw e;
@@ -253,10 +260,10 @@ class DefaultServer implements ClusterableServer {
         @SuppressWarnings("unchecked")
         @Override
         public <T> T execute(final CommandProtocol<T> protocol, final InternalConnection connection,
-                             final SessionContext sessionContext) {
+                             final SessionContext sessionContext, final Deadline deadline) {
             try {
                 protocol.sessionContext(new ClusterClockAdvancingSessionContext(sessionContext, clusterClock));
-                return protocol.execute(connection);
+                return protocol.execute(connection, deadline);
             } catch (MongoWriteConcernWithResponseException e) {
                 invalidate();
                 return (T) e.getResponse();

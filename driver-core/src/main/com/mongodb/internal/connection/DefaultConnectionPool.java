@@ -41,6 +41,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.connection.ConcurrentPool.Prune;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.thread.DaemonThreadFactory;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
 
@@ -48,7 +49,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +58,7 @@ import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandli
 import static com.mongodb.internal.event.EventListenerHelper.getConnectionPoolListener;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 @SuppressWarnings("deprecation")
 class DefaultConnectionPool implements ConnectionPool {
@@ -97,15 +98,15 @@ class DefaultConnectionPool implements ConnectionPool {
 
     @Override
     public InternalConnection get() {
-        return get(settings.getMaxWaitTime(MILLISECONDS), MILLISECONDS);
+        return get(Deadline.infinite());
     }
 
     @Override
-    public InternalConnection get(final long timeout, final TimeUnit timeUnit) {
+    public InternalConnection get(final Deadline deadline) {
         PooledConnection pooledConnection;
         try {
             connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
-            pooledConnection = getPooledConnection(timeout, timeUnit);
+            pooledConnection = getPooledConnection(deadline);
         } catch (Throwable t) {
             emitCheckOutFailedEvent(t);
             throw t;
@@ -137,7 +138,7 @@ class DefaultConnectionPool implements ConnectionPool {
 
         try {
             connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
-            connection = getPooledConnection(0, MILLISECONDS);
+            connection = getPooledConnection(Deadline.finite(0, MILLISECONDS));
         } catch (MongoTimeoutException e) {
             // fall through
         } catch (Throwable t) {
@@ -158,10 +159,11 @@ class DefaultConnectionPool implements ConnectionPool {
                 @Override
                 public void run() {
                     try {
-                        if (getRemainingWaitTime() <= 0) {
+                        long remainingWaitTime = getRemainingWaitTime();
+                        if (remainingWaitTime <= 0) {
                             errHandlingCallback.onResult(null, createTimeoutException());
                         } else {
-                            PooledConnection connection = getPooledConnection(getRemainingWaitTime(), MILLISECONDS);
+                            PooledConnection connection = getPooledConnection(Deadline.finite(remainingWaitTime, MILLISECONDS));
                             openAsync(connection, errHandlingCallback);
                         }
                     } catch (MongoTimeoutException e) {
@@ -280,11 +282,13 @@ class DefaultConnectionPool implements ConnectionPool {
         }
     }
 
-    private PooledConnection getPooledConnection(final long timeout, final TimeUnit timeUnit) {
-        UsageTrackingInternalConnection internalConnection = pool.get(timeout, timeUnit);
+    private PooledConnection getPooledConnection(final Deadline deadline) {
+        Deadline compositeDeadline = deadline.isInfinite() ?
+                Deadline.of(settings.getMaxWaitTime(NANOSECONDS), NANOSECONDS) : deadline;
+        UsageTrackingInternalConnection internalConnection = pool.get(compositeDeadline.getTimeRemaining(NANOSECONDS), NANOSECONDS);
         while (shouldPrune(internalConnection)) {
             pool.release(internalConnection, true);
-            internalConnection = pool.get(timeout, timeUnit);
+            internalConnection = pool.get(compositeDeadline.getTimeRemaining(NANOSECONDS), NANOSECONDS);
         }
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("Checked out connection [%s] to server %s", getId(internalConnection), serverId.getAddress()));
@@ -485,9 +489,10 @@ class DefaultConnectionPool implements ConnectionPool {
         }
 
         @Override
-        public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
+        public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
+                                    final Deadline deadline) {
             isTrue("open", !isClosed.get());
-            return wrapped.sendAndReceive(message, decoder, sessionContext);
+            return wrapped.sendAndReceive(message, decoder, sessionContext, deadline);
         }
 
         @Override

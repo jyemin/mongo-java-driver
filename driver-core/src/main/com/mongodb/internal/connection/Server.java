@@ -17,8 +17,9 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.annotations.ThreadSafe;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 
 /**
  * A logical connection to a MongoDB server.
@@ -46,6 +47,8 @@ public interface Server {
      * @return a connection this server
      */
     Connection getConnection();
+
+    Connection getConnection(Deadline connectionSelectionDeadline, Deadline operationDeadline);
 
     /**
      * <p>Gets a connection to this server asynchronously.  The connection should be released after the caller is done with it.</p>

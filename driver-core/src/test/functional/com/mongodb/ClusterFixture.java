@@ -58,6 +58,7 @@ import com.mongodb.internal.operation.CommandWriteOperation;
 import com.mongodb.internal.operation.DropDatabaseOperation;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -130,7 +131,7 @@ public final class ClusterFixture {
         if (serverVersion == null) {
             serverVersion = getVersion(new CommandReadOperation<BsonDocument>("admin",
                     new BsonDocument("buildInfo", new BsonInt32(1)), new BsonDocumentCodec())
-                    .execute(new ClusterBinding(getCluster(), ReadPreference.nearest(), ReadConcern.DEFAULT)));
+                    .execute(new ClusterBinding(getCluster(), ReadPreference.nearest(), ReadConcern.DEFAULT, Deadline.infinite())));
         }
         return serverVersion;
     }
@@ -230,7 +231,7 @@ public final class ClusterFixture {
         try {
             BsonDocument isMasterResult = new CommandReadOperation<BsonDocument>("admin",
                     new BsonDocument("ismaster", new BsonInt32(1)), new BsonDocumentCodec()).execute(new ClusterBinding(cluster,
-                    ReadPreference.nearest(), ReadConcern.DEFAULT));
+                    ReadPreference.nearest(), ReadConcern.DEFAULT, Deadline.infinite()));
             if (isMasterResult.containsKey("setName")) {
                 connectionString = new ConnectionString(DEFAULT_URI + "/?replicaSet="
                         + isMasterResult.getString("setName").getValue());
@@ -257,7 +258,7 @@ public final class ClusterFixture {
     }
 
     public static ReadWriteBinding getBinding(final Cluster cluster) {
-        return new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT);
+        return new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, Deadline.infinite());
     }
 
     public static ReadWriteBinding getBinding() {
@@ -270,7 +271,7 @@ public final class ClusterFixture {
 
     private static ReadWriteBinding getBinding(final Cluster cluster, final ReadPreference readPreference) {
         if (!bindingMap.containsKey(readPreference)) {
-            ReadWriteBinding binding = new ClusterBinding(cluster, readPreference, ReadConcern.DEFAULT);
+            ReadWriteBinding binding = new ClusterBinding(cluster, readPreference, ReadConcern.DEFAULT, Deadline.infinite());
             if (serverVersionAtLeast(3, 6)) {
                 binding = new SessionBinding(binding);
             }

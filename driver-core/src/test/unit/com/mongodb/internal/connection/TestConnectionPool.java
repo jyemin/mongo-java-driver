@@ -21,11 +21,11 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class TestConnectionPool implements ConnectionPool {
 
@@ -58,7 +58,8 @@ public class TestConnectionPool implements ConnectionPool {
             }
 
             @Override
-            public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
+            public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
+                                        final Deadline deadline) {
                 throw new UnsupportedOperationException("Not implemented yet!");
             }
 
@@ -137,7 +138,7 @@ public class TestConnectionPool implements ConnectionPool {
     }
 
     @Override
-    public InternalConnection get(final long timeout, final TimeUnit timeUnit) {
+    public InternalConnection get(final Deadline deadline) {
         if (exceptionToThrow != null) {
             throw exceptionToThrow;
         }

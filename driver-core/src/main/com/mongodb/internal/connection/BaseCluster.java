@@ -33,6 +33,7 @@ import com.mongodb.event.ClusterDescriptionChangedEvent;
 import com.mongodb.event.ClusterListener;
 import com.mongodb.event.ClusterOpeningEvent;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.selector.CompositeServerSelector;
 import com.mongodb.selector.ServerSelector;
 import org.bson.BsonTimestamp;
@@ -93,6 +94,11 @@ abstract class BaseCluster implements Cluster {
 
     @Override
     public Server selectServer(final ServerSelector serverSelector) {
+        return selectServer(serverSelector, Deadline.infinite());
+    }
+
+    @Override
+    public Server selectServer(final ServerSelector serverSelector, final Deadline deadline) {
         isTrue("open", !isClosed());
 
         try {
@@ -105,7 +111,7 @@ abstract class BaseCluster implements Cluster {
 
             long startTimeNanos = System.nanoTime();
             long curTimeNanos = startTimeNanos;
-            long maxWaitTimeNanos = getMaxWaitTimeNanos();
+            long maxWaitTimeNanos = getMaxWaitTimeNanos(deadline);
 
             while (true) {
                 throwIfIncompatible(curDescription);
@@ -147,7 +153,7 @@ abstract class BaseCluster implements Cluster {
             LOGGER.trace(format("Asynchronously selecting server with selector %s", serverSelector));
         }
         ServerSelectionRequest request = new ServerSelectionRequest(serverSelector, getCompositeServerSelector(serverSelector),
-                                                                    getMaxWaitTimeNanos(), callback);
+                                                                    getMaxWaitTimeNanos(Deadline.infinite()), callback);
 
         CountDownLatch currentPhase = phase.get();
         ClusterDescription currentDescription = description;
@@ -169,7 +175,7 @@ abstract class BaseCluster implements Cluster {
 
             long startTimeNanos = System.nanoTime();
             long curTimeNanos = startTimeNanos;
-            long maxWaitTimeNanos = getMaxWaitTimeNanos();
+            long maxWaitTimeNanos = getMaxWaitTimeNanos(Deadline.infinite());
 
             while (curDescription.getType() == ClusterType.UNKNOWN) {
 
@@ -269,11 +275,12 @@ abstract class BaseCluster implements Cluster {
         phase.getAndSet(new CountDownLatch(1)).countDown();
     }
 
-    private long getMaxWaitTimeNanos() {
-        if (settings.getServerSelectionTimeout(NANOSECONDS) < 0) {
-            return Long.MAX_VALUE;
+    private long getMaxWaitTimeNanos(final Deadline deadline) {
+        if (deadline.isInfinite()) {
+            return settings.getServerSelectionTimeout(NANOSECONDS) < 0 ? Long.MAX_VALUE : settings.getServerSelectionTimeout(NANOSECONDS);
+        } else {
+            return deadline.getTimeRemaining(NANOSECONDS);
         }
-        return settings.getServerSelectionTimeout(NANOSECONDS);
     }
 
     private long getMinWaitTimeNanos() {

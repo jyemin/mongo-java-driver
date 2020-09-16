@@ -28,6 +28,7 @@ import com.mongodb.internal.bulk.DeleteRequest;
 import com.mongodb.internal.bulk.InsertRequest;
 import com.mongodb.internal.bulk.UpdateRequest;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
@@ -43,12 +44,14 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     private final InternalConnection wrapped;
     private final ProtocolExecutor protocolExecutor;
     private final ClusterConnectionMode clusterConnectionMode;
+    private final Deadline deadline;
 
     public DefaultServerConnection(final InternalConnection wrapped, final ProtocolExecutor protocolExecutor,
-                            final ClusterConnectionMode clusterConnectionMode) {
+                                   final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
         this.wrapped = wrapped;
         this.protocolExecutor = protocolExecutor;
         this.clusterConnectionMode = clusterConnectionMode;
+        this.deadline = deadline;
     }
 
     @Override
@@ -199,7 +202,7 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     }
 
     private <T> T executeProtocol(final CommandProtocol<T> protocol, final SessionContext sessionContext) {
-        return protocolExecutor.execute(protocol, this.wrapped, sessionContext);
+        return protocolExecutor.execute(protocol, this.wrapped, sessionContext, deadline);
     }
 
     private <T> void executeProtocolAsync(final LegacyProtocol<T> protocol, final SingleResultCallback<T> callback) {

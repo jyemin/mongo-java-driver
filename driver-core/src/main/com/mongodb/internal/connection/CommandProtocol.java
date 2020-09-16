@@ -18,10 +18,11 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 
 public interface CommandProtocol<T> {
 
-    T execute(InternalConnection connection);
+    T execute(InternalConnection connection, Deadline deadline);
 
     void executeAsync(InternalConnection connection, SingleResultCallback<T> callback);
 

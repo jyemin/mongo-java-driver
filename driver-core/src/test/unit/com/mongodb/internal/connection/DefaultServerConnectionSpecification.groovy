@@ -20,17 +20,18 @@ import com.mongodb.MongoNamespace
 import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import com.mongodb.WriteConcernResult
-import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.connection.ClusterConnectionMode
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ConnectionId
 import com.mongodb.connection.ServerId
 import com.mongodb.diagnostics.logging.Logger
+import com.mongodb.internal.async.SingleResultCallback
 import com.mongodb.internal.bulk.DeleteRequest
 import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.bulk.UpdateRequest
 import com.mongodb.internal.bulk.WriteRequest
+import com.mongodb.internal.timeout.Deadline
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
@@ -63,7 +64,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 WriteConcernResult.unacknowledged()
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         def result = connection.insert(namespace, true, insertRequest)
@@ -80,7 +81,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 WriteConcernResult.unacknowledged()
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         def result = connection.update(namespace, true,  updateRequest)
@@ -97,7 +98,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 WriteConcernResult.unacknowledged()
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         def result = connection.delete(namespace, true, deleteRequest)
@@ -124,7 +125,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 expectedResult
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         def result = connection.query(namespace, query, fields, 2, 10, 5, slaveOk, false, true, false, true, false, decoder)
@@ -154,7 +155,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 expectedResult
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.SINGLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.SINGLE, Deadline.infinite())
         internalConnection.description >> connectionDescription
 
         when:
@@ -178,7 +179,7 @@ class DefaultServerConnectionSpecification extends Specification {
                 expectedResult
             }
         }
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         def result = connection.getMore(namespace, 1000L, 1, codec)
@@ -190,7 +191,7 @@ class DefaultServerConnectionSpecification extends Specification {
     def 'should execute kill cursor protocol'() {
         given:
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.killCursor(namespace, [5])
@@ -203,7 +204,7 @@ class DefaultServerConnectionSpecification extends Specification {
         given:
         def insertRequest = new InsertRequest(new BsonDocument())
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.insertAsync(namespace, true, insertRequest, callback)
@@ -217,7 +218,7 @@ class DefaultServerConnectionSpecification extends Specification {
         given:
         def updateRequest = new UpdateRequest(new BsonDocument(), new BsonDocument(), WriteRequest.Type.REPLACE)
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.updateAsync(namespace, true, updateRequest, callback)
@@ -231,7 +232,7 @@ class DefaultServerConnectionSpecification extends Specification {
         given:
         def deleteRequest = new DeleteRequest(new BsonDocument())
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.deleteAsync(namespace, true, deleteRequest, callback)
@@ -247,7 +248,7 @@ class DefaultServerConnectionSpecification extends Specification {
         def validator = new NoOpFieldNameValidator()
         def codec = new BsonDocumentCodec()
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.commandAsync('test', command, validator, ReadPreference.primary(), codec, NoOpSessionContext.INSTANCE, callback)
@@ -264,7 +265,7 @@ class DefaultServerConnectionSpecification extends Specification {
         def query = new BsonDocument('x', BsonBoolean.TRUE)
         def fields = new BsonDocument('y', new BsonInt32(1))
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.queryAsync(namespace, query, fields, 2, 10, 5, slaveOk, false, true, false, true, false, decoder, callback)
@@ -291,7 +292,7 @@ class DefaultServerConnectionSpecification extends Specification {
         def query = new BsonDocument('x', BsonBoolean.TRUE)
         def fields = new BsonDocument('y', new BsonInt32(1))
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.SINGLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.SINGLE, Deadline.infinite())
         internalConnection.description >> connectionDescription
 
         when:
@@ -319,7 +320,7 @@ class DefaultServerConnectionSpecification extends Specification {
         given:
         def codec = new BsonDocumentCodec()
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.getMoreAsync(namespace, 1000L, 1, codec, callback)
@@ -331,7 +332,7 @@ class DefaultServerConnectionSpecification extends Specification {
     def 'should execute kill cursor protocol asynchronously'() {
         given:
         def executor = Mock(ProtocolExecutor)
-        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE)
+        def connection = new DefaultServerConnection(internalConnection, executor, ClusterConnectionMode.MULTIPLE, Deadline.infinite())
 
         when:
         connection.killCursorAsync(namespace, [5], callback)

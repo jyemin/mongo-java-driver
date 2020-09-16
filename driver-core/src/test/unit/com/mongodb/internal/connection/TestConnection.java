@@ -19,12 +19,13 @@ package com.mongodb.internal.connection;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcernResult;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.bulk.DeleteRequest;
 import com.mongodb.internal.bulk.InsertRequest;
 import com.mongodb.internal.bulk.UpdateRequest;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
@@ -182,7 +183,7 @@ class TestConnection implements Connection, AsyncConnection {
 
     @SuppressWarnings("unchecked")
     private <T> T executeEnqueuedCommandBasedProtocol(final SessionContext sessionContext) {
-        return (T) executor.execute(enqueuedCommandProtocol, internalConnection, sessionContext);
+        return (T) executor.execute(enqueuedCommandProtocol, internalConnection, sessionContext, Deadline.infinite());
     }
 
     @SuppressWarnings("unchecked")

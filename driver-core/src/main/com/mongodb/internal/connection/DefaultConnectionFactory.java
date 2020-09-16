@@ -17,17 +17,18 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.internal.timeout.Deadline;
 
 class DefaultConnectionFactory implements ConnectionFactory {
     @Override
     public Connection create(final InternalConnection internalConnection, final ProtocolExecutor executor,
-                             final ClusterConnectionMode clusterConnectionMode) {
-        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode);
+                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
+        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, deadline);
     }
 
     @Override
     public AsyncConnection createAsync(final InternalConnection internalConnection, final ProtocolExecutor executor,
                                        final ClusterConnectionMode clusterConnectionMode) {
-        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode);
+        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, Deadline.infinite());
     }
 }

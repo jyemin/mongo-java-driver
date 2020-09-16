@@ -18,6 +18,7 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.ClusterFixture;
 import com.mongodb.async.FutureResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -40,7 +41,7 @@ final class ProtocolTestHelper {
             protocol.executeAsync(connection, futureResultCallback);
             return futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS);
         } else {
-            return protocol.execute(connection);
+            return protocol.execute(connection, Deadline.infinite());
         }
     }
 

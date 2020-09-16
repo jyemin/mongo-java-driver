@@ -17,9 +17,11 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.internal.timeout.Deadline;
 
 interface ConnectionFactory {
-    Connection create(InternalConnection internalConnection, ProtocolExecutor executor, ClusterConnectionMode clusterConnectionMode);
+    Connection create(InternalConnection internalConnection, ProtocolExecutor executor, ClusterConnectionMode clusterConnectionMode,
+                      Deadline deadline);
 
     AsyncConnection createAsync(InternalConnection internalConnection, ProtocolExecutor executor,
                                 ClusterConnectionMode clusterConnectionMode);

@@ -41,6 +41,7 @@ import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
 import com.mongodb.internal.session.SessionContext
+import com.mongodb.internal.timeout.Deadline
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -409,7 +410,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(_, 0) >> helper.reply(response)
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         thrown(MongoCommandException)
@@ -488,7 +489,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(90, 0) >> helper.defaultReply()
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         commandListener.eventsWereDelivered([
@@ -518,7 +519,7 @@ class InternalStreamConnectionSpecification extends Specification {
         }
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), sessionContext)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), sessionContext, Deadline.infinite())
 
         then:
         true
@@ -568,7 +569,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.write(_) >> { throw new MongoSocketWriteException('Failed to write', serverAddress, new IOException()) }
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         def e = thrown(MongoSocketWriteException)
@@ -587,7 +588,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(16, 0) >> { throw new MongoSocketReadException('Failed to read', serverAddress) }
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         def e = thrown(MongoSocketReadException)
@@ -607,7 +608,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(90, 0) >> { throw new MongoSocketReadException('Failed to read', serverAddress) }
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         def e = thrown(MongoSocketException)
@@ -628,7 +629,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(_, 0) >> helper.reply(response)
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         def e = thrown(MongoCommandException)
@@ -648,7 +649,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(90, 0) >> helper.defaultReply()
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         commandListener.eventsWereDelivered([
@@ -680,7 +681,7 @@ class InternalStreamConnectionSpecification extends Specification {
         stream.read(_, 0) >> helper.reply('{ok : 0, errmsg : "failed"}')
 
         when:
-        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+        connection.sendAndReceive(commandMessage, new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         thrown(MongoCommandException)

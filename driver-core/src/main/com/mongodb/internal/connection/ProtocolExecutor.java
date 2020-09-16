@@ -18,13 +18,16 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 
 public interface ProtocolExecutor {
+    // TODO: support for legacy wire protocol?  Needs to be in the spec
     <T> T execute(LegacyProtocol<T> protocol, InternalConnection connection);
 
+    // TODO: support for async
     <T> void executeAsync(LegacyProtocol<T> protocol, InternalConnection connection, SingleResultCallback<T> callback);
 
-    <T> T execute(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext);
+    <T> T execute(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext, Deadline deadline);
 
     <T> void executeAsync(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext,
                           SingleResultCallback<T> callback);

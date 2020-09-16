@@ -19,8 +19,9 @@ package com.mongodb.internal.connection;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoServerException;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
+import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
@@ -81,7 +82,7 @@ public final class CommandHelper {
         SessionContext sessionContext = clusterClock == null ? NoOpSessionContext.INSTANCE
                 : new ClusterClockAdvancingSessionContext(NoOpSessionContext.INSTANCE, clusterClock);
         return internalConnection.sendAndReceive(getCommandMessage(database, command, internalConnection), new BsonDocumentCodec(),
-                sessionContext);
+                sessionContext, Deadline.infinite());
     }
 
     private static CommandMessage getCommandMessage(final String database, final BsonDocument command,

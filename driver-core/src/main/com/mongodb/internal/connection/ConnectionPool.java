@@ -17,9 +17,9 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 
 import java.io.Closeable;
-import java.util.concurrent.TimeUnit;
 
 interface ConnectionPool extends Closeable {
 
@@ -28,7 +28,7 @@ interface ConnectionPool extends Closeable {
 
     InternalConnection get();
 
-    InternalConnection get(long timeout, TimeUnit timeUnit);
+    InternalConnection get(Deadline deadline);
 
     void getAsync(SingleResultCallback<InternalConnection> callback);
 

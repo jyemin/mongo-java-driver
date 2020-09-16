@@ -25,6 +25,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
 import org.bson.ByteBuf;
@@ -154,7 +155,8 @@ class TestInternalConnection implements InternalConnection {
     }
 
     @Override
-    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
+    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
+                                final Deadline deadline) {
         ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this);
         try {
             message.encode(bsonOutput, sessionContext);
@@ -202,7 +204,7 @@ class TestInternalConnection implements InternalConnection {
     public <T> void sendAndReceiveAsync(final CommandMessage message, final Decoder<T> decoder,
                                         final SessionContext sessionContext, final SingleResultCallback<T> callback) {
         try {
-            T result = sendAndReceive(message, decoder, sessionContext);
+            T result = sendAndReceive(message, decoder, sessionContext, Deadline.infinite());
             callback.onResult(result, null);
         } catch (MongoException ex) {
             callback.onResult(null, ex);

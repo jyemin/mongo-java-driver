@@ -36,9 +36,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MapReduceIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.result.InsertManyResult;
-import com.mongodb.client.result.InsertOneResult;
-import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateIndexOptions;
@@ -57,14 +54,18 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.InsertManyResult;
+import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.internal.bulk.WriteRequest;
+import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.client.model.CountStrategy;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.operation.IndexHelper;
 import com.mongodb.internal.operation.RenameCollectionOperation;
 import com.mongodb.internal.operation.SyncOperations;
 import com.mongodb.internal.operation.WriteOperation;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -76,6 +77,7 @@ import org.bson.conversions.Bson;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.bulk.WriteRequest.Type.DELETE;
@@ -220,7 +222,12 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
 
     private long executeCount(@Nullable final ClientSession clientSession, final Bson filter, final CountOptions options,
                               final CountStrategy countStrategy) {
-        return executor.execute(operations.count(filter, options, countStrategy), readPreference, readConcern, clientSession);
+        return executor.execute(operations.count(filter, options, countStrategy), readPreference, readConcern,
+                getDeadline(options.getTimeout(TimeUnit.MILLISECONDS)), clientSession);
+    }
+
+    private Deadline getDeadline(@Nullable final Long timeoutMS) {
+        return timeoutMS == null ? Deadline.infinite() : Deadline.of(timeoutMS, TimeUnit.MILLISECONDS);
     }
 
     @Override

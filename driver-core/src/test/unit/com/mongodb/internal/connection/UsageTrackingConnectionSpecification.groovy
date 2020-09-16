@@ -173,7 +173,7 @@ class UsageTrackingConnectionSpecification extends Specification {
         connection.sendAndReceive(new CommandMessage(new MongoNamespace('test.coll'),
                 new BsonDocument('ping', new BsonInt32(1)), new NoOpFieldNameValidator(), primary(),
                 MessageSettings.builder().build()),
-                new BsonDocumentCodec(), NoOpSessionContext.INSTANCE)
+                new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, com.mongodb.internal.timeout.Deadline.infinite())
 
         then:
         connection.lastUsedAt >= openedLastUsedAt

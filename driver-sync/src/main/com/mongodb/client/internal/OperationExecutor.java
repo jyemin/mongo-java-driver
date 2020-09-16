@@ -21,6 +21,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 
 /**
@@ -62,6 +63,9 @@ public interface OperationExecutor {
      * @return the result of executing the operation.
      */
     <T> T execute(ReadOperation<T> operation, ReadPreference readPreference, ReadConcern readConcern, @Nullable ClientSession session);
+
+    <T> T execute(ReadOperation<T> operation, ReadPreference readPreference, ReadConcern readConcern,
+                  Deadline deadline, @Nullable ClientSession session);
 
     /**
      * Execute the write operation.

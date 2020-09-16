@@ -17,11 +17,12 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.internal.timeout.Deadline;
 
 class TestConnectionFactory implements ConnectionFactory {
     @Override
     public Connection create(final InternalConnection internalConnection, final ProtocolExecutor executor,
-                             final ClusterConnectionMode clusterConnectionMode) {
+                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
         return new TestConnection(internalConnection, executor);
     }
 

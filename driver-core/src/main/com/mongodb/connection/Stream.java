@@ -44,6 +44,18 @@ public interface Stream extends BufferProvider{
     void openAsync(AsyncCompletionHandler<Void> handler);
 
     /**
+     * Returns whether this implementations supports per-operation write timeouts. The default is false.
+     *
+     * @return whether this implementations supports per-operation write timeouts
+     * @since 4.2?
+     */
+    default boolean supportsWriteTimeout() {
+        return false;
+    }
+
+    // TODO: add writeWithTimeout for Stream implementations that support write timeouts
+
+    /**
      * Write each buffer in the list to the stream in order, blocking until all are completely written.
      *
      * @param buffers the buffers to write
@@ -59,6 +71,32 @@ public interface Stream extends BufferProvider{
      * @throws IOException if there are problems reading from the stream
      */
     ByteBuf read(int numBytes) throws IOException;
+
+    /**
+     * Returns whether this implementations supports per-operation read timeouts. The default is false.
+     *
+     * @return whether this implementations supports per-operation read timeouts
+     * @since 4.2?
+     */
+    default boolean supportsReadTimeout() {
+        return false;
+    }
+
+    /**
+     * Read from the stream, blocking until the requested number of bytes have been read.
+     *
+     * @param numBytes The number of bytes to read into the returned byte buffer
+     * @param timeoutMS the per-operation timeout, in milliseconds.  A value of zero indicates no timeout
+     * @return a byte buffer filled with number of bytes requested
+     * @throws IOException if there are problems reading from the stream
+     * @since 4.2?
+     */
+    default ByteBuf readWithTimeout(int numBytes, int timeoutMS) throws IOException {
+        if (timeoutMS != 0) {
+            throw new UnsupportedOperationException();
+        }
+        return read(numBytes);
+    }
 
     /**
      * Gets whether this implementation supports specifying an additional timeout for read operations

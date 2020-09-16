@@ -18,9 +18,10 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
@@ -67,14 +68,14 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
     }
 
     @Override
-    public T execute(final InternalConnection connection) {
-        return connection.sendAndReceive(getCommandMessage(connection), commandResultDecoder, sessionContext);
+    public T execute(final InternalConnection connection, final Deadline deadline) {
+        return connection.sendAndReceive(getCommandMessage(connection, deadline), commandResultDecoder, sessionContext, deadline);
     }
 
     @Override
     public void executeAsync(final InternalConnection connection, final SingleResultCallback<T> callback) {
         try {
-            connection.sendAndReceiveAsync(getCommandMessage(connection), commandResultDecoder, sessionContext,
+            connection.sendAndReceiveAsync(getCommandMessage(connection, Deadline.infinite()), commandResultDecoder, sessionContext,
                     new SingleResultCallback<T>() {
                         @Override
                         public void onResult(final T result, final Throwable t) {
@@ -96,9 +97,9 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
         return this;
     }
 
-    private CommandMessage getCommandMessage(final InternalConnection connection) {
+    private CommandMessage getCommandMessage(final InternalConnection connection, final Deadline deadline) {
         return new CommandMessage(namespace, command, commandFieldNameValidator, readPreference,
-                    getMessageSettings(connection.getDescription()), responseExpected, payload,
-                payloadFieldNameValidator, clusterConnectionMode);
+                getMessageSettings(connection.getDescription()), responseExpected, payload,
+                payloadFieldNameValidator, clusterConnectionMode, Deadline.infinite());
     }
 }

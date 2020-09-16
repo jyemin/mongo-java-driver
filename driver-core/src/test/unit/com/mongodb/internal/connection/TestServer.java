@@ -23,6 +23,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.ServerDescriptionChangedEvent;
 import com.mongodb.event.ServerListener;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 
@@ -97,6 +98,11 @@ public class TestServer implements ClusterableServer {
 
     @Override
     public Connection getConnection() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Connection getConnection(final Deadline connectionSelectionDeadline, final Deadline operationDeadline) {
         throw new UnsupportedOperationException();
     }
 

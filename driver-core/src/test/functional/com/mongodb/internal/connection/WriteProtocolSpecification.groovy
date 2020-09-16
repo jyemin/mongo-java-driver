@@ -68,7 +68,7 @@ class WriteProtocolSpecification extends OperationFunctionalSpecification {
         new CommandProtocolImpl(getDatabaseName(), new BsonDocument('drop', new BsonString(getCollectionName())),
                 NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec())
                 .sessionContext(NoOpSessionContext.INSTANCE)
-                .execute(connection)
+                .execute(connection, com.mongodb.internal.timeout.Deadline.infinite())
 
         where:
         async << [false, true]

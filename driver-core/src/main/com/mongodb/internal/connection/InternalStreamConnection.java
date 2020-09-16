@@ -41,6 +41,7 @@ import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.event.CommandListener;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
 import org.bson.ByteBuf;
@@ -260,8 +261,10 @@ public class InternalStreamConnection implements InternalConnection {
         return isClosed.get();
     }
 
+    // TODO: use the deadline to set socket timeouts
     @Override
-    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
+    public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
+                                final Deadline deadline) {
         ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this);
         CommandEventSender commandEventSender;
 

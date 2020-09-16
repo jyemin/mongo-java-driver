@@ -36,6 +36,7 @@ public class CountOptions {
     private int skip;
     private long maxTimeMS;
     private Collation collation;
+    private Long timeoutMS;
 
     /**
      * Gets the hint to apply.
@@ -146,6 +147,36 @@ public class CountOptions {
     public CountOptions maxTime(final long maxTime, final TimeUnit timeUnit) {
         notNull("timeUnit", timeUnit);
         this.maxTimeMS = TimeUnit.MILLISECONDS.convert(maxTime, timeUnit);
+        return this;
+    }
+
+    /**
+     * Gets the maximum execution time on the client for this operation.  The default is 0, which places no limit on the execution time.
+     *
+     * @param timeUnit the time unit to return the result in
+     * @return the maximum execution time in the given time unit
+     * @since 4.2?
+     */
+    @Nullable
+    public Long getTimeout(final TimeUnit timeUnit) {
+        notNull("timeUnit", timeUnit);
+        if (timeoutMS == null) {
+            return null;
+        }
+        return timeUnit.convert(timeoutMS, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Sets the maximum execution time on the client for this operation.
+     *
+     * @param maxTime  the max time
+     * @param timeUnit the time unit, which may not be null
+     * @return this
+     * @since 4.2?
+     */
+    public CountOptions timeout(final long maxTime, final TimeUnit timeUnit) {
+        notNull("timeUnit", timeUnit);
+        this.timeoutMS = TimeUnit.MILLISECONDS.convert(maxTime, timeUnit);
         return this;
     }
 
