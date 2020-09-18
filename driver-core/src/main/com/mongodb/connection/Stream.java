@@ -37,6 +37,31 @@ public interface Stream extends BufferProvider{
     void open() throws IOException;
 
     /**
+     * Returns whether this implementations supports per-operation write timeouts. The default is false.
+     *
+     * @return whether this implementations supports per-operation write timeouts
+     * @since 4.2?
+     */
+    default boolean supportsOpenTimeout() {
+        return false;
+    }
+
+    /**
+     * Open the stream with the given timeout applied.
+     *
+     * @param timeoutMS the timeout, in milliseconds
+     * @throws IOException if an I/O error occurs
+     * @since 4.2?
+     */
+    default void open(int timeoutMS) throws IOException {
+        if (timeoutMS != 0) {
+            throw new UnsupportedOperationException();
+        }
+        open();
+    }
+
+
+    /**
      * Open the stream asynchronously.
      *
      * @param handler the completion handler for opening the stream

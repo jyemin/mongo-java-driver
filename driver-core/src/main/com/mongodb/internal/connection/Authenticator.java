@@ -18,8 +18,9 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoInternalException;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
 
@@ -68,7 +69,7 @@ public abstract class Authenticator {
 
     }
 
-    abstract void authenticate(InternalConnection connection, ConnectionDescription connectionDescription);
+    abstract void authenticate(InternalConnection connection, ConnectionDescription connectionDescription, Deadline deadline);
 
     abstract void authenticateAsync(InternalConnection connection, ConnectionDescription connectionDescription,
                                     SingleResultCallback<Void> callback);

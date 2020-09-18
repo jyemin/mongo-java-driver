@@ -22,6 +22,7 @@ import com.mongodb.ServerAddress
 import com.mongodb.async.FutureResultCallback
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ServerId
+import com.mongodb.internal.timeout.Deadline
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -49,7 +50,7 @@ class UsageTrackingConnectionSpecification extends Specification {
         connection.openedAt == Long.MAX_VALUE
 
         when:
-        connection.open()
+        connection.open(Deadline.infinite())
 
         then:
         connection.openedAt <= System.currentTimeMillis()
@@ -80,7 +81,7 @@ class UsageTrackingConnectionSpecification extends Specification {
         connection.lastUsedAt == Long.MAX_VALUE
 
         when:
-        connection.open()
+        connection.open(Deadline.infinite())
 
         then:
         connection.lastUsedAt <= System.currentTimeMillis()
@@ -106,7 +107,7 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on sendMessage'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
 
         when:
@@ -121,7 +122,7 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on sendMessage asynchronously'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
         def futureResultCallback = new FutureResultCallback<Void>()
 
@@ -137,7 +138,7 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on receiveMessage'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
         when:
         connection.receiveMessage(1)
@@ -150,7 +151,7 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on receiveMessage asynchronously'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
         def futureResultCallback = new FutureResultCallback<Void>()
 
@@ -166,14 +167,14 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on sendAndReceive'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
 
         when:
         connection.sendAndReceive(new CommandMessage(new MongoNamespace('test.coll'),
                 new BsonDocument('ping', new BsonInt32(1)), new NoOpFieldNameValidator(), primary(),
                 MessageSettings.builder().build()),
-                new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, com.mongodb.internal.timeout.Deadline.infinite())
+                new BsonDocumentCodec(), NoOpSessionContext.INSTANCE, Deadline.infinite())
 
         then:
         connection.lastUsedAt >= openedLastUsedAt
@@ -183,7 +184,7 @@ class UsageTrackingConnectionSpecification extends Specification {
     def 'lastUsedAt should be set on sendAndReceive asynchronously'() {
         given:
         def connection = new UsageTrackingInternalConnection(new TestInternalConnectionFactory().create(SERVER_ID), 0);
-        connection.open()
+        connection.open(Deadline.infinite())
         def openedLastUsedAt = connection.lastUsedAt
         def futureResultCallback = new FutureResultCallback<Void>()
 

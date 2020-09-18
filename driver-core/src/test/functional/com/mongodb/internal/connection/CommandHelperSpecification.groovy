@@ -26,6 +26,7 @@ import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.netty.NettyStreamFactory
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonTimestamp
@@ -46,7 +47,7 @@ class CommandHelperSpecification extends Specification {
         connection = new InternalStreamConnectionFactory(new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings()),
                 getCredentialWithCache(), null, null, [], null)
                 .create(new ServerId(new ClusterId(), getPrimary()))
-        connection.open()
+        connection.open(Deadline.infinite())
     }
 
     def cleanup() {

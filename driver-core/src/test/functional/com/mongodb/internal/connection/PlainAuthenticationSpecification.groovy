@@ -27,6 +27,7 @@ import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SocketStreamFactory
 import com.mongodb.connection.netty.NettyStreamFactory
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.BsonString
 import spock.lang.IgnoreIf
@@ -49,7 +50,8 @@ class PlainAuthenticationSpecification extends Specification {
 
         when:
         openConnection(connection, async)
-        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection)
+        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection,
+                Deadline.infinite())
 
         then:
         thrown(MongoCommandException)
@@ -67,7 +69,8 @@ class PlainAuthenticationSpecification extends Specification {
 
         when:
         openConnection(connection, async)
-        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection)
+        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection,
+                Deadline.infinite())
 
         then:
         true
@@ -85,7 +88,8 @@ class PlainAuthenticationSpecification extends Specification {
 
         when:
         openConnection(connection, async)
-        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection)
+        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection,
+                Deadline.infinite())
 
         then:
         thrown(MongoSecurityException)
@@ -119,7 +123,7 @@ class PlainAuthenticationSpecification extends Specification {
             connection.openAsync(futureResultCallback)
             futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS);
         } else {
-            connection.open()
+            connection.open(Deadline.infinite())
         }
     }
 }

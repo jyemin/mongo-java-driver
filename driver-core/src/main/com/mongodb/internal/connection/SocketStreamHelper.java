@@ -19,6 +19,7 @@ package com.mongodb.internal.connection;
 import com.mongodb.MongoInternalException;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
+import com.mongodb.internal.timeout.Deadline;
 import jdk.net.ExtendedSocketOptions;
 
 import javax.net.ssl.SSLParameters;
@@ -44,7 +45,7 @@ final class SocketStreamHelper {
     private static final int TCP_KEEPINTERVAL_DURATION = 10;
 
     static void initialize(final Socket socket, final InetSocketAddress inetSocketAddress, final SocketSettings settings,
-                           final SslSettings sslSettings) throws IOException {
+                           final SslSettings sslSettings, final Deadline deadline) throws IOException {
         socket.setTcpNoDelay(true);
         socket.setSoTimeout(settings.getReadTimeout(MILLISECONDS));
         socket.setKeepAlive(true);
@@ -75,7 +76,15 @@ final class SocketStreamHelper {
             }
             sslSocket.setSSLParameters(sslParameters);
         }
-        socket.connect(inetSocketAddress, settings.getConnectTimeout(MILLISECONDS));
+
+        // TODO: safe cast to int?
+        // TODO: is settings.connectTimeout always finite?
+        int connectTimeout = deadline.isInfinite()
+                ? settings.getConnectTimeout(MILLISECONDS)
+                : (int) Deadline.min(deadline, Deadline.finite(settings.getConnectTimeout(MILLISECONDS), MILLISECONDS))
+                .getTimeRemaining(MILLISECONDS);
+
+        socket.connect(inetSocketAddress, connectTimeout);
     }
 
     @SuppressWarnings("unchecked")

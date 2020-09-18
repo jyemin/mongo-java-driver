@@ -62,7 +62,7 @@ class TestInternalConnectionFactory implements InternalConnectionFactory {
             this.connectionId = new ConnectionId(serverId, incrementingId.incrementAndGet(), null);
         }
 
-        public void open() {
+        public void open(final Deadline deadline) {
             opened = true;
         }
 

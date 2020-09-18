@@ -111,7 +111,7 @@ public class TestConnectionPool implements ConnectionPool {
             }
 
             @Override
-            public void open() {
+            public void open(final Deadline deadline) {
                 throw new UnsupportedOperationException("Not implemented yet");
             }
 

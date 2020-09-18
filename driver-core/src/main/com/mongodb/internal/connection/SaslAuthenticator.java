@@ -20,11 +20,12 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.ServerAddress;
+import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
-import com.mongodb.connection.ConnectionDescription;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -47,14 +48,15 @@ abstract class SaslAuthenticator extends Authenticator implements SpeculativeAut
         super(credential);
     }
 
-    public void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription) {
+    public void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription,
+                             final Deadline deadline) {
         doAsSubject(new PrivilegedAction<Void>() {
             @Override
             public Void run() {
                 SaslClient saslClient = createSaslClient(connection.getDescription().getServerAddress());
                 throwIfSaslClientIsNull(saslClient);
                 try {
-                    BsonDocument responseDocument = getNextSaslResponse(saslClient, connection);
+                    BsonDocument responseDocument = getNextSaslResponse(saslClient, connection, deadline);
                     BsonInt32 conversationId = responseDocument.getInt32("conversationId");
 
                     while (!(responseDocument.getBoolean("done")).getValue()) {
@@ -66,7 +68,7 @@ abstract class SaslAuthenticator extends Authenticator implements SpeculativeAut
                                             + getMongoCredential());
                         }
 
-                        responseDocument = sendSaslContinue(conversationId, response, connection);
+                        responseDocument = sendSaslContinue(conversationId, response, connection, deadline);
                     }
                     if (!saslClient.isComplete()) {
                         saslClient.evaluateChallenge((responseDocument.getBinary("payload")).getData());
@@ -117,15 +119,17 @@ abstract class SaslAuthenticator extends Authenticator implements SpeculativeAut
         }
     }
 
-    private BsonDocument getNextSaslResponse(final SaslClient saslClient, final InternalConnection connection) {
+    private BsonDocument getNextSaslResponse(final SaslClient saslClient, final InternalConnection connection, final Deadline deadline) {
         BsonDocument response = getSpeculativeAuthenticateResponse();
         if (response != null) {
             return response;
         }
 
         try {
+            // TODO: SaslClient API does not allow timeouts, so deadline won't apply to any SaslClient implementations that do I/O,
+            // e.g. GSSAPI
             byte[] serverResponse = saslClient.hasInitialResponse() ? saslClient.evaluateChallenge(new byte[0]) : null;
-            return sendSaslStart(serverResponse, connection);
+            return sendSaslStart(serverResponse, connection, deadline);
         } catch (Exception e) {
             throw wrapException(e);
         }
@@ -185,14 +189,15 @@ abstract class SaslAuthenticator extends Authenticator implements SpeculativeAut
         return getMongoCredential().getMechanismProperty(JAVA_SUBJECT_KEY, null);
     }
 
-    private BsonDocument sendSaslStart(final byte[] outToken, final InternalConnection connection) {
+    private BsonDocument sendSaslStart(final byte[] outToken, final InternalConnection connection, final Deadline deadline) {
         BsonDocument startDocument = createSaslStartCommandDocument(outToken);
         appendSaslStartOptions(startDocument);
-        return executeCommand(getMongoCredential().getSource(), startDocument, connection);
+        return executeCommand(getMongoCredential().getSource(), startDocument, connection, deadline);
     }
 
-    private BsonDocument sendSaslContinue(final BsonInt32 conversationId, final byte[] outToken, final InternalConnection connection) {
-        return executeCommand(getMongoCredential().getSource(), createSaslContinueDocument(conversationId, outToken), connection);
+    private BsonDocument sendSaslContinue(final BsonInt32 conversationId, final byte[] outToken, final InternalConnection connection,
+                                          final Deadline deadline) {
+        return executeCommand(getMongoCredential().getSource(), createSaslContinueDocument(conversationId, outToken), connection, deadline);
     }
 
     private void sendSaslStartAsync(final byte[] outToken, final InternalConnection connection,

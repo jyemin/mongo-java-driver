@@ -17,10 +17,11 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 
 interface InternalConnectionInitializer {
 
-    InternalConnectionInitializationDescription initialize(InternalConnection internalConnection);
+    InternalConnectionInitializationDescription initialize(InternalConnection internalConnection, Deadline deadline);
 
     void initializeAsync(InternalConnection internalConnection, SingleResultCallback<InternalConnectionInitializationDescription> callback);
 

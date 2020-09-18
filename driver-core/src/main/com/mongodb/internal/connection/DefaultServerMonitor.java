@@ -29,6 +29,7 @@ import com.mongodb.event.ServerHeartbeatStartedEvent;
 import com.mongodb.event.ServerHeartbeatSucceededEvent;
 import com.mongodb.event.ServerMonitorListener;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -185,7 +186,7 @@ class DefaultServerMonitor implements ServerMonitor {
                 if (connection == null || connection.isClosed()) {
                     currentCheckCancelled = false;
                     InternalConnection newConnection = internalConnectionFactory.create(serverId);
-                    newConnection.open();
+                    newConnection.open(Deadline.infinite());
                     connection = newConnection;
                     averageRoundTripTime.addSample(connection.getInitialServerDescription().getRoundTripTimeNanos());
                     return connection.getInitialServerDescription();
@@ -418,7 +419,7 @@ class DefaultServerMonitor implements ServerMonitor {
         private void initialize() {
             connection = null;
             connection = internalConnectionFactory.create(serverId);
-            connection.open();
+            connection.open(Deadline.infinite());
             averageRoundTripTime.addSample(connection.getInitialServerDescription().getRoundTripTimeNanos());
         }
 

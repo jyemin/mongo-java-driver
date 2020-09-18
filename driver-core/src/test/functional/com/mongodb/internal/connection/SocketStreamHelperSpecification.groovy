@@ -20,6 +20,7 @@ import com.mongodb.ClusterFixture
 import com.mongodb.MongoInternalException
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SslSettings
+import com.mongodb.internal.timeout.Deadline
 import jdk.net.ExtendedSocketOptions
 import spock.lang.IgnoreIf
 import spock.lang.Specification
@@ -44,7 +45,8 @@ class SocketStreamHelperSpecification extends Specification {
                 .build()
 
         when:
-        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), socketSettings, SslSettings.builder().build())
+        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), socketSettings, SslSettings.builder().build(),
+                Deadline.infinite()())
 
         then:
         socket.getTcpNoDelay()
@@ -69,7 +71,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(),
-                SocketSettings.builder().build(), SslSettings.builder().build())
+                SocketSettings.builder().build(), SslSettings.builder().build(), Deadline.infinite()())
 
         then:
         socket.isConnected()
@@ -84,7 +86,8 @@ class SocketStreamHelperSpecification extends Specification {
         SSLSocket socket = SSLSocketFactory.default.createSocket()
 
         when:
-        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings)
+        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings,
+                Deadline.infinite()())
 
         then:
         socket.getSSLParameters().endpointIdentificationAlgorithm == (sslSettings.invalidHostNameAllowed ? null : 'HTTPS')
@@ -104,7 +107,8 @@ class SocketStreamHelperSpecification extends Specification {
         SSLSocket socket = SSLSocketFactory.default.createSocket()
 
         when:
-        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings)
+        SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings,
+                Deadline.infinite()())
 
         then:
         socket.getSSLParameters().getServerNames() == [new SNIHostName(getPrimary().getHost())]
@@ -123,7 +127,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(),
-                SslSettings.builder().enabled(true).build())
+                SslSettings.builder().enabled(true).build(), Deadline.infinite()())
 
         then:
         thrown(MongoInternalException)

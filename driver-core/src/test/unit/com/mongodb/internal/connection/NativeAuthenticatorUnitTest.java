@@ -23,6 +23,7 @@ import com.mongodb.async.FutureResultCallback;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.io.BsonInput;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +54,7 @@ public class NativeAuthenticatorUnitTest {
         enqueueUnsuccessfulReplies();
 
         try {
-            subject.authenticate(connection, connectionDescription);
+            subject.authenticate(connection, connectionDescription, Deadline.infinite());
             fail();
         } catch (MongoSecurityException e) {
             // all good
@@ -86,7 +87,7 @@ public class NativeAuthenticatorUnitTest {
     @Test
     public void testSuccessfulAuthentication() {
         enqueueSuccessfulReplies();
-        subject.authenticate(connection, connectionDescription);
+        subject.authenticate(connection, connectionDescription, Deadline.infinite());
 
         validateMessages();
     }

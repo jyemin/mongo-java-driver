@@ -30,19 +30,20 @@ import static com.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
 import static com.mongodb.ReadPreference.primary;
 
 public final class CommandHelper {
-    static BsonDocument executeCommand(final String database, final BsonDocument command, final InternalConnection internalConnection) {
-        return sendAndReceive(database, command, null, internalConnection);
+    static BsonDocument executeCommand(final String database, final BsonDocument command, final InternalConnection internalConnection,
+                                       final Deadline deadline) {
+        return sendAndReceive(database, command, null, internalConnection, deadline);
     }
 
     public static BsonDocument executeCommand(final String database, final BsonDocument command, final ClusterClock clusterClock,
                                               final InternalConnection internalConnection) {
-        return sendAndReceive(database, command, clusterClock, internalConnection);
+        return sendAndReceive(database, command, clusterClock, internalConnection, Deadline.infinite());
     }
 
     static BsonDocument executeCommandWithoutCheckingForFailure(final String database, final BsonDocument command,
-                                                                final InternalConnection internalConnection) {
+                                                                final InternalConnection internalConnection, final Deadline deadline) {
         try {
-            return sendAndReceive(database, command, null, internalConnection);
+            return sendAndReceive(database, command, null, internalConnection, deadline);
         } catch (MongoServerException e) {
             return new BsonDocument();
         }
@@ -78,11 +79,12 @@ public final class CommandHelper {
     }
 
     private static BsonDocument sendAndReceive(final String database, final BsonDocument command,
-                                               final ClusterClock clusterClock, final InternalConnection internalConnection) {
+                                               final ClusterClock clusterClock, final InternalConnection internalConnection,
+                                               final Deadline deadline) {
         SessionContext sessionContext = clusterClock == null ? NoOpSessionContext.INSTANCE
                 : new ClusterClockAdvancingSessionContext(NoOpSessionContext.INSTANCE, clusterClock);
         return internalConnection.sendAndReceive(getCommandMessage(database, command, internalConnection), new BsonDocumentCodec(),
-                sessionContext, Deadline.infinite());
+                sessionContext, deadline);
     }
 
     private static CommandMessage getCommandMessage(final String database, final BsonDocument command,

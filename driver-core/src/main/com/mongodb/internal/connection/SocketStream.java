@@ -63,8 +63,18 @@ public class SocketStream implements Stream {
 
     @Override
     public void open() {
+        open(0);
+    }
+
+    @Override
+    public boolean supportsOpenTimeout() {
+        return true;
+    }
+
+    @Override
+    public void open(final int timeoutMS) {
         try {
-            socket = initializeSocket();
+            socket = initializeSocket(timeoutMS == 0 ? Deadline.infinite() : Deadline.finite(timeoutMS, TimeUnit.MILLISECONDS));
             outputStream = socket.getOutputStream();
             inputStream = socket.getInputStream();
         } catch (IOException e) {
@@ -73,12 +83,12 @@ public class SocketStream implements Stream {
         }
     }
 
-    protected Socket initializeSocket() throws IOException {
+    protected Socket initializeSocket(final Deadline deadline) throws IOException {
         Iterator<InetSocketAddress> inetSocketAddresses = address.getSocketAddresses().iterator();
         while (inetSocketAddresses.hasNext()) {
             Socket socket = socketFactory.createSocket();
             try {
-                SocketStreamHelper.initialize(socket, inetSocketAddresses.next(), settings, sslSettings);
+                SocketStreamHelper.initialize(socket, inetSocketAddresses.next(), settings, sslSettings, deadline);
                 return socket;
             } catch (SocketTimeoutException e) {
                 if (!inetSocketAddresses.hasNext()) {

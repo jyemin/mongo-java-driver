@@ -16,7 +16,6 @@
 
 package com.mongodb.internal.connection
 
-import util.spock.annotations.Slow
 import com.mongodb.MongoSocketOpenException
 import com.mongodb.MongoSocketReadTimeoutException
 import com.mongodb.OperationFunctionalSpecification
@@ -26,10 +25,12 @@ import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.netty.NettyStreamFactory
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonString
 import spock.lang.IgnoreIf
+import util.spock.annotations.Slow
 
 import java.util.concurrent.TimeUnit
 
@@ -53,7 +54,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
                 [], null).create(new ServerId(new ClusterId(), new ServerAddress(new InetSocketAddress('192.168.255.255', 27017))))
 
         when:
-        connection.open()
+        connection.open(Deadline.infinite())
 
         then:
         thrown(MongoSocketOpenException)
@@ -65,14 +66,14 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
         def connection = new InternalStreamConnectionFactory(
                 new AsynchronousSocketChannelStreamFactory(readSocketSettings, getSslSettings()), getCredentialWithCache(), null, null,
                 [], null).create(new ServerId(new ClusterId(), getPrimary()))
-        connection.open()
+        connection.open(Deadline.infinite())
 
         getCollectionHelper().insertDocuments(new BsonDocument('_id', new BsonInt32(1)));
         def countCommand = new BsonDocument('count', new BsonString(getCollectionName()))
         countCommand.put('query', new BsonDocument('$where', new BsonString('sleep(5050); return true;')))
 
         when:
-        executeCommand(getDatabaseName(), countCommand, connection)
+        executeCommand(getDatabaseName(), countCommand, connection, Deadline.infinite())
 
         then:
         thrown(MongoSocketReadTimeoutException)
@@ -88,7 +89,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
         ).create(new ServerId(new ClusterId(), new ServerAddress(new InetSocketAddress('192.168.255.255', 27017))))
 
         when:
-        connection.open()
+        connection.open(Deadline.infinite())
 
         then:
         thrown(MongoSocketOpenException)
@@ -100,14 +101,14 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
         def connection = new InternalStreamConnectionFactory(
                 new NettyStreamFactory(readSocketSettings, getSslSettings()), getCredentialWithCache(), null, null, [], null
         ).create(new ServerId(new ClusterId(), getPrimary()))
-        connection.open()
+        connection.open(Deadline.infinite())
 
         getCollectionHelper().insertDocuments(new BsonDocument('_id', new BsonInt32(1)));
         def countCommand = new BsonDocument('count', new BsonString(getCollectionName()))
         countCommand.put('query', new BsonDocument('$where', new BsonString('sleep(5050); return true;')))
 
         when:
-        executeCommand(getDatabaseName(), countCommand, connection)
+        executeCommand(getDatabaseName(), countCommand, connection, Deadline.infinite())
 
         then:
         thrown(MongoSocketReadTimeoutException)

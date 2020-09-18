@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.mongodb.assertions.Assertions.isTrue;
@@ -137,12 +138,14 @@ public class InternalStreamConnection implements InternalConnection {
     }
 
     @Override
-    public void open() {
+    public void open(final Deadline deadline) {
         isTrue("Open already called", stream == null);
         stream = streamFactory.create(serverId.getAddress());
         try {
-            stream.open();
-            InternalConnectionInitializationDescription initializationDescription = connectionInitializer.initialize(this);
+            // TODO: safe cast?
+            stream.open((int) deadline.getTimeRemaining(TimeUnit.MILLISECONDS));
+            InternalConnectionInitializationDescription initializationDescription =
+                    connectionInitializer.initialize(this, deadline);
             description = initializationDescription.getConnectionDescription();
             initialServerDescription = initializationDescription.getServerDescription();
             opened.set(true);

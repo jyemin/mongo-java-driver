@@ -113,7 +113,7 @@ class DefaultConnectionPool implements ConnectionPool {
         }
         if (!pooledConnection.opened()) {
             try {
-                pooledConnection.open();
+                pooledConnection.open(deadline);
             } catch (Throwable t) {
                 pool.release(pooledConnection.wrapped, true);
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
@@ -283,8 +283,8 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private PooledConnection getPooledConnection(final Deadline deadline) {
-        Deadline compositeDeadline = deadline.isInfinite() ?
-                Deadline.of(settings.getMaxWaitTime(NANOSECONDS), NANOSECONDS) : deadline;
+        Deadline compositeDeadline = deadline.isInfinite()
+                ? Deadline.of(settings.getMaxWaitTime(NANOSECONDS), NANOSECONDS) : deadline;
         UsageTrackingInternalConnection internalConnection = pool.get(compositeDeadline.getTimeRemaining(NANOSECONDS), NANOSECONDS);
         while (shouldPrune(internalConnection)) {
             pool.release(internalConnection, true);
@@ -430,9 +430,9 @@ class DefaultConnectionPool implements ConnectionPool {
         }
 
         @Override
-        public void open() {
+        public void open(final Deadline deadline) {
             isTrue("open", !isClosed.get());
-            wrapped.open();
+            wrapped.open(deadline);
             connectionPoolListener.connectionReady(new ConnectionReadyEvent(getDescription().getConnectionId()));
         }
 
@@ -589,7 +589,7 @@ class DefaultConnectionPool implements ConnectionPool {
             UsageTrackingInternalConnection internalConnection =
             new UsageTrackingInternalConnection(internalConnectionFactory.create(serverId), generation.get());
             if (initialize) {
-                internalConnection.open();
+                internalConnection.open(Deadline.infinite());
             }
             connectionCreated(connectionPoolListener, getId(internalConnection));
             return internalConnection;

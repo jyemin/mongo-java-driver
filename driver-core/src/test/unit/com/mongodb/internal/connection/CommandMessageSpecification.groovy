@@ -197,7 +197,7 @@ class CommandMessageSpecification extends Specification {
         given:
         def message = new CommandMessage(namespace, originalCommandDocument, fieldNameValidator, ReadPreference.primary(),
                 MessageSettings.builder().maxWireVersion(maxWireVersion).build(), true, payload, new NoOpFieldNameValidator(),
-                ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new ByteBufferBsonOutput(new SimpleBufferProvider())
         message.encode(output, NoOpSessionContext.INSTANCE)
 
@@ -256,7 +256,7 @@ class CommandMessageSpecification extends Specification {
                                                      new BsonDocument('_id', new BsonInt32(5)).append('c', new BsonBinary(new byte[451]))]
                 .withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) } )
         def message = new CommandMessage(namespace, insertCommand, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new BasicOutputBuffer()
         def sessionContext = Stub(SessionContext) {
             getReadConcern() >> ReadConcern.DEFAULT
@@ -279,7 +279,7 @@ class CommandMessageSpecification extends Specification {
         when:
         payload = payload.getNextSplit()
         message = new CommandMessage(namespace, insertCommand, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         output.truncateToPosition(0)
         message.encode(output, sessionContext)
         byteBuf = new ByteBufNIO(ByteBuffer.wrap(output.toByteArray()))
@@ -297,7 +297,7 @@ class CommandMessageSpecification extends Specification {
         when:
         payload = payload.getNextSplit()
         message = new CommandMessage(namespace, insertCommand, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         output.truncateToPosition(0)
         message.encode(output, sessionContext)
         byteBuf = new ByteBufNIO(ByteBuffer.wrap(output.toByteArray()))
@@ -315,7 +315,7 @@ class CommandMessageSpecification extends Specification {
         when:
         payload = payload.getNextSplit()
         message = new CommandMessage(namespace, insertCommand, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         output.truncateToPosition(0)
         message.encode(output, sessionContext)
         byteBuf = new ByteBufNIO(ByteBuffer.wrap(output.toByteArray()))
@@ -339,7 +339,7 @@ class CommandMessageSpecification extends Specification {
                                                      new BsonDocument('c', new BsonBinary(new byte[450]))]
                 .withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) } )
         def message = new CommandMessage(namespace, command, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new BasicOutputBuffer()
         def sessionContext = Stub(SessionContext) {
             getReadConcern() >> ReadConcern.DEFAULT
@@ -362,7 +362,7 @@ class CommandMessageSpecification extends Specification {
         when:
         payload = payload.getNextSplit()
         message = new CommandMessage(namespace, command, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         output.truncateToPosition(0)
         message.encode(output, sessionContext)
         byteBuf = new ByteBufNIO(ByteBuffer.wrap(output.toByteArray()))
@@ -384,7 +384,7 @@ class CommandMessageSpecification extends Specification {
         def payload = new SplittablePayload(INSERT, [new BsonDocument('a', new BsonBinary(new byte[900]))]
                 .withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) })
         def message = new CommandMessage(namespace, command, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new BasicOutputBuffer()
         def sessionContext = Stub(SessionContext) {
             getReadConcern() >> ReadConcern.DEFAULT
@@ -402,7 +402,7 @@ class CommandMessageSpecification extends Specification {
         def messageSettings = MessageSettings.builder().maxWireVersion(THREE_DOT_SIX_WIRE_VERSION).build()
         def payload = new SplittablePayload(INSERT, [new BsonDocument('a', new BsonInt32(1))])
         def message = new CommandMessage(namespace, command, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new BasicOutputBuffer()
         def sessionContext = Stub(SessionContext) {
             getReadConcern() >> ReadConcern.DEFAULT
@@ -422,7 +422,7 @@ class CommandMessageSpecification extends Specification {
                 .maxWireVersion(FOUR_DOT_ZERO_WIRE_VERSION).build()
         def payload = new SplittablePayload(INSERT, [new BsonDocument('a', new BsonInt32(1))])
         def message = new CommandMessage(namespace, command, fieldNameValidator, ReadPreference.primary(), messageSettings,
-                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, com.mongodb.internal.timeout.Deadline.infinite())
+                false, payload, fieldNameValidator, ClusterConnectionMode.MULTIPLE, Deadline.infinite()())
         def output = new BasicOutputBuffer()
         def sessionContext = Stub(SessionContext) {
             getReadConcern() >> ReadConcern.DEFAULT

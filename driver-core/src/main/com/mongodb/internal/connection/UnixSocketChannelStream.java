@@ -20,6 +20,7 @@ import com.mongodb.UnixServerAddress;
 import com.mongodb.connection.BufferProvider;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
+import com.mongodb.internal.timeout.Deadline;
 import jnr.unixsocket.UnixSocketAddress;
 import jnr.unixsocket.UnixSocketChannel;
 
@@ -37,7 +38,7 @@ public class UnixSocketChannelStream extends SocketStream {
     }
 
     @Override
-    protected Socket initializeSocket() throws IOException {
+    protected Socket initializeSocket(final Deadline deadline) throws IOException {
         return UnixSocketChannel.open((UnixSocketAddress) address.getUnixSocketAddress()).socket();
     }
 }

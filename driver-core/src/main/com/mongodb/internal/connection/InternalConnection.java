@@ -45,8 +45,9 @@ public interface InternalConnection extends BufferProvider {
 
     /**
      * Opens the connection so its ready for use
+     * @param deadline the deadline
      */
-    void open();
+    void open(Deadline deadline);
 
     /**
      * Opens the connection so its ready for use

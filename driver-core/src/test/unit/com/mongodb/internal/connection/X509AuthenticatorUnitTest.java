@@ -23,6 +23,7 @@ import com.mongodb.async.FutureResultCallback;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.io.BsonInput;
 import org.junit.Before;
@@ -54,7 +55,7 @@ public class X509AuthenticatorUnitTest {
         enqueueFailedAuthenticationReply();
 
         try {
-            subject.authenticate(connection, connectionDescription);
+            subject.authenticate(connection, connectionDescription, Deadline.infinite());
             fail();
         } catch (MongoSecurityException e) {
             // all good
@@ -88,7 +89,7 @@ public class X509AuthenticatorUnitTest {
     public void testSuccessfulAuthentication() {
         enqueueSuccessfulAuthenticationReply();
 
-        subject.authenticate(connection, connectionDescription);
+        subject.authenticate(connection, connectionDescription, Deadline.infinite());
 
         validateMessages();
     }
@@ -113,7 +114,7 @@ public class X509AuthenticatorUnitTest {
                 + "user: \"CN=client,OU=kerneluser,O=10Gen,L=New York City,ST=New York,C=US\", "
                 + "mechanism: \"MONGODB-X509\", db: \"$external\"}");
         subject.setSpeculativeAuthenticateResponse(BsonDocument.parse(speculativeAuthenticateResponse));
-        subject.authenticate(connection, connectionDescription);
+        subject.authenticate(connection, connectionDescription, Deadline.infinite());
 
         assertEquals(connection.getSent().size(), 0);
         assertEquals(expectedSpeculativeAuthenticateCommand, subject.createSpeculativeAuthenticateCommand(connection));

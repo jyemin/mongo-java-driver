@@ -26,6 +26,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
+import com.mongodb.internal.timeout.Deadline;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,13 +64,13 @@ public class PlainAuthenticatorTest {
     @Test
     public void testSuccessfulAuthentication() {
         PlainAuthenticator authenticator = new PlainAuthenticator(getCredentialWithCache(userName, source, password.toCharArray()));
-        authenticator.authenticate(internalConnection, connectionDescription);
+        authenticator.authenticate(internalConnection, connectionDescription, Deadline.infinite());
     }
 
     @Test(expected = MongoSecurityException.class)
     public void testUnsuccessfulAuthentication() {
         PlainAuthenticator authenticator = new PlainAuthenticator(getCredentialWithCache(userName, source, "wrong".toCharArray()));
-        authenticator.authenticate(internalConnection, connectionDescription);
+        authenticator.authenticate(internalConnection, connectionDescription, Deadline.infinite());
     }
 
     private static MongoCredentialWithCache getCredentialWithCache(final String userName, final String source, final char[] password) {

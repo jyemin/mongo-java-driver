@@ -18,10 +18,11 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoSecurityException;
+import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 
@@ -39,16 +40,17 @@ class NativeAuthenticator extends Authenticator {
     }
 
     @Override
-    public void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription) {
+    public void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription,
+                             final Deadline deadline) {
         try {
             BsonDocument nonceResponse = executeCommand(getMongoCredential().getSource(),
                                                          getNonceCommand(),
-                                                         connection);
+                                                         connection, deadline);
 
             BsonDocument authCommand = getAuthCommand(getUserNameNonNull(),
                                                       getPasswordNonNull(),
                                                       ((BsonString) nonceResponse.get("nonce")).getValue());
-            executeCommand(getMongoCredential().getSource(), authCommand, connection);
+            executeCommand(getMongoCredential().getSource(), authCommand, connection, deadline);
         } catch (MongoCommandException e) {
             throw new MongoSecurityException(getMongoCredential(), "Exception authenticating", e);
         }

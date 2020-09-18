@@ -23,6 +23,7 @@ import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.netty.NettyStreamFactory
 import com.mongodb.internal.bulk.InsertRequest
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonString
@@ -42,7 +43,7 @@ class WriteProtocolSpecification extends OperationFunctionalSpecification {
         connection = new InternalStreamConnectionFactory(new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings()),
                 getCredentialWithCache(), null, null, [], null)
                 .create(new ServerId(new ClusterId(), getPrimary()))
-        connection.open();
+        connection.open(Deadline.infinite());
     }
 
     def cleanupSpec() {
@@ -68,7 +69,7 @@ class WriteProtocolSpecification extends OperationFunctionalSpecification {
         new CommandProtocolImpl(getDatabaseName(), new BsonDocument('drop', new BsonString(getCollectionName())),
                 NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec())
                 .sessionContext(NoOpSessionContext.INSTANCE)
-                .execute(connection, com.mongodb.internal.timeout.Deadline.infinite())
+                .execute(connection, Deadline.infinite()())
 
         where:
         async << [false, true]

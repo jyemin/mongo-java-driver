@@ -28,6 +28,7 @@ import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
 import com.mongodb.internal.async.SingleResultCallback
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonArray
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -59,7 +60,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulReplies(false, null)
-        def description = initializer.initialize(internalConnection)
+        def description = initializer.initialize(internalConnection, Deadline.infinite()())
         def connectionDescription = description.connectionDescription
         def serverDescription = description.serverDescription
 
@@ -91,7 +92,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulReplies(false, 123)
-        def description = initializer.initialize(internalConnection).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
 
         then:
         description == getExpectedConnectionDescription(description.connectionId.localValue, 123)
@@ -103,7 +104,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulRepliesWithConnectionIdIsIsMasterResponse(false, 123)
-        def description = initializer.initialize(internalConnection).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
 
         then:
         description == getExpectedConnectionDescription(description.connectionId.localValue, 123)
@@ -145,7 +146,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         when:
         enqueueSuccessfulReplies(false, null)
 
-        def description = initializer.initialize(internalConnection).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
 
         then:
         description
@@ -177,7 +178,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         when:
         enqueueSuccessfulReplies(true, null)
 
-        def description = initializer.initialize(internalConnection).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
 
         then:
         description
@@ -217,7 +218,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(internalConnection, callback)
             latch.await()
         } else {
-            initializer.initialize(internalConnection)
+            initializer.initialize(internalConnection, Deadline.infinite()())
         }
 
         then:
@@ -249,7 +250,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(internalConnection, callback)
             latch.await()
         } else {
-            initializer.initialize(internalConnection)
+            initializer.initialize(internalConnection, Deadline.infinite()())
         }
 
         then:
@@ -414,7 +415,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(connection, futureCallback)
             futureCallback.get()
         } else {
-            initializer.initialize(connection)
+            initializer.initialize(connection, Deadline.infinite()())
         }
     }
 

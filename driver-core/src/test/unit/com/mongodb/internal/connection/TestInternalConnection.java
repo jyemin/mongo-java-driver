@@ -102,7 +102,7 @@ class TestInternalConnection implements InternalConnection {
         throw new UnsupportedOperationException();
     }
 
-    public void open() {
+    public void open(final Deadline deadline) {
         opened = true;
     }
 

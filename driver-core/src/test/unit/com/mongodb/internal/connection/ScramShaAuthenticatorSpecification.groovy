@@ -522,7 +522,7 @@ class ScramShaAuthenticatorSpecification extends Specification {
             authenticator.authenticateAsync(connection, connectionDescription, futureCallback)
             futureCallback.get(5, TimeUnit.SECONDS)
         } else {
-            authenticator.authenticate(connection, connectionDescription)
+            authenticator.authenticate(connection, connectionDescription, com.mongodb.internal.timeout.Deadline.infinite())
         }
     }
 

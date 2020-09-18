@@ -19,10 +19,11 @@ package com.mongodb.internal.connection;
 import com.mongodb.AuthenticationMechanism;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoSecurityException;
+import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
@@ -41,14 +42,14 @@ class X509Authenticator extends Authenticator implements SpeculativeAuthenticato
     }
 
     @Override
-    void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription) {
+    void authenticate(final InternalConnection connection, final ConnectionDescription connectionDescription, final Deadline deadline) {
         if (this.speculativeAuthenticateResponse != null) {
             return;
         }
         try {
             validateUserName(connectionDescription);
             BsonDocument authCommand = getAuthCommand(getMongoCredential().getUserName());
-            executeCommand(getMongoCredential().getSource(), authCommand, connection);
+            executeCommand(getMongoCredential().getSource(), authCommand, connection, deadline);
         } catch (MongoCommandException e) {
             throw new MongoSecurityException(getMongoCredential(), "Exception authenticating", e);
         }

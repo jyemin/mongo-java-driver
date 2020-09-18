@@ -10,6 +10,7 @@ import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SocketStreamFactory
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.BsonString
 import spock.lang.IgnoreIf
@@ -31,7 +32,8 @@ class AwsAuthenticationSpecification extends Specification {
 
         when:
         openConnection(connection, async)
-        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection)
+        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection,
+                Deadline.infinite())
 
         then:
         thrown(MongoCommandException)
@@ -49,7 +51,8 @@ class AwsAuthenticationSpecification extends Specification {
 
         when:
         openConnection(connection, async)
-        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection)
+        executeCommand(getConnectionString().getDatabase(), new BsonDocument('count', new BsonString('test')), connection,
+                Deadline.infinite())
 
         then:
         true
@@ -79,7 +82,7 @@ class AwsAuthenticationSpecification extends Specification {
             connection.openAsync(futureResultCallback)
             futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS)
         } else {
-            connection.open()
+            connection.open(Deadline.infinite())
         }
     }
 }

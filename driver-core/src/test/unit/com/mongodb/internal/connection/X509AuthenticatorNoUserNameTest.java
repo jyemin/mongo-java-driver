@@ -25,6 +25,7 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.io.BsonInput;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class X509AuthenticatorNoUserNameTest {
     public void testSuccessfulAuthentication() {
         enqueueSuccessfulAuthenticationReply();
 
-        new X509Authenticator(getCredentialWithCache()).authenticate(connection, connectionDescriptionThreeFour);
+        new X509Authenticator(getCredentialWithCache()).authenticate(connection, connectionDescriptionThreeFour, Deadline.infinite());
 
         validateMessages();
     }
@@ -65,7 +66,7 @@ public class X509AuthenticatorNoUserNameTest {
     @Test
     public void testUnsuccessfulAuthenticationWhenServerVersionLessThanThreeFour() {
         try {
-            new X509Authenticator(getCredentialWithCache()).authenticate(connection, connectionDescriptionThreeTwo);
+            new X509Authenticator(getCredentialWithCache()).authenticate(connection, connectionDescriptionThreeTwo, Deadline.infinite());
             fail();
         } catch (MongoSecurityException e) {
             assertEquals("User name is required for the MONGODB-X509 authentication mechanism on server versions less than 3.4",

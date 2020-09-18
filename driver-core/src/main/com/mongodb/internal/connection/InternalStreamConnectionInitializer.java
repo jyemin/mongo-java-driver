@@ -25,6 +25,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerType;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -56,12 +57,12 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
     }
 
     @Override
-    public InternalConnectionInitializationDescription initialize(final InternalConnection internalConnection) {
+    public InternalConnectionInitializationDescription initialize(final InternalConnection internalConnection, final Deadline deadline) {
         notNull("internalConnection", internalConnection);
 
-        InternalConnectionInitializationDescription description = initializeConnectionDescription(internalConnection);
-        authenticate(internalConnection, description.getConnectionDescription());
-        return completeConnectionDescriptionInitialization(internalConnection, description);
+        InternalConnectionInitializationDescription description = initializeConnectionDescription(internalConnection, deadline);
+        authenticate(internalConnection, description.getConnectionDescription(), deadline);
+        return completeConnectionDescriptionInitialization(internalConnection, description, deadline);
     }
 
     @Override
@@ -98,13 +99,14 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
         };
     }
 
-    private InternalConnectionInitializationDescription initializeConnectionDescription(final InternalConnection internalConnection) {
+    private InternalConnectionInitializationDescription initializeConnectionDescription(final InternalConnection internalConnection,
+                                                                                        final Deadline deadline) {
         BsonDocument isMasterResult;
         BsonDocument isMasterCommandDocument = createIsMasterCommand(authenticator, internalConnection);
 
         long start = System.nanoTime();
         try {
-            isMasterResult = executeCommand("admin", isMasterCommandDocument, internalConnection);
+            isMasterResult = executeCommand("admin", isMasterCommandDocument, internalConnection, deadline);
         } catch (MongoException e) {
             if (checkSaslSupportedMechs && e.getCode() == USER_NOT_FOUND_CODE) {
                 MongoCredential credential = authenticator.getMongoCredential();
@@ -151,7 +153,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
 
     private InternalConnectionInitializationDescription completeConnectionDescriptionInitialization(
             final InternalConnection internalConnection,
-            final InternalConnectionInitializationDescription description) {
+            final InternalConnectionInitializationDescription description, final Deadline deadline) {
 
         if (description.getConnectionDescription().getConnectionId().getServerValue() != null) {
             return description;
@@ -159,13 +161,14 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
 
         return applyGetLastErrorResult(executeCommandWithoutCheckingForFailure("admin",
                 new BsonDocument("getlasterror", new BsonInt32(1)),
-                internalConnection),
+                internalConnection, deadline),
                 description);
     }
 
-    private void authenticate(final InternalConnection internalConnection, final ConnectionDescription connectionDescription) {
+    private void authenticate(final InternalConnection internalConnection, final ConnectionDescription connectionDescription,
+                              final Deadline deadline) {
         if (authenticator != null && connectionDescription.getServerType() != ServerType.REPLICA_SET_ARBITER) {
-            authenticator.authenticate(internalConnection, connectionDescription);
+            authenticator.authenticate(internalConnection, connectionDescription, deadline);
         }
     }
 

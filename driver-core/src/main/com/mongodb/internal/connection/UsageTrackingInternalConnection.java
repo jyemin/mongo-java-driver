@@ -48,8 +48,8 @@ class UsageTrackingInternalConnection implements InternalConnection {
     }
 
     @Override
-    public void open() {
-        wrapped.open();
+    public void open(final Deadline deadline) {
+        wrapped.open(deadline);
         openedAt = System.currentTimeMillis();
         lastUsedAt = openedAt;
     }

@@ -25,6 +25,7 @@ import com.mongodb.connection.netty.NettyStreamFactory
 import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonArray
 import org.bson.BsonDocument
 import org.bson.BsonDouble
@@ -48,7 +49,7 @@ class GetMoreProtocolCommandEventSpecification extends OperationFunctionalSpecif
         connection = new InternalStreamConnectionFactory(new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings()),
                 getCredentialWithCache(), null, null, [], null)
                 .create(new ServerId(new ClusterId(), getPrimary()))
-        connection.open();
+        connection.open(Deadline.infinite());
     }
 
     def cleanupSpec() {

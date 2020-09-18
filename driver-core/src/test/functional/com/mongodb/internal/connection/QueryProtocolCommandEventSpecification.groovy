@@ -27,6 +27,7 @@ import com.mongodb.connection.netty.NettyStreamFactory
 import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonArray
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
@@ -56,12 +57,12 @@ class QueryProtocolCommandEventSpecification extends OperationFunctionalSpecific
         nettyConnection = new InternalStreamConnectionFactory(new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings()),
                 getCredentialWithCache(), null, null, [], null)
                 .create(new ServerId(new ClusterId(), getPrimary()))
-        nettyConnection.open()
+        nettyConnection.open(Deadline.infinite())
 
         nioConnection = new InternalStreamConnectionFactory(new AsynchronousSocketChannelStreamFactory(SocketSettings.builder().build(),
                 getSslSettings()), getCredentialWithCache(), null, null, [], null)
                 .create(new ServerId(new ClusterId(), getPrimary()))
-        nioConnection.open()
+        nioConnection.open(Deadline.infinite())
     }
 
     def cleanupSpec() {

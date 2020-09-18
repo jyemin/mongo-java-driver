@@ -29,6 +29,7 @@ import com.mongodb.event.ServerHeartbeatFailedEvent
 import com.mongodb.event.ServerHeartbeatStartedEvent
 import com.mongodb.event.ServerHeartbeatSucceededEvent
 import com.mongodb.event.ServerMonitorListener
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.ByteBufNIO
 import spock.lang.Specification
@@ -54,7 +55,7 @@ class DefaultServerMonitorSpecification extends Specification {
         def internalConnectionFactory = Mock(InternalConnectionFactory) {
             create(_) >> {
                 Mock(InternalConnection) {
-                    open() >> { sleep(100) }
+                    open(Deadline.infinite()) >> { sleep(100) }
                 }
             }
         }
@@ -124,7 +125,7 @@ class DefaultServerMonitorSpecification extends Specification {
         def internalConnectionFactory = Mock(InternalConnectionFactory) {
             create(_) >> {
                 Mock(InternalConnection) {
-                    open() >> { }
+                    open(Deadline.infinite()) >> { }
 
                     getBuffer(_) >> { int size ->
                         new ByteBufNIO(ByteBuffer.allocate(size))
@@ -211,7 +212,7 @@ class DefaultServerMonitorSpecification extends Specification {
         def internalConnectionFactory = Mock(InternalConnectionFactory) {
             create(_) >> {
                 Mock(InternalConnection) {
-                    open() >> { }
+                    open(Deadline.infinite()) >> { }
 
                     getBuffer(_) >> { int size ->
                         new ByteBufNIO(ByteBuffer.allocate(size))
