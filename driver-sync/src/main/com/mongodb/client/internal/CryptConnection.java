@@ -29,9 +29,10 @@ import com.mongodb.internal.connection.MessageSettings;
 import com.mongodb.internal.connection.QueryResult;
 import com.mongodb.internal.connection.SplittablePayload;
 import com.mongodb.internal.connection.SplittablePayloadBsonWriter;
+import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.internal.validator.MappedFieldNameValidator;
 import com.mongodb.lang.Nullable;
-import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonBinaryWriter;
 import org.bson.BsonBinaryWriterSettings;
@@ -64,10 +65,12 @@ class CryptConnection implements Connection {
 
     private final Connection wrapped;
     private final Crypt crypt;
+    private final Deadline deadline;
 
-    CryptConnection(final Connection wrapped, final Crypt crypt) {
+    CryptConnection(final Connection wrapped, final Crypt crypt, final Deadline deadline) {
         this.wrapped = wrapped;
         this.crypt = crypt;
+        this.deadline = deadline;
     }
 
     @Override
@@ -113,12 +116,12 @@ class CryptConnection implements Connection {
         getEncoder(command).encode(writer, command, EncoderContext.builder().build());
 
         RawBsonDocument encryptedCommand = crypt.encrypt(database,
-                new RawBsonDocument(bsonOutput.getInternalBuffer(), 0, bsonOutput.getSize()));
+                new RawBsonDocument(bsonOutput.getInternalBuffer(), 0, bsonOutput.getSize()), deadline);
 
         RawBsonDocument encryptedResponse = wrapped.command(database, encryptedCommand, commandFieldNameValidator, readPreference,
                 new RawBsonDocumentCodec(), sessionContext, responseExpected, null, null);
 
-        RawBsonDocument decryptedResponse = crypt.decrypt(encryptedResponse);
+        RawBsonDocument decryptedResponse = crypt.decrypt(encryptedResponse, deadline);
 
         BsonBinaryReader reader = new BsonBinaryReader(decryptedResponse.getByteBuffer().asNIO());
 

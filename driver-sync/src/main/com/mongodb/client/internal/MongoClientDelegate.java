@@ -225,7 +225,7 @@ public class MongoClientDelegate {
                     getReadPreferenceForBinding(readPreference, session), readConcern, deadline);
 
             if (crypt != null) {
-                readWriteBinding = new CryptBinding(readWriteBinding, crypt);
+                readWriteBinding = new CryptBinding(readWriteBinding, crypt, deadline);
             }
 
             if (session != null) {

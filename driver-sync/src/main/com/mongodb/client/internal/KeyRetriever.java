@@ -18,6 +18,7 @@ package com.mongodb.client.internal;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadConcern;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonDocument;
 
 import java.io.Closeable;
@@ -37,7 +38,8 @@ class KeyRetriever implements Closeable {
         this.namespace = notNull("namespace", namespace);
     }
 
-    public List<BsonDocument> find(final BsonDocument keyFilter) {
+    public List<BsonDocument> find(final BsonDocument keyFilter, final Deadline deadline) {
+        // TODO: apply deadline to find operation
         return client.getDatabase(namespace.getDatabaseName()).getCollection(namespace.getCollectionName(), BsonDocument.class)
                 .withReadConcern(ReadConcern.MAJORITY)
                 .find(keyFilter).into(new ArrayList<BsonDocument>());

@@ -27,6 +27,7 @@ import com.mongodb.crypt.capi.MongoCryptException;
 import com.mongodb.crypt.capi.MongoDataKeyOptions;
 import com.mongodb.crypt.capi.MongoExplicitEncryptOptions;
 import com.mongodb.crypt.capi.MongoKeyDecryptor;
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
@@ -86,9 +87,10 @@ class Crypt implements Closeable {
      *
      * @param databaseName the namespace
      * @param command   the unencrypted command
+     * @param deadline
      * @return the encrypted command
      */
-    public RawBsonDocument encrypt(final String databaseName, final RawBsonDocument command) {
+    public RawBsonDocument encrypt(final String databaseName, final RawBsonDocument command, final Deadline deadline) {
         notNull("databaseName", databaseName);
         notNull("command", command);
 
@@ -100,7 +102,7 @@ class Crypt implements Closeable {
             MongoCryptContext encryptionContext = mongoCrypt.createEncryptionContext(databaseName, command);
 
             try {
-                return executeStateMachine(encryptionContext, databaseName);
+                return executeStateMachine(encryptionContext, databaseName, deadline);
             } finally {
                 encryptionContext.close();
             }
@@ -113,16 +115,17 @@ class Crypt implements Closeable {
      * Decrypt the given command response
      *
      * @param commandResponse the encrypted command response
+     * @param deadline
      * @return the decrypted command response
      */
-    RawBsonDocument decrypt(final RawBsonDocument commandResponse) {
+    RawBsonDocument decrypt(final RawBsonDocument commandResponse, final Deadline deadline) {
         notNull("commandResponse", commandResponse);
 
         try {
             MongoCryptContext decryptionContext = mongoCrypt.createDecryptionContext(commandResponse);
 
             try {
-                return executeStateMachine(decryptionContext, null);
+                return executeStateMachine(decryptionContext, null, deadline);
             } finally {
                 decryptionContext.close();
             }
@@ -150,7 +153,7 @@ class Crypt implements Closeable {
                             .build());
 
             try {
-                return executeStateMachine(dataKeyCreationContext, null);
+                return executeStateMachine(dataKeyCreationContext, null, Deadline.infinite());
             } finally {
                 dataKeyCreationContext.close();
             }
@@ -185,7 +188,7 @@ class Crypt implements Closeable {
             MongoCryptContext encryptionContext = mongoCrypt.createExplicitEncryptionContext(
                     new BsonDocument("v", value), encryptOptionsBuilder.build());
             try {
-                return executeStateMachine(encryptionContext, null).getBinary("v");
+                return executeStateMachine(encryptionContext, null, Deadline.infinite()).getBinary("v");
             } finally {
                 encryptionContext.close();
             }
@@ -207,7 +210,7 @@ class Crypt implements Closeable {
             MongoCryptContext decryptionContext = mongoCrypt.createExplicitDecryptionContext(new BsonDocument("v", value));
 
             try {
-                return executeStateMachine(decryptionContext, null).get("v");
+                return executeStateMachine(decryptionContext, null, Deadline.infinite()).get("v");
             } finally {
                 decryptionContext.close();
             }
@@ -225,21 +228,21 @@ class Crypt implements Closeable {
         keyRetriever.close();
     }
 
-    private RawBsonDocument executeStateMachine(final MongoCryptContext cryptContext, final String databaseName) {
+    private RawBsonDocument executeStateMachine(final MongoCryptContext cryptContext, final String databaseName, final Deadline deadline) {
         while (true) {
             State state = cryptContext.getState();
             switch (state) {
                 case NEED_MONGO_COLLINFO:
-                    collInfo(cryptContext, databaseName);
+                    collInfo(cryptContext, databaseName, deadline);
                     break;
                 case NEED_MONGO_MARKINGS:
-                    mark(cryptContext, databaseName);
+                    mark(cryptContext, databaseName, deadline);
                     break;
                 case NEED_MONGO_KEYS:
-                    fetchKeys(cryptContext);
+                    fetchKeys(cryptContext, deadline);
                     break;
                 case NEED_KMS:
-                    decryptKeys(cryptContext);
+                    decryptKeys(cryptContext, deadline);
                     break;
                 case READY:
                     return cryptContext.finish();
@@ -249,9 +252,9 @@ class Crypt implements Closeable {
         }
     }
 
-    private void collInfo(final MongoCryptContext cryptContext, final String databaseName) {
+    private void collInfo(final MongoCryptContext cryptContext, final String databaseName, final Deadline deadline) {
         try {
-            BsonDocument collectionInfo = collectionInfoRetriever.filter(databaseName, cryptContext.getMongoOperation());
+            BsonDocument collectionInfo = collectionInfoRetriever.filter(databaseName, cryptContext.getMongoOperation(), deadline);
             if (collectionInfo != null) {
                 cryptContext.addMongoOperationResult(collectionInfo);
             }
@@ -261,9 +264,9 @@ class Crypt implements Closeable {
         }
     }
 
-    private void mark(final MongoCryptContext cryptContext, final String databaseName) {
+    private void mark(final MongoCryptContext cryptContext, final String databaseName, final Deadline deadline) {
         try {
-            RawBsonDocument markedCommand = commandMarker.mark(databaseName, cryptContext.getMongoOperation());
+            RawBsonDocument markedCommand = commandMarker.mark(databaseName, cryptContext.getMongoOperation(), deadline);
             cryptContext.addMongoOperationResult(markedCommand);
             cryptContext.completeMongoOperation();
         } catch (Throwable t) {
@@ -271,9 +274,9 @@ class Crypt implements Closeable {
         }
     }
 
-    private void fetchKeys(final MongoCryptContext keyBroker) {
+    private void fetchKeys(final MongoCryptContext keyBroker, final Deadline deadline) {
         try {
-            for (BsonDocument bsonDocument : keyRetriever.find(keyBroker.getMongoOperation())) {
+            for (BsonDocument bsonDocument : keyRetriever.find(keyBroker.getMongoOperation(), deadline)) {
                 keyBroker.addMongoOperationResult(bsonDocument);
             }
             keyBroker.completeMongoOperation();
@@ -282,11 +285,11 @@ class Crypt implements Closeable {
         }
     }
 
-    private void decryptKeys(final MongoCryptContext cryptContext) {
+    private void decryptKeys(final MongoCryptContext cryptContext, final Deadline deadline) {
         try {
             MongoKeyDecryptor keyDecryptor = cryptContext.nextKeyDecryptor();
             while (keyDecryptor != null) {
-                decryptKey(keyDecryptor);
+                decryptKey(keyDecryptor, deadline);
                 keyDecryptor = cryptContext.nextKeyDecryptor();
             }
             cryptContext.completeKeyDecryptors();
@@ -295,8 +298,8 @@ class Crypt implements Closeable {
         }
     }
 
-    private void decryptKey(final MongoKeyDecryptor keyDecryptor) throws IOException {
-        InputStream inputStream = keyManagementService.stream(keyDecryptor.getHostName(), keyDecryptor.getMessage());
+    private void decryptKey(final MongoKeyDecryptor keyDecryptor, final Deadline deadline) throws IOException {
+        InputStream inputStream = keyManagementService.stream(keyDecryptor.getHostName(), keyDecryptor.getMessage(), deadline);
         try {
             int bytesNeeded = keyDecryptor.bytesNeeded();
 

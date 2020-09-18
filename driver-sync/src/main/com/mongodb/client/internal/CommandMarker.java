@@ -23,6 +23,7 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.internal.timeout.Deadline;
 import org.bson.RawBsonDocument;
 
 import java.io.Closeable;
@@ -52,17 +53,17 @@ class CommandMarker implements Closeable {
         }
     }
 
-    RawBsonDocument mark(final String databaseName, final RawBsonDocument command) {
+    RawBsonDocument mark(final String databaseName, final RawBsonDocument command, final Deadline deadline) {
         if (client != null) {
             try {
                 try {
-                    return executeCommand(databaseName, command);
+                    return executeCommand(databaseName, command, deadline);
                 } catch (MongoTimeoutException e) {
                     if (processBuilder == null) {  // mongocryptdBypassSpawn=true
                         throw e;
                     }
                     startProcess(processBuilder);
-                    return executeCommand(databaseName, command);
+                    return executeCommand(databaseName, command, deadline);
                 }
             } catch (MongoException e) {
                 throw wrapInClientException(e);
@@ -79,7 +80,9 @@ class CommandMarker implements Closeable {
         }
     }
 
-    private RawBsonDocument executeCommand(final String databaseName, final RawBsonDocument markableCommand) {
+    private RawBsonDocument executeCommand(final String databaseName, final RawBsonDocument markableCommand, final Deadline deadline) {
+        // TODO: apply deadline
+        // TODO: figure out how to avoid appending maxTimeMS to commands sent to mongocryptd
         return client.getDatabase(databaseName)
                 .withReadConcern(ReadConcern.DEFAULT)
                 .withReadPreference(ReadPreference.primary())

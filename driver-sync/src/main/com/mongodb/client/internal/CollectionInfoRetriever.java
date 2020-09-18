@@ -16,6 +16,7 @@
 
 package com.mongodb.client.internal;
 
+import com.mongodb.internal.timeout.Deadline;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 
@@ -30,7 +31,8 @@ class CollectionInfoRetriever {
     }
 
     @Nullable
-    public BsonDocument filter(final String databaseName, final BsonDocument filter) {
+    public BsonDocument filter(final String databaseName, final BsonDocument filter, final Deadline deadline) {
+        // TODO: convert deadline to timeout option
         return client.getDatabase(databaseName).listCollections(BsonDocument.class).filter(filter).first();
     }
 }

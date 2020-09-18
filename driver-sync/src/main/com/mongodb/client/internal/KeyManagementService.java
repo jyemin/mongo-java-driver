@@ -17,6 +17,7 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.ServerAddress;
+import com.mongodb.internal.timeout.Deadline;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -36,11 +37,12 @@ class KeyManagementService {
         this.timeoutMillis = timeoutMillis;
     }
 
-    public InputStream stream(final String host, final ByteBuffer message) throws IOException {
+    public InputStream stream(final String host, final ByteBuffer message, final Deadline deadline) throws IOException {
         ServerAddress serverAddress = host.contains(":") ? new ServerAddress(host) : new ServerAddress(host, defaultPort);
         Socket socket = sslContext.getSocketFactory().createSocket();
 
         try {
+            // TODO: apply deadline to SoTimeout (using min)
             socket.setSoTimeout(timeoutMillis);
             socket.connect(serverAddress.getSocketAddress(), timeoutMillis);
         } catch (IOException e) {

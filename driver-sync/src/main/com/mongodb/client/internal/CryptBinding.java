@@ -25,14 +25,17 @@ import com.mongodb.internal.binding.ReadWriteBinding;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.timeout.Deadline;
 
 class CryptBinding implements ClusterAwareReadWriteBinding {
     private final ClusterAwareReadWriteBinding wrapped;
+    private final Deadline deadline;
     private final Crypt crypt;
 
-    CryptBinding(final ClusterAwareReadWriteBinding wrapped, final Crypt crypt) {
+    CryptBinding(final ClusterAwareReadWriteBinding wrapped, final Crypt crypt, final Deadline deadline) {
         this.crypt = crypt;
         this.wrapped = wrapped;
+        this.deadline = deadline;
     }
 
     @Override
@@ -100,7 +103,7 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
 
         @Override
         public Connection getConnection() {
-            return new CryptConnection(wrapped.getConnection(), crypt);
+            return new CryptConnection(wrapped.getConnection(), crypt, deadline);
         }
 
         @Override
