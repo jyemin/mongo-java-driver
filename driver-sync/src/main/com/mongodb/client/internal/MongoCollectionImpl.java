@@ -227,7 +227,7 @@ class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     }
 
     private Deadline getDeadline(@Nullable final Long timeoutMS) {
-        return timeoutMS == null ? Deadline.infinite() : Deadline.of(timeoutMS, TimeUnit.MILLISECONDS);
+        return timeoutMS == null ? Deadline.infinite() : Deadline.finite(timeoutMS, TimeUnit.MILLISECONDS);
     }
 
     @Override
