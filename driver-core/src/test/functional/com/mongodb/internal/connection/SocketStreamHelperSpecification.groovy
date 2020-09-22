@@ -46,7 +46,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), socketSettings, SslSettings.builder().build(),
-                Deadline.infinite()())
+                Deadline.infinite())
 
         then:
         socket.getTcpNoDelay()
@@ -71,7 +71,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(),
-                SocketSettings.builder().build(), SslSettings.builder().build(), Deadline.infinite()())
+                SocketSettings.builder().build(), SslSettings.builder().build(), Deadline.infinite())
 
         then:
         socket.isConnected()
@@ -87,7 +87,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings,
-                Deadline.infinite()())
+                Deadline.infinite())
 
         then:
         socket.getSSLParameters().endpointIdentificationAlgorithm == (sslSettings.invalidHostNameAllowed ? null : 'HTTPS')
@@ -108,7 +108,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(), sslSettings,
-                Deadline.infinite()())
+                Deadline.infinite())
 
         then:
         socket.getSSLParameters().getServerNames() == [new SNIHostName(getPrimary().getHost())]
@@ -127,7 +127,7 @@ class SocketStreamHelperSpecification extends Specification {
 
         when:
         SocketStreamHelper.initialize(socket, getPrimary().getSocketAddress(), SocketSettings.builder().build(),
-                SslSettings.builder().enabled(true).build(), Deadline.infinite()())
+                SslSettings.builder().enabled(true).build(), Deadline.infinite())
 
         then:
         thrown(MongoInternalException)

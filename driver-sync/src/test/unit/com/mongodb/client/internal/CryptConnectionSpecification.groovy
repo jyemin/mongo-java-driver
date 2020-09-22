@@ -85,14 +85,14 @@ class CryptConnectionSpecification extends Specification {
                     1000, 1024 * 16_000, 1024 * 48_000, [])
         }
         1 * crypt.encrypt('db', toRaw(new BsonDocument('find', new BsonString('test'))
-                .append('filter', new BsonDocument('ssid', new BsonString('555-55-5555')))), com.mongodb.internal.timeout.Deadline.infinite()) >> {
+                .append('filter', new BsonDocument('ssid', new BsonString('555-55-5555')))), Deadline.infinite()) >> {
              encryptedCommand
         }
         1 * wrappedConnection.command('db', encryptedCommand, _ as NoOpFieldNameValidator, ReadPreference.primary(),
                 _ as RawBsonDocumentCodec, NoOpSessionContext.INSTANCE, true, null, null) >> {
             encryptedResponse
         }
-        1 * crypt.decrypt(encryptedResponse, com.mongodb.internal.timeout.Deadline.infinite()) >> {
+        1 * crypt.decrypt(encryptedResponse, Deadline.infinite()) >> {
             decryptedResponse
         }
         response == rawToDocument(decryptedResponse)
@@ -138,14 +138,14 @@ class CryptConnectionSpecification extends Specification {
                                 new BsonDocument('_id', new BsonInt32(1))
                                         .append('ssid', new BsonString('555-55-5555'))
                                         .append('b', new BsonBinary(bytes))
-                        ]))), com.mongodb.internal.timeout.Deadline.infinite()) >> {
+                        ]))), Deadline.infinite()) >> {
             encryptedCommand
         }
         1 * wrappedConnection.command('db', encryptedCommand, _ as NoOpFieldNameValidator, ReadPreference.primary(),
                 _ as RawBsonDocumentCodec, NoOpSessionContext.INSTANCE, true, null, null) >> {
             encryptedResponse
         }
-        1 * crypt.decrypt(encryptedResponse, com.mongodb.internal.timeout.Deadline.infinite()) >> {
+        1 * crypt.decrypt(encryptedResponse, Deadline.infinite()) >> {
             decryptedResponse
         }
         response == rawToBsonDocument(decryptedResponse)
@@ -192,14 +192,14 @@ class CryptConnectionSpecification extends Specification {
                         new BsonArray([
                                 new BsonDocument('_id', new BsonInt32(1)),
                                 new BsonDocument('_id', new BsonInt32(2))
-                        ]))), com.mongodb.internal.timeout.Deadline.infinite()) >> {
+                        ]))), Deadline.infinite()) >> {
             encryptedCommand
         }
         1 * wrappedConnection.command('db', encryptedCommand, _ as NoOpFieldNameValidator, ReadPreference.primary(),
                 _ as RawBsonDocumentCodec, NoOpSessionContext.INSTANCE, true, null, null) >> {
             encryptedResponse
         }
-        1 * crypt.decrypt(encryptedResponse, com.mongodb.internal.timeout.Deadline.infinite()) >> {
+        1 * crypt.decrypt(encryptedResponse, Deadline.infinite()) >> {
             decryptedResponse
         }
         response == rawToBsonDocument(decryptedResponse)

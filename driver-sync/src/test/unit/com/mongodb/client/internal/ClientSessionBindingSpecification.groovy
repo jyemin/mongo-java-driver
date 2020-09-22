@@ -24,6 +24,7 @@ import com.mongodb.internal.binding.ConnectionSource
 import com.mongodb.internal.binding.ReadWriteBinding
 import com.mongodb.internal.connection.Cluster
 import com.mongodb.internal.session.ClientSessionContext
+import com.mongodb.internal.timeout.Deadline
 import spock.lang.Specification
 
 class ClientSessionBindingSpecification extends Specification {
@@ -151,6 +152,6 @@ class ClientSessionBindingSpecification extends Specification {
 
     private ReadWriteBinding createStubBinding() {
         def cluster = Stub(Cluster)
-        new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, timeoutMS)
+        new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, Deadline.infinite())
     }
 }

@@ -22,7 +22,7 @@ import com.mongodb.internal.timeout.Deadline;
 
 public interface CommandProtocol<T> {
 
-    T execute(InternalConnection connection, Deadline deadline);
+    T execute(InternalConnection connection, Deadline deadline, long roundTripTimeMillis);
 
     void executeAsync(InternalConnection connection, SingleResultCallback<T> callback);
 

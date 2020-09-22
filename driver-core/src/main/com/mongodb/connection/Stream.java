@@ -54,9 +54,10 @@ public interface Stream extends BufferProvider{
      * @since 4.2?
      */
     default void open(int timeoutMS) throws IOException {
-        if (timeoutMS != 0) {
-            throw new UnsupportedOperationException();
-        }
+        // TODO: Add this back once all the driver's Stream implementations support this
+//        if (timeoutMS != 0) {
+//            throw new UnsupportedOperationException();
+//        }
         open();
     }
 

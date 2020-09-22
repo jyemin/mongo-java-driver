@@ -60,7 +60,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulReplies(false, null)
-        def description = initializer.initialize(internalConnection, Deadline.infinite()())
+        def description = initializer.initialize(internalConnection, Deadline.infinite())
         def connectionDescription = description.connectionDescription
         def serverDescription = description.serverDescription
 
@@ -92,7 +92,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulReplies(false, 123)
-        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()).connectionDescription
 
         then:
         description == getExpectedConnectionDescription(description.connectionId.localValue, 123)
@@ -104,7 +104,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
 
         when:
         enqueueSuccessfulRepliesWithConnectionIdIsIsMasterResponse(false, 123)
-        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()).connectionDescription
 
         then:
         description == getExpectedConnectionDescription(description.connectionId.localValue, 123)
@@ -146,11 +146,11 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         when:
         enqueueSuccessfulReplies(false, null)
 
-        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()).connectionDescription
 
         then:
         description
-        1 * firstAuthenticator.authenticate(internalConnection, _)
+        1 * firstAuthenticator.authenticate(internalConnection, _, Deadline.infinite())
     }
 
     def 'should authenticate asynchronously'() {
@@ -178,7 +178,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         when:
         enqueueSuccessfulReplies(true, null)
 
-        def description = initializer.initialize(internalConnection, Deadline.infinite()()).connectionDescription
+        def description = initializer.initialize(internalConnection, Deadline.infinite()).connectionDescription
 
         then:
         description
@@ -218,7 +218,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(internalConnection, callback)
             latch.await()
         } else {
-            initializer.initialize(internalConnection, Deadline.infinite()())
+            initializer.initialize(internalConnection, Deadline.infinite())
         }
 
         then:
@@ -250,7 +250,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(internalConnection, callback)
             latch.await()
         } else {
-            initializer.initialize(internalConnection, Deadline.infinite()())
+            initializer.initialize(internalConnection, Deadline.infinite())
         }
 
         then:
@@ -284,7 +284,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         if (async) {
             1 * scramShaAuthenticator.authenticateAsync(internalConnection, _, _)
         } else {
-            1 * scramShaAuthenticator.authenticate(internalConnection, _)
+            1 * scramShaAuthenticator.authenticate(internalConnection, _, Deadline.infinite())
         }
         1 * ((SpeculativeAuthenticator) scramShaAuthenticator).createSpeculativeAuthenticateCommand(_)
         ((SpeculativeAuthenticator) scramShaAuthenticator).getSpeculativeAuthenticateResponse() == speculativeAuthenticateResponse
@@ -314,7 +314,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         if (async) {
             1 * authenticator.authenticateAsync(internalConnection, _, _)
         } else {
-            1 * authenticator.authenticate(internalConnection, _)
+            1 * authenticator.authenticate(internalConnection, _, Deadline.infinite())
         }
         1 * ((SpeculativeAuthenticator) authenticator).createSpeculativeAuthenticateCommand(_)
         ((SpeculativeAuthenticator) authenticator).getSpeculativeAuthenticateResponse() == speculativeAuthenticateResponse
@@ -344,7 +344,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         if (async) {
             1 * authenticator.authenticateAsync(internalConnection, _, _)
         } else {
-            1 * authenticator.authenticate(internalConnection, _)
+            1 * authenticator.authenticate(internalConnection, _, Deadline.infinite())
         }
         1 * ((SpeculativeAuthenticator) authenticator).createSpeculativeAuthenticateCommand(_)
         ((SpeculativeAuthenticator) authenticator).getSpeculativeAuthenticateResponse() == speculativeAuthenticateResponse
@@ -372,7 +372,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
         if (async) {
             1 * authenticator.authenticateAsync(internalConnection, _, _)
         } else {
-            1 * authenticator.authenticate(internalConnection, _)
+            1 * authenticator.authenticate(internalConnection, _, Deadline.infinite())
         }
         1 * ((SpeculativeAuthenticator) authenticator).createSpeculativeAuthenticateCommand(_)
         ((SpeculativeAuthenticator) authenticator).getSpeculativeAuthenticateResponse() == speculativeAuthenticateResponse
@@ -415,7 +415,7 @@ class InternalStreamConnectionInitializerSpecification extends Specification {
             initializer.initializeAsync(connection, futureCallback)
             futureCallback.get()
         } else {
-            initializer.initialize(connection, Deadline.infinite()())
+            initializer.initialize(connection, Deadline.infinite())
         }
     }
 

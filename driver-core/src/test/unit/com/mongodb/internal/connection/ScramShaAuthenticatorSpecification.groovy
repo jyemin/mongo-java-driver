@@ -22,6 +22,7 @@ import com.mongodb.async.FutureResultCallback
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ServerId
+import com.mongodb.internal.timeout.Deadline
 import org.bson.BsonDocument
 import org.bson.internal.Base64
 import spock.lang.Specification
@@ -32,8 +33,8 @@ import java.util.concurrent.TimeUnit
 
 import static com.mongodb.MongoCredential.createScramSha1Credential
 import static com.mongodb.MongoCredential.createScramSha256Credential
-import static org.junit.Assert.assertEquals
 import static com.mongodb.internal.connection.MessageHelper.buildSuccessfulReply
+import static org.junit.Assert.assertEquals
 
 class ScramShaAuthenticatorSpecification extends Specification {
     def serverId = new ServerId(new ClusterId(), new ServerAddress('localhost', 27017))
@@ -522,7 +523,7 @@ class ScramShaAuthenticatorSpecification extends Specification {
             authenticator.authenticateAsync(connection, connectionDescription, futureCallback)
             futureCallback.get(5, TimeUnit.SECONDS)
         } else {
-            authenticator.authenticate(connection, connectionDescription, com.mongodb.internal.timeout.Deadline.infinite())
+            authenticator.authenticate(connection, connectionDescription, Deadline.infinite())
         }
     }
 
