@@ -266,7 +266,6 @@ public class InternalStreamConnection implements InternalConnection {
         return isClosed.get();
     }
 
-    // TODO: use the deadline to set socket timeouts
     @Override
     public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
                                 final Deadline deadline) {
@@ -283,9 +282,9 @@ public class InternalStreamConnection implements InternalConnection {
         }
 
         try {
-            sendCommandMessage(message, bsonOutput, sessionContext);
+            sendCommandMessage(message, bsonOutput, sessionContext, deadline);
             if (message.isResponseExpected()) {
-                return receiveCommandMessageResponse(decoder, commandEventSender, sessionContext, 0);
+                return receiveCommandMessageResponse(decoder, commandEventSender, sessionContext, deadline, 0);
             } else {
                 commandEventSender.sendSucceededEventForOneWayCommand();
                 return null;
@@ -300,7 +299,7 @@ public class InternalStreamConnection implements InternalConnection {
     public <T> void send(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext) {
         try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this)) {
             message.encode(bsonOutput, sessionContext);
-            sendCommandMessage(message, bsonOutput, sessionContext);
+            sendCommandMessage(message, bsonOutput, sessionContext, Deadline.infinite());
             if (message.isResponseExpected()) {
                 hasMoreToCome = true;
             }
@@ -310,7 +309,7 @@ public class InternalStreamConnection implements InternalConnection {
     @Override
     public <T> T receive(final Decoder<T> decoder, final SessionContext sessionContext) {
         isTrue("Response is expected", hasMoreToCome);
-        return receiveCommandMessageResponse(decoder, null, sessionContext, 0);
+        return receiveCommandMessageResponse(decoder, null, sessionContext, Deadline.infinite(), 0);
     }
 
     @Override
@@ -321,7 +320,7 @@ public class InternalStreamConnection implements InternalConnection {
     @Override
     public <T> T receive(final Decoder<T> decoder, final SessionContext sessionContext, final int additionalTimeout) {
         isTrue("Response is expected", hasMoreToCome);
-        return receiveCommandMessageResponse(decoder, null, sessionContext, additionalTimeout);
+        return receiveCommandMessageResponse(decoder, null, sessionContext, Deadline.infinite(), additionalTimeout);
     }
 
     @Override
@@ -330,10 +329,10 @@ public class InternalStreamConnection implements InternalConnection {
     }
 
     private void sendCommandMessage(final CommandMessage message,
-                                    final ByteBufferBsonOutput bsonOutput, final SessionContext sessionContext) {
+                                    final ByteBufferBsonOutput bsonOutput, final SessionContext sessionContext, final Deadline deadline) {
         if (sendCompressor == null || SECURITY_SENSITIVE_COMMANDS.contains(message.getCommandDocument(bsonOutput).getFirstKey())) {
             try {
-                sendMessage(bsonOutput.getByteBuffers(), message.getId());
+                sendMessage(bsonOutput.getByteBuffers(), message.getId(), deadline);
             } finally {
                 bsonOutput.close();
             }
@@ -350,7 +349,7 @@ public class InternalStreamConnection implements InternalConnection {
                 bsonOutput.close();
             }
             try {
-                sendMessage(compressedBsonOutput.getByteBuffers(), message.getId());
+                sendMessage(compressedBsonOutput.getByteBuffers(), message.getId(), deadline);
             } finally {
                 compressedBsonOutput.close();
             }
@@ -360,8 +359,8 @@ public class InternalStreamConnection implements InternalConnection {
 
     private <T> T receiveCommandMessageResponse(final Decoder<T> decoder,
                                                 final CommandEventSender commandEventSender, final SessionContext sessionContext,
-                                                final int additionalTimeout) {
-        try (ResponseBuffers responseBuffers = receiveMessageWithAdditionalTimeout(additionalTimeout)) {
+                                                final Deadline deadline, final int additionalTimeout) {
+        try (ResponseBuffers responseBuffers = receiveMessageWithAdditionalTimeout(deadline, additionalTimeout)) {
             updateSessionContext(sessionContext, responseBuffers);
             if (!isCommandOk(responseBuffers)) {
                 throw getCommandFailureException(responseBuffers.getResponseDocument(responseTo, new BsonDocumentCodec()),
@@ -490,8 +489,13 @@ public class InternalStreamConnection implements InternalConnection {
         return result;
     }
 
+
     @Override
     public void sendMessage(final List<ByteBuf> byteBuffers, final int lastRequestId) {
+       sendMessage(byteBuffers, lastRequestId, Deadline.infinite());
+    }
+
+    public void sendMessage(final List<ByteBuf> byteBuffers, final int lastRequestId, final Deadline deadline) {
         notNull("stream is open", stream);
 
         if (isClosed()) {
@@ -499,7 +503,13 @@ public class InternalStreamConnection implements InternalConnection {
         }
 
         try {
-            stream.write(byteBuffers);
+            if (Deadline.infinite().isInfinite()) {
+                stream.write(byteBuffers);
+            } else {
+                // TODO: deal with cast
+                // TODO: deal with zero remaining time
+                stream.writeWithTimeout(byteBuffers, (int) deadline.getTimeRemaining(TimeUnit.MILLISECONDS));
+            }
         } catch (Exception e) {
             close();
             throw translateWriteException(e);
@@ -513,12 +523,12 @@ public class InternalStreamConnection implements InternalConnection {
             throw new MongoSocketClosedException("Cannot read from a closed stream", getServerAddress());
         }
 
-        return receiveMessageWithAdditionalTimeout(0);
+        return receiveMessageWithAdditionalTimeout(Deadline.infinite(), 0);
     }
 
-    private ResponseBuffers receiveMessageWithAdditionalTimeout(final int additionalTimeout) {
+    private ResponseBuffers receiveMessageWithAdditionalTimeout(final Deadline deadline, final int additionalTimeout) {
         try {
-            return receiveResponseBuffers(additionalTimeout);
+            return receiveResponseBuffers(deadline, additionalTimeout);
         } catch (Throwable t) {
             close();
             throw translateReadException(t);
@@ -657,8 +667,8 @@ public class InternalStreamConnection implements InternalConnection {
         }
     }
 
-    private ResponseBuffers receiveResponseBuffers(final int additionalTimeout) throws IOException {
-        ByteBuf messageHeaderBuffer = stream.read(MESSAGE_HEADER_LENGTH, additionalTimeout);
+    private ResponseBuffers receiveResponseBuffers(final Deadline deadline, final int additionalTimeout) throws IOException {
+        ByteBuf messageHeaderBuffer = readFromStream(MESSAGE_HEADER_LENGTH, deadline, additionalTimeout);
         MessageHeader messageHeader;
         try {
             messageHeader = new MessageHeader(messageHeaderBuffer, description.getMaxMessageSize());
@@ -666,7 +676,7 @@ public class InternalStreamConnection implements InternalConnection {
             messageHeaderBuffer.release();
         }
 
-        ByteBuf messageBuffer = stream.read(messageHeader.getMessageLength() - MESSAGE_HEADER_LENGTH, additionalTimeout);
+        ByteBuf messageBuffer = readFromStream(messageHeader.getMessageLength() - MESSAGE_HEADER_LENGTH, deadline, additionalTimeout);
 
         if (messageHeader.getOpCode() == OP_COMPRESSED.getValue()) {
             CompressedHeader compressedHeader = new CompressedHeader(messageBuffer, messageHeader);
@@ -680,6 +690,18 @@ public class InternalStreamConnection implements InternalConnection {
             return new ResponseBuffers(new ReplyHeader(buffer, compressedHeader), buffer);
         } else {
             return new ResponseBuffers(new ReplyHeader(messageBuffer, messageHeader), messageBuffer);
+        }
+    }
+
+    private ByteBuf readFromStream(final int numBytes, final Deadline deadline, final int additionalTimeout) throws IOException {
+        if (deadline.isInfinite()) {
+            return stream.read(numBytes, additionalTimeout);
+        } else if (additionalTimeout != 0) {
+            throw new IllegalStateException("No support for both a deadline and an additional timeout");
+        } else {
+            // TODO: deal with cast
+            // TODO: check for zero remaining time
+            return stream.readWithTimeout(numBytes, (int) deadline.getTimeRemaining(TimeUnit.MILLISECONDS));
         }
     }
 

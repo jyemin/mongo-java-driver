@@ -79,7 +79,20 @@ public interface Stream extends BufferProvider{
         return false;
     }
 
-    // TODO: add writeWithTimeout for Stream implementations that support write timeouts
+    /**
+     * Write each buffer in the list to the stream in order, blocking until all are completely written.
+     *
+     * @param buffers the buffers to write
+     * @param timeoutMS the per-operation timeout, in milliseconds.  A value of zero indicates no timeout
+     * @throws IOException if there are problems writing to the stream
+     * @since 4.2?
+     */
+    default void writeWithTimeout(List<ByteBuf> buffers, int timeoutMS) throws IOException {
+        if (timeoutMS != 0) {
+            throw new UnsupportedOperationException();
+        }
+        write(buffers);
+    }
 
     /**
      * Write each buffer in the list to the stream in order, blocking until all are completely written.
