@@ -575,6 +575,12 @@ class DefaultConnectionPool implements ConnectionPool {
             isTrue("open", !isClosed.get());
             return wrapped.getInitialServerDescription();
         }
+
+        @Override
+        public boolean isCryptDaemon() {
+            isTrue("open", !isClosed.get());
+            return wrapped.isCryptDaemon();
+        }
     }
 
     private class UsageTrackingInternalConnectionItemFactory implements ConcurrentPool.ItemFactory<UsageTrackingInternalConnection> {

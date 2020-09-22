@@ -85,7 +85,7 @@ class InternalStreamConnectionSpecification extends Specification {
             .address(serverAddress)
             .build()
     def internalConnectionInitializationDescription =
-            new InternalConnectionInitializationDescription(connectionDescription, serverDescription)
+            new InternalConnectionInitializationDescription(connectionDescription, serverDescription, false)
     def stream = Mock(Stream) {
         openAsync(_) >> { it[0].completed(null) }
     }

@@ -148,5 +148,10 @@ class TestInternalConnectionFactory implements InternalConnectionFactory {
         public ServerDescription getInitialServerDescription() {
             return ServerDescription.builder().build();  // TODO: do we need more than this?
         }
+
+        @Override
+        public boolean isCryptDaemon() {
+            return false;
+        }
     }
 }

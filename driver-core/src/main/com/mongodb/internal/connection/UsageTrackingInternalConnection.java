@@ -189,6 +189,11 @@ class UsageTrackingInternalConnection implements InternalConnection {
     }
 
     @Override
+    public boolean isCryptDaemon() {
+        return wrapped.isCryptDaemon();
+    }
+
+    @Override
     public int getGeneration() {
         return generation;
     }

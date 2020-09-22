@@ -22,11 +22,13 @@ import com.mongodb.connection.ServerDescription;
 public class InternalConnectionInitializationDescription {
     private final ConnectionDescription connectionDescription;
     private final ServerDescription serverDescription;
+    private final boolean isCryptDaemon;
 
     public InternalConnectionInitializationDescription(final ConnectionDescription connectionDescription,
-                                                       final ServerDescription serverDescription) {
+                                                       final ServerDescription serverDescription, final boolean isCryptDaemon) {
         this.connectionDescription = connectionDescription;
         this.serverDescription = serverDescription;
+        this.isCryptDaemon = isCryptDaemon;
     }
 
     public ConnectionDescription getConnectionDescription() {
@@ -37,7 +39,11 @@ public class InternalConnectionInitializationDescription {
         return serverDescription;
     }
 
+    public boolean isCryptDaemon() {
+        return isCryptDaemon;
+    }
+
     public InternalConnectionInitializationDescription withConnectionDescription(final ConnectionDescription connectionDescription) {
-        return new InternalConnectionInitializationDescription(connectionDescription, serverDescription);
+        return new InternalConnectionInitializationDescription(connectionDescription, serverDescription, isCryptDaemon);
     }
 }

@@ -102,6 +102,11 @@ class TestInternalConnection implements InternalConnection {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public boolean isCryptDaemon() {
+        return false;
+    }
+
     public void open(final Deadline deadline) {
         opened = true;
     }

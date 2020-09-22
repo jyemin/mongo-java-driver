@@ -43,6 +43,8 @@ public interface InternalConnection extends BufferProvider {
      */
     ServerDescription getInitialServerDescription();
 
+    boolean isCryptDaemon();
+
     /**
      * Opens the connection so its ready for use
      * @param deadline the deadline

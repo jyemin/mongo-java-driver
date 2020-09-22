@@ -98,6 +98,7 @@ public class InternalStreamConnection implements InternalConnection {
 
     private volatile ConnectionDescription description;
     private volatile ServerDescription initialServerDescription;
+    private volatile boolean isCryptDaemon;
     private volatile Stream stream;
 
     private final AtomicBoolean isClosed = new AtomicBoolean();
@@ -148,6 +149,7 @@ public class InternalStreamConnection implements InternalConnection {
                     connectionInitializer.initialize(this, deadline);
             description = initializationDescription.getConnectionDescription();
             initialServerDescription = initializationDescription.getServerDescription();
+            isCryptDaemon = initializationDescription.isCryptDaemon();
             opened.set(true);
             sendCompressor = findSendCompressor(description);
             if (LOGGER.isInfoEnabled()) {
@@ -605,6 +607,11 @@ public class InternalStreamConnection implements InternalConnection {
 
     private ServerAddress getServerAddress() {
         return description.getServerAddress();
+    }
+
+    @Override
+    public boolean isCryptDaemon() {
+        return isCryptDaemon;
     }
 
     private void updateSessionContext(final SessionContext sessionContext, final ResponseBuffers responseBuffers) {

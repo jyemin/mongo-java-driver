@@ -111,6 +111,11 @@ public class TestConnectionPool implements ConnectionPool {
             }
 
             @Override
+            public boolean isCryptDaemon() {
+                throw new UnsupportedOperationException("Not implemented yet");
+            }
+
+            @Override
             public void open(final Deadline deadline) {
                 throw new UnsupportedOperationException("Not implemented yet");
             }

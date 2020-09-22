@@ -26,6 +26,8 @@ import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.connection.ProtocolHelper.getMessageSettings;
@@ -100,9 +102,20 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
         return this;
     }
 
-    private CommandMessage getCommandMessage(final InternalConnection connection, final Deadline deadline, final long roundTripTimeNanos) {
+    private CommandMessage getCommandMessage(final InternalConnection connection, final Deadline deadline, final long roundTripTimeMillis) {
+        long maxTimeMillis = 0;
+        if (!connection.isCryptDaemon() && !deadline.isInfinite()) {
+            long timeRemaining = deadline.getTimeRemaining(TimeUnit.MILLISECONDS);
+            if (timeRemaining > 0) {
+                // TODO: is it safe to always add this? Seems like we will need some cooperation with Operation implementations
+                // TODO: or at least operation creators, to not set maxTimeMS if timeout is non-infinite
+                maxTimeMillis = timeRemaining > roundTripTimeMillis ? timeRemaining - roundTripTimeMillis : timeRemaining;
+            }
+
+        }
+
         return new CommandMessage(namespace, command, commandFieldNameValidator, readPreference,
                 getMessageSettings(connection.getDescription()), responseExpected, payload,
-                payloadFieldNameValidator, clusterConnectionMode, deadline, roundTripTimeNanos);
+                payloadFieldNameValidator, clusterConnectionMode, maxTimeMillis);
     }
 }

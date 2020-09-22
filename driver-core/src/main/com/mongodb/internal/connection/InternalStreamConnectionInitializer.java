@@ -27,6 +27,7 @@ import com.mongodb.connection.ServerType;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.timeout.Deadline;
 import org.bson.BsonArray;
+import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
@@ -116,12 +117,13 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
         }
         long elapsedTime = System.nanoTime() - start;
 
-        ConnectionDescription connectionDescription = createConnectionDescription(internalConnection.getDescription().getConnectionId(),
-                isMasterResult);
+        ConnectionDescription connectionDescription =
+                createConnectionDescription(internalConnection.getDescription().getConnectionId(), isMasterResult);
         ServerDescription serverDescription = createServerDescription(internalConnection.getDescription().getServerAddress(),
                 isMasterResult, elapsedTime);
         setSpeculativeAuthenticateResponse(isMasterResult);
-        return new InternalConnectionInitializationDescription(connectionDescription, serverDescription);
+        return new InternalConnectionInitializationDescription(connectionDescription, serverDescription,
+                isMasterResult.getBoolean("iscryptd", BsonBoolean.FALSE).getValue());
     }
 
     private BsonDocument createIsMasterCommand(final Authenticator authenticator, final InternalConnection connection) {
@@ -195,7 +197,8 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
                                     createServerDescription(internalConnection.getDescription().getServerAddress(), isMasterResult,
                                             System.nanoTime() - startTime);
                             setSpeculativeAuthenticateResponse(isMasterResult);
-                            callback.onResult(new InternalConnectionInitializationDescription(connectionDescription, serverDescription),
+                            callback.onResult(new InternalConnectionInitializationDescription(connectionDescription, serverDescription,
+                                            isMasterResult.getBoolean("iscryptd", BsonBoolean.FALSE).getValue()),
                                     null);
                         }
                     }
