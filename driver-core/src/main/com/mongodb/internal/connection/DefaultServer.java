@@ -49,6 +49,8 @@ import static com.mongodb.internal.connection.ClusterableServer.ConnectionState.
 import static com.mongodb.internal.connection.EventHelper.wouldDescriptionsGenerateEquivalentEvents;
 import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WIRE_VERSION;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 class DefaultServer implements ClusterableServer {
     private static final Logger LOGGER = Loggers.getLogger("connection");
@@ -100,7 +102,7 @@ class DefaultServer implements ClusterableServer {
         isTrue("open", !isClosed());
         try {
             return connectionFactory.create(connectionPool.get(connectionSelectionDeadline), new DefaultServerProtocolExecutor(),
-                    clusterConnectionMode, operationDeadline);
+                    clusterConnectionMode, operationDeadline, MILLISECONDS.convert(description.getRoundTripTimeNanos(), NANOSECONDS));
         } catch (MongoSecurityException e) {
             connectionPool.invalidate();
             throw e;
@@ -260,10 +262,10 @@ class DefaultServer implements ClusterableServer {
         @SuppressWarnings("unchecked")
         @Override
         public <T> T execute(final CommandProtocol<T> protocol, final InternalConnection connection,
-                             final SessionContext sessionContext, final Deadline deadline) {
+                             final SessionContext sessionContext, final Deadline deadline, final long roundTripTimeMillis) {
             try {
                 protocol.sessionContext(new ClusterClockAdvancingSessionContext(sessionContext, clusterClock));
-                return protocol.execute(connection, deadline);
+                return protocol.execute(connection, deadline, roundTripTimeMillis);
             } catch (MongoWriteConcernWithResponseException e) {
                 invalidate();
                 return (T) e.getResponse();

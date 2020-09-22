@@ -183,7 +183,7 @@ class TestConnection implements Connection, AsyncConnection {
 
     @SuppressWarnings("unchecked")
     private <T> T executeEnqueuedCommandBasedProtocol(final SessionContext sessionContext) {
-        return (T) executor.execute(enqueuedCommandProtocol, internalConnection, sessionContext, Deadline.infinite());
+        return (T) executor.execute(enqueuedCommandProtocol, internalConnection, sessionContext, Deadline.infinite(), 0);
     }
 
     @SuppressWarnings("unchecked")

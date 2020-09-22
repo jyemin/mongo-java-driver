@@ -21,7 +21,7 @@ import com.mongodb.internal.timeout.Deadline;
 
 interface ConnectionFactory {
     Connection create(InternalConnection internalConnection, ProtocolExecutor executor, ClusterConnectionMode clusterConnectionMode,
-                      Deadline deadline);
+                      Deadline deadline, long roundTripTimeNanos);
 
     AsyncConnection createAsync(InternalConnection internalConnection, ProtocolExecutor executor,
                                 ClusterConnectionMode clusterConnectionMode);

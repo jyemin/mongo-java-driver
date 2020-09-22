@@ -22,13 +22,14 @@ import com.mongodb.internal.timeout.Deadline;
 class DefaultConnectionFactory implements ConnectionFactory {
     @Override
     public Connection create(final InternalConnection internalConnection, final ProtocolExecutor executor,
-                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
-        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, deadline);
+                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline, final long roundTripTimeNanos) {
+        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, deadline, roundTripTimeNanos);
     }
 
     @Override
     public AsyncConnection createAsync(final InternalConnection internalConnection, final ProtocolExecutor executor,
                                        final ClusterConnectionMode clusterConnectionMode) {
-        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, Deadline.infinite());
+        // TODO: update
+        return new DefaultServerConnection(internalConnection, executor, clusterConnectionMode, Deadline.infinite(), Long.MAX_VALUE);
     }
 }

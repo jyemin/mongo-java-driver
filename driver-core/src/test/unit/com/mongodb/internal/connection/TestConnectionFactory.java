@@ -22,7 +22,7 @@ import com.mongodb.internal.timeout.Deadline;
 class TestConnectionFactory implements ConnectionFactory {
     @Override
     public Connection create(final InternalConnection internalConnection, final ProtocolExecutor executor,
-                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
+                             final ClusterConnectionMode clusterConnectionMode, final Deadline deadline, final long roundTripTimeNanos) {
         return new TestConnection(internalConnection, executor);
     }
 

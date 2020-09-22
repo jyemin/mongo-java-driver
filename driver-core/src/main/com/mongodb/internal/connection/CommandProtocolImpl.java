@@ -68,14 +68,17 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
     }
 
     @Override
-    public T execute(final InternalConnection connection, final Deadline deadline) {
-        return connection.sendAndReceive(getCommandMessage(connection, deadline), commandResultDecoder, sessionContext, deadline);
+    public T execute(final InternalConnection connection, final Deadline deadline, final long roundTripTimeMillis) {
+        return connection.sendAndReceive(getCommandMessage(connection, deadline, roundTripTimeMillis), commandResultDecoder, sessionContext,
+                deadline);
     }
 
     @Override
     public void executeAsync(final InternalConnection connection, final SingleResultCallback<T> callback) {
         try {
-            connection.sendAndReceiveAsync(getCommandMessage(connection, Deadline.infinite()), commandResultDecoder, sessionContext,
+            // TODO: fix RTT
+            connection.sendAndReceiveAsync(getCommandMessage(connection, Deadline.infinite(), 0),
+                    commandResultDecoder, sessionContext,
                     new SingleResultCallback<T>() {
                         @Override
                         public void onResult(final T result, final Throwable t) {
@@ -97,9 +100,9 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
         return this;
     }
 
-    private CommandMessage getCommandMessage(final InternalConnection connection, final Deadline deadline) {
+    private CommandMessage getCommandMessage(final InternalConnection connection, final Deadline deadline, final long roundTripTimeNanos) {
         return new CommandMessage(namespace, command, commandFieldNameValidator, readPreference,
                 getMessageSettings(connection.getDescription()), responseExpected, payload,
-                payloadFieldNameValidator, clusterConnectionMode, Deadline.infinite());
+                payloadFieldNameValidator, clusterConnectionMode, deadline, roundTripTimeNanos);
     }
 }

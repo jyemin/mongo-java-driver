@@ -27,7 +27,8 @@ public interface ProtocolExecutor {
     // TODO: support for async
     <T> void executeAsync(LegacyProtocol<T> protocol, InternalConnection connection, SingleResultCallback<T> callback);
 
-    <T> T execute(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext, Deadline deadline);
+    <T> T execute(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext, Deadline deadline,
+                  long roundTripTimeMillis);
 
     <T> void executeAsync(CommandProtocol<T> protocol, InternalConnection connection, SessionContext sessionContext,
                           SingleResultCallback<T> callback);

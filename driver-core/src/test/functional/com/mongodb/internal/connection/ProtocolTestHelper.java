@@ -41,7 +41,7 @@ final class ProtocolTestHelper {
             protocol.executeAsync(connection, futureResultCallback);
             return futureResultCallback.get(ClusterFixture.TIMEOUT, SECONDS);
         } else {
-            return protocol.execute(connection, Deadline.infinite());
+            return protocol.execute(connection, Deadline.infinite(), 0);
         }
     }
 

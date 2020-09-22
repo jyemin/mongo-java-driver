@@ -88,7 +88,7 @@ class DefaultServerSpecification extends Specification {
 
         then:
         receivedConnection
-        1 * connectionFactory.create(internalConnection, _, mode, Deadline.infinite()) >> connection
+        1 * connectionFactory.create(internalConnection, _, mode, Deadline.infinite(), 0) >> connection
 
         where:
         mode << [SINGLE, MULTIPLE]
@@ -612,7 +612,7 @@ class DefaultServerSpecification extends Specification {
         }
 
         @Override
-        BsonDocument execute(final InternalConnection connection, Deadline deadline) {
+        BsonDocument execute(final InternalConnection connection, Deadline deadline, long roundTripTimeMillis) {
             commandResult
         }
 

@@ -45,13 +45,16 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     private final ProtocolExecutor protocolExecutor;
     private final ClusterConnectionMode clusterConnectionMode;
     private final Deadline deadline;
+    private final long roundTripTimeMillis;
 
     public DefaultServerConnection(final InternalConnection wrapped, final ProtocolExecutor protocolExecutor,
-                                   final ClusterConnectionMode clusterConnectionMode, final Deadline deadline) {
+                                   final ClusterConnectionMode clusterConnectionMode, final Deadline deadline,
+                                   final long roundTripTimeMillis) {
         this.wrapped = wrapped;
         this.protocolExecutor = protocolExecutor;
         this.clusterConnectionMode = clusterConnectionMode;
         this.deadline = deadline;
+        this.roundTripTimeMillis = roundTripTimeMillis;
     }
 
     @Override
@@ -202,7 +205,7 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     }
 
     private <T> T executeProtocol(final CommandProtocol<T> protocol, final SessionContext sessionContext) {
-        return protocolExecutor.execute(protocol, this.wrapped, sessionContext, deadline);
+        return protocolExecutor.execute(protocol, this.wrapped, sessionContext, deadline, roundTripTimeMillis);
     }
 
     private <T> void executeProtocolAsync(final LegacyProtocol<T> protocol, final SingleResultCallback<T> callback) {
