@@ -89,7 +89,7 @@ class WriteProtocolCommandEventSpecification extends OperationFunctionalSpecific
         new CommandProtocolImpl(getDatabaseName(), new BsonDocument('drop', new BsonString(getCollectionName())),
                             NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec())
                 .sessionContext(NoOpSessionContext.INSTANCE)
-                .execute(connection, Deadline.infinite()())
+                .execute(connection, Deadline.infinite())
 
         where:
         async << [false, true]
@@ -126,7 +126,7 @@ class WriteProtocolCommandEventSpecification extends OperationFunctionalSpecific
         new CommandProtocolImpl(getDatabaseName(), new BsonDocument('drop', new BsonString(getCollectionName())),
                 NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec())
                 .sessionContext(NoOpSessionContext.INSTANCE)
-                .execute(connection, Deadline.infinite()())
+                .execute(connection, Deadline.infinite())
 
         where:
         async << [false, true]
@@ -162,7 +162,7 @@ class WriteProtocolCommandEventSpecification extends OperationFunctionalSpecific
         new CommandProtocolImpl(getDatabaseName(), new BsonDocument('drop', new BsonString(getCollectionName())),
                 NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec())
                 .sessionContext(NoOpSessionContext.INSTANCE)
-                .execute(connection, Deadline.infinite()())
+                .execute(connection, Deadline.infinite())
 
         where:
         async << [false, true]
