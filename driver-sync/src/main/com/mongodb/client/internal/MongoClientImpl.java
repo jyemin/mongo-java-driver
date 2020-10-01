@@ -37,7 +37,7 @@ import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.Cluster;
-import com.mongodb.internal.connection.DefaultClusterFactory;
+import com.mongodb.internal.connection.UnmonitoredClusterFactory;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -48,9 +48,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.mongodb.assertions.Assertions.notNull;
-import static org.bson.internal.CodecRegistryHelper.createRegistry;
 import static com.mongodb.client.internal.Crypts.createCrypt;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
+import static org.bson.internal.CodecRegistryHelper.createRegistry;
 
 public final class MongoClientImpl implements MongoClient {
 
@@ -201,7 +201,7 @@ public final class MongoClientImpl implements MongoClient {
     private static Cluster createCluster(final MongoClientSettings settings,
                                          @Nullable final MongoDriverInformation mongoDriverInformation) {
         notNull("settings", settings);
-        return new DefaultClusterFactory().createCluster(settings.getClusterSettings(), settings.getServerSettings(),
+        return new UnmonitoredClusterFactory().createCluster(settings.getClusterSettings(), settings.getServerSettings(),
                 settings.getConnectionPoolSettings(), getStreamFactory(settings, false), getStreamFactory(settings, true),
                 settings.getCredential(), getCommandListener(settings.getCommandListeners()), settings.getApplicationName(),
                 mongoDriverInformation, settings.getCompressorList());
