@@ -60,6 +60,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private final long maxTimeMS;
     private int batchSize;
     private ConnectionSource connectionSource;
+    private Connection connection;
     private ServerCursor serverCursor;
     private List<T> nextBatch;
     private int count;
@@ -117,6 +118,8 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             this.maxWireVersion = connection.getDescription().getMaxWireVersion();
             if (limitReached()) {
                 killCursor(connection);
+            } else if (serverCursor != null) {
+                this.connection = connection.retain();
             }
         }
         releaseConnectionSourceIfNoServerCursor();
@@ -186,6 +189,9 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             try {
                 killCursor();
             } finally {
+                if (connection != null) {
+                    connection.release();
+                }
                 if (connectionSource != null) {
                     connectionSource.release();
                 }
@@ -260,7 +266,6 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     private void getMore() {
-        Connection connection = connectionSource.getConnection();
         try {
             if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
                 try {
@@ -282,7 +287,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
                 killCursor(connection);
             }
         } finally {
-            connection.release();
+            releaseConnectionIfNoServerCursor();
             releaseConnectionSourceIfNoServerCursor();
         }
     }
@@ -323,12 +328,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private void killCursor() {
         if (serverCursor != null) {
             try {
-                Connection connection = connectionSource.getConnection();
-                try {
-                    killCursor(connection);
-                } finally {
-                    connection.release();
-                }
+                killCursor(connection);
             } catch (MongoException e) {
                 // Ignore exceptions from calling killCursor
             }
@@ -355,6 +355,13 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         if (serverCursor == null && connectionSource != null) {
             connectionSource.release();
             connectionSource = null;
+        }
+    }
+
+    private void releaseConnectionIfNoServerCursor() {
+        if (serverCursor == null && connection != null) {
+            connection.release();
+            connection = null;
         }
     }
 
