@@ -22,6 +22,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.ClientSession;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.binding.AbstractReferenceCounted;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadWriteBinding;
@@ -80,7 +81,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
     @Override
     public ConnectionSource getReadConnectionSource() {
         if (isActiveShardedTxn()) {
-            return new SessionBindingConnectionSource(wrapped.getConnectionSource(pinServer()));
+            return new SessionBindingConnectionSource(getPinnedConnectionSource());
         } else {
             return new SessionBindingConnectionSource(wrapped.getReadConnectionSource());
         }
@@ -88,7 +89,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
 
     public ConnectionSource getWriteConnectionSource() {
         if (isActiveShardedTxn()) {
-            return new SessionBindingConnectionSource(wrapped.getConnectionSource(pinServer()));
+            return new SessionBindingConnectionSource(getPinnedConnectionSource());
         } else {
             return new SessionBindingConnectionSource(wrapped.getWriteConnectionSource());
         }
@@ -111,6 +112,38 @@ public class ClientSessionBinding implements ReadWriteBinding {
             session.setPinnedServerAddress(pinnedServerAddress);
         }
         return pinnedServerAddress;
+    }
+
+    private ConnectionSource getPinnedConnectionSource() {
+        TransactionContext transactionContext = (TransactionContext) session.getTransactionContext();
+        if (transactionContext == null) {
+            Server server = wrapped.getCluster().selectServer(new ReadPreferenceServerSelector(wrapped.getReadPreference()));
+            session.setPinnedServerAddress(server.getDescription().getAddress());
+            ConnectionSource connectionSource = wrapped.getConnectionSource(server.getDescription().getAddress());
+            Connection connection = connectionSource.getConnection();
+            transactionContext = new TransactionContext(server, connection);
+            session.setTransactionContext(transactionContext);
+            transactionContext.release();
+        }
+        return wrapped.getConnectionSource(transactionContext.server, transactionContext.connection);
+    }
+
+    private static class TransactionContext extends AbstractReferenceCounted {
+        private final Server server;
+        private final Connection connection;
+
+        private TransactionContext(final Server server, final Connection connection) {
+            this.server = server;
+            this.connection = connection;
+        }
+
+        @Override
+        public void release() {
+            super.release();
+            if (getCount() == 0) {
+                connection.release();
+            }
+        }
     }
 
     private class SessionBindingConnectionSource implements ConnectionSource {

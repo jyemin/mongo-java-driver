@@ -24,6 +24,7 @@ import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadWriteBinding;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.Connection;
+import com.mongodb.internal.connection.Server;
 import com.mongodb.internal.session.SessionContext;
 
 class CryptBinding implements ClusterAwareReadWriteBinding {
@@ -53,6 +54,11 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
     @Override
     public ConnectionSource getConnectionSource(final ServerAddress serverAddress) {
         return new CryptConnectionSource(wrapped.getConnectionSource(serverAddress));
+    }
+
+    @Override
+    public ConnectionSource getConnectionSource(final Server server, final Connection connection) {
+        return new CryptConnectionSource(wrapped.getConnectionSource(server, connection));
     }
 
     @Override

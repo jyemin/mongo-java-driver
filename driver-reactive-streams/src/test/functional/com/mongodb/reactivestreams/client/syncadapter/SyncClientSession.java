@@ -105,6 +105,16 @@ class SyncClientSession implements ClientSession {
     }
 
     @Override
+    public Object getTransactionContext() {
+        return wrapped.getTransactionContext();
+    }
+
+    @Override
+    public void setTransactionContext(Object transactionContext) {
+        wrapped.setTransactionContext(transactionContext);
+    }
+
+    @Override
     public boolean hasActiveTransaction() {
         return wrapped.hasActiveTransaction();
     }

@@ -16,15 +16,17 @@
 
 package com.mongodb.internal.session;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.ServerAddress;
+import com.mongodb.internal.binding.ReferenceCounted;
 import com.mongodb.lang.Nullable;
 import com.mongodb.session.ClientSession;
-import com.mongodb.ClientSessionOptions;
 import com.mongodb.session.ServerSession;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 
 import static com.mongodb.assertions.Assertions.isTrue;
+import static com.mongodb.assertions.Assertions.notNull;
 
 public class BaseClientSessionImpl implements ClientSession {
     private static final String CLUSTER_TIME_KEY = "clusterTime";
@@ -38,6 +40,7 @@ public class BaseClientSessionImpl implements ClientSession {
     private ServerAddress pinnedServerAddress;
     private BsonDocument recoveryToken;
     private volatile boolean closed;
+    private ReferenceCounted transactionContext;
 
     public BaseClientSessionImpl(final ServerSessionPool serverSessionPool, final Object originator, final ClientSessionOptions options) {
         this.serverSessionPool = serverSessionPool;
@@ -58,7 +61,26 @@ public class BaseClientSessionImpl implements ClientSession {
     public void setPinnedServerAddress(@Nullable final ServerAddress address) {
         isTrue("pinned mongos null check", address == null || pinnedServerAddress == null);
         pinnedServerAddress = address;
+        // TODO: this is a hack, to avoid changing too many calling paths to also reset the transaction context
+        if (pinnedServerAddress == null) {
+            if (transactionContext != null) {
+                transactionContext.release();
+                transactionContext = null;
+            }
+        }
     }
+
+    @Override
+    public Object getTransactionContext() {
+        return transactionContext;
+    }
+
+    @Override
+    public void setTransactionContext(final Object transactionContext) {
+        this.transactionContext = (ReferenceCounted) notNull("transactionContext", transactionContext);
+        this.transactionContext.retain();
+    }
+
 
     @Override
     public BsonDocument getRecoveryToken() {
@@ -141,6 +163,10 @@ public class BaseClientSessionImpl implements ClientSession {
             closed = true;
             serverSessionPool.release(serverSession);
             pinnedServerAddress = null;
+            if (transactionContext != null) {
+                transactionContext.release();
+                transactionContext = null;
+            }
         }
     }
 }

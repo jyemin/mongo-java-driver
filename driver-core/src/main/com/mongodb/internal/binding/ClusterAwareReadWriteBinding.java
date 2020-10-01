@@ -18,6 +18,8 @@ package com.mongodb.internal.binding;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.internal.connection.Cluster;
+import com.mongodb.internal.connection.Connection;
+import com.mongodb.internal.connection.Server;
 
 /**
  * This interface is not part of the public API and may be removed or changed at any time.
@@ -30,4 +32,6 @@ public interface ClusterAwareReadWriteBinding extends ReadWriteBinding {
      * @return the connection source
      */
     ConnectionSource getConnectionSource(ServerAddress serverAddress);
+
+    ConnectionSource getConnectionSource(final Server server, Connection connection);
 }

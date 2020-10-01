@@ -141,4 +141,16 @@ class ClientSessionImpl implements ClientSession {
     public void close() {
         wrapped.close();
     }
+
+    @Override
+    public Object getTransactionContext() {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setTransactionContext(Object transactionContext) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
 }

@@ -134,4 +134,8 @@ public interface ClientSession extends Closeable {
 
     @Override
     void close();
+
+    Object getTransactionContext();
+
+    void setTransactionContext(Object transactionContext);
 }

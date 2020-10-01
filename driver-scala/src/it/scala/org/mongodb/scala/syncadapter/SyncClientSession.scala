@@ -28,6 +28,11 @@ case class SyncClientSession(wrapped: ClientSession, originator: Object) extends
 
   override def setPinnedServerAddress(address: ServerAddress): Unit = wrapped.setPinnedServerAddress(address)
 
+  override def getTransactionContext: Object = wrapped.getTransactionContext
+
+  override def setTransactionContext(transactionContext: Object): Unit =
+    wrapped.setTransactionContext(transactionContext)
+
   override def getRecoveryToken: BsonDocument = wrapped.getRecoveryToken
 
   override def setRecoveryToken(recoveryToken: BsonDocument): Unit = wrapped.setRecoveryToken(recoveryToken)

@@ -83,23 +83,28 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
 
     @Override
     public ConnectionSource getReadConnectionSource() {
-        return new ClusterBindingConnectionSource(new ReadPreferenceServerSelector(readPreference));
+        return new ServerBindingConnectionSource(new ReadPreferenceServerSelector(readPreference));
     }
 
     @Override
     public ConnectionSource getWriteConnectionSource() {
-        return new ClusterBindingConnectionSource(new WritableServerSelector());
+        return new ServerBindingConnectionSource(new WritableServerSelector());
     }
 
     @Override
     public ConnectionSource getConnectionSource(final ServerAddress serverAddress) {
-        return new ClusterBindingConnectionSource(new ServerAddressSelector(serverAddress));
+        return new ServerBindingConnectionSource(new ServerAddressSelector(serverAddress));
     }
 
-    private final class ClusterBindingConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
+    @Override
+    public ConnectionSource getConnectionSource(final Server server, final Connection connection) {
+        return new ConnectionBindingConnectionSource(server, connection);
+    }
+
+    private final class ServerBindingConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
         private final Server server;
 
-        private ClusterBindingConnectionSource(final ServerSelector serverSelector) {
+        private ServerBindingConnectionSource(final ServerSelector serverSelector) {
             this.server = cluster.selectServer(serverSelector);
             ClusterBinding.this.retain();
         }
@@ -129,6 +134,46 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
         public void release() {
             super.release();
             ClusterBinding.this.release();
+        }
+    }
+
+    private class ConnectionBindingConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
+        private final Server server;
+        private final Connection connection;
+
+        public ConnectionBindingConnectionSource(final Server server, final Connection connection) {
+            this.server = server;
+            this.connection = connection.retain();
+            ClusterBinding.this.retain();
+        }
+
+        @Override
+        public ServerDescription getServerDescription() {
+            return server.getDescription();
+        }
+
+        @Override
+        public SessionContext getSessionContext() {
+            return new ReadConcernAwareNoOpSessionContext(readConcern);
+        }
+
+        @Override
+        public Connection getConnection() {
+            return connection.retain();
+        }
+
+        public ConnectionSource retain() {
+            super.retain();
+            ClusterBinding.this.retain();
+            connection.retain();
+            return this;
+        }
+
+        @Override
+        public void release() {
+            super.release();
+            ClusterBinding.this.release();
+            connection.release();
         }
     }
 }

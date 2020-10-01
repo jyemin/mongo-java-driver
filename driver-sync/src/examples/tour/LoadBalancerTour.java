@@ -24,7 +24,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
-import com.mongodb.client.TransactionBody;
 import org.bson.Document;
 
 import java.util.Random;
@@ -50,27 +49,37 @@ public class LoadBalancerTour {
 
 
     private static void testTransaction(final MongoClient client) throws InterruptedException {
-        MongoCollection<Document> collection = client.getDatabase("test").getCollection("transaction");
-        collection.drop();
 
-        int count = 100;
+        int count = 10;
+
+        for (int i = 0; i < count; i++) {
+            MongoCollection<Document> collection = client.getDatabase("test").getCollection("transaction-" + i);
+            collection.drop();
+        }
+
         ExecutorService service = Executors.newFixedThreadPool(count);
 
         CountDownLatch latch = new CountDownLatch(count);
         AtomicInteger counter = new AtomicInteger();
         AtomicInteger failureCounter = new AtomicInteger();
         for (int i = 0; i < count; i++) {
+            MongoCollection<Document> collection = client.getDatabase("test").getCollection("transaction-" + i);
             service.submit(() -> {
                 Random random = new Random();
                 try (ClientSession clientSession = client.startSession()) {
-                    clientSession.withTransaction((TransactionBody<Void>) () -> {
-                        for (int j = 0; j < 50; j++) {
+                    try {
+                        clientSession.startTransaction();
+                        for (int j = 0; j < 10; j++) {
                             collection.insertOne(clientSession, new Document());
-                            sleepUninterruptibly(random);
+                            sleepUninterruptedly(random);
                         }
-                        //noinspection ConstantConditions
-                        return null;
-                    });
+                        clientSession.commitTransaction();
+                    } catch (Exception e) {
+                        if (clientSession.hasActiveTransaction()) {
+                            clientSession.abortTransaction();
+                        }
+                        throw e;
+                    }
                 } catch (Exception e) {
                     failureCounter.incrementAndGet();
                     e.printStackTrace();
@@ -80,10 +89,10 @@ public class LoadBalancerTour {
                 }
             });
         }
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(5, TimeUnit.MINUTES);
         service.shutdown();
         if (failureCounter.get() > 0) {
-            throw new RuntimeException("At least one transaction failed to complete");
+            throw new RuntimeException(failureCounter.get() + " failures");
         }
     }
 
@@ -106,7 +115,7 @@ public class LoadBalancerTour {
                         try (MongoCursor<Document> cursor = collection.find().batchSize(1).cursor()) {
                             while (cursor.hasNext()) {
                                 cursor.next();
-                                sleepUninterruptibly(random);
+                                sleepUninterruptedly(random);
                             }
                         } catch (Exception e) {
                             failureCounter.incrementAndGet();
@@ -119,14 +128,14 @@ public class LoadBalancerTour {
             );
         }
 
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(1, TimeUnit.MINUTES);
         service.shutdown();
         if (failureCounter.get() > 0) {
-            throw new RuntimeException("At least one cursor failed to iterate");
+            throw new RuntimeException(failureCounter.get() + " failures");
         }
     }
 
-    private static void sleepUninterruptibly(Random random) {
+    private static void sleepUninterruptedly(Random random) {
         try {
             Thread.sleep(random.nextInt(5) + 1);
         } catch (InterruptedException e) {
