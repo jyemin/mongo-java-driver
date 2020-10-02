@@ -44,6 +44,7 @@ public class LoadBalancerTour {
 
         testCursor(client);
         testTransaction(client);
+        testShutdown(client);
     }
 
 
@@ -70,7 +71,7 @@ public class LoadBalancerTour {
                         clientSession.startTransaction();
                         for (int j = 0; j < 10; j++) {
                             collection.insertOne(clientSession, new Document());
-                            sleepUninterruptedly(random);
+                            sleepUninterruptedly(random, 5);
                         }
                         clientSession.commitTransaction();
                     } catch (Exception e) {
@@ -114,7 +115,7 @@ public class LoadBalancerTour {
                         try (MongoCursor<Document> cursor = collection.find().batchSize(1).cursor()) {
                             while (cursor.hasNext()) {
                                 cursor.next();
-                                sleepUninterruptedly(random);
+                                sleepUninterruptedly(random, 5);
                             }
                         } catch (Exception e) {
                             failureCounter.incrementAndGet();
@@ -134,11 +135,46 @@ public class LoadBalancerTour {
         }
     }
 
-    private static void sleepUninterruptedly(Random random) {
+    private static void testShutdown(final MongoClient client) throws InterruptedException {
+        MongoCollection<Document> collection = client.getDatabase("test").getCollection("shutdown");
+        collection.drop();
+
+        int count = 100;
+        ExecutorService service = Executors.newFixedThreadPool(count);
+
+        AtomicInteger failureCounter = new AtomicInteger();
+        for (int i = 0; i < count; i++) {
+            service.submit(() -> {
+                        Random random = new Random();
+                //noinspection InfiniteLoopStatement
+                while (true) {
+                            try {
+                                collection.find().first();
+                                sleepUninterruptedly(random, 1000);
+                            } catch (Exception e) {
+                                failureCounter.incrementAndGet();
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+            );
+        }
+
+        //noinspection InfiniteLoopStatement
+        while (true) {
+            //noinspection BusyWait
+            Thread.sleep(1000);
+            System.out.println("Failures: " + failureCounter.get());
+        }
+    }
+
+    private static void sleepUninterruptedly(Random random, int bound) {
         try {
-            Thread.sleep(random.nextInt(5) + 1);
+            Thread.sleep(random.nextInt(bound) + 1);
         } catch (InterruptedException e) {
             // nothing
         }
     }
+
+
 }
