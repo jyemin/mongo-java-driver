@@ -23,6 +23,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -156,6 +157,11 @@ public class TestConnectionPool implements ConnectionPool {
     @Override
     public void invalidate() {
         generation++;
+    }
+
+    @Override
+    public void invalidatePuddle(ObjectId puddleIdentifier) {
+        // ignore
     }
 
     @Override

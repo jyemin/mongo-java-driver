@@ -23,6 +23,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
+import com.mongodb.connection.TopologyVersion;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.event.ConnectionCheckOutFailedEvent;
@@ -43,8 +44,11 @@ import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.thread.DaemonThreadFactory;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
+import org.bson.types.ObjectId;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,6 +77,8 @@ class DefaultConnectionPool implements ConnectionPool {
     private final ConnectionPoolListener connectionPoolListener;
     private final ServerId serverId;
     private volatile boolean closed;
+    // TODO: when is it safe to remove anything from this set?  How do we know when the last connection is gone?
+    private final Set<ObjectId> invalidatedPuddles = ConcurrentHashMap.newKeySet();
 
     DefaultConnectionPool(final ServerId serverId, final InternalConnectionFactory internalConnectionFactory,
                           final ConnectionPoolSettings settings) {
@@ -254,6 +260,11 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     @Override
+    public void invalidatePuddle(ObjectId puddleIdentifier) {
+        invalidatedPuddles.add(puddleIdentifier);
+    }
+
+    @Override
     public void close() {
         if (!closed) {
             pool.close();
@@ -303,6 +314,7 @@ class DefaultConnectionPool implements ConnectionPool {
 
     private Runnable createMaintenanceTask() {
         Runnable newMaintenanceTask = null;
+        // TODO: this looks like a bug, since we also want to prune when the generation increments
         if (shouldPrune() || shouldEnsureMinSize()) {
             newMaintenanceTask = new Runnable() {
                 @Override
@@ -346,11 +358,21 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private boolean shouldPrune() {
-        return settings.getMaxConnectionIdleTime(MILLISECONDS) > 0 || settings.getMaxConnectionLifeTime(MILLISECONDS) > 0;
+        return settings.getMaxConnectionIdleTime(MILLISECONDS) > 0 || settings.getMaxConnectionLifeTime(MILLISECONDS) > 0
+                || true; // TODO add a setting for load-balanced mode?
     }
 
     private boolean shouldPrune(final UsageTrackingInternalConnection connection) {
-        return fromPreviousGeneration(connection) || pastMaxLifeTime(connection) || pastMaxIdleTime(connection);
+        return fromPreviousGeneration(connection) || pastMaxLifeTime(connection) || pastMaxIdleTime(connection) ||
+                fromInvalidatedPuddle(connection);
+    }
+
+    private boolean fromInvalidatedPuddle(UsageTrackingInternalConnection connection) {
+        TopologyVersion topologyVersion = connection.getInitialServerDescription().getTopologyVersion();
+        if (topologyVersion == null) {
+            return false;  // TODO this should not really be allowed, as it's required for correctness
+        }
+        return invalidatedPuddles.contains(topologyVersion.getProcessId());
     }
 
     private boolean pastMaxIdleTime(final UsageTrackingInternalConnection connection) {
@@ -623,7 +645,9 @@ class DefaultConnectionPool implements ConnectionPool {
             ConnectionClosedEvent.Reason reason;
             if (connection.isClosed()) {
                 reason = ConnectionClosedEvent.Reason.ERROR;
-            } else if (fromPreviousGeneration(connection)) {
+            } else if (fromPreviousGeneration(connection) ||
+                    invalidatedPuddles.contains(connection.getInitialServerDescription()
+                            .getTopologyVersion().getProcessId())) {
                 reason = ConnectionClosedEvent.Reason.STALE;
             } else if (pastMaxIdleTime(connection)) {
                 reason = ConnectionClosedEvent.Reason.IDLE;

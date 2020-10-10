@@ -106,7 +106,13 @@ class UnmonitoredServer implements ClusterableServer {
         @Override
         public <T> T execute(final CommandProtocol<T> protocol, final InternalConnection connection, final SessionContext sessionContext) {
             protocol.sessionContext(new ClusterClockAdvancingSessionContext(sessionContext, clusterClock));
-            return protocol.execute(connection);
+            try {
+                return protocol.execute(connection);
+            } catch (Exception e) {
+                connectionPool.invalidatePuddle(connection.getInitialServerDescription()
+                        .getTopologyVersion().getProcessId());
+                throw e;
+            }
         }
 
         @Override
