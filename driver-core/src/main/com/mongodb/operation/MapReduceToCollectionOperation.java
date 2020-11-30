@@ -31,9 +31,7 @@ import com.mongodb.operation.CommandOperationHelper.CommandTransformer;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonJavaScript;
-import org.bson.BsonNull;
 import org.bson.BsonString;
-import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
 
 import java.util.List;
@@ -44,13 +42,15 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.operation.CommandOperationHelper.executeWrappedCommandProtocol;
 import static com.mongodb.operation.CommandOperationHelper.executeWrappedCommandProtocolAsync;
+import static com.mongodb.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.operation.DocumentHelper.putIfTrue;
 import static com.mongodb.operation.OperationHelper.AsyncCallableWithConnection;
 import static com.mongodb.operation.OperationHelper.LOGGER;
-import static com.mongodb.operation.OperationHelper.validateCollation;
 import static com.mongodb.operation.OperationHelper.releasingCallback;
+import static com.mongodb.operation.OperationHelper.serverIsAtLeastVersionFourDotFour;
 import static com.mongodb.operation.OperationHelper.serverIsAtLeastVersionThreeDotTwo;
+import static com.mongodb.operation.OperationHelper.validateCollation;
 import static com.mongodb.operation.OperationHelper.withConnection;
 import static com.mongodb.operation.WriteConcernHelper.appendWriteConcernToCommand;
 import static com.mongodb.operation.WriteConcernHelper.throwOnWriteConcernError;
@@ -581,20 +581,23 @@ MapReduceToCollectionOperation implements AsyncWriteOperation<MapReduceStatistic
 
     private BsonDocument getCommand(final ConnectionDescription description) {
         BsonDocument outputDocument = new BsonDocument(getAction(), new BsonString(getCollectionName()));
-        outputDocument.append("sharded", BsonBoolean.valueOf(isSharded()));
-        outputDocument.append("nonAtomic", BsonBoolean.valueOf(isNonAtomic()));
+        if (description != null && !serverIsAtLeastVersionFourDotFour(description)) {
+            putIfTrue(outputDocument, "sharded", isSharded());
+            putIfTrue(outputDocument, "nonAtomic", isNonAtomic());
+        }
         if (getDatabaseName() != null) {
             outputDocument.put("db", new BsonString(getDatabaseName()));
         }
         BsonDocument commandDocument = new BsonDocument("mapreduce", new BsonString(namespace.getCollectionName()))
-                                           .append("map", getMapFunction())
-                                           .append("reduce", getReduceFunction())
-                                           .append("out", outputDocument)
-                                           .append("query", asValueOrNull(getFilter()))
-                                           .append("sort", asValueOrNull(getSort()))
-                                           .append("finalize", asValueOrNull(getFinalizeFunction()))
-                                           .append("scope", asValueOrNull(getScope()))
-                                           .append("verbose", BsonBoolean.valueOf(isVerbose()));
+                .append("map", getMapFunction())
+                .append("reduce", getReduceFunction())
+                .append("out", outputDocument);
+
+        putIfNotNull(commandDocument, "query", getFilter());
+        putIfNotNull(commandDocument, "sort", getSort());
+        putIfNotNull(commandDocument, "finalize", getFinalizeFunction());
+        putIfNotNull(commandDocument, "scope", getScope());
+        putIfTrue(commandDocument, "verbose", isVerbose());
         putIfNotZero(commandDocument, "limit", getLimit());
         putIfNotZero(commandDocument, "maxTimeMS", getMaxTime(MILLISECONDS));
         putIfTrue(commandDocument, "jsMode", isJsMode());
@@ -608,9 +611,5 @@ MapReduceToCollectionOperation implements AsyncWriteOperation<MapReduceStatistic
             commandDocument.put("collation", collation.asDocument());
         }
         return commandDocument;
-    }
-
-    private static BsonValue asValueOrNull(final BsonValue value) {
-        return value == null ? BsonNull.VALUE : value;
     }
 }

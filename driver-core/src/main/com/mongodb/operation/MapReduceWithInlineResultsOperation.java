@@ -29,11 +29,10 @@ import com.mongodb.connection.AsyncConnection;
 import com.mongodb.connection.Connection;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.QueryResult;
-import com.mongodb.session.SessionContext;
 import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.operation.CommandOperationHelper.CommandTransformer;
 import com.mongodb.operation.OperationHelper.AsyncCallableWithConnection;
-import org.bson.BsonBoolean;
+import com.mongodb.session.SessionContext;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonJavaScript;
@@ -49,13 +48,14 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.operation.CommandOperationHelper.executeWrappedCommandProtocol;
 import static com.mongodb.operation.CommandOperationHelper.executeWrappedCommandProtocolAsync;
+import static com.mongodb.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.operation.DocumentHelper.putIfTrue;
 import static com.mongodb.operation.ExplainHelper.asExplainCommand;
 import static com.mongodb.operation.OperationHelper.CallableWithConnectionAndSource;
 import static com.mongodb.operation.OperationHelper.LOGGER;
-import static com.mongodb.operation.OperationHelper.validateReadConcernAndCollation;
 import static com.mongodb.operation.OperationHelper.releasingCallback;
+import static com.mongodb.operation.OperationHelper.validateReadConcernAndCollation;
 import static com.mongodb.operation.OperationHelper.withConnection;
 import static com.mongodb.operation.ReadConcernHelper.appendReadConcernToCommand;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -471,14 +471,15 @@ public class MapReduceWithInlineResultsOperation<T> implements AsyncReadOperatio
 
     private BsonDocument getCommand(final SessionContext sessionContext) {
         BsonDocument commandDocument = new BsonDocument("mapreduce", new BsonString(namespace.getCollectionName()))
-                                           .append("map", getMapFunction())
-                                           .append("reduce", getReduceFunction())
-                                           .append("out", new BsonDocument("inline", new BsonInt32(1)))
-                                           .append("query", asValueOrNull(getFilter()))
-                                           .append("sort", asValueOrNull(getSort()))
-                                           .append("finalize", asValueOrNull(getFinalizeFunction()))
-                                           .append("scope", asValueOrNull(getScope()))
-                                           .append("verbose", BsonBoolean.valueOf(isVerbose()));
+                .append("map", getMapFunction())
+                .append("reduce", getReduceFunction())
+                .append("out", new BsonDocument("inline", new BsonInt32(1)));
+
+        putIfNotNull(commandDocument, "query", getFilter());
+        putIfNotNull(commandDocument, "sort", getSort());
+        putIfNotNull(commandDocument, "finalize", getFinalizeFunction());
+        putIfNotNull(commandDocument, "scope", getScope());
+        putIfTrue(commandDocument, "verbose", isVerbose());
 
         appendReadConcernToCommand(readConcern, sessionContext, commandDocument);
         putIfNotZero(commandDocument, "limit", getLimit());

@@ -26,18 +26,21 @@ import com.mongodb.client.model.ValidationOptions
 import com.mongodb.client.test.CollectionHelper
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
+import org.bson.BsonDouble
 import org.bson.BsonInt32
 import org.bson.BsonInt64
 import org.bson.BsonJavaScript
-import org.bson.BsonNull
 import org.bson.BsonString
 import org.bson.Document
+import org.bson.codecs.BsonDocumentCodec
 import org.bson.codecs.DocumentCodec
 import spock.lang.IgnoreIf
 
 import static com.mongodb.ClusterFixture.getBinding
 import static com.mongodb.ClusterFixture.isDiscoverableReplicaSet
 import static com.mongodb.ClusterFixture.serverVersionAtLeast
+import static com.mongodb.ClusterFixture.serverVersionGreaterThan
+import static com.mongodb.ClusterFixture.serverVersionLessThan
 import static com.mongodb.client.model.Filters.gte
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -48,9 +51,9 @@ class MapReduceToCollectionOperationSpecification extends OperationFunctionalSpe
                                                                 new BsonJavaScript('function(){ emit( this.name , 1 ); }'),
                                                                 new BsonJavaScript('function(key, values){ return values.length; }'),
                                                                 mapReduceOutputNamespace.getCollectionName())
-    def expectedResults = [['_id': 'Pete', 'value': 2.0] as Document,
-                           ['_id': 'Sam', 'value': 1.0] as Document]
-    def helper = new CollectionHelper<Document>(new DocumentCodec(), mapReduceOutputNamespace)
+    def expectedResults = [new BsonDocument('_id', new BsonString('Pete')).append('value', new BsonDouble(2.0)),
+                           new BsonDocument('_id', new BsonString('Sam')).append('value', new BsonDouble(1.0))] as Set
+    def helper = new CollectionHelper<BsonDocument>(new BsonDocumentCodec(), mapReduceOutputNamespace)
 
     def setup() {
         CollectionHelper<Document> helper = new CollectionHelper<Document>(new DocumentCodec(), mapReduceInputNamespace)
@@ -137,6 +140,7 @@ class MapReduceToCollectionOperationSpecification extends OperationFunctionalSpe
         operation.getCollation() == defaultCollation
     }
 
+    @IgnoreIf({ serverVersionGreaterThan('4.2') })
     def 'should return the correct statistics and save the results'() {
         when:
         MapReduceStatistics results = execute(mapReduceOperation, async)
@@ -146,12 +150,27 @@ class MapReduceToCollectionOperationSpecification extends OperationFunctionalSpe
         results.inputCount == 3
         results.outputCount == 2
         helper.count() == 2
-        helper.find() == expectedResults
+        helper.find() as Set == expectedResults
 
         where:
         async << [true, false]
     }
 
+    @IgnoreIf({ serverVersionLessThan('4.4') })
+    def 'should return zero-valued statistics and save the results'() {
+        when:
+        MapReduceStatistics results = execute(mapReduceOperation, async)
+
+        then:
+        results.emitCount == 0
+        results.inputCount == 0
+        results.outputCount == 0
+        helper.count() == 2
+        helper.find() as Set == expectedResults
+
+        where:
+        async << [true, false]
+    }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 2) })
     def 'should support bypassDocumentValidation'() {
@@ -232,12 +251,7 @@ class MapReduceToCollectionOperationSpecification extends OperationFunctionalSpe
         def expectedCommand = new BsonDocument('mapreduce', new BsonString(getCollectionName()))
                 .append('map', mapF)
                 .append('reduce', reduceF)
-                .append('out', BsonDocument.parse('{replace: "outCollection", sharded: false, nonAtomic: false}'))
-                .append('query', BsonNull.VALUE)
-                .append('sort', BsonNull.VALUE)
-                .append('finalize', BsonNull.VALUE)
-                .append('scope', BsonNull.VALUE)
-                .append('verbose', BsonBoolean.FALSE)
+                .append('out', BsonDocument.parse('{replace: "outCollection"}'))
 
         if (includeWriteConcern) {
             expectedCommand.append('writeConcern', WriteConcern.MAJORITY.asDocument())
@@ -258,7 +272,7 @@ class MapReduceToCollectionOperationSpecification extends OperationFunctionalSpe
                 .bypassDocumentValidation(true)
                 .verbose(true)
 
-        expectedCommand.append('out', BsonDocument.parse('{merge: "outCollection", sharded: false, nonAtomic: false, db: "dbName"}'))
+        expectedCommand.append('out', BsonDocument.parse('{merge: "outCollection", db: "dbName"}'))
                 .append('query', filter)
                 .append('sort', sort)
                 .append('finalize', finalizeF)

@@ -30,6 +30,7 @@ import static com.mongodb.ClusterFixture.enableMaxTimeFailPoint;
 import static com.mongodb.ClusterFixture.isDiscoverableReplicaSet;
 import static com.mongodb.ClusterFixture.isSharded;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.ClusterFixture.serverVersionLessThan;
 import static com.mongodb.DBObjectMatchers.hasFields;
 import static com.mongodb.DBObjectMatchers.hasSubdocument;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -150,6 +151,7 @@ public class MapReduceTest extends DatabaseTestCase {
                                                         MapReduceCommand.OutputType.REPLACE,
                                                         new BasicDBObject());
         command.setOutputDB(MR_DATABASE);
+        getClient().getDatabase(MR_DATABASE).createCollection(DEFAULT_COLLECTION);
         MapReduceOutput output = collection.mapReduce(command);
 
 
@@ -299,11 +301,11 @@ public class MapReduceTest extends DatabaseTestCase {
     @Test
     public void shouldReturnStatisticsForInlineMapReduce() {
         MapReduceCommand command = new MapReduceCommand(collection,
-                                                        DEFAULT_MAP,
-                                                        DEFAULT_REDUCE,
-                                                        DEFAULT_COLLECTION,
-                                                        MapReduceCommand.OutputType.INLINE,
-                                                        new BasicDBObject());
+                DEFAULT_MAP,
+                DEFAULT_REDUCE,
+                DEFAULT_COLLECTION,
+                MapReduceCommand.OutputType.INLINE,
+                new BasicDBObject());
 
         //when
         MapReduceOutput output = collection.mapReduce(command);
@@ -311,30 +313,42 @@ public class MapReduceTest extends DatabaseTestCase {
         //then
         //duration is not working on the unstable server version
         //        assertThat(output.getDuration(), is(greaterThan(0)));
-        assertThat(output.getEmitCount(), is(6));
-        assertThat(output.getInputCount(), is(3));
-        assertThat(output.getOutputCount(), is(4));
+        if (serverVersionLessThan("4.4")) {
+            assertThat(output.getEmitCount(), is(6));
+            assertThat(output.getInputCount(), is(3));
+            assertThat(output.getOutputCount(), is(4));
+        } else {
+            assertThat(output.getEmitCount(), is(0));
+            assertThat(output.getInputCount(), is(0));
+            assertThat(output.getOutputCount(), is(0));
+        }
     }
 
     @Test
     public void shouldReturnStatisticsForMapReduceIntoACollection() {
         MapReduceCommand command = new MapReduceCommand(collection,
-                                                        DEFAULT_MAP,
-                                                        DEFAULT_REDUCE,
-                                                        DEFAULT_COLLECTION,
-                                                        MapReduceCommand.OutputType.REPLACE,
-                                                        new BasicDBObject());
+                DEFAULT_MAP,
+                DEFAULT_REDUCE,
+                DEFAULT_COLLECTION,
+                MapReduceCommand.OutputType.REPLACE,
+                new BasicDBObject());
 
         //when
         MapReduceOutput output = collection.mapReduce(command);
 
         //then
-        assertThat(output.getDuration(), is(greaterThanOrEqualTo(0)));
-        assertThat(output.getEmitCount(), is(6));
-        assertThat(output.getInputCount(), is(3));
-        assertThat(output.getOutputCount(), is(4));
+        if (serverVersionLessThan("4.4")) {
+            assertThat(output.getDuration(), is(greaterThanOrEqualTo(0)));
+            assertThat(output.getEmitCount(), is(6));
+            assertThat(output.getInputCount(), is(3));
+            assertThat(output.getOutputCount(), is(4));
+        } else {
+            assertThat(output.getDuration(), is(0));
+            assertThat(output.getEmitCount(), is(0));
+            assertThat(output.getInputCount(), is(0));
+            assertThat(output.getOutputCount(), is(0));
+        }
     }
-
 
     //TODO: test read preferences - always go to primary for non-inline.  Presumably do whatever if inline
 
