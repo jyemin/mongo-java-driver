@@ -45,16 +45,16 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
 
     private static final int MAX_RETRY_TIME_LIMIT_MS = 120000;
 
-    private final MongoClientDelegate delegate;
+    private final OperationExecutor operationExecutor;
     private TransactionState transactionState = TransactionState.NONE;
     private boolean messageSentInCurrentTransaction;
     private boolean commitInProgress;
     private TransactionOptions transactionOptions;
 
     ClientSessionImpl(final ServerSessionPool serverSessionPool, final Object originator, final ClientSessionOptions options,
-                      final MongoClientDelegate delegate) {
+                      final OperationExecutor operationExecutor) {
         super(serverSessionPool, originator, options);
-        this.delegate = delegate;
+        this.operationExecutor = operationExecutor;
     }
 
     @Override
@@ -126,8 +126,8 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                     throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
                 }
                 commitInProgress = true;
-                delegate.getOperationExecutor().execute(new CommitTransactionOperation(transactionOptions.getWriteConcern(),
-                        transactionState == TransactionState.COMMITTED)
+                operationExecutor.execute(new CommitTransactionOperation(transactionOptions.getWriteConcern(),
+                                transactionState == TransactionState.COMMITTED)
                                 .recoveryToken(getRecoveryToken())
                                 .maxCommitTime(transactionOptions.getMaxCommitTime(MILLISECONDS), MILLISECONDS),
                         readConcern, this);
@@ -158,7 +158,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                 if (readConcern == null) {
                     throw new MongoInternalException("Invariant violated.  Transaction options read concern can not be null");
                 }
-                delegate.getOperationExecutor().execute(new AbortTransactionOperation(transactionOptions.getWriteConcern())
+                operationExecutor.execute(new AbortTransactionOperation(transactionOptions.getWriteConcern())
                                 .recoveryToken(getRecoveryToken()),
                         readConcern, this);
             }

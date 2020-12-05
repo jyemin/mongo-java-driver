@@ -22,24 +22,41 @@ import com.mongodb.Function;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoDriverInformation;
+import com.mongodb.MongoException;
+import com.mongodb.MongoInternalException;
+import com.mongodb.MongoQueryException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.MongoTimeoutException;
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterDescription;
+import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
+import com.mongodb.internal.binding.ClusterBinding;
+import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.binding.ReadWriteBinding;
+import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
+import com.mongodb.internal.operation.ReadOperation;
+import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.internal.session.ServerSessionPool;
 import com.mongodb.lang.Nullable;
+import com.mongodb.selector.ServerSelector;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -48,8 +65,14 @@ import org.bson.conversions.Bson;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
+import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
+import static com.mongodb.ReadPreference.primary;
+import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.internal.Crypts.createCrypt;
+import static com.mongodb.internal.connection.ClusterDescriptionHelper.getAny;
+import static com.mongodb.internal.connection.ClusterDescriptionHelper.getAnyPrimaryOrSecondary;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
 import static org.bson.internal.CodecRegistryHelper.createRegistry;
 
@@ -57,7 +80,11 @@ public final class MongoClientImpl implements MongoClient {
 
     private final MongoClientSettings settings;
     private final MongoDriverInformation mongoDriverInformation;
-    private final MongoClientDelegate delegate;
+    private final Cluster cluster;
+    private final ServerSessionPool serverSessionPool;
+    private final OperationExecutor operationExecutor;
+    private final Crypt crypt;
+    private final CodecRegistry codecRegistry;
 
     public MongoClientImpl(final MongoClientSettings settings, final MongoDriverInformation mongoDriverInformation) {
         this(createCluster(settings, mongoDriverInformation), mongoDriverInformation, settings, null);
@@ -68,17 +95,19 @@ public final class MongoClientImpl implements MongoClient {
                            @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         this.mongoDriverInformation = mongoDriverInformation;
+        this.cluster = cluster;
+        this.codecRegistry = createRegistry(settings.getCodecRegistry(), settings.getUuidRepresentation());
+        this.serverSessionPool = new ServerSessionPool(cluster);
+        this.operationExecutor = operationExecutor != null ? operationExecutor : new OperationExecutorImpl();
         AutoEncryptionSettings autoEncryptionSettings = settings.getAutoEncryptionSettings();
-        this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                createRegistry(settings.getCodecRegistry(), settings.getUuidRepresentation()), this, operationExecutor,
-                autoEncryptionSettings == null ? null : createCrypt(this, autoEncryptionSettings));
+        this.crypt = autoEncryptionSettings == null ? null : createCrypt(this, autoEncryptionSettings);
     }
 
     @Override
     public MongoDatabase getDatabase(final String databaseName) {
-        return new MongoDatabaseImpl(databaseName, delegate.getCodecRegistry(), settings.getReadPreference(), settings.getWriteConcern(),
+        return new MongoDatabaseImpl(databaseName, codecRegistry, settings.getReadPreference(), settings.getWriteConcern(),
                 settings.getRetryWrites(), settings.getRetryReads(), settings.getReadConcern(),
-                settings.getUuidRepresentation(), delegate.getOperationExecutor());
+                settings.getUuidRepresentation(), operationExecutor);
     }
 
     @Override
@@ -126,7 +155,7 @@ public final class MongoClientImpl implements MongoClient {
 
     @Override
     public ClientSession startSession(final ClientSessionOptions options) {
-        ClientSession clientSession = delegate.createClientSession(notNull("options", options),
+        ClientSession clientSession = createClientSession(notNull("options", options),
                 settings.getReadConcern(), settings.getWriteConcern(), settings.getReadPreference());
         if (clientSession == null) {
             throw new MongoClientException("Sessions are not supported by the MongoDB cluster to which this client is connected");
@@ -136,7 +165,11 @@ public final class MongoClientImpl implements MongoClient {
 
     @Override
     public void close() {
-        delegate.close();
+        if (crypt != null) {
+            crypt.close();
+        }
+        serverSessionPool.close();
+        cluster.close();
     }
 
     @Override
@@ -183,23 +216,23 @@ public final class MongoClientImpl implements MongoClient {
 
     @Override
     public ClusterDescription getClusterDescription() {
-        return delegate.getCluster().getCurrentDescription();
+        return cluster.getCurrentDescription();
     }
 
     private <TResult> ChangeStreamIterable<TResult> createChangeStreamIterable(@Nullable final ClientSession clientSession,
                                                                                final List<? extends Bson> pipeline,
                                                                                final Class<TResult> resultClass) {
         return new ChangeStreamIterableImpl<>(clientSession, "admin", settings.getCodecRegistry(), settings.getReadPreference(),
-                settings.getReadConcern(), delegate.getOperationExecutor(),
+                settings.getReadConcern(), operationExecutor,
                 pipeline, resultClass, ChangeStreamLevel.CLIENT, settings.getRetryReads());
     }
 
     public Cluster getCluster() {
-        return delegate.getCluster();
+        return cluster;
     }
 
     public CodecRegistry getCodecRegistry() {
-        return delegate.getCodecRegistry();
+        return codecRegistry;
     }
 
     private static Cluster createCluster(final MongoClientSettings settings,
@@ -222,8 +255,8 @@ public final class MongoClientImpl implements MongoClient {
     }
 
     private <T> ListDatabasesIterable<T> createListDatabasesIterable(@Nullable final ClientSession clientSession, final Class<T> clazz) {
-        return new ListDatabasesIterableImpl<>(clientSession, clazz, delegate.getCodecRegistry(), ReadPreference.primary(),
-                delegate.getOperationExecutor(), settings.getRetryReads());
+        return new ListDatabasesIterableImpl<>(clientSession, clazz, codecRegistry, ReadPreference.primary(),
+                operationExecutor, settings.getRetryReads());
     }
 
     private MongoIterable<String> createListDatabaseNamesIterable(final @Nullable ClientSession clientSession) {
@@ -236,11 +269,11 @@ public final class MongoClientImpl implements MongoClient {
     }
 
     public ServerSessionPool getServerSessionPool() {
-        return delegate.getServerSessionPool();
+        return serverSessionPool;
     }
 
     public OperationExecutor getOperationExecutor() {
-        return delegate.getOperationExecutor();
+        return operationExecutor;
     }
 
     public MongoClientSettings getSettings() {
@@ -249,6 +282,171 @@ public final class MongoClientImpl implements MongoClient {
 
     public MongoDriverInformation getMongoDriverInformation() {
         return mongoDriverInformation;
+    }
+
+    @Nullable
+    private ClientSession createClientSession(final ClientSessionOptions options, final ReadConcern readConcern,
+                                              final WriteConcern writeConcern, final ReadPreference readPreference) {
+        notNull("readConcern", readConcern);
+        notNull("writeConcern", writeConcern);
+        notNull("readPreference", readPreference);
+
+        ClusterDescription connectedClusterDescription = getConnectedClusterDescription();
+
+        if (connectedClusterDescription.getLogicalSessionTimeoutMinutes() == null) {
+            return null;
+        } else {
+            ClientSessionOptions mergedOptions = ClientSessionOptions.builder(options)
+                    .defaultTransactionOptions(
+                            TransactionOptions.merge(
+                                    options.getDefaultTransactionOptions(),
+                                    TransactionOptions.builder()
+                                            .readConcern(readConcern)
+                                            .writeConcern(writeConcern)
+                                            .readPreference(readPreference)
+                                            .build()))
+                    .build();
+            return new ClientSessionImpl(serverSessionPool, this, mergedOptions, operationExecutor);
+        }
+    }
+
+    private ClusterDescription getConnectedClusterDescription() {
+        ClusterDescription clusterDescription = cluster.getDescription();
+        if (getServerDescriptionListToConsiderForSessionSupport(clusterDescription).isEmpty()) {
+            cluster.selectServer(new ServerSelector() {
+                @Override
+                public List<ServerDescription> select(final ClusterDescription clusterDescription) {
+                    return getServerDescriptionListToConsiderForSessionSupport(clusterDescription);
+                }
+            });
+            clusterDescription = cluster.getDescription();
+        }
+        return clusterDescription;
+    }
+
+    private List<ServerDescription> getServerDescriptionListToConsiderForSessionSupport(final ClusterDescription clusterDescription) {
+        if (clusterDescription.getConnectionMode() == ClusterConnectionMode.SINGLE) {
+            return getAny(clusterDescription);
+        } else {
+            return getAnyPrimaryOrSecondary(clusterDescription);
+        }
+    }
+
+    private class OperationExecutorImpl implements OperationExecutor {
+        @Override
+        public <T> T execute(final ReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern) {
+            return execute(operation, readPreference, readConcern, null);
+        }
+
+        @Override
+        public <T> T execute(final WriteOperation<T> operation, final ReadConcern readConcern) {
+            return execute(operation, readConcern, null);
+        }
+
+        @Override
+        public <T> T execute(final ReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern,
+                             @Nullable final ClientSession session) {
+            ClientSession actualClientSession = getClientSession(session);
+            ReadBinding binding = getReadBinding(readPreference, readConcern, actualClientSession,
+                    session == null && actualClientSession != null);
+
+            try {
+                if (session != null && session.hasActiveTransaction() && !binding.getReadPreference().equals(primary())) {
+                    throw new MongoClientException("Read preference in a transaction must be primary");
+                }
+                return operation.execute(binding);
+            } catch (MongoException e) {
+                labelException(session, e);
+                unpinServerAddressOnTransientTransactionError(session, e);
+                throw e;
+            } finally {
+                binding.release();
+            }
+        }
+
+        @Override
+        public <T> T execute(final WriteOperation<T> operation, final ReadConcern readConcern, @Nullable final ClientSession session) {
+            ClientSession actualClientSession = getClientSession(session);
+            WriteBinding binding = getWriteBinding(readConcern, actualClientSession,
+                    session == null && actualClientSession != null);
+
+            try {
+                return operation.execute(binding);
+            } catch (MongoException e) {
+                labelException(session, e);
+                unpinServerAddressOnTransientTransactionError(session, e);
+                throw e;
+            } finally {
+                binding.release();
+            }
+        }
+
+        WriteBinding getWriteBinding(final ReadConcern readConcern, @Nullable final ClientSession session, final boolean ownsSession) {
+            return getReadWriteBinding(primary(), readConcern, session, ownsSession);
+        }
+
+        ReadBinding getReadBinding(final ReadPreference readPreference, final ReadConcern readConcern,
+                                   @Nullable final ClientSession session, final boolean ownsSession) {
+            return getReadWriteBinding(readPreference, readConcern, session, ownsSession);
+        }
+
+        ReadWriteBinding getReadWriteBinding(final ReadPreference readPreference, final ReadConcern readConcern,
+                                             @Nullable final ClientSession session, final boolean ownsSession) {
+            ClusterAwareReadWriteBinding readWriteBinding = new ClusterBinding(cluster,
+                    getReadPreferenceForBinding(readPreference, session), readConcern);
+
+            if (crypt != null) {
+                readWriteBinding = new CryptBinding(readWriteBinding, crypt);
+            }
+
+            if (session != null) {
+                return new ClientSessionBinding(session, ownsSession, readWriteBinding);
+            } else {
+                return readWriteBinding;
+            }
+        }
+
+        private void labelException(final @Nullable ClientSession session, final MongoException e) {
+            if (session != null && session.hasActiveTransaction()
+                    && (e instanceof MongoSocketException || e instanceof MongoTimeoutException
+                    || (e instanceof MongoQueryException && e.getCode() == 91))
+                    && !e.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
+                e.addLabel(TRANSIENT_TRANSACTION_ERROR_LABEL);
+            }
+        }
+
+        private void unpinServerAddressOnTransientTransactionError(final @Nullable ClientSession session, final MongoException e) {
+            if (session != null && e.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                session.setPinnedServerAddress(null);
+            }
+        }
+
+        private ReadPreference getReadPreferenceForBinding(final ReadPreference readPreference, @Nullable final ClientSession session) {
+            if (session == null) {
+                return readPreference;
+            }
+            if (session.hasActiveTransaction()) {
+                ReadPreference readPreferenceForBinding = session.getTransactionOptions().getReadPreference();
+                if (readPreferenceForBinding == null) {
+                    throw new MongoInternalException("Invariant violated.  Transaction options read preference can not be null");
+                }
+                return readPreferenceForBinding;
+            }
+            return readPreference;
+        }
+
+        @Nullable
+        ClientSession getClientSession(@Nullable final ClientSession clientSessionFromOperation) {
+            ClientSession session;
+            if (clientSessionFromOperation != null) {
+                isTrue("ClientSession from same MongoClient", clientSessionFromOperation.getOriginator() == MongoClientImpl.this);
+                session = clientSessionFromOperation;
+            } else {
+                session = createClientSession(ClientSessionOptions.builder().causallyConsistent(false).build(), ReadConcern.DEFAULT,
+                        WriteConcern.ACKNOWLEDGED, ReadPreference.primary());
+            }
+            return session;
+        }
     }
 }
 
