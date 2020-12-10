@@ -132,6 +132,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         thrown(NoSuchElementException)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'test normal exhaustion'() {
@@ -143,6 +146,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         cursor.iterator().sum { it.size } == 10
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'test limit exhaustion'() {
@@ -157,6 +163,7 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         cursor.iterator().sum { it.size } == expectedTotal
 
         cleanup:
+        cursor?.close()
         connection?.release()
 
         where:
@@ -182,6 +189,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         thrown(UnsupportedOperationException)
+
+        cleanup:
+        cursor?.close()
     }
 
     @SuppressWarnings('EmptyCatchBlock')
@@ -224,6 +234,7 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         if (!cleanedUp) {
             throw new MongoTimeoutException('Timed out waiting for documents to be inserted')
         }
+        cursor?.close()
         connection?.release()
 
         where:
@@ -256,6 +267,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         then:
         nextBatch
         nextBatch.iterator().next().get('_id') == 2
+
+        cleanup:
+        cursor?.close()
     }
 
     @Slow
@@ -282,6 +296,7 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         cleanup:
         latch.await(5, TimeUnit.SECONDS)  // wait for cursor.close to complete
+        cursor?.close()
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 2) || isSharded() })
@@ -307,7 +322,8 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         cleanup:
         connection?.release()
-   }
+        cursor?.close()
+    }
 
     @SuppressWarnings('EmptyCatchBlock')
     @Slow
@@ -341,6 +357,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         seen == 1
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ isSharded() })
@@ -358,6 +377,7 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         thrown(MongoCursorNotFoundException)
 
         cleanup:
+        cursor?.close()
         connection?.release()
     }
 
@@ -379,6 +399,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         thrown(MongoCursorNotFoundException)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should release connection source if limit is reached on initial query'() throws InterruptedException {
@@ -393,6 +416,7 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         checkReferenceCountReachesTarget(connectionSource, 1)
 
         cleanup:
+        cursor?.close()
         connection?.release()
     }
 
@@ -408,6 +432,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         checkReferenceCountReachesTarget(connectionSource, 1)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'test limit with get more'() {
@@ -422,6 +449,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         cursor.next() != null
         cursor.next() != null
         !cursor.hasNext()
+
+        cleanup:
+        cursor?.close()
     }
 
     @Slow
@@ -438,6 +468,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         cursor.iterator().sum { it.size } == 300
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should respect batch size'() {
@@ -475,6 +508,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         nextBatch.size() == 3
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'test normal loop with get more'() {
@@ -488,6 +524,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         then:
         results == (0..9).toList()
         !cursor.hasNext()
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'test next without has next with get more'() {
@@ -507,6 +546,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
 
         then:
         thrown(NoSuchElementException)
+
+        cleanup:
+        cursor?.close()
     }
 
     @SuppressWarnings('BracesForTryCatchFinally')
@@ -532,6 +574,9 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
         } catch (ignored) {
             fail('Expected MongoCursorNotFoundException to be thrown but got ' + ignored.getClass())
         }
+
+        cleanup:
+        cursor?.close()
     }
 
     private QueryResult<Document> executeQuery() {

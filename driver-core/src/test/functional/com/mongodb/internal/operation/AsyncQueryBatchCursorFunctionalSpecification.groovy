@@ -99,6 +99,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         expect:
         nextBatch().size() == 10
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should not retain connection and source after cursor is exhausted on first batch'() {
@@ -111,6 +114,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         then:
         connection.count == 1
         connectionSource.count == 1
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should not retain connection and source after cursor is exhausted on getMore'() {
@@ -123,6 +129,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         then:
         getReferenceCountAfterTimeout(connection, 1) == 1
         getReferenceCountAfterTimeout(connectionSource, 1) == 1
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should not retain connection and source after cursor is exhausted after first batch'() {
@@ -133,6 +142,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         then:
         getReferenceCountAfterTimeout(connection, 1) == 1
         getReferenceCountAfterTimeout(connectionSource, 1) == 1
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should exhaust single batch with limit'() {
@@ -142,6 +154,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         expect:
         nextBatch().size() == 1
         !nextBatch()
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should exhaust multiple batches with limit'() {
@@ -162,6 +177,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         then:
         total == expectedTotal
+
+        cleanup:
+        cursor?.close()
 
         where:
         limit | batchSize | expectedTotal
@@ -186,6 +204,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         nextBatch().size() == 2
         nextBatch().size() == 1
         !nextBatch()
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should respect batch size'() {
@@ -201,6 +222,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         then:
         nextBatch().size() == 4
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should close when exhausted'() {
@@ -219,6 +243,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         then:
         thrown(MongoException)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should close when not exhausted'() {
@@ -230,6 +257,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         then:
         waitForRelease(connectionSource, 1)
+
+        cleanup:
+        cursor?.close()
     }
 
     @Slow
@@ -259,6 +289,7 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         if (!cleanedUp) {
             throw new MongoTimeoutException('Timed out waiting for documents to be inserted')
         }
+        cursor?.close()
     }
 
     @Slow
@@ -295,6 +326,7 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         if (!cleanedUp) {
             throw new MongoTimeoutException('Timed out waiting for documents to be inserted')
         }
+        cursor?.close()
 
         where:
         awaitData | maxTimeMS
@@ -312,6 +344,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         nextBatch().size() == 2
         nextBatch().size() == 1
         !nextBatch()
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ isSharded() })
@@ -329,6 +364,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
 
         then:
         thrown(MongoCursorNotFoundException)
+
+        cleanup:
+        cursor?.close()
     }
 
     @SuppressWarnings('BracesForTryCatchFinally')
@@ -363,6 +401,9 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         } catch (ignored) {
             fail('Expected MongoCursorNotFoundException to be thrown but got ' + ignored.getClass())
         }
+
+        cleanup:
+        cursor?.close()
     }
 
     List<Document> nextBatch() {

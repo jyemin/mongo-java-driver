@@ -289,6 +289,9 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
         firstBatch == [new Document('_id', 1), new Document('_id', 2), new Document('_id', 3)]
         hasAnotherBatch == hasNext
 
+        cleanup:
+        cursor?.close()
+
         where:
         batchSize | hasNext | async
         3         | true    | true
@@ -513,6 +516,9 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
         then:
         firstBatch.size() == 5
 
+        cleanup:
+        cursor?.close()
+
         where:
         [async, isHedgeEnabled] << [[true, false], [null, false, true]].combinations()
     }
@@ -722,6 +728,9 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         cursor.maxTimeMS == maxTimeMSForCursor
+
+        cleanup:
+        cursor?.close()
 
         where:
         [async, cursorDetails] << [

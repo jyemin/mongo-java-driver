@@ -70,6 +70,7 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         cleanup:
         collectionHelper.dropDatabase(madeUpDatabase)
+        cursor.close()
     }
 
 
@@ -95,6 +96,7 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         cleanup:
         collectionHelper.dropDatabase(madeUpDatabase)
+        cursor?.close()
     }
 
     def 'should return collection names if a collection exists'() {
@@ -115,6 +117,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         names.containsAll([collectionName, 'collection2'])
         !names.contains(null)
         names.findAll { it.contains('$') }.isEmpty()
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ serverVersionAtLeast(3, 0) })
@@ -148,6 +153,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         then:
         names.contains('collection2')
         !names.contains(collectionName)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should filter capped collections'() {
@@ -167,6 +175,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         then:
         names.contains('collection3')
         !names.contains(collectionName)
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 4) || serverVersionAtLeast(4, 0) })
@@ -181,6 +192,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         then:
         collection.size() > 2
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ !serverVersionAtLeast(4, 0) })
@@ -196,6 +210,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         then:
         collection.size() == 2
+
+        cleanup:
+        cursor?.close()
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 4) || serverVersionAtLeast(4, 0) })
@@ -211,6 +228,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         then:
         collection.size() > 2
+
+        cleanup:
+        cursor?.close()
     }
 
 
@@ -233,6 +253,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         names.containsAll([collectionName, 'collection2'])
         !names.contains(null)
         names.findAll { it.contains('$') }.isEmpty()
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should filter indexes when calling hasNext before next'() {
@@ -249,6 +272,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         cursor.hasNext()
         cursorToListWithNext(cursor)*.get('name').contains(collectionName)
         !cursor.hasNext()
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should filter indexes without calling hasNext before next'() {
@@ -271,6 +297,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         then:
         thrown(NoSuchElementException)
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should filter indexes when calling hasNext before tryNext'() {
@@ -293,6 +322,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         !cursor.hasNext()
         !cursor.hasNext()
         cursor.tryNext() == null
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should filter indexes without calling hasNext before tryNext'() {
@@ -309,6 +341,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         list*.get('name').contains(collectionName)
         list.findAll { collection -> collection.get('name').contains('$') } == []
         cursor.tryNext() == null
+
+        cleanup:
+        cursor?.close()
     }
 
 
@@ -325,6 +360,9 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
         then:
         list*.get('name').contains(collectionName)
         list.findAll { collection -> collection.get('name').contains('$') } == []
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should use the set batchSize of collections'() {
@@ -388,6 +426,7 @@ class ListCollectionsOperationSpecification extends OperationFunctionalSpecifica
 
         cleanup:
         consumeAsyncResults(cursor)
+        cursor?.close()
     }
 
     @IgnoreIf({ isSharded() })

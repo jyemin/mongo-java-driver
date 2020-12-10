@@ -63,6 +63,9 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
 
         then:
         !cursor.hasNext()
+
+        cleanup:
+        cursor?.close()
     }
 
 
@@ -77,6 +80,9 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
 
         then:
         callback.get() == null
+
+        cleanup:
+        cursor?.close()
     }
 
 
@@ -110,6 +116,9 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
         then:
         indexes.size() == 1
         indexes[0].name == '_id_'
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should return created indexes on Collection'() {
@@ -129,6 +138,9 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
         indexes*.name.containsAll(['_id_', 'theField_1', 'compound_1_index_-1', 'unique_1'])
         indexes.find { it.name == 'unique_1' }.unique
         !cursor.hasNext()
+
+        cleanup:
+        cursor?.close()
     }
 
 
@@ -150,6 +162,9 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
         indexes.size() == 4
         indexes*.name.containsAll(['_id_', 'theField_1', 'compound_1_index_-1', 'unique_1'])
         indexes.find { it.name == 'unique_1' }.unique
+
+        cleanup:
+        cursor?.close()
     }
 
     def 'should use the set batchSize of collections'() {
@@ -211,6 +226,7 @@ class ListIndexesOperationSpecification extends OperationFunctionalSpecification
 
         cleanup:
         consumeAsyncResults(cursor)
+        cursor?.close()
     }
 
     @IgnoreIf({ isSharded() })

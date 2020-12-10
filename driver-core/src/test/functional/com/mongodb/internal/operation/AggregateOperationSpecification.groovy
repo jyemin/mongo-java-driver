@@ -252,6 +252,9 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         results.size() == 3
         results.containsAll(['Pete', 'Sam'])
 
+        cleanup:
+        batchCursor?.close()
+
         where:
         async << [true, false]
     }
@@ -276,6 +279,7 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
 
         cleanup:
         new DropCollectionOperation(viewNamespace, WriteConcern.ACKNOWLEDGED).execute(getBinding(getCluster()))
+        batchCursor?.close()
 
         where:
         async << [true, false]
@@ -292,6 +296,9 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         results.size() == 1
         results == ['Sam']
 
+        cleanup:
+        batchCursor?.close()
+
         where:
         async << [true, false]
     }
@@ -304,6 +311,9 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         then:
         cursor.next()*.getString('name') == ['Pete', 'Sam', 'Pete']
 
+        cleanup:
+        cursor?.close()
+
         where:
         allowDiskUse << [null, true, false]
     }
@@ -315,6 +325,9 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
 
         then:
         cursor.next()*.getString('name') == ['Pete', 'Sam', 'Pete']
+
+        cleanup:
+        cursor?.close()
 
         where:
         batchSize << [null, 0, 10]
@@ -367,6 +380,9 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         then:
         results.size() == 1
         results == ['Sam']
+
+        cleanup:
+        batchCursor?.close()
 
         where:
         [async, options] << [[true, false], [defaultCollation, null, Collation.builder().build()]].combinations()
