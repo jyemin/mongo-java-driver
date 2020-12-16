@@ -18,8 +18,8 @@ package com.mongodb.internal.async.client;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterType;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.AsyncConnectionSource;
@@ -127,8 +127,8 @@ public class ClientSessionBinding implements AsyncReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return wrapped.getServerDescription();
+        public ServerAddress getAddress() {
+            return wrapped.getAddress();
         }
 
         @Override

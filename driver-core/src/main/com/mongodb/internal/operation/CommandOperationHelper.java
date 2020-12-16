@@ -25,7 +25,6 @@ import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ReadPreference;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
@@ -180,7 +179,7 @@ final class CommandOperationHelper {
     }
 
     interface CommandCreator {
-        BsonDocument create(ServerDescription serverDescription, ConnectionDescription connectionDescription);
+        BsonDocument create(ConnectionDescription connectionDescription);
     }
 
     /* Read Binding Helpers */
@@ -218,7 +217,7 @@ final class CommandOperationHelper {
         BsonDocument command = null;
         MongoException exception;
         try {
-            command = commandCreator.create(source.getServerDescription(), connection.getDescription());
+            command = commandCreator.create(connection.getDescription());
             return executeCommand(database, command, decoder, source, connection, binding.getReadPreference(), transformer,
                     binding.getSessionContext());
         } catch (MongoException e) {
@@ -239,10 +238,10 @@ final class CommandOperationHelper {
             @Override
             public T call(final ConnectionSource source, final Connection connection) {
                 try {
-                    if (!canRetryRead(source.getServerDescription(), connection.getDescription(), binding.getSessionContext())) {
+                    if (!canRetryRead(connection.getDescription(), binding.getSessionContext())) {
                         throw originalException;
                     }
-                    BsonDocument retryCommand = commandCreator.create(source.getServerDescription(), connection.getDescription());
+                    BsonDocument retryCommand = commandCreator.create(connection.getDescription());
                     logRetryExecute(retryCommand.getFirstKey(), originalException);
                     return executeCommand(database, retryCommand, decoder, source, connection, binding.getReadPreference(), transformer,
                             binding.getSessionContext());
@@ -449,7 +448,7 @@ final class CommandOperationHelper {
                                                          final AsyncConnection connection,
                                                          final SingleResultCallback<T> callback) {
         try {
-            BsonDocument command = commandCreator.create(source.getServerDescription(), connection.getDescription());
+            BsonDocument command = commandCreator.create(connection.getDescription());
             connection.commandAsync(database, command, new NoOpFieldNameValidator(), binding.getReadPreference(), decoder,
                     binding.getSessionContext(),
                     createCommandCallback(binding, source, connection, database, binding.getReadPreference(),
@@ -506,11 +505,10 @@ final class CommandOperationHelper {
                     public void call(final AsyncConnectionSource source, final AsyncConnection connection, final Throwable t) {
                         if (t != null) {
                             callback.onResult(null, originalError);
-                        } else if (!canRetryRead(source.getServerDescription(), connection.getDescription(),
-                                binding.getSessionContext())) {
+                        } else if (!canRetryRead(connection.getDescription(), binding.getSessionContext())) {
                             releasingCallback(callback, source, connection).onResult(null, originalError);
                         } else {
-                            BsonDocument retryCommand = commandCreator.create(source.getServerDescription(), connection.getDescription());
+                            BsonDocument retryCommand = commandCreator.create(connection.getDescription());
                             logRetryExecute(retryCommand.getFirstKey(), originalError);
                             connection.commandAsync(database, retryCommand, fieldNameValidator, readPreference,
                                     commandResultDecoder, binding.getSessionContext(),
@@ -708,7 +706,7 @@ final class CommandOperationHelper {
                 BsonDocument command = null;
                 MongoException exception;
                 try {
-                    command = commandCreator.create(source.getServerDescription(), connection.getDescription());
+                    command = commandCreator.create(connection.getDescription());
                     return transformer.apply(connection.command(database, command, fieldNameValidator, readPreference,
                             commandResultDecoder, binding.getSessionContext()), connection);
                 } catch (MongoException e) {
@@ -732,7 +730,7 @@ final class CommandOperationHelper {
                     @Override
                     public R call(final ConnectionSource source, final Connection connection) {
                         try {
-                            if (!canRetryWrite(source.getServerDescription(), connection.getDescription(), binding.getSessionContext())) {
+                            if (!canRetryWrite(connection.getDescription(), binding.getSessionContext())) {
                                 throw originalException;
                             }
                             BsonDocument retryCommand = retryCommandModifier.apply(originalCommand);
@@ -783,7 +781,7 @@ final class CommandOperationHelper {
                                 releasingCallback(errorHandlingCallback, source).onResult(null, t);
                             } else {
                                 try {
-                                    BsonDocument command = commandCreator.create(source.getServerDescription(),
+                                    BsonDocument command = commandCreator.create(
                                             connection.getDescription());
                                     connection.commandAsync(database, command, fieldNameValidator, readPreference,
                                             commandResultDecoder, binding.getSessionContext(),
@@ -852,8 +850,7 @@ final class CommandOperationHelper {
                     public void call(final AsyncConnectionSource source, final AsyncConnection connection, final Throwable t) {
                         if (t != null) {
                             callback.onResult(null, originalError);
-                        } else if (!canRetryWrite(source.getServerDescription(), connection.getDescription(),
-                                binding.getSessionContext())) {
+                        } else if (!canRetryWrite(connection.getDescription(), binding.getSessionContext())) {
                             releasingCallback(callback, source, connection).onResult(null, originalError);
                         } else {
                             connection.commandAsync(database, retryCommand, fieldNameValidator, readPreference,

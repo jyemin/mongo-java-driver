@@ -17,6 +17,7 @@
 package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.AsyncConnection;
@@ -84,8 +85,8 @@ public class AsyncSingleConnectionReadBinding extends AbstractReferenceCounted i
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return serverDescription;
+        public ServerAddress getAddress() {
+            return serverDescription.getAddress();
         }
 
         @Override

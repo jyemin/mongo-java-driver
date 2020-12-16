@@ -16,7 +16,7 @@
 
 package com.mongodb.internal.binding;
 
-import com.mongodb.connection.ServerDescription;
+import com.mongodb.ServerAddress;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.session.SessionContext;
 
@@ -27,12 +27,7 @@ import com.mongodb.internal.session.SessionContext;
  */
 public interface ConnectionSource extends ReferenceCounted {
 
-    /**
-     * Gets the current description of this source.
-     *
-     * @return the current details of the server state.
-     */
-    ServerDescription getServerDescription();
+    ServerAddress getAddress();
 
     /**
      * Gets the session context for this source

@@ -24,7 +24,6 @@ import com.mongodb.ServerCursor;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ConnectionSource;
@@ -237,7 +236,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
                                 commandTransformer(), retryReads, connection);
                     } catch (MongoCommandException e) {
                         return rethrowIfNotNamespaceError(e, createEmptyBatchCursor(createNamespace(), decoder,
-                                source.getServerDescription().getAddress(), batchSize));
+                                source.getAddress(), batchSize));
                     }
                 } else {
                     try {
@@ -300,7 +299,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
     }
 
     private AsyncBatchCursor<T> emptyAsyncCursor(final AsyncConnectionSource source) {
-        return createEmptyAsyncBatchCursor(createNamespace(), source.getServerDescription().getAddress());
+        return createEmptyAsyncBatchCursor(createNamespace(), source.getAddress());
     }
 
     private MongoNamespace createNamespace() {
@@ -333,7 +332,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
     private CommandCreator getCommandCreator() {
         return new CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
                 return getCommand();
             }
         };

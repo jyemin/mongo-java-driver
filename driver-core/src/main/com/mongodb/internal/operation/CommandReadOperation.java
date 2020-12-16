@@ -18,7 +18,6 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ReadBinding;
 import org.bson.BsonDocument;
@@ -66,7 +65,7 @@ public class CommandReadOperation<T> implements AsyncReadOperation<T>, ReadOpera
     private CommandCreator getCommandCreator() {
         return new CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
                 return command;
             }
         };

@@ -23,7 +23,6 @@ import com.mongodb.MongoQueryException;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
@@ -883,7 +882,7 @@ public class FindOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>>
     private CommandCreator getCommandCreator(final SessionContext sessionContext) {
         return new CommandOperationHelper.CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
                 validateFindOptions(connectionDescription, sessionContext.getReadConcern(), collation, allowDiskUse);
                 return getCommand(sessionContext, connectionDescription);
             }

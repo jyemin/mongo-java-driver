@@ -26,8 +26,6 @@ import com.mongodb.client.test.CollectionHelper
 import com.mongodb.client.test.Worker
 import com.mongodb.client.test.WorkerCodec
 import com.mongodb.connection.ConnectionDescription
-import com.mongodb.connection.ServerConnectionState
-import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerType
 import com.mongodb.connection.ServerVersion
 import com.mongodb.internal.binding.AsyncConnectionSource
@@ -273,13 +271,6 @@ class OperationFunctionalSpecification extends Specification {
             getConnection() >> {
                 connection
             }
-            getServerDescription() >> {
-                def builder = ServerDescription.builder().address(Stub(ServerAddress)).state(ServerConnectionState.CONNECTED)
-                if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
-                    builder.logicalSessionTimeoutMinutes(42)
-                }
-                builder.build()
-            }
         }
         def readBinding = Stub(ReadBinding) {
             getReadConnectionSource() >> connectionSource
@@ -349,13 +340,6 @@ class OperationFunctionalSpecification extends Specification {
 
         def connectionSource = Stub(AsyncConnectionSource) {
             getConnection(_) >> { it[0].onResult(connection, null) }
-            getServerDescription() >> {
-                def builder = ServerDescription.builder().address(Stub(ServerAddress)).state(ServerConnectionState.CONNECTED)
-                if (new ServerVersion(serverVersion).compareTo(new ServerVersion(3, 6)) >= 0) {
-                    builder.logicalSessionTimeoutMinutes(42)
-                }
-                builder.build()
-            }
         }
         def readBinding = Stub(AsyncReadBinding) {
             getReadConnectionSource(_) >> { it[0].onResult(connectionSource, null) }

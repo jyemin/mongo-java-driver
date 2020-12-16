@@ -17,6 +17,7 @@
 package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.NoOpSessionContext;
@@ -85,8 +86,8 @@ public class SingleConnectionReadBinding extends AbstractReferenceCounted implem
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return serverDescription;
+        public ServerAddress getAddress() {
+            return serverDescription.getAddress();
         }
 
         @Override

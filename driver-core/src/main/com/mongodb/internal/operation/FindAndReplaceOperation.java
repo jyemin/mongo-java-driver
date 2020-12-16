@@ -20,7 +20,6 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.validator.CollectibleDocumentFieldNameValidator;
 import com.mongodb.internal.validator.MappedFieldNameValidator;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
@@ -352,13 +351,13 @@ public class FindAndReplaceOperation<T> extends BaseFindAndModifyOperation<T> {
     protected CommandCreator getCommandCreator(final SessionContext sessionContext) {
         return new CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
-                return createCommand(sessionContext, serverDescription, connectionDescription);
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
+                return createCommand(sessionContext, connectionDescription);
             }
         };
     }
 
-    private BsonDocument createCommand(final SessionContext sessionContext, final ServerDescription serverDescription,
+    private BsonDocument createCommand(final SessionContext sessionContext,
                                        final ConnectionDescription connectionDescription) {
         validateCollation(connectionDescription, collation);
 
@@ -385,7 +384,7 @@ public class FindAndReplaceOperation<T> extends BaseFindAndModifyOperation<T> {
                 commandDocument.put("hint", new BsonString(hintString));
             }
         }
-        addTxnNumberToCommand(serverDescription, connectionDescription, commandDocument, sessionContext);
+        addTxnNumberToCommand(connectionDescription, commandDocument, sessionContext);
         return commandDocument;
     }
 

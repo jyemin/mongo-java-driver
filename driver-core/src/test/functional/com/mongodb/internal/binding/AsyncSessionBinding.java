@@ -17,8 +17,8 @@
 package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.session.SessionContext;
 
@@ -95,8 +95,8 @@ public final class AsyncSessionBinding implements AsyncReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return wrapped.getServerDescription();
+        public ServerAddress getAddress() {
+            return wrapped.getAddress();
         }
 
         @Override

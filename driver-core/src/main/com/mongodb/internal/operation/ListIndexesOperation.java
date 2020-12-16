@@ -22,7 +22,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ConnectionSource;
@@ -171,8 +170,7 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
                         return executeCommandWithConnection(binding, source, namespace.getDatabaseName(), getCommandCreator(),
                                 createCommandDecoder(), transformer(), retryReads, connection);
                     } catch (MongoCommandException e) {
-                        return rethrowIfNotNamespaceError(e, createEmptyBatchCursor(namespace, decoder,
-                                                                                    source.getServerDescription().getAddress(), batchSize));
+                        return rethrowIfNotNamespaceError(e, createEmptyBatchCursor(namespace, decoder, source.getAddress(), batchSize));
                     }
                 } else {
                     try {
@@ -236,7 +234,7 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
     }
 
     private AsyncBatchCursor<T> emptyAsyncCursor(final AsyncConnectionSource source) {
-        return createEmptyAsyncBatchCursor(namespace, source.getServerDescription().getAddress());
+        return createEmptyAsyncBatchCursor(namespace, source.getAddress());
     }
 
     private BsonDocument asQueryDocument(final ConnectionDescription connectionDescription, final ReadPreference readPreference) {
@@ -257,7 +255,7 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
     private CommandCreator getCommandCreator() {
         return new CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
                 return getCommand();
             }
         };

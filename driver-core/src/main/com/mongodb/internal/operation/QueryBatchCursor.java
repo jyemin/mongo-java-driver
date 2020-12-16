@@ -310,7 +310,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
 
     private void initFromCommandResult(final BsonDocument getMoreCommandResultDocument) {
         QueryResult<T> queryResult = getMoreCursorDocumentToQueryResult(getMoreCommandResultDocument.getDocument(CURSOR),
-                                                                        connectionSource.getServerDescription().getAddress());
+                                                                        connectionSource.getAddress());
         postBatchResumeToken = getPostBatchResumeTokenFromResponse(getMoreCommandResultDocument);
         operationTime = getMoreCommandResultDocument.getTimestamp(OPERATION_TIME, null);
         initFromQueryResult(queryResult);

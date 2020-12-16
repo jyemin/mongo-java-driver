@@ -18,9 +18,8 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.internal.session.SessionContext;
@@ -122,9 +121,9 @@ public abstract class BaseFindAndModifyOperation<T> implements AsyncWriteOperati
 
     protected abstract CommandCreator getCommandCreator(SessionContext sessionContext);
 
-    protected void addTxnNumberToCommand(final ServerDescription serverDescription, final ConnectionDescription connectionDescription,
+    protected void addTxnNumberToCommand(final ConnectionDescription connectionDescription,
                                          final BsonDocument commandDocument, final SessionContext sessionContext) {
-        if (isRetryableWrite(isRetryWrites(), getWriteConcern(), serverDescription, connectionDescription, sessionContext)) {
+        if (isRetryableWrite(isRetryWrites(), getWriteConcern(), connectionDescription, sessionContext)) {
             commandDocument.put("txnNumber", new BsonInt64(sessionContext.advanceTransactionNumber()));
         }
     }

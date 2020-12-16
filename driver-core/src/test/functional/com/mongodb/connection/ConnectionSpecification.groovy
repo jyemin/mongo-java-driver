@@ -49,13 +49,13 @@ class ConnectionSpecification extends OperationFunctionalSpecification {
                                                              new BsonInt32(getDefaultMaxMessageSize())).intValue()
         def expectedMaxBatchCount = commandResult.getNumber('maxWriteBatchSize',
                                                             new BsonInt32(getDefaultMaxWriteBatchSize())).intValue()
+        def expectedMaxDocumentSize = commandResult.getNumber('maxBsonObjectSize').intValue()
         def source = getBinding().getReadConnectionSource()
         def connection = source.connection
 
         then:
-        connection.description.serverAddress == source.getServerDescription().getAddress()
-        connection.description.serverType == source.getServerDescription().getType()
-        connection.description.maxDocumentSize == source.getServerDescription().getMaxDocumentSize()
+        connection.description.serverAddress == source.getAddress()
+        connection.description.maxDocumentSize == expectedMaxDocumentSize
         connection.description.maxMessageSize == expectedMaxMessageSize
         connection.description.maxBatchCount == expectedMaxBatchCount
 

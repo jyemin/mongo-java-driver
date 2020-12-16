@@ -26,7 +26,6 @@ import com.mongodb.MongoTimeoutException;
 import com.mongodb.MongoWriteConcernException;
 import com.mongodb.WriteConcern;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
@@ -187,8 +186,8 @@ public class CommitTransactionOperation extends TransactionOperation {
     CommandCreator getCommandCreator() {
         final CommandCreator creator = new CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
-                BsonDocument command = CommitTransactionOperation.super.getCommandCreator().create(serverDescription,
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
+                BsonDocument command = CommitTransactionOperation.super.getCommandCreator().create(
                         connectionDescription);
                 if (maxCommitTimeMS != null) {
                     command.append("maxTimeMS",
@@ -201,16 +200,15 @@ public class CommitTransactionOperation extends TransactionOperation {
         if (alreadyCommitted) {
             return new CommandCreator() {
                 @Override
-                public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
-                    return getRetryCommandModifier().apply(creator.create(serverDescription, connectionDescription));
+                public BsonDocument create(final ConnectionDescription connectionDescription) {
+                    return getRetryCommandModifier().apply(creator.create(connectionDescription));
                 }
             };
         } else if (recoveryToken != null) {
                 return new CommandCreator() {
                     @Override
-                    public BsonDocument create(final ServerDescription serverDescription,
-                                               final ConnectionDescription connectionDescription) {
-                        return creator.create(serverDescription, connectionDescription).append("recoveryToken", recoveryToken);
+                    public BsonDocument create(final ConnectionDescription connectionDescription) {
+                        return creator.create(connectionDescription).append("recoveryToken", recoveryToken);
                     }
                 };
         }

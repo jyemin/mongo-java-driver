@@ -21,7 +21,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.ClientSession;
 import com.mongodb.connection.ClusterType;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadWriteBinding;
@@ -121,8 +120,8 @@ public class ClientSessionBinding implements ReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return wrapped.getServerDescription();
+        public ServerAddress getAddress() {
+            return wrapped.getAddress();
         }
 
         @Override

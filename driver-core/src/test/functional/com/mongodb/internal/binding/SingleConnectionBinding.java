@@ -17,7 +17,7 @@
 package com.mongodb.internal.binding;
 
 import com.mongodb.ReadPreference;
-import com.mongodb.connection.ServerDescription;
+import com.mongodb.ServerAddress;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.NoOpSessionContext;
@@ -127,8 +127,8 @@ public class SingleConnectionBinding implements ReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return server.getDescription();
+        public ServerAddress getAddress() {
+            return server.getDescription().getAddress();
         }
 
         @Override

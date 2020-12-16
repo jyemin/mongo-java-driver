@@ -19,7 +19,6 @@ package com.mongodb.internal.operation;
 import com.mongodb.Function;
 import com.mongodb.WriteConcern;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import org.bson.BsonDocument;
 
 import static com.mongodb.internal.operation.CommandOperationHelper.noOpRetryCommandModifier;
@@ -64,8 +63,8 @@ public class AbortTransactionOperation extends TransactionOperation {
         if (recoveryToken != null) {
             return new CommandOperationHelper.CommandCreator() {
                 @Override
-                public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
-                    return creator.create(serverDescription, connectionDescription).append("recoveryToken", recoveryToken);
+                public BsonDocument create(final ConnectionDescription connectionDescription) {
+                    return creator.create(connectionDescription).append("recoveryToken", recoveryToken);
                 }
             };
         }

@@ -20,7 +20,6 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ReadBinding;
 import org.bson.BsonArray;
@@ -181,7 +180,7 @@ class AggregateExplainOperation implements AsyncReadOperation<BsonDocument>, Rea
     private CommandOperationHelper.CommandCreator getCommandCreator() {
         return new CommandOperationHelper.CommandCreator() {
             @Override
-            public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
+            public BsonDocument create(final ConnectionDescription connectionDescription) {
                 validateCollation(connectionDescription, collation);
                 return getCommand();
             }

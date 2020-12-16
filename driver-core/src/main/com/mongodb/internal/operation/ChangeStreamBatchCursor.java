@@ -182,7 +182,8 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
             withReadConnectionSource(binding, new CallableWithSource<Void>() {
                 @Override
                 public Void call(final ConnectionSource source) {
-                    changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, source.getServerDescription().getMaxWireVersion());
+                    // TODO: determine whether it's safe to use previous wire version
+                    changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, maxWireVersion);
                     return null;
                 }
             });

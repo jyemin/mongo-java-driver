@@ -18,7 +18,6 @@ package com.mongodb.reactivestreams.client.internal.crypt;
 
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.AsyncConnectionSource;
@@ -109,8 +108,8 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return wrapped.getServerDescription();
+        public ServerAddress getAddress() {
+            return wrapped.getAddress();
         }
 
         @Override

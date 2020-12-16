@@ -19,7 +19,6 @@ package com.mongodb.internal.binding;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.ReadConcernAwareNoOpSessionContext;
@@ -105,8 +104,8 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return server.getDescription();
+        public ServerAddress getAddress() {
+            return server.getDescription().getAddress();
         }
 
         @Override

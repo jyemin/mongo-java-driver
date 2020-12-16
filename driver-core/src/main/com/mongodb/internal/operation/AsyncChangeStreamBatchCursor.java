@@ -236,7 +236,8 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
-                    changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, source.getServerDescription().getMaxWireVersion());
+                    // TODO: determine whether it's safe to use previous wire version
+                    changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, maxWireVersion);
                     source.release();
                     changeStreamOperation.executeAsync(binding, new SingleResultCallback<AsyncBatchCursor<T>>() {
                         @Override

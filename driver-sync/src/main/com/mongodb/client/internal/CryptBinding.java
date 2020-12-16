@@ -18,7 +18,6 @@ package com.mongodb.client.internal;
 
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadWriteBinding;
@@ -89,8 +88,8 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
         }
 
         @Override
-        public ServerDescription getServerDescription() {
-            return wrapped.getServerDescription();
+        public ServerAddress getAddress() {
+            return wrapped.getAddress();
         }
 
         @Override

@@ -75,7 +75,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         1 * connection.release()
     }
 
-    def 'connection source should get server description'() {
+    def 'connection source should get server address'() {
         given:
         def connection = Stub(Connection)
         def binding = new SingleConnectionReadBinding(ReadPreference.primary(),
@@ -86,7 +86,7 @@ class SingleConnectionReadBindingSpecification extends Specification {
         def source = binding.readConnectionSource
 
         then:
-        source.serverDescription == serverDescription
+        source.address == serverDescription.address
     }
 
     def 'connection source should retain and release resources'() {

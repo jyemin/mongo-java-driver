@@ -75,7 +75,7 @@ class AsyncSingleConnectionReadBindingSpecification extends Specification {
         1 * connection.release()
     }
 
-    def 'connection source should get server description'() {
+    def 'connection source should get server address'() {
         given:
         def connection = Stub(AsyncConnection)
         def binding = new AsyncSingleConnectionReadBinding(ReadPreference.primary(),
@@ -89,7 +89,7 @@ class AsyncSingleConnectionReadBindingSpecification extends Specification {
         }
 
         then:
-        source.serverDescription == serverDescription
+        source.address == serverDescription.address
     }
 
     def 'connection source should retain and release self and connection'() {
