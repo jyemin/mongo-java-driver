@@ -18,6 +18,7 @@ package com.mongodb.client;
 
 import com.mongodb.ExplainVerbosity;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -26,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -47,10 +49,37 @@ public abstract class AbstractExplainTest {
     }
 
     @Test
-    public void testExplain() {
+    public void testExplainOfFind() {
         FindIterable<BsonDocument> iterable = client.getDatabase(getDefaultDatabaseName())
                 .getCollection("explainTest", BsonDocument.class).find()
                 .filter(Filters.eq("_id", 1));
+
+        Document explainDocument = iterable.explain();
+        assertNotNull(explainDocument);
+        assertTrue(explainDocument.containsKey("queryPlanner"));
+        assertTrue(explainDocument.containsKey("executionStats"));
+
+        explainDocument = iterable.explain(ExplainVerbosity.QUERY_PLANNER);
+        assertNotNull(explainDocument);
+        assertTrue(explainDocument.containsKey("queryPlanner"));
+        assertFalse(explainDocument.containsKey("executionStats"));
+
+        BsonDocument explainBsonDocument = iterable.explain(BsonDocument.class);
+        assertNotNull(explainDocument);
+        assertTrue(explainBsonDocument.containsKey("queryPlanner"));
+        assertTrue(explainBsonDocument.containsKey("executionStats"));
+
+        explainBsonDocument = iterable.explain(BsonDocument.class, ExplainVerbosity.QUERY_PLANNER);
+        assertNotNull(explainBsonDocument);
+        assertTrue(explainBsonDocument.containsKey("queryPlanner"));
+        assertFalse(explainBsonDocument.containsKey("executionStats"));
+    }
+
+    @Test
+    public void testExplainOfAggregate() {
+        AggregateIterable<BsonDocument> iterable = client.getDatabase(getDefaultDatabaseName())
+                .getCollection("explainTest", BsonDocument.class)
+                .aggregate(singletonList(Aggregates.match(Filters.eq("_id", 1))));
 
         Document explainDocument = iterable.explain();
         assertNotNull(explainDocument);
