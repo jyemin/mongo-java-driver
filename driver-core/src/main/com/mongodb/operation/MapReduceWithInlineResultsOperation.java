@@ -33,7 +33,6 @@ import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.operation.CommandOperationHelper.CommandReadTransformer;
 import com.mongodb.operation.CommandOperationHelper.CommandReadTransformerAsync;
 import com.mongodb.session.SessionContext;
-import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonJavaScript;
@@ -50,6 +49,7 @@ import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandli
 import static com.mongodb.operation.CommandOperationHelper.CommandCreator;
 import static com.mongodb.operation.CommandOperationHelper.executeCommand;
 import static com.mongodb.operation.CommandOperationHelper.executeCommandAsync;
+import static com.mongodb.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.operation.DocumentHelper.putIfTrue;
 import static com.mongodb.operation.ExplainHelper.asExplainCommand;
@@ -428,14 +428,15 @@ public class MapReduceWithInlineResultsOperation<T> implements AsyncReadOperatio
 
     private BsonDocument getCommand(final SessionContext sessionContext) {
         BsonDocument commandDocument = new BsonDocument("mapreduce", new BsonString(namespace.getCollectionName()))
-                                           .append("map", getMapFunction())
-                                           .append("reduce", getReduceFunction())
-                                           .append("out", new BsonDocument("inline", new BsonInt32(1)))
-                                           .append("query", asValueOrNull(getFilter()))
-                                           .append("sort", asValueOrNull(getSort()))
-                                           .append("finalize", asValueOrNull(getFinalizeFunction()))
-                                           .append("scope", asValueOrNull(getScope()))
-                                           .append("verbose", BsonBoolean.valueOf(isVerbose()));
+                .append("map", getMapFunction())
+                .append("reduce", getReduceFunction())
+                .append("out", new BsonDocument("inline", new BsonInt32(1)));
+
+        putIfNotNull(commandDocument, "query", getFilter());
+        putIfNotNull(commandDocument, "sort", getSort());
+        putIfNotNull(commandDocument, "finalize", getFinalizeFunction());
+        putIfNotNull(commandDocument, "scope", getScope());
+        putIfTrue(commandDocument, "verbose", isVerbose());
 
         appendReadConcernToCommand(sessionContext, commandDocument);
         putIfNotZero(commandDocument, "limit", getLimit());
