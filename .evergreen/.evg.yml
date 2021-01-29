@@ -453,6 +453,20 @@ axes:
   - id: version
     display_name: MongoDB Version
     values:
+      - id: "latest"
+        display_name: "latest"
+        variables:
+          VERSION: "latest"
+          # Multiple mongos instances can be specified in the connection string
+          # for this version.
+          SAFE_FOR_MULTI_MONGOS: true
+      - id: "4.4"
+        display_name: "4.4"
+        variables:
+          VERSION: "4.4"
+          # Multiple mongos instances can be specified in the connection string
+          # for this version.
+          SAFE_FOR_MULTI_MONGOS: true
       - id: "4.2"
         display_name: "4.2"
         variables:
@@ -625,7 +639,7 @@ buildvariants:
      - name: "test"
 
 - matrix_name: "tests-jdk-newer-secure"
-  matrix_spec: { auth: "auth", ssl: "ssl", jdk: ["jdk8", "jdk11"], version: ["4.0", "4.2"], topology: "*", os: "linux" }
+  matrix_spec: { auth: "auth", ssl: "ssl", jdk: ["jdk8", "jdk11"], version: ["4.0", "4.2", "4.4", "latest"], topology: "*", os: "linux" }
   display_name: "${version} ${topology} ${auth} ${ssl} ${jdk} ${os} "
   tags: ["tests-variant"]
   tasks:
