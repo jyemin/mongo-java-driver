@@ -148,16 +148,26 @@ class FiltersSpecification extends Specification {
         toBson(or(eq('x', 1), eq('y', 2))) == parse('{$or : [{x : 1}, {y : 2}]}')
     }
 
-    def 'and should render empty and using $and'() {
+    def 'and should flatten no clauses'() {
         expect:
-        toBson(and([])) == parse('{$and : []}')
-        toBson(and()) == parse('{$and : []}')
+        toBson(and([])) == parse('{}')
+        toBson(and()) == parse('{}')
     }
 
-    def 'and should render using $and'() {
+    def 'and should flatten one empty clause'() {
         expect:
-        toBson(and([eq('x', 1), eq('y', 2)])) == parse('{$and: [{x : 1}, {y : 2}]}')
-        toBson(and(eq('x', 1), eq('y', 2))) == parse('{$and: [{x : 1}, {y : 2}]}')
+        toBson(and(new BsonDocument())) == parse('{}')
+    }
+
+    def 'and should flatten two empty clauses'() {
+        expect:
+        toBson(and(new BsonDocument(), new BsonDocument())) == parse('{}')
+    }
+
+    def 'and should flatten when keys do not clash'() {
+        expect:
+        toBson(and([eq('x', 1), eq('y', 2)])) == parse('{x : 1, y : 2}')
+        toBson(and(eq('x', 1), eq('y', 2))) == parse('{x : 1, y : 2}')
     }
 
     def 'and should render $and with clashing keys'() {
@@ -165,47 +175,60 @@ class FiltersSpecification extends Specification {
         toBson(and([eq('a', 1), eq('a', 2)])) == parse('{$and: [{a: 1}, {a: 2}]}');
     }
 
-    def 'and should not flatten nested'() {
+    def 'and should flatten nested'() {
         expect:
         toBson(and([and([eq('a', 1), eq('b', 2)]), eq('c', 3)])) ==
-                parse('{$and: [{$and: [{a : 1}, {b : 2}]}, {c : 3}]}')
+                parse('{a : 1, b : 2, c : 3}')
         toBson(and([and([eq('a', 1), eq('a', 2)]), eq('c', 3)])) ==
-                parse('{$and:[{$and: [{a : 1}, {a : 2}]}, {c : 3}]} }')
+                parse('{$and: [{a : 1}, {a : 2}, {c : 3}]}')
         toBson(and([lt('a', 1), lt('b', 2)])) ==
-                parse('{$and: [{a : {$lt : 1}}, {b : {$lt : 2}}]}')
+                parse('{a : {$lt : 1}, b : {$lt : 2}}')
         toBson(and([lt('a', 1), lt('a', 2)])) ==
                 parse('{$and : [{a : {$lt : 1}}, {a : {$lt : 2}}]}')
+    }
+
+    def 'and with clashing keys but different operators should get merged'() {
+        expect:
+        toBson(and(gt('a', 1), lt('a', 10))) ==
+                parse('{a: {$gt: 1, $lt: 10}}')
+    }
+
+    def 'and with clashing keys and different operators but with filters that support only dollar form should use $and'() {
+        expect:
+        toBson(and(parse(firstFilter), parse(secondFilter))) ==
+                parse("{\$and : [ $firstFilter, $secondFilter ] }")
+
+        where:
+        firstFilter                                                                 | secondFilter
+        '{ geoField : { $geoWithin : { $box : [ [ 1.0, 2.0 ], [ 3.0, 4.0 ] ] } } }' | '{ geoField : { $near : [ 5.0, 6.0 ] } }'
+        '{ geoField : { $near : [ 5.0, 6.0 ] } }' | '{ geoField : { $geoWithin : { $box : [ [ 1.0, 2.0 ], [ 3.0, 4.0 ] ] } } }'
+        '{ geoField : { $nearSphere : { $geometry : { type : "Point", coordinates : [ 1, 2 ] } } } }' | '{ geoField : { $geoIntersects : { $geometry : { type : "Polygon", coordinates: [ [ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ], [ 7, 8 ] ] ] } } } }'
+        '{ geoField : { $geoIntersects : { $geometry : { type : "Polygon", coordinates: [ [ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ], [ 7, 8 ] ] ] } } } }' | '{ geoField : { $nearSphere : { $geometry : { type : "Point", coordinates : [ 1, 2 ] } } } }'
+    }
+
+    // Test from JAVA-3338
+    // TODO: this is flattening!
+    def '$geoWithin should not be flattened when combined with other operators'() {
+        expect:
+        toBson(and(
+                geoWithinCenterSphere("coordinates", 22, 52, 0.04),
+                not(geoWithinCenterSphere("coordinates", 22, 52, 0.01)))) ==
+                parse('{"coordinates": {"$geoWithin": {"$centerSphere": [[22.0, 52.0], 0.04]}, "$not": {"$geoWithin": {"$centerSphere": [[22.0, 52.0], 0.01]}}}}')
     }
 
     def '$and should be explicit when using $not'() {
         expect:
         toBson(and(lt('item', 10), not(lt('item', 5)))) ==
-                parse('''{
-                  $and:
-                      [
-                          { item: { $lt: 10 } },
-                          { item: { $not: { $lt: 5 } } }
-                      ]
-                  }
-                ''')
+                parse('{item: {$lt: 10, $not: { $lt: 5}}}')
 
         toBson(and(lt('item', 100), gt('item', 10), not(gt('item', 50)))) ==
-                parse('''{
-                  $and:
-                      [
-                          { item: { $lt: 100 } },
-                          { item: { $gt: 10 } },
-                          { item: { $not: { $gt: 50 } } }
-                      ]
-                  }
-                ''')
+                parse('{item: { $lt: 100, $gt: 10, $not: { $gt: 50}}}')
 
         toBson(and(not(lt('item', 10)), lt('item', 100), not(gt('item', 50)))) ==
                 parse('''{
                   $and:
                       [
-                          { item: { $not: { $lt: 10 } } },
-                          { item: { $lt: 100 } },
+                          { item: { $not: { $lt: 10 }, $lt: 100 } },
                           { item: { $not: { $gt: 50 } } }
                       ]
                   }
@@ -224,7 +247,7 @@ class FiltersSpecification extends Specification {
                 parse('{results : {$elemMatch : {$gte: 80, $lt: 85}}}')
 
         toBson(elemMatch('results', and(eq('product', 'xyz'), gt('score', 8)))) ==
-                parse('{ results : {$elemMatch : {$and: [{product : "xyz"}, {score : {$gt : 8}}]}}}')
+                parse('{ results : {$elemMatch : {product : "xyz", score : {$gt : 8}}}}')
     }
 
     def 'should render $in'() {

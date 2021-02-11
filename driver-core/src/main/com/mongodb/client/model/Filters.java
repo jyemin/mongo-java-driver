@@ -984,6 +984,13 @@ public final class Filters {
     }
 
     private static class AndFilter implements Bson {
+
+        private static final List<String> OPERATORS_THAT_CANNOT_BE_COMBINED = Arrays.asList(
+                "$geoWithin",
+                "$near",
+                "$geoIntersects",
+                "$nearSphere"
+        );
         private final Iterable<Bson> filters;
 
         AndFilter(final Iterable<Bson> filters) {
@@ -992,12 +999,57 @@ public final class Filters {
 
         @Override
         public <TDocument> BsonDocument toBsonDocument(final Class<TDocument> documentClass, final CodecRegistry codecRegistry) {
-            BsonArray clauses = new BsonArray();
+
+            BsonDocument andFilterDocument = new BsonDocument();
+
             for (Bson filter : filters) {
-                clauses.add(filter.toBsonDocument(documentClass, codecRegistry));
+                BsonDocument renderedFilter = filter.toBsonDocument(documentClass, codecRegistry);
+                for (Map.Entry<String, BsonValue> clause: renderedFilter.entrySet()) {
+                    addClause(andFilterDocument, clause.getKey(), clause.getValue());
+                }
             }
 
-            return new BsonDocument("$and", clauses);
+            return andFilterDocument;
+        }
+
+        private void addClause(final BsonDocument andFilterDocument, final String clauseName, final BsonValue clauseValue) {
+            if (clauseName.equals("$and")) {
+               for (BsonValue clauses: clauseValue.asArray()) {
+                   for (Map.Entry<String, BsonValue> clause: clauses.asDocument().entrySet()) {
+                       addClause(andFilterDocument, clause.getKey(), clause.getValue());
+                   }
+                }
+            } else if (andFilterDocument.size() == 1 && andFilterDocument.getFirstKey().equals("$and")) {
+                andFilterDocument.getArray("$and").add(new BsonDocument(clauseName, clauseValue));
+            } else if (andFilterDocument.containsKey(clauseName)) {
+                 BsonValue existingClauseValue = andFilterDocument.get(clauseName);
+                 if (existingClauseValue.isDocument() && clauseValue.isDocument()) {
+                     BsonDocument clauseValueDocument = clauseValue.asDocument();
+                     String clauseOperator = clauseValueDocument.size() > 0 ? clauseValueDocument.getFirstKey() : null;
+                     if (clauseValueDocument.keySet().stream().anyMatch(op -> existingClauseValue.asDocument().containsKey(op))
+                             || OPERATORS_THAT_CANNOT_BE_COMBINED.contains(clauseOperator)) {
+                         promoteFilterToDollarForm(andFilterDocument, clauseName, clauseValue);
+                     } else {
+                         for (Map.Entry<String, BsonValue> cur: clauseValueDocument.entrySet()) {
+                             existingClauseValue.asDocument().append(cur.getKey(), cur.getValue());
+                         }
+                     }
+                 } else {
+                    promoteFilterToDollarForm(andFilterDocument, clauseName, clauseValue);
+                 }
+            } else {
+                andFilterDocument.append(clauseName, clauseValue);
+            }
+        }
+
+        private void promoteFilterToDollarForm(final BsonDocument andFilterDocument, final String name, final BsonValue value) {
+            BsonArray clauses = new BsonArray();
+            for (Map.Entry<String, BsonValue> clause: andFilterDocument.entrySet()) {
+                clauses.add(new BsonDocument(clause.getKey(), clause.getValue()));
+            }
+            clauses.add(new BsonDocument(name, value));
+            andFilterDocument.clear();
+            andFilterDocument.append("$and", clauses);
         }
 
         @Override
