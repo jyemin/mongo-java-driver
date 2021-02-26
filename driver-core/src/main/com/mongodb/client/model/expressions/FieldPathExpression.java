@@ -25,6 +25,13 @@ import java.util.Objects;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
+/**
+ * An expression representing a field path, to access fields in the input documents.
+ *
+ * @see Expressions#fieldPath(String)
+ * @mongodb.driver.manual meta/aggregation-quick-reference/#agg-quick-ref-field-paths
+ * @since 4.?
+ */
 @Immutable
 public class FieldPathExpression implements Expression {
     private final String fieldPath;
@@ -33,6 +40,11 @@ public class FieldPathExpression implements Expression {
         this.fieldPath = notNull("fieldPath", fieldPath);
     }
 
+    /**
+     * Gets the possibly dotted field path.
+     *
+     * @return the field path
+     */
     public String getFieldPath() {
         return fieldPath;
     }

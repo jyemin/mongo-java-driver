@@ -27,6 +27,12 @@ import java.util.Objects;
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.Collections.unmodifiableList;
 
+/**
+ * An expression representing an array, where each element of the array is evaluated as an expression.
+ *
+ * @see Expressions#array(List)
+ * @since 4.?
+ */
 @Immutable
 public final class ArrayExpression implements Expression {
     private final List<Expression> elements;
@@ -35,6 +41,11 @@ public final class ArrayExpression implements Expression {
         this.elements = notNull("elements", elements);
     }
 
+    /**
+     * The elements of the array.
+     *
+     * @return the list of elements
+     */
     public List<Expression> getElements() {
         return unmodifiableList(elements);
     }

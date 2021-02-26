@@ -26,6 +26,14 @@ import java.util.Objects;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
+/**
+ * An expression representing a reference to a variable.
+ *
+ * @see Expressions#currentRef()
+ * @see Expressions#rootRef()
+ * @see Expressions#ref(String)
+ * @since 4.?
+ */
 @Immutable
 public class VariableReferenceExpression implements Expression {
     private final String name;
@@ -37,14 +45,31 @@ public class VariableReferenceExpression implements Expression {
         this.fieldPath = fieldPath;
     }
 
+    /**
+     * Gets the field path to append to the variable reference.
+     *
+     *  * @param path the field path to append to the variable reference.  This may be null
+     * @return this
+     */
+    @Nullable
     public VariableReferenceExpression fieldPath(final String path) {
         return new VariableReferenceExpression(name, path);
     }
 
+    /**
+     * Gets the name of the variable.
+     *
+     * @return the variable name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the optional field path.
+     *
+     * @return the field path
+     */
     @Nullable
     public String getFieldPath() {
         return fieldPath;

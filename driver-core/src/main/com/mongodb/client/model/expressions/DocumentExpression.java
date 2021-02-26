@@ -27,6 +27,12 @@ import java.util.Objects;
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.Collections.unmodifiableMap;
 
+/**
+ * An expression representing a document, where the value of each field is evaluated as an expression.
+ *
+ * @see Expressions#document(Map)
+ * @since 4.?
+ */
 @Immutable
 public final class DocumentExpression implements Expression {
     private final Map<String, Expression> elements;
@@ -35,10 +41,14 @@ public final class DocumentExpression implements Expression {
         this.elements = notNull("elements", elements);
     }
 
+    /**
+     * Gets the elements of the document.
+     *
+     * @return the elements of the document
+     */
     public Map<String, Expression> getElements() {
         return unmodifiableMap(elements);
     }
-
 
     @Override
     public BsonValue toBsonValue(final CodecRegistry codecRegistry) {

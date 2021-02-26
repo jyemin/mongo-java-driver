@@ -27,6 +27,13 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.model.expressions.ExpressionHelper.toBsonArray;
 import static java.util.Arrays.asList;
 
+/**
+ * An expression that compares two values and returns true when the first value is greater than or equivalent to the second value,
+ * and false when the first value is less than the second value.
+ *
+ * @see Expressions#gte(Expression, Expression)
+ * @mongodb.driver.manual reference/operator/aggregation/gte/
+ */
 @Immutable
 public class GreaterThanOrEqualExpression implements Expression {
     private final Expression first;
@@ -37,10 +44,20 @@ public class GreaterThanOrEqualExpression implements Expression {
         this.second = notNull("second", second);
     }
 
+    /**
+     * Gets the first expression.
+     *
+     * @return the first expression
+     */
     public Expression getFirst() {
         return first;
     }
 
+    /**
+     * Gets the second expression.
+     *
+     * @return the second expression
+     */
     public Expression getSecond() {
         return second;
     }

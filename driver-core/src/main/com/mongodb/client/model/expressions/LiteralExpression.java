@@ -26,6 +26,12 @@ import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.Objects;
 
+/**
+ * An expression representing a literal value.
+ *
+ * @see Expressions#literal(int)
+ * @since 4.?
+ */
 @Immutable
 public class LiteralExpression implements Expression {
 
@@ -37,10 +43,23 @@ public class LiteralExpression implements Expression {
         this.parsed = parsed;
     }
 
+    /**
+     * Gets the literal value.
+     *
+     * @return the literal value
+     */
     public Object getValue() {
         return value;
     }
 
+    /**
+     *
+     * <p>
+     *  In most cases it doesn't matter, but...
+     * </p>
+     *
+     * @return whether the value will be parsed as an expression.
+     */
     public boolean isParsed() {
         return parsed;
     }

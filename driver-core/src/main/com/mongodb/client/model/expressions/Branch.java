@@ -22,6 +22,12 @@ import java.util.Objects;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
+/**
+ * A branch of a switch expression.
+ *
+ * @see Expressions#branch(Expression, Expression)
+ * @since 4.?
+ */
 @Immutable
 public final class Branch {
     private final Expression caseExpr;
@@ -32,10 +38,20 @@ public final class Branch {
         this.thenExpr = notNull("then", thenExpr);
     }
 
+    /**
+     * Gets the case expression.
+     *
+     * @return the case expression
+     */
     public Expression getCase() {
         return caseExpr;
     }
 
+    /**
+     * Gets the then expression.
+     *
+     * @return the then expression
+     */
     public Expression getThen() {
         return thenExpr;
     }

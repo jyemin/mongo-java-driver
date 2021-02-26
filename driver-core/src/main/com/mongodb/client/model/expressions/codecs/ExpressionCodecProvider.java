@@ -22,6 +22,12 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
+/**
+ * A provider of codecs for implementations of the {@code Expression} interface.
+ *
+ * @see Expression
+ * @since 4.3
+ */
 @Immutable
 public class ExpressionCodecProvider implements CodecProvider {
     @Override

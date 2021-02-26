@@ -28,6 +28,12 @@ import java.util.Objects;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.model.expressions.ExpressionHelper.toBsonArray;
 
+/**
+ * An add expression
+ *
+ * @see Expressions#add(Expression...)
+ * @since 4.?
+ */
 @Immutable
 public final class AddExpression implements Expression {
     private final List<Expression> numbers;
@@ -36,6 +42,11 @@ public final class AddExpression implements Expression {
         this.numbers = notNull("numbers", numbers);
     }
 
+    /**
+     * Gets the list numbers to add.
+     *
+     * @return the list of numbers
+     */
     public List<Expression> getNumbers() {
         return Collections.unmodifiableList(numbers);
     }

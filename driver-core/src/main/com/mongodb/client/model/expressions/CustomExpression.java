@@ -24,6 +24,12 @@ import org.bson.conversions.Bson;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
+/**
+ * An expression represented by a BSON document.
+ *
+ * @see Expressions#of(Bson)
+ * @since 4.?
+ */
 @Immutable
 public final class CustomExpression implements Expression {
     private final Bson expression;
@@ -32,6 +38,11 @@ public final class CustomExpression implements Expression {
         this.expression = notNull("expression", expression);
     }
 
+    /**
+     * The expresion.
+     *
+     * @return the expression
+     */
     public Bson getExpression() {
         return expression;
     }

@@ -29,6 +29,17 @@ import org.bson.codecs.configuration.CodecRegistry;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
+/**
+ * A Codec for implementations of the {@code Expression} interface.
+ *
+ * <p>
+ * Only encoding is supported.
+ * </p>
+ *
+ * @see Expression
+ * @see com.mongodb.client.model.expressions.Expressions
+ * @since 4.?
+ */
 @Immutable
 public final class ExpressionCodec implements Codec<Expression> {
     private static final CodecRegistry DEFAULT_REGISTRY = fromProviders(new BsonValueCodecProvider());
