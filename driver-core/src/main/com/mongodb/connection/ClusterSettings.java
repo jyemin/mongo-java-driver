@@ -265,8 +265,12 @@ public final class ClusterSettings {
          */
         public Builder applyConnectionString(final ConnectionString connectionString) {
             Boolean directConnection = connectionString.isDirectConnection();
+            Boolean loadBalanced = connectionString.isLoadBalanced();
 
-            if (connectionString.isSrvProtocol()) {
+            if (loadBalanced != null && loadBalanced) {
+                mode(ClusterConnectionMode.LOAD_BALANCED);
+                hosts(singletonList(createServerAddress(connectionString.getHosts().get(0))));
+            } else if (connectionString.isSrvProtocol()) {
                 mode(ClusterConnectionMode.MULTIPLE);
                 srvHost(connectionString.getHosts().get(0));
             } else if ((directConnection != null && directConnection)
@@ -551,6 +555,10 @@ public final class ClusterSettings {
                 throw new IllegalArgumentException("When specifying a replica set name, only ClusterType.UNKNOWN and "
                                                    + "ClusterType.REPLICA_SET are valid.");
             }
+        }
+
+        if (builder.mode == ClusterConnectionMode.LOAD_BALANCED && builder.hosts.size() > 1) {
+            throw new IllegalArgumentException("Multiple hosts cannot be specified when in load balancing mode");
         }
 
         srvHost = builder.srvHost;

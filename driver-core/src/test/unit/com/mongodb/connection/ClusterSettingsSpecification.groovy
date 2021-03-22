@@ -107,6 +107,17 @@ class ClusterSettingsSpecification extends Specification {
         thrown(IllegalArgumentException)
     }
 
+    def 'when hosts contains more than one element and mode is LOAD_BALANCED, should throw IllegalArgumentException'() {
+        when:
+        def builder = ClusterSettings.builder()
+        builder.hosts([new ServerAddress('host1'), new ServerAddress('host2')])
+        builder.mode(ClusterConnectionMode.LOAD_BALANCED)
+        builder.build()
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
     def 'when srvHost is specified, should set mode to MULTIPLE'() {
         when:
         def builder = ClusterSettings.builder()
@@ -236,6 +247,14 @@ class ClusterSettingsSpecification extends Specification {
 
         then:
         settings.serverSelector == new LatencyMinimizingServerSelector(99, TimeUnit.MILLISECONDS)
+
+        when:
+        settings = ClusterSettings.builder()
+                .applyConnectionString(new ConnectionString('mongodb://example.com:27018/?loadBalanced=true')).build()
+
+        then:
+        settings.mode == ClusterConnectionMode.LOAD_BALANCED
+        settings.hosts == [new ServerAddress('example.com:27018')]
     }
 
     def 'when cluster type is unknown and replica set name is specified, should set cluster type to ReplicaSet'() {
