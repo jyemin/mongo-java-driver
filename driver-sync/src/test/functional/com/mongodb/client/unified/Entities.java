@@ -74,6 +74,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.mongodb.ClusterFixture.getMultiMongosConnectionString;
+import static com.mongodb.ClusterFixture.isLoadBalanced;
 import static com.mongodb.ClusterFixture.isSharded;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static com.mongodb.client.unified.EventMatcher.getReasonString;
@@ -283,7 +284,9 @@ public final class Entities {
         if (entity.getBoolean("useMultipleMongoses", BsonBoolean.FALSE).getValue()) {
             assumeTrue("Multiple mongos connection string not available for sharded cluster",
                     !isSharded() || getMultiMongosConnectionString() != null);
-            if (isSharded()) {
+            assumeTrue("Multiple mongos connection string not available for load-balanced cluster",
+                    !isLoadBalanced() || getMultiMongosConnectionString() != null);
+            if (isSharded() || isLoadBalanced()) {
                 clientSettingsBuilder.applyConnectionString(requireNonNull(getMultiMongosConnectionString()));
             }
         }

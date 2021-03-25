@@ -22,6 +22,7 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
+import com.mongodb.connection.ServerType;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.QueryResult;
@@ -60,13 +61,14 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private final long maxTimeMS;
     private int batchSize;
     private ConnectionSource connectionSource;
+    private Connection connection;
     private ServerCursor serverCursor;
     private List<T> nextBatch;
     private int count;
     private volatile boolean closed;
     private BsonDocument postBatchResumeToken;
     private BsonTimestamp operationTime;
-    private boolean firstBatchEmpty;
+    private final boolean firstBatchEmpty;
     private int maxWireVersion = 0;
 
     QueryBatchCursor(final QueryResult<T> firstQueryResult, final int limit, final int batchSize, final Decoder<T> decoder) {
@@ -76,11 +78,6 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     QueryBatchCursor(final QueryResult<T> firstQueryResult, final int limit, final int batchSize,
                      final Decoder<T> decoder, final ConnectionSource connectionSource) {
         this(firstQueryResult, limit, batchSize, 0, decoder, connectionSource, null, null);
-    }
-
-    QueryBatchCursor(final QueryResult<T> firstQueryResult, final int limit, final int batchSize,
-                     final Decoder<T> decoder, final ConnectionSource connectionSource, final Connection connection) {
-        this(firstQueryResult, limit, batchSize, 0, decoder, connectionSource, connection, null);
     }
 
     QueryBatchCursor(final QueryResult<T> firstQueryResult, final int limit, final int batchSize, final long maxTimeMS,
@@ -107,8 +104,6 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         }
         if (connectionSource != null) {
             this.connectionSource = connectionSource.retain();
-        } else {
-            this.connectionSource = null;
         }
 
         initFromQueryResult(firstQueryResult);
@@ -118,9 +113,11 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             this.maxWireVersion = connection.getDescription().getMaxWireVersion();
             if (limitReached()) {
                 killCursor(connection);
+            } else if (connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER) {
+                this.connection = connection.retain();
             }
         }
-        releaseConnectionSourceIfNoServerCursor();
+        releaseConnectionAndSourceIfNoServerCursor();
     }
 
     @Override
@@ -189,6 +186,9 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             } finally {
                 if (connectionSource != null) {
                     connectionSource.release();
+                }
+                if (connection != null) {
+                    connection.release();
                 }
             }
         }
@@ -261,7 +261,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     private void getMore() {
-        Connection connection = connectionSource.getConnection();
+        Connection connection = getConnection();
         try {
             if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
                 try {
@@ -283,9 +283,22 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             if (limitReached()) {
                 killCursor(connection);
             }
-        } finally {
+        } catch (Exception e) {
+            // TODO: getMore failures are not recoverable, but we might not want to do something this drastic
+            serverCursor = null;
+            throw e;
+        }
+        finally {
             connection.release();
-            releaseConnectionSourceIfNoServerCursor();
+            releaseConnectionAndSourceIfNoServerCursor();
+        }
+    }
+
+    private Connection getConnection() {
+        if (connection == null) {
+            return connectionSource.getConnection();
+        } else {
+            return connection.retain();
         }
     }
 
@@ -325,7 +338,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private void killCursor() {
         if (serverCursor != null) {
             try {
-                Connection connection = connectionSource.getConnection();
+                Connection connection = getConnection();
                 try {
                     killCursor(connection);
                 } finally {
@@ -354,10 +367,16 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         }
     }
 
-    private void releaseConnectionSourceIfNoServerCursor() {
-        if (serverCursor == null && connectionSource != null) {
-            connectionSource.release();
-            connectionSource = null;
+    private void releaseConnectionAndSourceIfNoServerCursor() {
+        if (serverCursor == null) {
+            if (connectionSource != null) {
+                connectionSource.release();
+                connectionSource = null;
+            }
+            if (connection != null) {
+                connection.release();
+                connection = null;
+            }
         }
     }
 

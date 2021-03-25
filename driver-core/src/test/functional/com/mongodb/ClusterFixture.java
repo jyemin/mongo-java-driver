@@ -73,6 +73,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.mongodb.connection.ClusterConnectionMode.LOAD_BALANCED;
 import static com.mongodb.connection.ClusterConnectionMode.MULTIPLE;
 import static com.mongodb.connection.ClusterType.REPLICA_SET;
 import static com.mongodb.connection.ClusterType.SHARDED;
@@ -483,6 +484,10 @@ public final class ClusterFixture {
 
     public static boolean isStandalone() {
         return getCluster().getDescription().getType() == STANDALONE;
+    }
+
+    public static boolean isLoadBalanced() {
+        return getCluster().getSettings().getMode() == LOAD_BALANCED;
     }
 
     public static boolean isAuthenticated() {

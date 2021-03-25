@@ -65,7 +65,7 @@ public final class LoadBalancedCluster implements Cluster {
                 singletonList(ServerDescription.builder()
                         .ok(true)
                         .state(ServerConnectionState.CONNECTED)
-//                        .logicalSessionTimeoutMinutes(30)  // TODO: this is a hack, but necessary to get sessions to work
+                        .logicalSessionTimeoutMinutes(30)  // TODO: this is a hack, but necessary to get sessions to work for now
                         .type(ServerType.LOAD_BALANCER)
                         .address(settings.getHosts().get(0))
                         .build()),

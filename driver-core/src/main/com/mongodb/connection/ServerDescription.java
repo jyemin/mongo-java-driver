@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.connection.ServerConnectionState.CONNECTED;
+import static com.mongodb.connection.ServerType.LOAD_BALANCER;
 import static com.mongodb.connection.ServerType.REPLICA_SET_PRIMARY;
 import static com.mongodb.connection.ServerType.REPLICA_SET_SECONDARY;
 import static com.mongodb.connection.ServerType.SHARD_ROUTER;
@@ -568,19 +569,21 @@ public class ServerDescription {
     /**
      * Returns whether this can be treated as a primary server.
      *
-     * @return true if this server is the primary in a replica set, is a mongos, or is a single standalone server
+     * @return true if this server is the primary in a replica set, is a mongos, a load balancer, or is a single standalone server
      */
     public boolean isPrimary() {
-        return ok && (type == REPLICA_SET_PRIMARY || type == SHARD_ROUTER || type == STANDALONE);
+        // TODO: may not be necessary change
+        return ok && (type == REPLICA_SET_PRIMARY || type == SHARD_ROUTER || type == STANDALONE || type == LOAD_BALANCER);
     }
 
     /**
      * Returns whether this can be treated as a secondary server.
      *
-     * @return true if this server is a secondary in a replica set, is a mongos, or is a single standalone server
+     * @return true if this server is a secondary in a replica set, is a mongos, a load balancer, or is a single standalone server
      */
     public boolean isSecondary() {
-        return ok && (type == REPLICA_SET_SECONDARY || type == SHARD_ROUTER || type == STANDALONE);
+        // TODO: may not be necessary change
+        return ok && (type == REPLICA_SET_SECONDARY || type == SHARD_ROUTER || type == STANDALONE || type == LOAD_BALANCER);
     }
 
     /**
