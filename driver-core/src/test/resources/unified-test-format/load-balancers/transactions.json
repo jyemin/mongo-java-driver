@@ -70,7 +70,6 @@
   "tests": [
     {
       "description": "pinned connections are returned on commit",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "startTransaction",
@@ -150,7 +149,6 @@
     },
     {
       "description": "pinned connections are returned on abort",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "startTransaction",
@@ -230,7 +228,6 @@
     },
     {
       "description": "commitTransaction can be retried after a network error",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "failPoint",
@@ -355,7 +352,6 @@
     },
     {
       "description": "abortTransaction can be retried after a network error",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "failPoint",
@@ -479,7 +475,6 @@
     },
     {
       "description": "cursors started in a transaction should pin to the same connection as the transaction",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "startTransaction",
@@ -596,7 +591,6 @@
     },
     {
       "description": "pinned connections are returned after a network error on a CRUD command",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "failPoint",
@@ -741,7 +735,6 @@
     },
     {
       "description": "connections pinned by multiple resources are forcefully returned after a network error",
-      "skipReason": "TODO!!!",
       "operations": [
         {
           "name": "failPoint",
