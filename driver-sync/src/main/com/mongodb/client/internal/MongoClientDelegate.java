@@ -174,7 +174,7 @@ final class MongoClientDelegate {
                 return operation.execute(binding);
             } catch (MongoException e) {
                 labelException(session, e);
-                unpinServerAddressOnTransientTransactionError(session, e);
+                clearTransactionContextOnTransientTransactionError(session, e);
                 throw e;
             } finally {
                 binding.release();
@@ -191,7 +191,7 @@ final class MongoClientDelegate {
                 return operation.execute(binding);
             } catch (MongoException e) {
                 labelException(session, e);
-                unpinServerAddressOnTransientTransactionError(session, e);
+                clearTransactionContextOnTransientTransactionError(session, e);
                 throw e;
             } finally {
                 binding.release();
@@ -232,9 +232,9 @@ final class MongoClientDelegate {
             }
         }
 
-        private void unpinServerAddressOnTransientTransactionError(final @Nullable ClientSession session, final MongoException e) {
+        private void clearTransactionContextOnTransientTransactionError(final @Nullable ClientSession session, final MongoException e) {
             if (session != null && e.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
-                session.setPinnedServerAddress(null);
+                session.clearTransactionContext();
             }
         }
 

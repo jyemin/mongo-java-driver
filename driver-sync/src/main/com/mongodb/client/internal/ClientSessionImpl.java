@@ -107,7 +107,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         if (!writeConcern.isAcknowledged()) {
             throw new MongoClientException("Transactions do not support unacknowledged write concern");
         }
-        setPinnedServerAddress(null);
+        clearTransactionContext();
     }
 
     @Override
@@ -133,11 +133,11 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                         readConcern, this);
             }
         } catch (MongoException e) {
-            unpinServerAddressOnError(e);
+            clearTransactionContextOnError(e);
             throw e;
         } finally {
-            transactionState = TransactionState.COMMITTED;
             commitInProgress = false;
+            cleanupTransaction(TransactionState.COMMITTED);
         }
     }
 
@@ -164,16 +164,16 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             }
         } catch (Exception e) {
             if (e instanceof MongoException) {
-                unpinServerAddressOnError((MongoException) e);
+                clearTransactionContextOnError((MongoException) e);
             }
         } finally {
             cleanupTransaction(TransactionState.ABORTED);
         }
     }
 
-    private void unpinServerAddressOnError(final MongoException e) {
+    private void clearTransactionContextOnError(final MongoException e) {
         if (e.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL) || e.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
-            setPinnedServerAddress(null);
+            clearTransactionContext();
         }
     }
 
@@ -210,7 +210,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                         commitTransaction();
                         break;
                     } catch (MongoException e) {
-                        unpinServerAddressOnError(e);
+                        clearTransactionContextOnError(e);
                         if (ClientSessionClock.INSTANCE.now() - startTime < MAX_RETRY_TIME_LIMIT_MS) {
                             applyMajorityWriteConcernToTransactionOptions();
 
@@ -260,5 +260,6 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         messageSentInCurrentTransaction = false;
         transactionOptions = null;
         transactionState = nextState;
+        clearTransactionContext();
     }
 }
