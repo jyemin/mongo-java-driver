@@ -814,6 +814,10 @@
           }
         },
         {
+          "name": "close",
+          "object": "cursor0"
+        },
+        {
           "name": "assertNumberConnectionsCheckedOut",
           "object": "testRunner",
           "arguments": {
@@ -859,6 +863,11 @@
                   "update": "coll0"
                 },
                 "commandName": "update"
+              }
+            },
+            {
+              "commandStartedEvent": {
+                "commandName": "killCursors"
               }
             },
             {
