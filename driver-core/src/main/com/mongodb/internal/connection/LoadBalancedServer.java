@@ -15,9 +15,13 @@
  */
 package com.mongodb.internal.connection;
 
+import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
+import com.mongodb.MongoNodeIsRecoveringException;
+import com.mongodb.MongoNotPrimaryException;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.MongoSocketException;
+import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ServerConnectionState;
 import com.mongodb.connection.ServerDescription;
@@ -30,14 +34,21 @@ import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerOpeningEvent;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.lang.Nullable;
+import org.bson.types.ObjectId;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 import static com.mongodb.internal.connection.ClusterableServer.ConnectionState.AFTER_HANDSHAKE;
+import static com.mongodb.internal.connection.ClusterableServer.ConnectionState.BEFORE_HANDSHAKE;
+import static java.util.Arrays.asList;
 
 public class LoadBalancedServer implements ClusterableServer {
+    // TODO: share with DefaultServer?
+    private static final List<Integer> SHUTDOWN_CODES = asList(91, 11600);
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ServerId serverId;
     private final ConnectionPool connectionPool;
@@ -79,7 +90,26 @@ public class LoadBalancedServer implements ClusterableServer {
     @Override
     public void invalidate(final ConnectionState connectionState, final Throwable reason, final int connectionGeneration,
                            final int maxWireVersion) {
-        // TODO
+        invalidate(connectionState, reason, null);
+    }
+
+
+    // TODO: no longer overrides base class method
+    private void invalidate(final ConnectionState connectionState, final Throwable t, @Nullable final ObjectId serverId) {
+        if (!isClosed()) {
+            if (t instanceof MongoSocketException
+                    && (!(t instanceof MongoSocketReadTimeoutException) || connectionState == BEFORE_HANDSHAKE)) {
+                if (serverId != null) {
+                    connectionPool.invalidate(serverId);
+                }
+            } else if (t instanceof MongoNotPrimaryException || t instanceof MongoNodeIsRecoveringException) {
+                if (SHUTDOWN_CODES.contains(((MongoCommandException) t).getErrorCode())) {
+                    if (serverId != null) {
+                        connectionPool.invalidate(serverId);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -106,13 +136,14 @@ public class LoadBalancedServer implements ClusterableServer {
             return connectionFactory.create(connectionPool.get(), new LoadBalancedServerProtocolExecutor(),
                     ClusterConnectionMode.LOAD_BALANCED);
         } catch (MongoSecurityException e) {
+            // TODO: what should happen here, if anything?
             connectionPool.invalidate();
             throw e;
-        } catch (MongoSocketException e) {
-            invalidate(ConnectionState.BEFORE_HANDSHAKE, e, connectionPool.getGeneration(), 0);
+        } catch (MongoException e) {
+            // TODO: since no connection is returned, where do we invalidate the pool?  Not even the pool will be able to do this unless
+            // the exception includes the serverId.
             throw e;
         }
-
     }
 
     @Override
@@ -143,7 +174,7 @@ public class LoadBalancedServer implements ClusterableServer {
                 invalidate();
                 return (T) e.getResponse();
             } catch (MongoException e) {
-                invalidate(AFTER_HANDSHAKE, e, connection.getGeneration(), connection.getDescription().getMaxWireVersion());
+                invalidate(AFTER_HANDSHAKE, e, connection.getDescription().getServerId());
                 if (e instanceof MongoSocketException && sessionContext.hasSession()) {
                     sessionContext.markSessionDirty();
                 }

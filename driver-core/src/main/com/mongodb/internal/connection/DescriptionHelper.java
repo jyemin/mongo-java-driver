@@ -68,6 +68,10 @@ public final class DescriptionHelper {
                     connectionDescription.getConnectionId().withServerValue(isMasterResult.getNumber("connectionId").intValue());
             connectionDescription = connectionDescription.withConnectionId(newConnectionId);
         }
+        // TODO: this is a temporary workaround until we have a server that supports load balancing handshake
+        if (isMasterResult.containsKey("topologyVersion")) {
+            connectionDescription = connectionDescription.withServerId(getTopologyVersion(isMasterResult).getProcessId());
+        }
         return connectionDescription;
     }
 

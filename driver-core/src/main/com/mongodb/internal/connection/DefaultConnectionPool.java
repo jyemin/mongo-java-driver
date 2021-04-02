@@ -43,8 +43,11 @@ import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.thread.DaemonThreadFactory;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
+import org.bson.types.ObjectId;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -72,6 +75,7 @@ class DefaultConnectionPool implements ConnectionPool {
     private final Runnable maintenanceTask;
     private final ConnectionPoolListener connectionPoolListener;
     private final ServerId serverId;
+    private final Map<ObjectId, ServerStats> serverStatsMap = new HashMap<>();
     private volatile boolean closed;
 
     DefaultConnectionPool(final ServerId serverId, final InternalConnectionFactory internalConnectionFactory,
@@ -113,6 +117,9 @@ class DefaultConnectionPool implements ConnectionPool {
         if (!pooledConnection.opened()) {
             try {
                 pooledConnection.open();
+                if (pooledConnection.getDescription().getServerId() != null) {
+                    addConnectionToServerStats(pooledConnection.getDescription().getServerId());
+                }
             } catch (Throwable t) {
                 pool.release(pooledConnection.wrapped, true);
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
@@ -253,6 +260,13 @@ class DefaultConnectionPool implements ConnectionPool {
         connectionPoolListener.connectionPoolCleared(new ConnectionPoolClearedEvent(serverId));
     }
 
+    public void invalidate(final ObjectId serverId) {
+        LOGGER.debug("Invalidating the connection pool for server id " + serverId);
+        incrementGenerationInServerStats(serverId);
+        // TODO: serverId term has become overloaded
+        connectionPoolListener.connectionPoolCleared(new ConnectionPoolClearedEvent(this.serverId));
+    }
+
     @Override
     public void close() {
         if (!closed) {
@@ -269,6 +283,10 @@ class DefaultConnectionPool implements ConnectionPool {
     @Override
     public int getGeneration() {
         return generation.get();
+    }
+
+    private int getGeneration(final ObjectId serverId) {
+        return getGenerationFromServerStats(serverId);
     }
 
     /**
@@ -362,7 +380,11 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private boolean fromPreviousGeneration(final UsageTrackingInternalConnection connection) {
-        return generation.get() > connection.getGeneration();
+        if (connection.getDescription().getServerId() != null) {
+            return getGenerationFromServerStats(connection.getDescription().getServerId()) > connection.getGeneration();
+        } else {
+            return generation.get() > connection.getGeneration();
+        }
     }
 
     private boolean expired(final long startTime, final long curTime, final long maxTime) {
@@ -581,8 +603,11 @@ class DefaultConnectionPool implements ConnectionPool {
 
         @Override
         public UsageTrackingInternalConnection create(final boolean initialize) {
-            UsageTrackingInternalConnection internalConnection =
-            new UsageTrackingInternalConnection(internalConnectionFactory.create(serverId), generation.get());
+            InternalConnection wrappedInternalConnection = internalConnectionFactory.create(serverId);
+            int generation = wrappedInternalConnection.getDescription().getServerId() == null
+                    ? getGeneration()
+                    : getGeneration(wrappedInternalConnection.getDescription().getServerId());
+            UsageTrackingInternalConnection internalConnection = new UsageTrackingInternalConnection(wrappedInternalConnection, generation);
             ConnectionId id = getId(internalConnection);
             connectionCreated(connectionPoolListener, id);
             if (initialize) {
@@ -601,6 +626,9 @@ class DefaultConnectionPool implements ConnectionPool {
                                   getReasonStringForClosing(connection)));
             }
             connection.close();
+            if (connection.getDescription().getServerId() != null) {
+                removeConnectionFromServerStats(connection.getDescription().getServerId());
+            }
         }
 
         private String getReasonStringForClosing(final UsageTrackingInternalConnection connection) {
@@ -636,6 +664,65 @@ class DefaultConnectionPool implements ConnectionPool {
         @Override
         public Prune shouldPrune(final UsageTrackingInternalConnection usageTrackingConnection) {
             return DefaultConnectionPool.this.shouldPrune(usageTrackingConnection) ? Prune.YES : Prune.NO;
+        }
+    }
+
+    private ServerStats getServerStats(final ObjectId serverId) {
+        ServerStats serverStats = serverStatsMap.get(serverId);
+        if (serverStats == null) {
+            serverStats = new ServerStats();
+            serverStatsMap.put(serverId, serverStats);
+        }
+        return serverStats;
+    }
+
+    private synchronized void addConnectionToServerStats(final ObjectId serverId) {
+        ServerStats serverStats = getServerStats(serverId);
+        serverStats.incrementCount();
+    }
+
+    private synchronized void removeConnectionFromServerStats(final ObjectId serverId) {
+        ServerStats serverStats = serverStatsMap.get(serverId);
+        // assert not null
+        serverStats.decrementCount();
+        if (serverStats.getConnectionCount() == 0) {
+            serverStatsMap.remove(serverId);
+        }
+    }
+
+    private synchronized void incrementGenerationInServerStats(final ObjectId serverId) {
+        ServerStats serverStats = serverStatsMap.get(serverId);
+        // assert not null
+        serverStats.incrementGeneration();
+    }
+
+    private synchronized int getGenerationFromServerStats(final ObjectId serverId) {
+        ServerStats serverStats = getServerStats(serverId);
+        return serverStats.getGeneration();
+    }
+
+    private static class ServerStats {
+        private int generation;
+        private int connectionCount;
+
+        void incrementCount() {
+            connectionCount++;
+        }
+
+        void decrementCount() {
+            connectionCount--;
+        }
+
+        void incrementGeneration() {
+            generation++;
+        }
+
+        public int getGeneration() {
+            return generation;
+        }
+
+        public int getConnectionCount() {
+            return connectionCount;
         }
     }
 }
