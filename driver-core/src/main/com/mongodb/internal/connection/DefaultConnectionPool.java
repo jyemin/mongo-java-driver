@@ -128,6 +128,9 @@ class DefaultConnectionPool implements ConnectionPool {
                     addConnectionToServerStats(pooledConnection.getDescription().getServerId());
                 }
             } catch (Throwable t) {
+                if (pooledConnection.wrapped.getDescription().getServerId() != null) {
+                    invalidate(pooledConnection.wrapped.getDescription().getServerId());
+                }
                 pool.release(pooledConnection.wrapped, true);
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
                         Reason.CONNECTION_ERROR));
@@ -737,7 +740,7 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private synchronized void incrementGenerationInServerStats(final ObjectId serverId) {
-        ServerStats serverStats = serverStatsMap.get(serverId);
+        ServerStats serverStats = getServerStats(serverId);
         // assert not null
         serverStats.incrementGeneration();
     }

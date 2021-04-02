@@ -137,11 +137,6 @@ public class LoadBalancedServer implements ClusterableServer {
                     ClusterConnectionMode.LOAD_BALANCED);
         } catch (MongoSecurityException e) {
             // TODO: what should happen here, if anything?
-            connectionPool.invalidate();
-            throw e;
-        } catch (MongoException e) {
-            // TODO: since no connection is returned, where do we invalidate the pool?  Not even the pool will be able to do this unless
-            // the exception includes the serverId.
             throw e;
         }
     }

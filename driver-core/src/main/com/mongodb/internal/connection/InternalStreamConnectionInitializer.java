@@ -60,10 +60,17 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
     }
 
     @Override
-    public InternalConnectionInitializationDescription initialize(final InternalConnection internalConnection) {
+    public InternalConnectionInitializationDescription startHandshake(final InternalConnection internalConnection) {
         notNull("internalConnection", internalConnection);
 
-        InternalConnectionInitializationDescription description = initializeConnectionDescription(internalConnection);
+        return initializeConnectionDescription(internalConnection);
+    }
+
+    public InternalConnectionInitializationDescription completeHandshake(final InternalConnection internalConnection,
+                                                                         final InternalConnectionInitializationDescription description) {
+        notNull("internalConnection", internalConnection);
+        notNull("description", description);
+
         authenticate(internalConnection, description.getConnectionDescription());
         return completeConnectionDescriptionInitialization(internalConnection, description);
     }

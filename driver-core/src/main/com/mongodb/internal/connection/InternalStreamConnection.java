@@ -141,9 +141,15 @@ public class InternalStreamConnection implements InternalConnection {
         stream = streamFactory.create(serverId.getAddress());
         try {
             stream.open();
-            InternalConnectionInitializationDescription initializationDescription = connectionInitializer.initialize(this);
+
+            InternalConnectionInitializationDescription initializationDescription = connectionInitializer.startHandshake(this);
             description = initializationDescription.getConnectionDescription();
             initialServerDescription = initializationDescription.getServerDescription();
+
+            initializationDescription = connectionInitializer.completeHandshake(this, initializationDescription);
+            description = initializationDescription.getConnectionDescription();
+            initialServerDescription = initializationDescription.getServerDescription();
+
             opened.set(true);
             sendCompressor = findSendCompressor(description);
             if (LOGGER.isInfoEnabled()) {
