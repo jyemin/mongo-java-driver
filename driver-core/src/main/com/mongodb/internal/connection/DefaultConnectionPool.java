@@ -75,6 +75,9 @@ class DefaultConnectionPool implements ConnectionPool {
     private final Runnable maintenanceTask;
     private final ConnectionPoolListener connectionPoolListener;
     private final ServerId serverId;
+    private final AtomicInteger numPinnedToCursor = new AtomicInteger(0);
+    private final AtomicInteger numPinnedToTransaction = new AtomicInteger(0);
+
     private final Map<ObjectId, ServerStats> serverStatsMap = new HashMap<>();
     private volatile boolean closed;
 
@@ -110,6 +113,10 @@ class DefaultConnectionPool implements ConnectionPool {
         try {
             connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
             pooledConnection = getPooledConnection(timeout, timeUnit);
+        } catch (MongoTimeoutException e) {
+            MongoTimeoutException replacementException = createTimeoutException();
+            emitCheckOutFailedEvent(replacementException);
+            throw replacementException;
         } catch (Throwable t) {
             emitCheckOutFailedEvent(t);
             throw t;
@@ -172,8 +179,7 @@ class DefaultConnectionPool implements ConnectionPool {
                             openAsync(connection, errHandlingCallback);
                         }
                     } catch (MongoTimeoutException e) {
-                        Exception exception = new MongoTimeoutException(format("Timeout waiting for a pooled connection after %d %s",
-                                settings.getMaxWaitTime(MILLISECONDS), MILLISECONDS));
+                        Exception exception = createTimeoutException();
                         emitCheckOutFailedEvent(exception);
                         errHandlingCallback.onResult(null, exception);
                     } catch (Throwable t) {
@@ -311,8 +317,20 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private MongoTimeoutException createTimeoutException() {
-        return new MongoTimeoutException(format("Timed out after %d ms while waiting for a connection to server %s.",
-                                                settings.getMaxWaitTime(MILLISECONDS), serverId.getAddress()));
+        int numPinnedToCursor = this.numPinnedToCursor.get();
+        int numPinnedToTransaction = this.numPinnedToTransaction.get();
+        if (numPinnedToCursor == 0 && numPinnedToTransaction == 0) {
+            return new MongoTimeoutException(format("Timed out after %d ms while waiting for a connection to server %s.",
+                    settings.getMaxWaitTime(MILLISECONDS), serverId.getAddress()));
+        } else {
+            // TODO: should this new format only apply to load-balancing mode, only when at least one connection is pinned, or always?
+            int numOtherInUse = pool.getInUseCount() - numPinnedToCursor - numPinnedToTransaction;
+            return new MongoTimeoutException(format("Timed out after %d ms while waiting for a connection to server %s. Details: "
+                    + "maxPoolSize: %d, connections in use by cursors: %d, connections in use by transactions: %d, "
+                    + "connections in use by other operations: %d",
+                    settings.getMaxWaitTime(MILLISECONDS), serverId.getAddress(),
+                    settings.getMaxSize(), numPinnedToCursor, numPinnedToTransaction, numOtherInUse));
+        }
     }
 
     ConcurrentPool<UsageTrackingInternalConnection> getPool() {
@@ -580,6 +598,34 @@ class DefaultConnectionPool implements ConnectionPool {
                     callback.onResult(result, t);
                 }
             });
+        }
+
+        @Override
+        public void markAsPinned(final Connection.PinningMode pinningMode) {
+            switch (pinningMode) {
+                case CURSOR:
+                    numPinnedToCursor.incrementAndGet();
+                    break;
+                case TRANSACTION:
+                    numPinnedToTransaction.incrementAndGet();
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported pinning mode: " + pinningMode);
+            }
+        }
+
+        @Override
+        public void unmarkAsPinned(final Connection.PinningMode pinningMode) {
+            switch (pinningMode) {
+                case CURSOR:
+                    numPinnedToCursor.decrementAndGet();
+                    break;
+                case TRANSACTION:
+                    numPinnedToTransaction.decrementAndGet();
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported pinning mode: " + pinningMode);
+            }
         }
 
         @Override

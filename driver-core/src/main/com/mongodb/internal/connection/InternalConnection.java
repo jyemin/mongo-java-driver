@@ -147,4 +147,10 @@ public interface InternalConnection extends BufferProvider {
      * @param callback the callback to invoke on completion
      */
     void receiveMessageAsync(int responseTo, SingleResultCallback<ResponseBuffers> callback);
+
+    default void markAsPinned(Connection.PinningMode pinningMode) {
+    }
+
+    default void unmarkAsPinned(final Connection.PinningMode pinningMode) {
+    }
 }

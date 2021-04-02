@@ -113,8 +113,12 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             this.maxWireVersion = connection.getDescription().getMaxWireVersion();
             if (limitReached()) {
                 killCursor(connection);
-            } else if (connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER) {
-                this.connection = connection.retain();
+            } else {
+                assert connectionSource != null;  // TODO: use Assertions class for this
+                if (connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER) {
+                    this.connection = connection.retain();
+                    this.connection.markAsPinned(Connection.PinningMode.CURSOR);
+                }
             }
         }
         releaseConnectionAndSourceIfNoServerCursor();
@@ -188,6 +192,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
                     connectionSource.release();
                 }
                 if (connection != null) {
+                    connection.unmarkAsPinned(Connection.PinningMode.CURSOR);
                     connection.release();
                 }
             }

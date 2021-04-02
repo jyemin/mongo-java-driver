@@ -148,6 +148,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
 
         public void pinConnection(final Connection connection) {
             this.pinnedConnection = connection.retain();
+            pinnedConnection.markAsPinned(Connection.PinningMode.TRANSACTION);
         }
 
         boolean isConnectionPinningRequired() {
@@ -159,6 +160,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
             super.release();
             if (getCount() == 0) {
                 if (pinnedConnection != null) {
+                    pinnedConnection.unmarkAsPinned(Connection.PinningMode.TRANSACTION);
                     pinnedConnection.release();
                 }
             }
