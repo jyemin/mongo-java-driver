@@ -32,10 +32,13 @@ import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionReadyEvent;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 final class EventMatcher {
     private final ValueMatcher valueMatcher;
@@ -60,6 +63,16 @@ final class EventMatcher {
             if (expected.containsKey("commandName")) {
                 assertEquals(context.getMessage("Command names must be equal"),
                         expected.getString("commandName").getValue(), actual.getCommandName());
+            }
+
+            if (expected.containsKey("hasServerId")) {
+                boolean hasServerId = expected.getBoolean("hasServerId").getValue();
+                ObjectId serverId = actual.getConnectionDescription().getServerId();
+                if (hasServerId) {
+                    assertNotNull(context.getMessage("Expected serverId"), serverId);
+                } else {
+                    assertNull(context.getMessage("Expected no serverId"), serverId);
+                }
             }
 
             if (actual.getClass().equals(CommandStartedEvent.class)) {
@@ -105,6 +118,16 @@ final class EventMatcher {
                 assertEquals(context.getMessage("Expected ConnectionPoolOpenedEvent"), eventType, "poolCreatedEvent");
             } else if (actual.getClass().equals(ConnectionPoolClearedEvent.class)) {
                 assertEquals(context.getMessage("Expected ConnectionPoolClearedEvent"), eventType, "poolClearedEvent");
+                if (expected.containsKey("hasServerId")) {
+                    ConnectionPoolClearedEvent connectionPoolClearedEvent = (ConnectionPoolClearedEvent) actual;
+                    boolean hasServerId = expected.getBoolean("hasServerId").getValue();
+                    ObjectId serverId = connectionPoolClearedEvent.getProcessId();
+                    if (hasServerId) {
+                        assertNotNull(context.getMessage("Expected serverId"), serverId);
+                    } else {
+                        assertNull(context.getMessage("Expected no serverId"), serverId);
+                    }
+                }
             } else if (actual.getClass().equals(ConnectionPoolClosedEvent.class)) {
                 assertEquals(context.getMessage("Expected ConnectionPoolClosedEvent"), eventType, "poolClosedEvent");
             } else if (actual.getClass().equals(ConnectionCheckOutStartedEvent.class)) {

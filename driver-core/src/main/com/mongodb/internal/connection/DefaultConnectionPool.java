@@ -273,7 +273,7 @@ class DefaultConnectionPool implements ConnectionPool {
         LOGGER.debug("Invalidating the connection pool for server id " + serverId);
         incrementGenerationInServerStats(serverId);
         // TODO: serverId term has become overloaded
-        connectionPoolListener.connectionPoolCleared(new ConnectionPoolClearedEvent(this.serverId));
+        connectionPoolListener.connectionPoolCleared(new ConnectionPoolClearedEvent(this.serverId, serverId));
     }
 
     @Override

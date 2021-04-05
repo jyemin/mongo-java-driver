@@ -17,6 +17,7 @@
 package com.mongodb.event;
 
 import com.mongodb.connection.ServerId;
+import org.bson.types.ObjectId;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -27,6 +28,7 @@ import static com.mongodb.assertions.Assertions.notNull;
  */
 public final class ConnectionPoolClearedEvent {
     private final ServerId serverId;
+    private final ObjectId processId;
 
     /**
      * Constructs a new instance of the event.
@@ -34,7 +36,19 @@ public final class ConnectionPoolClearedEvent {
      * @param serverId the server id
      */
     public ConnectionPoolClearedEvent(final ServerId serverId) {
+        this(serverId, null);
+    }
+
+    /**
+     * Constructs a new instance of the event.
+     *
+     * @param serverId the server id
+     * @param processId the process id
+     * @since 4.3
+     */
+    public ConnectionPoolClearedEvent(final ServerId serverId, final ObjectId processId) {
         this.serverId = notNull("serverId", serverId);
+        this.processId = processId;
     }
 
     /**
@@ -46,10 +60,23 @@ public final class ConnectionPoolClearedEvent {
         return serverId;
     }
 
+    /**
+     * Gets the process id.
+     *
+     * TODO: Better docs
+     *
+     * @return the process id
+     * @since 4.3
+     */
+    public ObjectId getProcessId() {
+        return processId;
+    }
+
     @Override
     public String toString() {
         return "ConnectionPoolClearedEvent{"
-                       + "serverId=" + serverId
-                       + '}';
+                + "serverId=" + serverId
+                + ", processId=" + processId
+                + '}';
     }
 }
