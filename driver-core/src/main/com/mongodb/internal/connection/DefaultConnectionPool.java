@@ -79,6 +79,7 @@ class DefaultConnectionPool implements ConnectionPool {
     private final AtomicInteger numPinnedToTransaction = new AtomicInteger(0);
 
     private final Map<ObjectId, ServerStats> serverStatsMap = new HashMap<>();
+    private final ConnectionGenerationSupplier connectionGenerationSupplier;
     private volatile boolean closed;
 
     DefaultConnectionPool(final ServerId serverId, final InternalConnectionFactory internalConnectionFactory,
@@ -92,6 +93,17 @@ class DefaultConnectionPool implements ConnectionPool {
         maintenanceTask = createMaintenanceTask();
         sizeMaintenanceTimer = createMaintenanceTimer();
         connectionPoolCreated(connectionPoolListener, serverId, settings);
+        connectionGenerationSupplier = new ConnectionGenerationSupplier() {
+            @Override
+            public int getGeneration() {
+                return generation.get();
+            }
+
+            @Override
+            public int getGeneration(final ObjectId processIdentifier) {
+                return getGenerationFromServerStats(processIdentifier);
+            }
+        };
     }
 
     @Override
@@ -347,6 +359,7 @@ class DefaultConnectionPool implements ConnectionPool {
                 @Override
                 public synchronized void run() {
                     try {
+                        // TODO: all this logic is suspect for load-balanced mode
                         int curGeneration = generation.get();
                         if (shouldPrune() || curGeneration > lastPrunedGeneration.get()) {
                             if (LOGGER.isDebugEnabled()) {
@@ -401,10 +414,15 @@ class DefaultConnectionPool implements ConnectionPool {
     }
 
     private boolean fromPreviousGeneration(final UsageTrackingInternalConnection connection) {
+        // TODO: will a magic number burn us?  Is it worth a hasGeneration method for an internal API?
+        int generation = connection.getGeneration();
+        if (generation == -1) {
+            return false;
+        }
         if (connection.getDescription().getServerId() != null) {
-            return getGenerationFromServerStats(connection.getDescription().getServerId()) > connection.getGeneration();
+            return getGenerationFromServerStats(connection.getDescription().getServerId()) > generation;
         } else {
-            return generation.get() > connection.getGeneration();
+            return this.generation.get() > generation;
         }
     }
 
@@ -652,11 +670,9 @@ class DefaultConnectionPool implements ConnectionPool {
 
         @Override
         public UsageTrackingInternalConnection create(final boolean initialize) {
-            InternalConnection wrappedInternalConnection = internalConnectionFactory.create(serverId);
-            int generation = wrappedInternalConnection.getDescription().getServerId() == null
-                    ? getGeneration()
-                    : getGeneration(wrappedInternalConnection.getDescription().getServerId());
-            UsageTrackingInternalConnection internalConnection = new UsageTrackingInternalConnection(wrappedInternalConnection, generation);
+            InternalConnection wrappedInternalConnection = internalConnectionFactory.create(serverId, connectionGenerationSupplier);
+            UsageTrackingInternalConnection internalConnection = new UsageTrackingInternalConnection(wrappedInternalConnection
+            );
             ConnectionId id = getId(internalConnection);
             connectionCreated(connectionPoolListener, id);
             if (initialize) {

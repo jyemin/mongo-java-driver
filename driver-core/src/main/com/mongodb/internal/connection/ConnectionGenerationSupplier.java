@@ -16,23 +16,10 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.connection.ServerId;
 import org.bson.types.ObjectId;
 
-interface InternalConnectionFactory {
-    default InternalConnection create(ServerId serverId) {
-        return create(serverId, new ConnectionGenerationSupplier() {
-            @Override
-            public int getGeneration() {
-                return 0;
-            }
+interface ConnectionGenerationSupplier {
+    int getGeneration();
 
-            @Override
-            public int getGeneration(final ObjectId processIdentifier) {
-                return 0;
-            }
-        });
-    }
-
-    InternalConnection create(ServerId serverId, ConnectionGenerationSupplier connectionGenerationSupplier);
+    int getGeneration(ObjectId processIdentifier);
 }

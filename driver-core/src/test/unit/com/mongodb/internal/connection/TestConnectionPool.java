@@ -133,6 +133,11 @@ public class TestConnectionPool implements ConnectionPool {
             public boolean isClosed() {
                 throw new UnsupportedOperationException("Not implemented yet!");
             }
+
+            @Override
+            public int getGeneration() {
+                return 0;
+            }
         };
     }
 

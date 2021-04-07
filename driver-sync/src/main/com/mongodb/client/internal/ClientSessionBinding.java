@@ -108,6 +108,7 @@ public class ClientSessionBinding implements ReadWriteBinding {
     }
 
     private boolean isConnectionSourcePinningRequired() {
+        // TODO: Is it sketchy to wait for cluster type discovery here?
         ClusterType clusterType = wrapped.getCluster().getDescription().getType();
         return session.hasActiveTransaction() && (clusterType == ClusterType.SHARDED || clusterType == LOAD_BALANCED);
     }

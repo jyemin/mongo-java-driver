@@ -21,6 +21,7 @@ import com.mongodb.MongoCredential;
 import com.mongodb.MongoDriverInformation;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerApi;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionPoolSettings;
@@ -75,7 +76,7 @@ public class DefaultClusterableServerFactory implements ClusterableServerFactory
                                     final ServerListener serverListener,
                                     final ClusterClock clusterClock) {
         ConnectionPool connectionPool = new DefaultConnectionPool(new ServerId(clusterId, serverAddress),
-                new InternalStreamConnectionFactory(streamFactory, credential, applicationName,
+                new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE, streamFactory, credential, applicationName,
                         mongoDriverInformation, compressorList, commandListener, serverApi), connectionPoolSettings);
 
         connectionPool.start();
@@ -83,7 +84,7 @@ public class DefaultClusterableServerFactory implements ClusterableServerFactory
         // no credentials, compressor list, or command listener for the server monitor factory
         ServerMonitorFactory serverMonitorFactory =
             new DefaultServerMonitorFactory(new ServerId(clusterId, serverAddress), serverSettings, clusterClock,
-                    new InternalStreamConnectionFactory(heartbeatStreamFactory, null,
+                    new InternalStreamConnectionFactory(clusterSettings.getMode(), heartbeatStreamFactory, null,
                             applicationName, mongoDriverInformation, Collections.<MongoCompressor>emptyList(), null, serverApi),
                     connectionPool, serverApi);
 

@@ -65,7 +65,7 @@ class DefaultConnectionPoolSpecification extends Specification {
         pool.get()
 
         then:
-        1 * connectionFactory.create(SERVER_ID)
+        1 * connectionFactory.create(SERVER_ID, _)
     }
 
     def 'should release a connection back into the pool on close, not close the underlying connection'() throws InterruptedException {

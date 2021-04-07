@@ -78,9 +78,7 @@ public interface InternalConnection extends BufferProvider {
      *
      * @return the generation.
      */
-    default int getGeneration() {
-        throw new UnsupportedOperationException();
-    }
+    int getGeneration();
 
     /**
      * Send a command message to the server.
