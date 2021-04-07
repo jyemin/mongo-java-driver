@@ -70,7 +70,7 @@ public final class DescriptionHelper {
         }
         // TODO: this is a temporary workaround until we have a server that supports load balancing handshake
         if (isMasterResult.containsKey("topologyVersion")) {
-            connectionDescription = connectionDescription.withServerId(getTopologyVersion(isMasterResult).getProcessId());
+            connectionDescription = connectionDescription.withProcessId(getTopologyVersion(isMasterResult).getProcessId());
         }
         return connectionDescription;
     }

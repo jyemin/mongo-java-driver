@@ -67,7 +67,7 @@ final class EventMatcher {
 
             if (expected.containsKey("hasServerId")) {
                 boolean hasServerId = expected.getBoolean("hasServerId").getValue();
-                ObjectId serverId = actual.getConnectionDescription().getServerId();
+                ObjectId serverId = actual.getConnectionDescription().getProcessId();
                 if (hasServerId) {
                     assertNotNull(context.getMessage("Expected serverId"), serverId);
                 } else {

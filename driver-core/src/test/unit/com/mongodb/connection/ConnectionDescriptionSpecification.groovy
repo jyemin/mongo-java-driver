@@ -31,7 +31,7 @@ class ConnectionDescriptionSpecification extends Specification {
 
     def 'should initialize all values'() {
         expect:
-        description.getServerId() == serverId
+        description.getProcessId() == serverId
         description.connectionId == id
         description.maxWireVersion == 5
         description.serverType == ServerType.STANDALONE
@@ -49,7 +49,7 @@ class ConnectionDescriptionSpecification extends Specification {
 
         expect:
         !newDescription.is(description)
-        newDescription.serverId == serverId
+        newDescription.processId == serverId
         newDescription.connectionId == newId
         newDescription.maxWireVersion == 5
         newDescription.serverType == ServerType.STANDALONE
@@ -63,11 +63,11 @@ class ConnectionDescriptionSpecification extends Specification {
     def 'withServerId should return a new instance with the given serverId and preserve the rest'() {
         given:
         def newServerId = new ObjectId();
-        def newDescription = description.withServerId(newServerId)
+        def newDescription = description.withProcessId(newServerId)
 
         expect:
         !newDescription.is(description)
-        newDescription.serverId == newServerId
+        newDescription.processId == newServerId
         newDescription.connectionId == id
         newDescription.maxWireVersion == 5
         newDescription.serverType == ServerType.STANDALONE

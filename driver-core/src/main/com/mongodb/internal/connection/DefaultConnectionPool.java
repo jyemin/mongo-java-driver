@@ -136,12 +136,12 @@ class DefaultConnectionPool implements ConnectionPool {
         if (!pooledConnection.opened()) {
             try {
                 pooledConnection.open();
-                if (pooledConnection.getDescription().getServerId() != null) {
-                    addConnectionToServerStats(pooledConnection.getDescription().getServerId());
+                if (pooledConnection.getDescription().getProcessId() != null) {
+                    addConnectionToServerStats(pooledConnection.getDescription().getProcessId());
                 }
             } catch (Throwable t) {
-                if (pooledConnection.wrapped.getDescription().getServerId() != null) {
-                    invalidate(pooledConnection.wrapped.getDescription().getServerId());
+                if (pooledConnection.wrapped.getDescription().getProcessId() != null) {
+                    invalidate(pooledConnection.wrapped.getDescription().getProcessId());
                 }
                 pool.release(pooledConnection.wrapped, true);
                 connectionPoolListener.connectionCheckOutFailed(new ConnectionCheckOutFailedEvent(serverId,
@@ -419,8 +419,8 @@ class DefaultConnectionPool implements ConnectionPool {
         if (generation == -1) {
             return false;
         }
-        if (connection.getDescription().getServerId() != null) {
-            return getGenerationFromServerStats(connection.getDescription().getServerId()) > generation;
+        if (connection.getDescription().getProcessId() != null) {
+            return getGenerationFromServerStats(connection.getDescription().getProcessId()) > generation;
         } else {
             return this.generation.get() > generation;
         }
@@ -691,8 +691,8 @@ class DefaultConnectionPool implements ConnectionPool {
                                   getReasonStringForClosing(connection)));
             }
             connection.close();
-            if (connection.getDescription().getServerId() != null) {
-                removeConnectionFromServerStats(connection.getDescription().getServerId());
+            if (connection.getDescription().getProcessId() != null) {
+                removeConnectionFromServerStats(connection.getDescription().getProcessId());
             }
         }
 

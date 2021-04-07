@@ -162,7 +162,7 @@ public class InternalStreamConnection implements InternalConnection {
             initialServerDescription = initializationDescription.getServerDescription();
 
             if (clusterConnectionMode == ClusterConnectionMode.LOAD_BALANCED) {
-                generation = connectionGenerationSupplier.getGeneration(description.getServerId());
+                generation = connectionGenerationSupplier.getGeneration(description.getProcessId());
             }
 
             initializationDescription = connectionInitializer.completeHandshake(this, initializationDescription);

@@ -35,7 +35,7 @@ import static com.mongodb.connection.ServerDescription.getDefaultMaxDocumentSize
  */
 @Immutable
 public class ConnectionDescription {
-    private final ObjectId serverId;
+    private final ObjectId processId;
     private final ConnectionId connectionId;
     private final int maxWireVersion;
     private final ServerType serverType;
@@ -99,7 +99,7 @@ public class ConnectionDescription {
     /**
      * Construct an instance.
      *
-     * @param serverId        the server id
+     * @param processId        the server id
      * @param connectionId    the connection id
      * @param maxWireVersion  the max wire version
      * @param serverType      the server type
@@ -110,10 +110,10 @@ public class ConnectionDescription {
      * @param saslSupportedMechanisms the supported SASL mechanisms
      * @since 4.3
      */
-    public ConnectionDescription(final ObjectId serverId, final ConnectionId connectionId, final int maxWireVersion,
+    public ConnectionDescription(final ObjectId processId, final ConnectionId connectionId, final int maxWireVersion,
                                  final ServerType serverType, final int maxBatchCount, final int maxDocumentSize,
                                  final int maxMessageSize, final List<String> compressors, final BsonArray saslSupportedMechanisms) {
-        this.serverId = serverId;
+        this.processId = processId;
         this.connectionId = connectionId;
         this.serverType = serverType;
         this.maxBatchCount = maxBatchCount;
@@ -132,20 +132,20 @@ public class ConnectionDescription {
      */
     public ConnectionDescription withConnectionId(final ConnectionId connectionId) {
         notNull("connectionId", connectionId);
-        return new ConnectionDescription(serverId, connectionId, maxWireVersion, serverType, maxBatchCount, maxDocumentSize, maxMessageSize,
-                compressors, saslSupportedMechanisms);
+        return new ConnectionDescription(processId, connectionId, maxWireVersion, serverType, maxBatchCount, maxDocumentSize,
+                maxMessageSize, compressors, saslSupportedMechanisms);
     }
 
     /**
-     * Creates a new connection description with the given server id
+     * Creates a new connection description with the given process id
      *
-     * @param serverId the serverId id
+     * @param processId the processId id
      * @return the new connection description
      * @since 4.3
      */
-    public ConnectionDescription withServerId(final ObjectId serverId) {
-        notNull("serverId", serverId);
-        return new ConnectionDescription(serverId, connectionId, maxWireVersion, serverType, maxBatchCount, maxDocumentSize, maxMessageSize,
+    public ConnectionDescription withProcessId(final ObjectId processId) {
+        notNull("processId", processId);
+        return new ConnectionDescription(processId, connectionId, maxWireVersion, serverType, maxBatchCount, maxDocumentSize, maxMessageSize,
                 compressors, saslSupportedMechanisms);
     }
 
@@ -168,13 +168,13 @@ public class ConnectionDescription {
     }
 
     /**
-     * Gets the id of the server.
+     * Gets the id of the process.
      *
-     * @return the server id
+     * @return the process id
      * @since 4.3
      */
-    public ObjectId getServerId() {
-        return serverId;
+    public ObjectId getProcessId() {
+        return processId;
     }
 
     /**

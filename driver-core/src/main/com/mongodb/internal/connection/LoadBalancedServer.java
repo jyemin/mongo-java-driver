@@ -169,7 +169,7 @@ public class LoadBalancedServer implements ClusterableServer {
                 invalidate();
                 return (T) e.getResponse();
             } catch (MongoException e) {
-                invalidate(AFTER_HANDSHAKE, e, connection.getDescription().getServerId());
+                invalidate(AFTER_HANDSHAKE, e, connection.getDescription().getProcessId());
                 if (e instanceof MongoSocketException && sessionContext.hasSession()) {
                     sessionContext.markSessionDirty();
                 }
