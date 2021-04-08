@@ -16,9 +16,11 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.MongoClientException;
 import com.mongodb.ServerAddress;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerDescription;
@@ -57,8 +59,11 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public final class DescriptionHelper {
 
-    static ConnectionDescription createConnectionDescription(final ConnectionId connectionId,
-                                                             final BsonDocument isMasterResult) {
+    // TODO: this is a temporary workaround until we have a server that supports load balancing handshake
+    public static volatile boolean MANUFACTURE_PROCESS_ID = false;
+
+    static ConnectionDescription createConnectionDescription(final ClusterConnectionMode clusterConnectionMode,
+                                                             final ConnectionId connectionId, final BsonDocument isMasterResult) {
         ConnectionDescription connectionDescription = new ConnectionDescription(connectionId,
                 getMaxWireVersion(isMasterResult), getServerType(isMasterResult), getMaxWriteBatchSize(isMasterResult),
                 getMaxBsonObjectSize(isMasterResult), getMaxMessageSizeBytes(isMasterResult), getCompressors(isMasterResult),
@@ -69,8 +74,16 @@ public final class DescriptionHelper {
             connectionDescription = connectionDescription.withConnectionId(newConnectionId);
         }
         // TODO: this is a temporary workaround until we have a server that supports load balancing handshake
-        if (isMasterResult.containsKey("topologyVersion")) {
-            connectionDescription = connectionDescription.withProcessId(getTopologyVersion(isMasterResult).getProcessId());
+        if (clusterConnectionMode == ClusterConnectionMode.LOAD_BALANCED) {
+            if (MANUFACTURE_PROCESS_ID) {
+                TopologyVersion topologyVersion = getTopologyVersion(isMasterResult);
+                if (topologyVersion != null) {
+                    connectionDescription = connectionDescription.withProcessId(topologyVersion.getProcessId());
+                }
+            } else {
+                throw new MongoClientException("Driver attempted to initialize in load balancing mode, but the server does not support "
+                        + "this mode");
+            }
         }
         return connectionDescription;
     }

@@ -373,7 +373,9 @@ public final class Entities {
                                 builder.maxWaitTime(value.asNumber().longValue(), TimeUnit.MILLISECONDS));
                         break;
                     case "loadBalanced":
-                        clientSettingsBuilder.applyToClusterSettings(builder -> builder.mode(ClusterConnectionMode.LOAD_BALANCED));
+                        if (value.asBoolean().getValue()) {
+                            clientSettingsBuilder.applyToClusterSettings(builder -> builder.mode(ClusterConnectionMode.LOAD_BALANCED));
+                        }
                         break;
                     case "appname":
                         clientSettingsBuilder.applicationName(value.asString().getValue());

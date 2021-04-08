@@ -59,7 +59,8 @@ class InternalStreamConnectionFactory implements InternalConnectionFactory {
     public InternalConnection create(final ServerId serverId, final ConnectionGenerationSupplier connectionGenerationSupplier) {
         Authenticator authenticator = credential == null ? null : createAuthenticator(credential);
         return new InternalStreamConnection(clusterConnectionMode, serverId, connectionGenerationSupplier, streamFactory, compressorList,
-                commandListener, new InternalStreamConnectionInitializer(authenticator, clientMetadataDocument, compressorList, serverApi));
+                commandListener, new InternalStreamConnectionInitializer(clusterConnectionMode, authenticator, clientMetadataDocument,
+                compressorList, serverApi));
     }
 
     private Authenticator createAuthenticator(final MongoCredentialWithCache credential) {

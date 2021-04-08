@@ -200,7 +200,7 @@ class GSSAPIAuthenticationSpecification extends Specification {
         new InternalStreamConnection(SINGLE, new ServerId(new ClusterId(), new ServerAddress(getConnectionString().getHosts().get(0))),
                 async ? new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings())
                         : new SocketStreamFactory(SocketSettings.builder().build(), getSslSettings()), [], null,
-                new InternalStreamConnectionInitializer(createAuthenticator(credential), null, [], null))
+                new InternalStreamConnectionInitializer(SINGLE, createAuthenticator(credential), null, [], null))
     }
 
     private static Authenticator createAuthenticator(final MongoCredential credential) {

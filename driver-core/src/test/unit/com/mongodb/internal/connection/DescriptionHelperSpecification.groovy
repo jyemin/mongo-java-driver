@@ -51,8 +51,8 @@ class DescriptionHelperSpecification extends Specification {
     def 'connection description should reflect ismaster result'() {
         def connectionId = new ConnectionId(new ServerId(new ClusterId(), serverAddress))
         expect:
-        createConnectionDescription(connectionId,
-                                    parse('''{
+        createConnectionDescription(clusterConnectionMode, connectionId,
+                parse('''{
                                           ismaster : true,
                                           maxBsonObjectSize : 16777216,
                                           maxMessageSizeBytes : 48000000,
@@ -64,7 +64,7 @@ class DescriptionHelperSpecification extends Specification {
                                           }''')) ==
         new ConnectionDescription(connectionId, 6, ServerType.STANDALONE, 1000, 16777216, 48000000, [])
 
-        createConnectionDescription(connectionId,
+        createConnectionDescription(clusterConnectionMode, connectionId,
                 parse('''{
                                           ismaster : true,
                                           maxBsonObjectSize : 16777216,
@@ -83,7 +83,7 @@ class DescriptionHelperSpecification extends Specification {
     def 'connection description should reflect ismaster result with compressors'() {
         def connectionId = new ConnectionId(new ServerId(new ClusterId(), serverAddress))
         expect:
-        createConnectionDescription(connectionId,
+        createConnectionDescription(clusterConnectionMode, connectionId,
                 parse('''{
                                           ismaster : true,
                                           maxBsonObjectSize : 16777216,

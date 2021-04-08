@@ -49,6 +49,7 @@ import com.mongodb.internal.binding.SingleConnectionBinding;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
+import com.mongodb.internal.connection.DescriptionHelper;
 import com.mongodb.internal.connection.MongoCredentialWithCache;
 import com.mongodb.internal.operation.AsyncReadOperation;
 import com.mongodb.internal.operation.AsyncWriteOperation;
@@ -117,6 +118,15 @@ public final class ClusterFixture {
 
     static {
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+
+        // TODO: this is a temporary hack
+        ConnectionString defaultConnectionString = getConnectionStringFromSystemProperty(MONGODB_URI_SYSTEM_PROPERTY_NAME);
+        if (defaultConnectionString != null) {
+            Boolean loadBalanced = defaultConnectionString.isLoadBalanced();
+            if (loadBalanced != null && loadBalanced) {
+                DescriptionHelper.MANUFACTURE_PROCESS_ID = true;
+            }
+        }
     }
 
     private ClusterFixture() {
