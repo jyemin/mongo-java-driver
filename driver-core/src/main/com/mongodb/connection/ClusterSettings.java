@@ -269,7 +269,15 @@ public final class ClusterSettings {
 
             if (loadBalanced != null && loadBalanced) {
                 mode(ClusterConnectionMode.LOAD_BALANCED);
-                hosts(singletonList(createServerAddress(connectionString.getHosts().get(0))));
+                if (connectionString.getHosts().size() != 1) {
+                    throw new IllegalArgumentException("A single host name must be provided in the connection string when load balanced "
+                            + "mode is specified");
+                }
+                if (connectionString.isSrvProtocol()) {
+                    srvHost(connectionString.getHosts().get(0));
+                } else {
+                    hosts(singletonList(createServerAddress(connectionString.getHosts().get(0))));
+                }
             } else if (connectionString.isSrvProtocol()) {
                 mode(ClusterConnectionMode.MULTIPLE);
                 srvHost(connectionString.getHosts().get(0));
@@ -557,7 +565,7 @@ public final class ClusterSettings {
             }
         }
 
-        if (builder.mode == ClusterConnectionMode.LOAD_BALANCED && builder.hosts.size() > 1) {
+        if (builder.mode == ClusterConnectionMode.LOAD_BALANCED && builder.srvHost == null && builder.hosts.size() != 1) {
             throw new IllegalArgumentException("Multiple hosts cannot be specified when in load balancing mode");
         }
 
@@ -567,7 +575,8 @@ public final class ClusterSettings {
             if (builder.mode == ClusterConnectionMode.SINGLE) {
                 throw new IllegalArgumentException("An SRV host name was provided but the connection mode is not MULTIPLE");
             }
-            mode = ClusterConnectionMode.MULTIPLE;
+            // TODO: a bit sketchy to default to MULTIPLE?  And needs a test
+            mode = builder.mode != null ? builder.mode : ClusterConnectionMode.MULTIPLE;
         } else {
             if (builder.mode == ClusterConnectionMode.SINGLE && builder.hosts.size() > 1) {
                 throw new IllegalArgumentException("Can not directly connect to more than one server");
