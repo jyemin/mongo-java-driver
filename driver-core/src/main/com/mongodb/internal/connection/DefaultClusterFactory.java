@@ -65,19 +65,19 @@ public final class DefaultClusterFactory {
 
         ClusterId clusterId = new ClusterId();
 
+        DnsSrvRecordMonitorFactory dnsSrvRecordMonitorFactory = new DefaultDnsSrvRecordMonitorFactory(clusterId, serverSettings);
+
         if (clusterSettings.getMode() == ClusterConnectionMode.LOAD_BALANCED) {
             ClusterableServerFactory serverFactory = new LoadBalancedClusterableServerFactory(clusterId, serverSettings,
                     connectionPoolSettings, streamFactory, credential, commandListener, applicationName,
                     mongoDriverInformation != null ? mongoDriverInformation : MongoDriverInformation.builder().build(), compressorList,
                     serverApi);
-            return new LoadBalancedCluster(clusterId, clusterSettings, serverFactory);
+            return new LoadBalancedCluster(clusterId, clusterSettings, serverFactory, dnsSrvRecordMonitorFactory);
         } else {
             ClusterableServerFactory serverFactory = new DefaultClusterableServerFactory(clusterId, clusterSettings, serverSettings,
                     connectionPoolSettings, streamFactory, heartbeatStreamFactory, credential, commandListener, applicationName,
                     mongoDriverInformation != null ? mongoDriverInformation : MongoDriverInformation.builder().build(), compressorList,
                     serverApi);
-
-            DnsSrvRecordMonitorFactory dnsSrvRecordMonitorFactory = new DefaultDnsSrvRecordMonitorFactory(clusterId, serverSettings);
 
             if (clusterSettings.getMode() == ClusterConnectionMode.SINGLE) {
                 return new SingleServerCluster(clusterId, clusterSettings, serverFactory);

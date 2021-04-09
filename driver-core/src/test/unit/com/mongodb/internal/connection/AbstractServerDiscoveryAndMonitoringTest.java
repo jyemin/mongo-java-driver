@@ -184,7 +184,7 @@ public class AbstractServerDiscoveryAndMonitoringTest {
         } else if (settings.getMode() == ClusterConnectionMode.MULTIPLE) {
             cluster = new MultiServerCluster(clusterId, clusterSettings, factory);
         } else {
-            cluster = new LoadBalancedCluster(clusterId, clusterSettings, factory);
+            cluster = new LoadBalancedCluster(clusterId, clusterSettings, factory, null);
         }
     }
 
