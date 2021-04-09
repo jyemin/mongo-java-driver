@@ -90,7 +90,8 @@ final class MongoClientDelegate {
 
         ClusterDescription connectedClusterDescription = getConnectedClusterDescription();
 
-        if (connectedClusterDescription.getLogicalSessionTimeoutMinutes() == null) {
+        if (connectedClusterDescription.getLogicalSessionTimeoutMinutes() == null
+                && connectedClusterDescription.getConnectionMode() != ClusterConnectionMode.LOAD_BALANCED) {
             return null;
         } else {
             ClientSessionOptions mergedOptions = ClientSessionOptions.builder(options)
