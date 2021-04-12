@@ -116,7 +116,7 @@
   ],
   "tests": [
     {
-      "description": "only connections for a specific serverId are closed when pools are cleared",
+      "description": "only connections for a specific serviceId are closed when pools are cleared",
       "operations": [
         {
           "name": "createFindCursor",
@@ -246,7 +246,6 @@
     },
     {
       "description": "errors during the initial connection hello are ignore",
-      "skipReason": "blocked on running against 4.9+ until SERVER-55211",
       "runOnRequirements": [
         {
           "minServerVersion": "4.9"

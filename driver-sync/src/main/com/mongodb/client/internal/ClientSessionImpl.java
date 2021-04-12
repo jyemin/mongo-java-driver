@@ -136,8 +136,8 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
             clearTransactionContextOnError(e);
             throw e;
         } finally {
+            transactionState = TransactionState.COMMITTED;
             commitInProgress = false;
-            cleanupTransaction(TransactionState.COMMITTED);
         }
     }
 
@@ -167,6 +167,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                 clearTransactionContextOnError((MongoException) e);
             }
         } finally {
+            clearTransactionContext();
             cleanupTransaction(TransactionState.ABORTED);
         }
     }
@@ -252,6 +253,7 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
                 abortTransaction();
             }
         } finally {
+            clearTransactionContext();
             super.close();
         }
     }
@@ -260,6 +262,5 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         messageSentInCurrentTransaction = false;
         transactionOptions = null;
         transactionState = nextState;
-        clearTransactionContext();
     }
 }

@@ -288,12 +288,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             if (limitReached()) {
                 killCursor(connection);
             }
-        } catch (Exception e) {
-            // TODO: getMore failures are not recoverable, but we might not want to do something this drastic
-            serverCursor = null;
-            throw e;
-        }
-        finally {
+        } finally {
             connection.release();
             releaseConnectionAndSourceIfNoServerCursor();
         }
