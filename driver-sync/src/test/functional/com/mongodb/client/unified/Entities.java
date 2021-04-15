@@ -351,10 +351,12 @@ public final class Entities {
         MongoDatabase database = client.getDatabase(entity.getString("databaseName").getValue());
         if (entity.containsKey("collectionOptions")) {
             for (Map.Entry<String, BsonValue> entry : entity.getDocument("collectionOptions").entrySet()) {
-                //noinspection SwitchStatementWithTooFewBranches
                 switch (entry.getKey()) {
                     case "readConcern":
                         database = database.withReadConcern(asReadConcern(entry.getValue().asDocument()));
+                        break;
+                    case "writeConcern":
+                        database = database.withWriteConcern(asWriteConcern(entry.getValue().asDocument()));
                         break;
                     default:
                         throw new UnsupportedOperationException("Unsupported database option: " + entry.getKey());
@@ -370,10 +372,12 @@ public final class Entities {
                 BsonDocument.class);
         if (entity.containsKey("collectionOptions")) {
             for (Map.Entry<String, BsonValue> entry : entity.getDocument("collectionOptions").entrySet()) {
-                //noinspection SwitchStatementWithTooFewBranches
                 switch (entry.getKey()) {
                     case "readConcern":
                         collection = collection.withReadConcern(asReadConcern(entry.getValue().asDocument()));
+                        break;
+                    case "writeConcern":
+                        collection = collection.withWriteConcern(asWriteConcern(entry.getValue().asDocument()));
                         break;
                     default:
                         throw new UnsupportedOperationException("Unsupported collection option: " + entry.getKey());

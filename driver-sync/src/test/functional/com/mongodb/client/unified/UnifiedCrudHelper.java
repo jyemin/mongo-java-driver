@@ -74,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -150,6 +151,9 @@ final class UnifiedCrudHelper {
                 case "limit":
                     iterable.limit(cur.getValue().asInt32().intValue());
                     break;
+                case "allowDiskUse":
+                    iterable.allowDiskUse(cur.getValue().asBoolean().getValue());
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
             }
@@ -186,7 +190,7 @@ final class UnifiedCrudHelper {
         BsonDocument arguments = operation.getDocument("arguments");
 
         BsonDocument filter = arguments.getDocument("filter").asDocument();
-        BsonDocument update = arguments.getDocument("update").asDocument();
+        BsonValue update = arguments.get("update");
         FindOneAndUpdateOptions options = new FindOneAndUpdateOptions();
 
         for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
@@ -206,13 +210,25 @@ final class UnifiedCrudHelper {
                             throw new UnsupportedOperationException("Can't happen");
                     }
                     break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
             }
         }
 
-        return resultOf(() ->
-                collection.findOneAndUpdate(filter, update, options));
+        return resultOf(() -> {
+                if (update.isDocument()) {
+                    return collection.findOneAndUpdate(filter, update.asDocument(), options);
+                } else {
+                    return collection.findOneAndUpdate(filter, update.asArray().stream().map(BsonValue::asDocument).collect(toList()));
+                }
+        });
     }
 
     OperationResult executeFindOneAndReplace(final BsonDocument operation) {
@@ -240,6 +256,13 @@ final class UnifiedCrudHelper {
                             throw new UnsupportedOperationException("Can't happen");
                     }
                     break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
             }
@@ -257,9 +280,15 @@ final class UnifiedCrudHelper {
         FindOneAndDeleteOptions options = new FindOneAndDeleteOptions();
 
         for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
-            //noinspection SwitchStatementWithTooFewBranches
             switch (cur.getKey()) {
                 case "filter":
+                    break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
@@ -290,12 +319,16 @@ final class UnifiedCrudHelper {
                 case "batchSize":
                     iterable.batchSize(cur.getValue().asNumber().intValue());
                     break;
+                case "allowDiskUse":
+                    iterable.allowDiskUse(cur.getValue().asBoolean().getValue());
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
             }
         }
         return resultOf(() -> {
-            if (pipeline.get(pipeline.size() - 1).getFirstKey().equals("$out")) {
+            if (pipeline.get(pipeline.size() - 1).getFirstKey().equals("$out")
+                 || pipeline.get(pipeline.size() - 1).getFirstKey().equals("$merge")) {
                 iterable.toCollection();
                 return null;
             } else {
@@ -308,26 +341,20 @@ final class UnifiedCrudHelper {
         MongoCollection<BsonDocument> collection = entities.getCollection(operation.getString("object").getValue());
         BsonDocument arguments = operation.getDocument("arguments");
         BsonDocument filter = arguments.getDocument("filter");
-
-        if (operation.getDocument("arguments").size() > 1) {
-            throw new UnsupportedOperationException("Unexpected arguments");
-        }
+        DeleteOptions options = getDeleteOptions(arguments);
 
         return resultOf(() ->
-                toExpected(collection.deleteOne(filter)));
+                toExpected(collection.deleteOne(filter, options)));
     }
 
     OperationResult executeDeleteMany(final BsonDocument operation) {
         MongoCollection<BsonDocument> collection = entities.getCollection(operation.getString("object").getValue());
         BsonDocument arguments = operation.getDocument("arguments");
         BsonDocument filter = arguments.getDocument("filter");
-
-        if (operation.getDocument("arguments").size() > 1) {
-            throw new UnsupportedOperationException("Unexpected arguments");
-        }
+        DeleteOptions options = getDeleteOptions(arguments);
 
         return resultOf(() ->
-                toExpected(collection.deleteMany(filter)));
+                toExpected(collection.deleteMany(filter, options)));
     }
 
     private BsonDocument toExpected(final DeleteResult result) {
@@ -337,42 +364,31 @@ final class UnifiedCrudHelper {
     OperationResult executeUpdateOne(final BsonDocument operation) {
         MongoCollection<BsonDocument> collection = entities.getCollection(operation.getString("object").getValue());
         BsonDocument arguments = operation.getDocument("arguments");
-        for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
-            switch (cur.getKey()) {
-                case "filter":
-                case "update":
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
-            }
-        }
         BsonDocument filter = arguments.getDocument("filter");
         BsonValue update = arguments.get("update");
         UpdateOptions options = getUpdateOptions(arguments);
-        UpdateResult updateResult = update.isArray()
-                ? collection.updateOne(filter, update.asArray().stream().map(BsonValue::asDocument).collect(toList()), options)
-                : collection.updateOne(filter, update.asDocument(), options);
-        return resultOf(() -> toExpected(updateResult));
+
+        return resultOf(() -> {
+            UpdateResult updateResult = update.isArray()
+                    ? collection.updateOne(filter, update.asArray().stream().map(BsonValue::asDocument).collect(toList()), options)
+                    : collection.updateOne(filter, update.asDocument(), options);
+            return toExpected(updateResult);
+        });
     }
 
     OperationResult executeUpdateMany(final BsonDocument operation) {
         MongoCollection<BsonDocument> collection = entities.getCollection(operation.getString("object").getValue());
         BsonDocument arguments = operation.getDocument("arguments");
         BsonDocument filter = arguments.getDocument("filter");
-        BsonDocument update = arguments.getDocument("update");
+        BsonValue update = arguments.get("update");
         UpdateOptions options = getUpdateOptions(arguments);
 
-        for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
-            switch (cur.getKey()) {
-                case "filter":
-                case "update":
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
-            }
-        }
-        return resultOf(() ->
-                toExpected(collection.updateMany(filter, update, options)));
+        return resultOf(() -> {
+            UpdateResult updateResult = update.isArray()
+                    ? collection.updateMany(filter, update.asArray().stream().map(BsonValue::asDocument).collect(toList()), options)
+                    : collection.updateMany(filter, update.asDocument(), options);
+            return toExpected(updateResult);
+        });
     }
 
     OperationResult executeReplaceOne(final BsonDocument operation) {
@@ -382,16 +398,6 @@ final class UnifiedCrudHelper {
         BsonDocument replacement = arguments.getDocument("replacement");
         ReplaceOptions options = getReplaceOptions(arguments);
 
-        for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
-            switch (cur.getKey()) {
-                case "filter":
-                case "replacement":
-                case "upsert":
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
-            }
-        }
         return resultOf(() ->
                 toExpected(collection.replaceOne(filter, replacement, options)));
     }
@@ -403,6 +409,7 @@ final class UnifiedCrudHelper {
         if (result.getUpsertedId() != null) {
             expectedDocument.append("upsertedId", result.getUpsertedId());
         }
+        expectedDocument.append("upsertedCount", new BsonInt32(result.getUpsertedId() == null ? 0 : 1));
         return expectedDocument;
     }
 
@@ -474,6 +481,9 @@ final class UnifiedCrudHelper {
                 case "ordered":
                     options.ordered(cur.getValue().asBoolean().getValue());
                     break;
+                case "options":
+                    options.ordered(true); // TODO: GET RID OF THIS HACK
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
             }
@@ -493,7 +503,8 @@ final class UnifiedCrudHelper {
                 .append("insertedIds", new BsonDocument(result.getInserts().stream()
                         .map(value -> new BsonElement(Integer.toString(value.getIndex()), value.getId())).collect(toList())))
                 .append("upsertedIds", new BsonDocument(result.getUpserts().stream()
-                        .map(value -> new BsonElement(Integer.toString(value.getIndex()), value.getId())).collect(toList())));
+                        .map(value -> new BsonElement(Integer.toString(value.getIndex()), value.getId())).collect(toList())))
+                .append("upsertedCount", new BsonInt32(result.getUpserts().size()));
     }
 
     private WriteModel<BsonDocument> toWriteModel(final BsonDocument document) {
@@ -504,15 +515,27 @@ final class UnifiedCrudHelper {
             case "insertOne":
                 return new InsertOneModel<>(arguments.getDocument("document"));
             case "updateOne":
-                return new UpdateOneModel<>(arguments.getDocument("filter"), arguments.getDocument("update"),
-                        getUpdateOptions(arguments));
+                if (arguments.get("update").isDocument()) {
+                    return new UpdateOneModel<>(arguments.getDocument("filter"), arguments.getDocument("update"),
+                            getUpdateOptions(arguments));
+                } else {
+                    return new UpdateOneModel<>(arguments.getDocument("filter"), arguments.getArray("update")
+                            .stream().map(BsonValue::asDocument).collect(Collectors.toList()),
+                            getUpdateOptions(arguments));
+                }
             case "updateMany":
-                return new UpdateManyModel<>(arguments.getDocument("filter"), arguments.getDocument("update"),
-                        getUpdateOptions(arguments));
+                if (arguments.get("update").isDocument()) {
+                    return new UpdateManyModel<>(arguments.getDocument("filter"), arguments.getDocument("update"),
+                            getUpdateOptions(arguments));
+                } else {
+                    return new UpdateManyModel<>(arguments.getDocument("filter"), arguments.getArray("update")
+                            .stream().map(BsonValue::asDocument).collect(Collectors.toList()),
+                            getUpdateOptions(arguments));
+                    }
             case "deleteOne":
-                return new DeleteOneModel<>(arguments.getDocument("filter"), getDeleteOptions());
+                return new DeleteOneModel<>(arguments.getDocument("filter"), getDeleteOptions(arguments));
             case "deleteMany":
-                return new DeleteManyModel<>(arguments.getDocument("filter"), getDeleteOptions());
+                return new DeleteManyModel<>(arguments.getDocument("filter"), getDeleteOptions(arguments));
             case "replaceOne":
                 return new ReplaceOneModel<>(arguments.getDocument("filter"), arguments.getDocument("replacement"),
                         getReplaceOptions(arguments));
@@ -522,8 +545,24 @@ final class UnifiedCrudHelper {
     }
 
     @NotNull
-    private DeleteOptions getDeleteOptions() {
-        return new DeleteOptions();
+    private DeleteOptions getDeleteOptions(final BsonDocument arguments) {
+        DeleteOptions options = new DeleteOptions();
+        for (Map.Entry<String, BsonValue> cur : arguments.entrySet()) {
+            switch (cur.getKey()) {
+                case "filter":
+                    break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
+            }
+        }
+        return options;
     }
 
     private UpdateOptions getUpdateOptions(final BsonDocument arguments) {
@@ -536,6 +575,16 @@ final class UnifiedCrudHelper {
                     break;
                 case "upsert":
                     options.upsert(cur.getValue().asBoolean().getValue());
+                    break;
+                case "arrayFilters":
+                    options.arrayFilters(cur.getValue().asArray().stream().map(BsonValue::asDocument).collect(toList()));
+                    break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
@@ -553,6 +602,13 @@ final class UnifiedCrudHelper {
                     break;
                 case "upsert":
                     options.upsert(cur.getValue().asBoolean().getValue());
+                    break;
+                case "hint":
+                    if (cur.getValue().isString()) {
+                        options.hintString(cur.getValue().asString().getValue());
+                    } else {
+                        options.hint(cur.getValue().asDocument());
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported argument: " + cur.getKey());
