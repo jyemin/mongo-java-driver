@@ -272,7 +272,7 @@ public class ConnectionString {
     private String applicationName;
     private List<MongoCompressor> compressorList;
     private UuidRepresentation uuidRepresentation;
-
+    private Boolean grpc;
     /**
      * Creates a ConnectionString from the given string.
      *
@@ -448,6 +448,7 @@ public class ConnectionString {
         GENERAL_OPTIONS_KEYS.add("uuidrepresentation");
 
         GENERAL_OPTIONS_KEYS.add("directconnection");
+        GENERAL_OPTIONS_KEYS.add("grpc");
 
         COMPRESSOR_KEYS.add("compressors");
         COMPRESSOR_KEYS.add("zlibcompressionlevel");
@@ -551,6 +552,8 @@ public class ConnectionString {
                 uuidRepresentation = createUuidRepresentation(value);
             } else if (key.equals("directconnection")) {
                 directConnection = parseBoolean(value, "directconnection");
+            } else if (key.equals("grpc")) {
+                grpc = parseBoolean(value, "grpc");
             }
         }
 
@@ -1353,6 +1356,16 @@ public class ConnectionString {
     @Nullable
     public UuidRepresentation getUuidRepresentation() {
         return uuidRepresentation;
+    }
+
+    /**
+     * Gets whether gRPC is enabled
+     *
+     * @return true if gRPC is enable, false if not, null if unspecified
+     */
+    @Nullable
+    public Boolean isGrpc() {
+        return grpc;
     }
 
     @Override

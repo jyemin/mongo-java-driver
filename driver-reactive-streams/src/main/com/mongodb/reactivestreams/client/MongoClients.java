@@ -24,6 +24,7 @@ import com.mongodb.connection.AsynchronousSocketChannelStreamFactoryFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
 import com.mongodb.connection.TlsChannelStreamFactoryFactory;
+import com.mongodb.connection.grpc.TransportStreamFactoryFactory;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
 import com.mongodb.lang.Nullable;
@@ -163,11 +164,19 @@ public final class MongoClients {
 
     private static MongoClient createWithAsynchronousSocketChannel(final MongoClientSettings settings,
             @Nullable final MongoDriverInformation mongoDriverInformation) {
-        StreamFactoryFactory streamFactoryFactory = AsynchronousSocketChannelStreamFactoryFactory.builder().build();
+        StreamFactoryFactory streamFactoryFactory;
+        Closeable externalResourceCloser = null;
+        if (settings.isGrpcEnabled()) {
+            TransportStreamFactoryFactory transportStreamFactoryFactory = new TransportStreamFactoryFactory();
+            streamFactoryFactory = transportStreamFactoryFactory;
+            externalResourceCloser = transportStreamFactoryFactory;
+        } else {
+            streamFactoryFactory = AsynchronousSocketChannelStreamFactoryFactory.builder().build();
+        }
         StreamFactory streamFactory = streamFactoryFactory.create(settings.getSocketSettings(), settings.getSslSettings());
         StreamFactory heartbeatStreamFactory = streamFactoryFactory.create(settings.getHeartbeatSocketSettings(),
                 settings.getSslSettings());
-        return createMongoClient(settings, mongoDriverInformation, streamFactory, heartbeatStreamFactory, null);
+        return createMongoClient(settings, mongoDriverInformation, streamFactory, heartbeatStreamFactory, externalResourceCloser);
     }
 
     private static StreamFactory getStreamFactory(final MongoClientSettings settings, final boolean isHeartbeat) {

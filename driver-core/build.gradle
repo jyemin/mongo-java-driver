@@ -17,6 +17,7 @@
 
 plugins {
     id 'de.fuerstenau.buildconfig' version '1.1.8'
+    id 'com.google.protobuf' version '0.8.15'
 }
 
 archivesBaseName = 'mongodb-driver-core'
@@ -40,6 +41,11 @@ dependencies {
     implementation "org.xerial.snappy:snappy-java:$snappyVersion", optional
     implementation "com.github.luben:zstd-jni:$zstdVersion", optional
     implementation "org.mongodb:mongodb-crypt:$mongoCryptVersion", optional
+
+    implementation 'io.grpc:grpc-netty-shaded:1.37.0'
+    implementation 'io.grpc:grpc-protobuf:1.37.0'
+    implementation 'io.grpc:grpc-stub:1.37.0'
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
 
     testImplementation project(':bson').sourceSets.test.output
 }
@@ -73,3 +79,20 @@ afterEvaluate {
         'com.mongodb.crypt.capi.*;resolution:=optional'
     ].join(',')
 }
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.12.0"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.37.0'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+

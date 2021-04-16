@@ -24,3 +24,5 @@ include ':driver-reactive-streams'
 include ':bson-scala'
 include ':driver-scala'
 include ':util'
+include 'driver-grpc-test'
+

@@ -96,6 +96,7 @@ public final class MongoClientSettings {
     private final AutoEncryptionSettings autoEncryptionSettings;
     private final boolean heartbeatSocketTimeoutSetExplicitly;
     private final boolean heartbeatConnectTimeoutSetExplicitly;
+    private final boolean grpcEnabled;
 
     /**
      * Gets the default codec registry.  It includes the following providers:
@@ -170,6 +171,7 @@ public final class MongoClientSettings {
 
         private int heartbeatConnectTimeoutMS;
         private int heartbeatSocketTimeoutMS;
+        private boolean grpcEnabled;
 
         private Builder() {
         }
@@ -201,6 +203,7 @@ public final class MongoClientSettings {
             if (settings.heartbeatSocketTimeoutSetExplicitly) {
                 heartbeatSocketTimeoutMS = settings.heartbeatSocketSettings.getReadTimeout(MILLISECONDS);
             }
+            grpcEnabled = settings.grpcEnabled;
         }
 
         /**
@@ -226,6 +229,10 @@ public final class MongoClientSettings {
             }
             if (connectionString.getReadPreference() != null) {
                 readPreference = connectionString.getReadPreference();
+            }
+            Boolean grpcValue = connectionString.isGrpc();
+            if (grpcValue != null) {
+                grpcEnabled = grpcValue;
             }
 
             Boolean retryWritesValue = connectionString.getRetryWritesValue();
@@ -529,6 +536,11 @@ public final class MongoClientSettings {
             return this;
         }
 
+        Builder grpcEnabled(final boolean grpcEnabled) {
+            this.grpcEnabled = grpcEnabled;
+            return this;
+        }
+
         /**
          * Build an instance of {@code MongoClientSettings}.
          *
@@ -694,6 +706,15 @@ public final class MongoClientSettings {
     }
 
     /**
+     * Gets whether gRPC is enabled.
+     *
+     * @return true if gRPC is enabled
+     */
+    public boolean isGrpcEnabled() {
+        return grpcEnabled;
+    }
+
+    /**
      * Gets the auto-encryption settings.
      * <p>
      * Client side encryption enables an application to specify what fields in a collection must be
@@ -817,5 +838,6 @@ public final class MongoClientSettings {
                 .build();
         heartbeatSocketTimeoutSetExplicitly = builder.heartbeatSocketTimeoutMS != 0;
         heartbeatConnectTimeoutSetExplicitly = builder.heartbeatConnectTimeoutMS != 0;
+        grpcEnabled = builder.grpcEnabled;
     }
 }

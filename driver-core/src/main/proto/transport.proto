@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package mongodb;
+
+option java_package = "com.mongodb.internal.connection";
+
+service Transport {
+  rpc SendMessage (Message) returns (Message) {}
+}
+
+message Message {
+  bytes payload = 1;
+}
+
