@@ -66,7 +66,7 @@ public class PowerOfTwoBufferPool implements BufferProvider {
     /**
      * Construct an instance with a highest power of two of 24.
      */
-    PowerOfTwoBufferPool() {
+    public PowerOfTwoBufferPool() {
         this(24);
     }
 

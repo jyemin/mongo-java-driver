@@ -35,6 +35,7 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.connection.grpc.TransportStreamFactoryFactory;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
@@ -237,7 +238,11 @@ public final class MongoClientImpl implements MongoClient {
         StreamFactoryFactory streamFactoryFactory = settings.getStreamFactoryFactory();
         SocketSettings socketSettings = isHeartbeat ? settings.getHeartbeatSocketSettings() : settings.getSocketSettings();
         if (streamFactoryFactory == null) {
-            return new SocketStreamFactory(socketSettings, settings.getSslSettings());
+            if (settings.isGrpcEnabled()) {
+                return new TransportStreamFactoryFactory().create(socketSettings, settings.getSslSettings());
+            } else {
+                return new SocketStreamFactory(socketSettings, settings.getSslSettings());
+            }
         } else {
             return streamFactoryFactory.create(socketSettings, settings.getSslSettings());
         }

@@ -57,6 +57,8 @@ dependencies {
     implementation "com.github.luben:zstd-jni:$zstdVersion", optional
     implementation "org.mongodb:mongodb-crypt:$mongoCryptVersion", optional
 
+    implementation 'io.grpc:grpc-stub:1.55.1'
+
     testImplementation project(':bson').sourceSets.test.output
     testRuntimeOnly "io.netty:netty-tcnative-boringssl-static"
 
@@ -93,3 +95,4 @@ afterEvaluate {
             '*' // import all that is not excluded or modified before
     ].join(',')
 }
+
