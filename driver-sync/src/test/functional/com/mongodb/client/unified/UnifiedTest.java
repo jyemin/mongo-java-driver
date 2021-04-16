@@ -129,10 +129,10 @@ public abstract class UnifiedTest {
                 || schemaVersion.startsWith("1.1")
                 || schemaVersion.startsWith("1.2")
                 || schemaVersion.startsWith("1.3"));
-        // TODO: Remove this!!!!!!
-//        assumeTrue(definition.getString("description").getValue().equals("pinned connection is released after a transient non-network commit error"));
-//        assumeTrue(definition.getString("description").getValue().equals("pinned connections are not returned after an network error during getMore"));
-//        assumeTrue(definition.getString("description").getValue().equals("pinned connections are not returned to the pool after a non-network error on getMore"));
+
+//        String description = definition.getString("description").getValue();
+//        assumeTrue(description.equals("pinned connections are not returned to the pool after a non-network error on getMore")
+//                || description.equals("pinned connections are not returned after an network error during getMore"));
 
         if (runOnRequirements != null) {
             assumeTrue("Run-on requirements not met",

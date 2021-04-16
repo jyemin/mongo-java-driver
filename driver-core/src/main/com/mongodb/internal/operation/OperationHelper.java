@@ -407,7 +407,7 @@ final class OperationHelper {
         if (serverIsLessThanVersionThreeDotSix(connectionDescription)) {
             LOGGER.debug("retryWrites set to true but the server does not support retryable writes.");
             return false;
-        } else if (serverDescription.getLogicalSessionTimeoutMinutes() == null) {
+        } else if (serverDescription.getLogicalSessionTimeoutMinutes() == null && serverDescription.getType() != ServerType.LOAD_BALANCER) {
             LOGGER.debug("retryWrites set to true but the server does not have 3.6 feature compatibility enabled.");
             return false;
         } else if (connectionDescription.getServerType().equals(ServerType.STANDALONE)) {

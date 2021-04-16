@@ -19,6 +19,7 @@ package com.mongodb.internal.operation;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.MongoSocketException;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
@@ -70,6 +71,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private BsonTimestamp operationTime;
     private final boolean firstBatchEmpty;
     private int maxWireVersion = 0;
+    private boolean killCursorOnClose = true;
 
     QueryBatchCursor(final QueryResult<T> firstQueryResult, final int limit, final int batchSize, final Decoder<T> decoder) {
         this(firstQueryResult, limit, batchSize, decoder, null);
@@ -288,6 +290,12 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             if (limitReached()) {
                 killCursor(connection);
             }
+        } catch (MongoSocketException e) {
+            // If connection is pinned, don't attempt to kill the cursor on close, since the connection is in a bad state
+            if (this.connection != null) {
+                killCursorOnClose = false;
+            }
+            throw e;
         } finally {
             connection.release();
             releaseConnectionAndSourceIfNoServerCursor();
@@ -336,7 +344,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     private void killCursor() {
-        if (serverCursor != null) {
+        if (serverCursor != null && killCursorOnClose) {
             try {
                 Connection connection = getConnection();
                 try {
