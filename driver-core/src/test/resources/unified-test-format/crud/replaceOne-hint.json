@@ -93,13 +93,13 @@
                       "u": {
                         "x": 111
                       },
+                      "hint": "_id_",
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": "_id_"
+                      }
                     }
                   ]
                 }
@@ -169,14 +169,14 @@
                       "u": {
                         "x": 111
                       },
+                      "hint": {
+                        "_id": 1
+                      },
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": {
-                        "_id": 1
                       }
                     }
                   ]

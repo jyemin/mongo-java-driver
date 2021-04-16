@@ -96,9 +96,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true
@@ -177,9 +175,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true
@@ -250,9 +246,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true

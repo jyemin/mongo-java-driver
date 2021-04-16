@@ -96,9 +96,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectResult": {
             "deletedCount": 0,
@@ -129,13 +127,13 @@
                           "x": 1
                         }
                       },
+                      "hint": "_id_",
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": "_id_"
+                      }
                     },
                     {
                       "q": {
@@ -146,14 +144,14 @@
                           "x": 1
                         }
                       },
+                      "hint": {
+                        "_id": 1
+                      },
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": {
-                        "_id": 1
                       }
                     }
                   ],
@@ -230,9 +228,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectResult": {
             "deletedCount": 0,
@@ -266,10 +262,10 @@
                         }
                       },
                       "multi": true,
+                      "hint": "_id_",
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": "_id_"
+                      }
                     },
                     {
                       "q": {
@@ -283,11 +279,11 @@
                         }
                       },
                       "multi": true,
-                      "upsert": {
-                        "$$unsetOrMatches": false
-                      },
                       "hint": {
                         "_id": 1
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
                       }
                     }
                   ],
@@ -356,9 +352,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectResult": {
             "deletedCount": 0,
@@ -387,13 +381,13 @@
                       "u": {
                         "x": 333
                       },
+                      "hint": "_id_",
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": "_id_"
+                      }
                     },
                     {
                       "q": {
@@ -402,14 +396,14 @@
                       "u": {
                         "x": 444
                       },
+                      "hint": {
+                        "_id": 1
+                      },
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "hint": {
-                        "_id": 1
                       }
                     }
                   ],

@@ -101,7 +101,10 @@
                         }
                       },
                       "multi": true,
-                      "hint": "_id_"
+                      "hint": "_id_",
+                      "upsert": {
+                        "$$unsetOrMatches": false
+                      }
                     }
                   ]
                 }
@@ -180,6 +183,9 @@
                       "multi": true,
                       "hint": {
                         "_id": 1
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
                       }
                     }
                   ]

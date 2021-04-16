@@ -97,9 +97,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true
@@ -124,7 +122,13 @@
                           "x": 1
                         }
                       },
-                      "hint": "_id_"
+                      "hint": "_id_",
+                      "multi": {
+                        "$$unsetOrMatches": false
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
+                      }
                     },
                     {
                       "q": {
@@ -137,6 +141,12 @@
                       },
                       "hint": {
                         "_id": 1
+                      },
+                      "multi": {
+                        "$$unsetOrMatches": false
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
                       }
                     }
                   ],
@@ -213,9 +223,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true
@@ -243,7 +251,10 @@
                         }
                       },
                       "multi": true,
-                      "hint": "_id_"
+                      "hint": "_id_",
+                      "upsert": {
+                        "$$unsetOrMatches": false
+                      }
                     },
                     {
                       "q": {
@@ -259,6 +270,9 @@
                       "multi": true,
                       "hint": {
                         "_id": 1
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
                       }
                     }
                   ],
@@ -327,9 +341,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectError": {
             "isError": true
@@ -352,7 +364,13 @@
                       "u": {
                         "x": 333
                       },
-                      "hint": "_id_"
+                      "hint": "_id_",
+                      "multi": {
+                        "$$unsetOrMatches": false
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
+                      }
                     },
                     {
                       "q": {
@@ -363,6 +381,12 @@
                       },
                       "hint": {
                         "_id": 1
+                      },
+                      "multi": {
+                        "$$unsetOrMatches": false
+                      },
+                      "upsert": {
+                        "$$unsetOrMatches": false
                       }
                     }
                   ],

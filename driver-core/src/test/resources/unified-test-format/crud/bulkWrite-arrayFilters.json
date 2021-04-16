@@ -89,9 +89,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectResult": {
             "deletedCount": 0,
@@ -120,17 +118,17 @@
                           "y.$[i].b": 2
                         }
                       },
+                      "arrayFilters": [
+                        {
+                          "i.b": 3
+                        }
+                      ],
                       "multi": {
                         "$$unsetOrMatches": false
                       },
                       "upsert": {
                         "$$unsetOrMatches": false
-                      },
-                      "arrayFilters": [
-                        {
-                          "i.b": 3
-                        }
-                      ]
+                      }
                     }
                   ],
                   "ordered": true
@@ -197,9 +195,7 @@
                 }
               }
             ],
-            "options": {
-              "ordered": true
-            }
+            "ordered": true
           },
           "expectResult": {
             "deletedCount": 0,
@@ -229,14 +225,14 @@
                         }
                       },
                       "multi": true,
-                      "upsert": {
-                        "$$unsetOrMatches": false
-                      },
                       "arrayFilters": [
                         {
                           "i.b": 1
                         }
-                      ]
+                      ],
+                      "upsert": {
+                        "$$unsetOrMatches": false
+                      }
                     }
                   ],
                   "ordered": true
