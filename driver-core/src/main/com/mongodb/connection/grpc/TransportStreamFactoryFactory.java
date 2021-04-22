@@ -60,6 +60,7 @@ public final class TransportStreamFactoryFactory implements StreamFactoryFactory
                 channel = map.get(serverAddress);
                 if (channel == null) {
                     channel = ManagedChannelBuilder.forAddress(serverAddress.getHost(), serverAddress.getPort())
+                            .maxInboundMessageSize(48000000)
                             .usePlaintext()
                             .build();
                     // Experimental.  Maybe need more state change notifications...

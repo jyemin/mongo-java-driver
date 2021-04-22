@@ -16,30 +16,38 @@
 package com.mongodb.connection.grpc;
 
 import com.google.protobuf.ByteString;
-import com.mongodb.MongoException;
-import com.mongodb.MongoInternalException;
-import com.mongodb.MongoInterruptedException;
+import com.mongodb.MongoClientException;
+import com.mongodb.MongoSocketReadException;
+import com.mongodb.MongoSocketWriteException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.connection.BufferProvider;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.Stream;
 import com.mongodb.internal.connection.TransportGrpc;
-import com.mongodb.internal.connection.TransportGrpc.TransportBlockingStub;
 import com.mongodb.internal.connection.TransportGrpc.TransportStub;
 import com.mongodb.internal.connection.TransportOuterClass.Message;
+import io.grpc.CallOptions;
 import io.grpc.Channel;
+import io.grpc.Drainable;
+import io.grpc.KnownLength;
 import io.grpc.Metadata;
+import io.grpc.MethodDescriptor;
 import io.grpc.stub.StreamObserver;
 import org.bson.ByteBuf;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+
+import static com.mongodb.assertions.Assertions.isTrue;
+import static io.grpc.stub.ClientCalls.blockingUnaryCall;
 
 /**
  * A Stream implementation for gRPC.
@@ -48,8 +56,9 @@ public final class TransportStream implements Stream {
     private final ServerAddress serverAddress;
     private final BufferProvider bufferProvider;
     private final TransportStub transportStub;
-    private final TransportBlockingStub transportBlockingStub;
-    private SocketSettings socketSettings;
+    private final Channel channel;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final SocketSettings socketSettings;
     private final String connectionId = UUID.randomUUID().toString();
 
     private volatile boolean isClosed = false;
@@ -57,6 +66,8 @@ public final class TransportStream implements Stream {
     private ByteBuffer nextResponse;
     private Throwable nextError;
     private PendingReader pendingReader;
+    private ByteBuf header;
+    private ByteBuf body;
 
     /**
      * The constructor.
@@ -70,8 +81,8 @@ public final class TransportStream implements Stream {
                            final SocketSettings socketSettings) {
         this.serverAddress = serverAddress;
         this.bufferProvider = bufferProvider;
+        this.channel = channel;
         this.transportStub = TransportGrpc.newStub(channel).withCallCredentials(new MongoCallCredentials());
-        this.transportBlockingStub = TransportGrpc.newBlockingStub(channel).withCallCredentials(new MongoCallCredentials());
         this.socketSettings = socketSettings;
     }
 
@@ -93,21 +104,35 @@ public final class TransportStream implements Stream {
 
     @Override
     public void write(final List<ByteBuf> buffers) throws IOException {
-        Message message = Message.newBuilder()
-                .setPayload(ByteString.copyFrom(toByteStrings(buffers)))
-                .build();
-        Message replyMessage = transportBlockingStub.sendMessage(message);
-        nextResponse = replyMessage.getPayload().asReadOnlyByteBuffer();
+        MethodDescriptor.Marshaller<List<ByteBuf>> marshaller = new MessageDescriptor();
+        List<ByteBuf> replyBuffers = blockingUnaryCall(channel,
+                MethodDescriptor.newBuilder(marshaller, marshaller)
+                        .setFullMethodName("OP_MSG")
+                        .setType(MethodDescriptor.MethodType.UNARY)
+                        .build(),
+                CallOptions.DEFAULT
+                        .withCallCredentials(new MongoCallCredentials()),
+                buffers);
+        header = replyBuffers.get(0);
+        body = replyBuffers.get(1);
     }
 
     @Override
     public ByteBuf read(final int numBytes) throws IOException {
-        ByteBuf readBytes = bufferProvider.getBuffer(numBytes);
-        nextResponse.get(readBytes.array(), 0, numBytes);
-        if (!nextResponse.hasRemaining()) {
-            nextResponse = null;
+        ByteBuf retVal;
+        if (header != null) {
+            isTrue("Reading whole header", numBytes == header.remaining());
+            retVal = header;
+            header = null;
+        } else if (body != null) {
+            isTrue("Reading whole body", numBytes == body.remaining());
+            retVal = body;
+            body = null;
+        } else {
+            throw new MongoClientException("Oops");
         }
-        return readBytes;
+
+        return retVal;
     }
 
     @Override
@@ -204,45 +229,6 @@ public final class TransportStream implements Stream {
                 .collect(Collectors.toList());
     }
 
-    private static final class FutureAsyncCompletionHandler<T> implements AsyncCompletionHandler<T> {
-        private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile T t;
-        private volatile Throwable throwable;
-
-        FutureAsyncCompletionHandler() {
-        }
-
-        @Override
-        public void completed(final T t) {
-            this.t = t;
-            latch.countDown();
-        }
-
-        @Override
-        public void failed(final Throwable t) {
-            this.throwable = t;
-            latch.countDown();
-        }
-
-        public T get() throws IOException {
-            try {
-                latch.await();
-                if (throwable != null) {
-                    if (throwable instanceof IOException) {
-                        throw (IOException) throwable;
-                    } else if (throwable instanceof MongoException) {
-                        throw (MongoException) throwable;
-                    } else {
-                        throw new MongoInternalException("Exception thrown from Netty Stream", throwable);
-                    }
-                }
-                return t;
-            } catch (InterruptedException e) {
-                throw new MongoInterruptedException("Interrupted", e);
-            }
-        }
-    }
-
     private class MongoCallCredentials extends io.grpc.CallCredentials {
         @Override
         public void applyRequestMetadata(final RequestInfo requestInfo, final Executor appExecutor, final MetadataApplier applier) {
@@ -266,6 +252,69 @@ public final class TransportStream implements Stream {
         public PendingReader(int numBytes, AsyncCompletionHandler<ByteBuf> handler) {
             this.numBytes = numBytes;
             this.handler = handler;
+        }
+    }
+
+    private final class MessageDescriptor implements MethodDescriptor.Marshaller<List<ByteBuf>> {
+        @Override
+        public InputStream stream(final List<ByteBuf> buffers) {
+            return new ByteBufDrainableInputStream(buffers);
+        }
+
+        @Override
+        public List<ByteBuf> parse(final InputStream stream) {
+            org.bson.ByteBuf header = bufferProvider.getBuffer(16);
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                stream.read(header.array());
+                int remaining = header.getInt(0);
+
+                org.bson.ByteBuf body = bufferProvider.getBuffer(remaining);
+                //noinspection ResultOfMethodCallIgnored
+                stream.read(body.array());
+                List<ByteBuf> retVal = new ArrayList<>(2);
+                retVal.add(header);
+                retVal.add(body);
+                return retVal;
+            } catch (IOException e) {
+                throw new MongoSocketReadException("", serverAddress, e);
+            }
+        }
+    }
+
+    private final class ByteBufDrainableInputStream extends InputStream implements KnownLength, Drainable {
+
+        private final List<ByteBuf> buffers;
+
+        public ByteBufDrainableInputStream(List<ByteBuf> buffers) {
+            this.buffers = buffers;
+        }
+
+        @Override
+        public int drainTo(final OutputStream target) {
+            try {
+                for (ByteBuf cur: buffers) {
+                    // This is a bit sketchy.  Assumes a 0 offset into the backing array.
+                    target.write(cur.array(), cur.position(), cur.remaining());
+                }
+            } catch (IOException e) {
+                throw new MongoSocketWriteException("This shouldn't really happen", serverAddress, e);
+            }
+            return available();
+        }
+
+        @Override
+        public int read() {
+            // TODO
+            throw new UnsupportedOperationException("I guess this is needed after all");
+        }
+
+        public int available() {
+            int available = 0;
+            for (ByteBuf cur : buffers) {
+                available += cur.remaining();
+            }
+            return available;
         }
     }
 }
