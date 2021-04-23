@@ -44,4 +44,12 @@ echo "Running tests with ${JDK}"
 ./gradlew -PjdkHome=/opt/java/${JDK} \
   -Dorg.mongodb.test.uri=${SINGLE_MONGOS_LB_URI} \
   -Dorg.mongodb.test.transaction.uri=${MULTI_MONGOS_LB_URI} \
-  ${GRADLE_EXTRA_VARS} --stacktrace --info --continue driver-sync:test --tests LoadBalancerTest
+  ${GRADLE_EXTRA_VARS} --stacktrace --info --continue driver-sync:test \
+  --tests LoadBalancerTest \
+  --tests RetryableReadsTest \
+  --tests RetryableWritesTest \
+  --tests VersionedApiTest \
+  --tests ChangeStreamsTest \
+  --tests UnifiedCrudTest \
+  --tests UnifiedTransactionsTest \
+  --tests InitialDnsSeedlistDiscoveryTest
