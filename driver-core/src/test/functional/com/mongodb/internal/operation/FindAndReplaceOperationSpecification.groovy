@@ -367,7 +367,7 @@ class FindAndReplaceOperationSpecification extends OperationFunctionalSpecificat
 
         where:
         [serverVersion, serverType, writeConcern, async, retryWrites] << [
-                [[3, 6, 0], [3, 4, 0], [3, 0, 0]],
+                [[3, 6, 0], [3, 4, 0]],
                 [REPLICA_SET_PRIMARY, STANDALONE],
                 [ACKNOWLEDGED, W1, UNACKNOWLEDGED],
                 [true, false],
@@ -453,23 +453,6 @@ class FindAndReplaceOperationSpecification extends OperationFunctionalSpecificat
 
         where:
         async << [true, false]
-    }
-
-    def 'should throw an exception when passing an unsupported collation'() {
-        given:
-        def replacement = BsonDocument.parse('{ replacement: 1}')
-        def operation =  new FindAndReplaceOperation<Document>(getNamespace(), ACKNOWLEDGED, false, documentCodec, replacement)
-                .collation(defaultCollation)
-
-        when:
-        testOperationThrows(operation, [3, 2, 0], async)
-
-        then:
-        def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by wire version:')
-
-        where:
-        async << [false, false]
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 4) })

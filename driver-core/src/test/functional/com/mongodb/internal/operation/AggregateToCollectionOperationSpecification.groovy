@@ -289,26 +289,6 @@ class AggregateToCollectionOperationSpecification extends OperationFunctionalSpe
         [3, 6, 0]     | true                    | true               | true                | true             | false  | true
         [3, 4, 0]     | true                    | true               | true                | true             | true   | false
         [3, 4, 0]     | true                    | true               | true                | true             | false  | false
-        [3, 2, 0]     | true                    | false              | false               | false            | true   | false
-        [3, 2, 0]     | true                    | false              | false               | false            | false  | false
-        [3, 0, 0]     | false                   | false              | false               | false            | true   | false
-        [3, 0, 0]     | false                   | false              | false               | false            | false  | false
-    }
-
-    def 'should throw an exception when passing an unsupported collation'() {
-        given:
-        def pipeline = [BsonDocument.parse('{$out: "collectionOut"}')]
-        def operation = new AggregateToCollectionOperation(getNamespace(), pipeline, ACKNOWLEDGED).collation(defaultCollation)
-
-        when:
-        testOperationThrows(operation, [3, 2, 0], async)
-
-        then:
-        def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by wire version:')
-
-        where:
-        async << [false, false]
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 4) })

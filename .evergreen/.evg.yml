@@ -1293,14 +1293,6 @@ axes:
         display_name: "3.4"
         variables:
            VERSION: "3.4"
-      - id: "3.2"
-        display_name: "3.2"
-        variables:
-           VERSION: "3.2"
-      - id: "3.0"
-        display_name: "3.0"
-        variables:
-           VERSION: "3.0"
   - id: os
     display_name: OS
     values:

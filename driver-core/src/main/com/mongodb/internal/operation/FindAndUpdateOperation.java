@@ -44,7 +44,6 @@ import static com.mongodb.internal.operation.CommandOperationHelper.CommandCreat
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.internal.operation.DocumentHelper.putIfTrue;
-import static com.mongodb.internal.operation.OperationHelper.validateCollation;
 import static com.mongodb.internal.operation.OperationHelper.validateHint;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -427,7 +426,6 @@ public class FindAndUpdateOperation<T> extends BaseFindAndModifyOperation<T> {
 
     private BsonDocument createCommand(final SessionContext sessionContext, final ServerDescription serverDescription,
                                        final ConnectionDescription connectionDescription) {
-        validateCollation(connectionDescription, collation);
         BsonDocument commandDocument = new BsonDocument("findAndModify", new BsonString(getNamespace().getCollectionName()));
         putIfNotNull(commandDocument, "query", getFilter());
         putIfNotNull(commandDocument, "fields", getProjection());

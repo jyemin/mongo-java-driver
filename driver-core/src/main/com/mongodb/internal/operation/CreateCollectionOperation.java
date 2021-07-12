@@ -22,7 +22,6 @@ import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.TimeSeriesOptions;
 import com.mongodb.client.model.ValidationAction;
 import com.mongodb.client.model.ValidationLevel;
-import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
@@ -45,7 +44,6 @@ import static com.mongodb.internal.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.internal.operation.OperationHelper.AsyncCallableWithConnection;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
-import static com.mongodb.internal.operation.OperationHelper.validateCollation;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection;
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
@@ -361,8 +359,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
         return withConnection(binding, new CallableWithConnection<Void>() {
             @Override
             public Void call(final Connection connection) {
-                validateCollation(connection, collation);
-                executeCommand(binding, databaseName, getCommand(connection.getDescription()), connection,
+                executeCommand(binding, databaseName, getCommand(), connection,
                         writeConcernErrorTransformer());
                 return null;
             }
@@ -378,24 +375,14 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
                 if (t != null) {
                     errHandlingCallback.onResult(null, t);
                 } else {
-                    final SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, connection);
-                    validateCollation(connection, collation, new AsyncCallableWithConnection() {
-                        @Override
-                        public void call(final AsyncConnection connection, final Throwable t) {
-                            if (t != null) {
-                                wrappedCallback.onResult(null, t);
-                            } else {
-                                executeCommandAsync(binding, databaseName, getCommand(connection.getDescription()),
-                                        connection, writeConcernErrorWriteTransformer(), wrappedCallback);
-                            }
-                        }
-                    });
+                    executeCommandAsync(binding, databaseName, getCommand(),
+                            connection, writeConcernErrorWriteTransformer(), releasingCallback(errHandlingCallback, connection));
                 }
             }
         });
     }
 
-    private BsonDocument getCommand(final ConnectionDescription description) {
+    private BsonDocument getCommand() {
         BsonDocument document = new BsonDocument("create", new BsonString(collectionName));
         putIfFalse(document, "autoIndexId", autoIndex);
         document.put("capped", BsonBoolean.valueOf(capped));
@@ -418,7 +405,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
         if (validationAction != null) {
             document.put("validationAction", new BsonString(validationAction.getValue()));
         }
-        appendWriteConcernToCommand(writeConcern, document, description);
+        appendWriteConcernToCommand(writeConcern, document);
         if (collation != null) {
             document.put("collation", collation.asDocument());
         }

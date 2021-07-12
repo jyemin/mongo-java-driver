@@ -162,39 +162,6 @@ class AggregateOperationSpecification extends OperationFunctionalSpecification {
         async << [true, false]
     }
 
-    def 'should throw an exception when using an unsupported ReadConcern'() {
-        given:
-        def pipeline = [new BsonDocument('$match', new BsonDocument('a', new BsonString('A')))]
-        def operation = new AggregateOperation<Document>(helper.namespace, pipeline, new DocumentCodec())
-
-        when:
-        testOperationThrows(operation, [3, 0, 0], readConcern, async)
-
-        then:
-        def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('ReadConcern not supported by wire version:')
-
-        where:
-        [async, readConcern] << [[true, false], [ReadConcern.MAJORITY, ReadConcern.LOCAL]].combinations()
-    }
-
-    def 'should throw an exception when using an unsupported Collation'() {
-        given:
-        def pipeline = [new BsonDocument('$match', new BsonDocument('a', new BsonString('A')))]
-        def operation = new AggregateOperation<Document>(helper.namespace, pipeline, new DocumentCodec())
-                .collation(defaultCollation)
-
-        when:
-        testOperationThrows(operation, [3, 2, 0], async)
-
-        then:
-        def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by wire version:')
-
-        where:
-        async << [true, false]
-    }
-
     @IgnoreIf({ !serverVersionAtLeast(3, 4) })
     def 'should support collation'() {
         given:

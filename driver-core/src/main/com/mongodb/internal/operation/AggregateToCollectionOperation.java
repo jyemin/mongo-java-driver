@@ -49,10 +49,8 @@ import static com.mongodb.internal.operation.OperationHelper.AsyncCallableWithCo
 import static com.mongodb.internal.operation.OperationHelper.CallableWithConnection;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
-import static com.mongodb.internal.operation.OperationHelper.validateCollation;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection;
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotFour;
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotSix;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 
@@ -354,7 +352,6 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
         return withConnection(binding, new CallableWithConnection<Void>() {
             @Override
             public Void call(final Connection connection) {
-                validateCollation(connection, collation);
                 return executeCommand(binding, namespace.getDatabaseName(), getCommand(connection.getDescription()),
                         connection, writeConcernErrorTransformer());
             }
@@ -370,19 +367,9 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
                 if (t != null) {
                     errHandlingCallback.onResult(null, t);
                 } else {
-                    final SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, connection);
-                    validateCollation(connection, collation, new AsyncCallableWithConnection() {
-                        @Override
-                        public void call(final AsyncConnection connection, final Throwable t) {
-                            if (t != null) {
-                                wrappedCallback.onResult(null, t);
-                            } else {
-                                executeCommandAsync(binding, namespace.getDatabaseName(),
-                                        getCommand(connection.getDescription()), connection, writeConcernErrorWriteTransformer(),
-                                        wrappedCallback);
-                            }
-                        }
-                    });
+                    executeCommandAsync(binding, namespace.getDatabaseName(),
+                            getCommand(connection.getDescription()), connection, writeConcernErrorWriteTransformer(),
+                            releasingCallback(errHandlingCallback, connection));
                 }
             }
         });
@@ -408,8 +395,8 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
             commandDocument.put("cursor", new BsonDocument());
         }
 
-        appendWriteConcernToCommand(writeConcern, commandDocument, description);
-        if (readConcern != null && !readConcern.isServerDefault() && serverIsAtLeastVersionThreeDotFour(description)) {
+        appendWriteConcernToCommand(writeConcern, commandDocument);
+        if (readConcern != null && !readConcern.isServerDefault()) {
             commandDocument.put("readConcern", readConcern.asDocument());
         }
 

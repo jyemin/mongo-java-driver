@@ -241,7 +241,7 @@ class FindAndDeleteOperationSpecification extends OperationFunctionalSpecificati
 
         where:
         [serverVersion, serverType, writeConcern, async, retryWrites] << [
-                [[3, 6, 0], [3, 4, 0], [3, 0, 0]],
+                [[3, 6, 0], [3, 4, 0]],
                 [REPLICA_SET_PRIMARY, STANDALONE],
                 [ACKNOWLEDGED, W1, UNACKNOWLEDGED],
                 [true, false],
@@ -319,21 +319,6 @@ class FindAndDeleteOperationSpecification extends OperationFunctionalSpecificati
         then:
         commandException = thrown()
         commandException == originalException
-
-        where:
-        async << [true, false]
-    }
-
-    def 'should throw an exception when passing an unsupported collation'() {
-        given:
-        def operation = new FindAndDeleteOperation<Document>(getNamespace(), ACKNOWLEDGED, false, documentCodec).collation(defaultCollation)
-
-        when:
-        testOperationThrows(operation, [3, 2, 0], async)
-
-        then:
-        def exception = thrown(IllegalArgumentException)
-        exception.getMessage().startsWith('Collation not supported by wire version:')
 
         where:
         async << [true, false]

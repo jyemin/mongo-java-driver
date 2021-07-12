@@ -20,7 +20,6 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.internal.connection.AsyncConnection;
@@ -91,7 +90,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
             @Override
             public Void call(final Connection connection) {
                 try {
-                    executeCommand(binding, namespace.getDatabaseName(), getCommand(connection.getDescription()),
+                    executeCommand(binding, namespace.getDatabaseName(), getCommand(),
                             connection, writeConcernErrorTransformer());
                 } catch (MongoCommandException e) {
                     rethrowIfNotNamespaceError(e);
@@ -111,7 +110,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
                     errHandlingCallback.onResult(null, t);
                 } else {
                     final SingleResultCallback<Void> releasingCallback = releasingCallback(errHandlingCallback, connection);
-                    executeCommandAsync(binding, namespace.getDatabaseName(), getCommand(connection.getDescription()),
+                    executeCommandAsync(binding, namespace.getDatabaseName(), getCommand(),
                             connection, writeConcernErrorWriteTransformer(), new SingleResultCallback<Void>() {
                                 @Override
                                 public void onResult(final Void result, final Throwable t) {
@@ -127,9 +126,9 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
         });
     }
 
-    private BsonDocument getCommand(final ConnectionDescription description) {
+    private BsonDocument getCommand() {
         BsonDocument commandDocument = new BsonDocument("drop", new BsonString(namespace.getCollectionName()));
-        appendWriteConcernToCommand(writeConcern, commandDocument, description);
+        appendWriteConcernToCommand(writeConcern, commandDocument);
         return commandDocument;
     }
 
