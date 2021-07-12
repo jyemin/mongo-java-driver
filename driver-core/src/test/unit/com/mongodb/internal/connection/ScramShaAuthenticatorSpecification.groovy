@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit
 
 import static com.mongodb.MongoCredential.createScramSha1Credential
 import static com.mongodb.MongoCredential.createScramSha256Credential
-import static org.junit.Assert.assertEquals
 import static com.mongodb.internal.connection.MessageHelper.buildSuccessfulReply
+import static org.junit.Assert.assertEquals
 
 class ScramShaAuthenticatorSpecification extends Specification {
     def serverId = new ServerId(new ClusterId(), new ServerAddress('localhost', 27017))
@@ -491,7 +491,8 @@ class ScramShaAuthenticatorSpecification extends Specification {
             def sentMessage = sent.get(it)
             def messageStart = speculativeAuthenticate || it != 0 ? 'saslContinue: 1, conversationId: 1'
                     : "saslStart: 1, mechanism:'$mechanism', options: {skipEmptyExchange: true}"
-            def expectedMessage = BsonDocument.parse("{$messageStart, payload: BinData(0, '${encode64(clientMessages.get(it))}')}")
+            def expectedMessage = BsonDocument.parse(
+                    "{$messageStart, payload: BinData(0, '${encode64(clientMessages.get(it))}'), \$db: \"database\"}")
             assertEquals(expectedMessage, sentMessage)
         }
     }

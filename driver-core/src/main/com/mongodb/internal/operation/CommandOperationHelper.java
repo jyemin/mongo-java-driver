@@ -223,7 +223,7 @@ final class CommandOperationHelper {
                                          final MongoException originalException) {
         return withReleasableConnection(binding, originalException, (source, connection) -> {
             try {
-                if (!canRetryRead(source.getServerDescription(), connection.getDescription(), binding.getSessionContext())) {
+                if (!canRetryRead(source.getServerDescription(), binding.getSessionContext())) {
                     throw originalException;
                 }
                 BsonDocument retryCommand = commandCreator.create(source.getServerDescription(), connection.getDescription());
@@ -483,8 +483,7 @@ final class CommandOperationHelper {
                 withAsyncReadConnection(binding, (source, connection, t) -> {
                     if (t != null) {
                         callback.onResult(null, originalError);
-                    } else if (!canRetryRead(source.getServerDescription(), connection.getDescription(),
-                            binding.getSessionContext())) {
+                    } else if (!canRetryRead(source.getServerDescription(), binding.getSessionContext())) {
                         releasingCallback(callback, source, connection).onResult(null, originalError);
                     } else {
                         BsonDocument retryCommand = commandCreator.create(source.getServerDescription(), connection.getDescription());

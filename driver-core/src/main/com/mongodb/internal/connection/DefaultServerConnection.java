@@ -16,18 +16,13 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerApi;
-import com.mongodb.WriteConcernResult;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.internal.bulk.DeleteRequest;
-import com.mongodb.internal.bulk.InsertRequest;
-import com.mongodb.internal.bulk.UpdateRequest;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -68,39 +63,6 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     public ConnectionDescription getDescription() {
         isTrue("open", getCount() > 0);
         return wrapped.getDescription();
-    }
-
-    @Override
-    public WriteConcernResult insert(final MongoNamespace namespace, final boolean ordered, final InsertRequest insertRequest) {
-        return executeProtocol(new InsertProtocol(namespace, ordered, insertRequest));
-    }
-
-    @Override
-    public void insertAsync(final MongoNamespace namespace, final boolean ordered, final InsertRequest insertRequest,
-                            final SingleResultCallback<WriteConcernResult> callback) {
-        executeProtocolAsync(new InsertProtocol(namespace, ordered, insertRequest), callback);
-    }
-
-    @Override
-    public WriteConcernResult update(final MongoNamespace namespace, final boolean ordered, final UpdateRequest updateRequest) {
-        return executeProtocol(new UpdateProtocol(namespace, ordered, updateRequest));
-    }
-
-    @Override
-    public void updateAsync(final MongoNamespace namespace, final boolean ordered, final UpdateRequest updateRequest,
-                            final SingleResultCallback<WriteConcernResult> callback) {
-        executeProtocolAsync(new UpdateProtocol(namespace, ordered, updateRequest), callback);
-    }
-
-    @Override
-    public WriteConcernResult delete(final MongoNamespace namespace, final boolean ordered, final DeleteRequest deleteRequest) {
-        return executeProtocol(new DeleteProtocol(namespace, ordered, deleteRequest));
-    }
-
-    @Override
-    public void deleteAsync(final MongoNamespace namespace, final boolean ordered, final DeleteRequest deleteRequest,
-                            final SingleResultCallback<WriteConcernResult> callback) {
-        executeProtocolAsync(new DeleteProtocol(namespace, ordered, deleteRequest), callback);
     }
 
     @Override
@@ -146,21 +108,8 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
         wrapped.markAsPinned(pinningMode);
     }
 
-    private <T> T executeProtocol(final LegacyProtocol<T> protocol) {
-        return protocolExecutor.execute(protocol, this.wrapped);
-    }
-
     private <T> T executeProtocol(final CommandProtocol<T> protocol, final SessionContext sessionContext) {
         return protocolExecutor.execute(protocol, this.wrapped, sessionContext);
-    }
-
-    private <T> void executeProtocolAsync(final LegacyProtocol<T> protocol, final SingleResultCallback<T> callback) {
-        SingleResultCallback<T> errHandlingCallback = errorHandlingCallback(callback, LOGGER);
-        try {
-            protocolExecutor.executeAsync(protocol, this.wrapped, errHandlingCallback);
-        } catch (Throwable t) {
-            errHandlingCallback.onResult(null, t);
-        }
     }
 
     private <T> void executeProtocolAsync(final CommandProtocol<T> protocol, final SessionContext sessionContext,

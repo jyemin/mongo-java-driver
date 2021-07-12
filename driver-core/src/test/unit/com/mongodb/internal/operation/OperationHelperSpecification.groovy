@@ -48,7 +48,7 @@ class OperationHelperSpecification extends Specification {
 
     def 'should accept valid writeRequests'() {
         when:
-        validateWriteRequests(connectionDescription, bypassDocumentValidation,  writeRequests, writeConcern)
+        validateWriteRequests(bypassDocumentValidation, writeRequests, writeConcern)
 
         then:
         notThrown(IllegalArgumentException)
@@ -64,11 +64,11 @@ class OperationHelperSpecification extends Specification {
 
         where:
         connectionDescription          | bypassDocumentValidation | writeConcern   | writeRequests
-        threeConnectionDescription     | null                     | ACKNOWLEDGED   | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))]
-        threeTwoConnectionDescription  | null                     | UNACKNOWLEDGED | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))]
-        threeFourConnectionDescription | null                     | ACKNOWLEDGED   | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))
+        threeSixConnectionDescription  | null                     | ACKNOWLEDGED   | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))]
+        threeSixConnectionDescription  | null                     | UNACKNOWLEDGED | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))]
+        threeSixConnectionDescription  | null                     | ACKNOWLEDGED   | [new DeleteRequest(BsonDocument.parse('{a: "a"}}'))
                                                                                               .collation(enCollation)]
-        threeFourConnectionDescription | true                     | ACKNOWLEDGED   | [new UpdateRequest(BsonDocument.parse('{a: "a"}}'),
+        threeSixConnectionDescription  | true                     | ACKNOWLEDGED   | [new UpdateRequest(BsonDocument.parse('{a: "a"}}'),
                                                                                       BsonDocument.parse('{$set: {a: "A"}}'),
                                                                                       WriteRequest.Type.REPLACE).collation(enCollation)]
     }
@@ -119,16 +119,15 @@ class OperationHelperSpecification extends Specification {
         }
 
         expect:
-        isRetryableRead(retryReads, serverDescription, connectionDescription, noTransactionSessionContext) == expected
-        !isRetryableRead(retryReads, serverDescription, connectionDescription, activeTransactionSessionContext)
-        !isRetryableRead(retryReads, serverDescription, connectionDescription, noOpSessionContext)
+        isRetryableRead(retryReads, serverDescription, noTransactionSessionContext) == expected
+        !isRetryableRead(retryReads, serverDescription, activeTransactionSessionContext)
+        !isRetryableRead(retryReads, serverDescription, noOpSessionContext)
 
         where:
         retryReads  | serverDescription             | connectionDescription                 | expected
         false       | retryableServerDescription    | threeSixConnectionDescription         | false
         true        | retryableServerDescription    | threeSixConnectionDescription         | true
         true        | nonRetryableServerDescription | threeSixConnectionDescription         | false
-        true        | retryableServerDescription    | threeFourConnectionDescription        | false
         true        | retryableServerDescription    | threeSixPrimaryConnectionDescription  | true
     }
 

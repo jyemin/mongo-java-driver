@@ -287,8 +287,6 @@ class AggregateToCollectionOperationSpecification extends OperationFunctionalSpe
         serverVersion | includeBypassValidation | includeReadConcern | includeWriteConcern | includeCollation | async  | useCursor
         [3, 6, 0]     | true                    | true               | true                | true             | true   | true
         [3, 6, 0]     | true                    | true               | true                | true             | false  | true
-        [3, 4, 0]     | true                    | true               | true                | true             | true   | false
-        [3, 4, 0]     | true                    | true               | true                | true             | false  | false
     }
 
     @IgnoreIf({ !serverVersionAtLeast(3, 4) })

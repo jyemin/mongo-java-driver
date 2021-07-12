@@ -214,31 +214,6 @@ class DefaultServer implements ClusterableServer {
     }
 
     private class DefaultServerProtocolExecutor implements ProtocolExecutor {
-        @Override
-        public <T> T execute(final LegacyProtocol<T> protocol, final InternalConnection connection) {
-            try {
-                protocol.setCommandListener(commandListener);
-                return protocol.execute(connection);
-            } catch (MongoException e) {
-                invalidate(AFTER_HANDSHAKE, e, connection.getGeneration(), connection.getDescription().getMaxWireVersion());
-                throw e;
-            }
-        }
-
-        @Override
-        public <T> void executeAsync(final LegacyProtocol<T> protocol, final InternalConnection connection,
-                                     final SingleResultCallback<T> callback) {
-            protocol.setCommandListener(commandListener);
-            protocol.executeAsync(connection, errorHandlingCallback(new SingleResultCallback<T>() {
-                @Override
-                public void onResult(final T result, final Throwable t) {
-                    if (t != null) {
-                        invalidate(AFTER_HANDSHAKE, t, connection.getGeneration(), connection.getDescription().getMaxWireVersion());
-                    }
-                    callback.onResult(result, t);
-                }
-            }, LOGGER));
-        }
 
         @SuppressWarnings("unchecked")
         @Override

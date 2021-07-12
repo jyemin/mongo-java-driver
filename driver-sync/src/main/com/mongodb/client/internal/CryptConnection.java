@@ -17,14 +17,9 @@
 package com.mongodb.client.internal;
 
 import com.mongodb.MongoClientException;
-import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerApi;
-import com.mongodb.WriteConcernResult;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.internal.bulk.DeleteRequest;
-import com.mongodb.internal.bulk.InsertRequest;
-import com.mongodb.internal.bulk.UpdateRequest;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.MessageSettings;
 import com.mongodb.internal.connection.SplittablePayload;
@@ -154,24 +149,6 @@ class CryptConnection implements Connection {
                 .maxMessageSize(getDescription().getMaxMessageSize())
                 .maxDocumentSize(getDescription().getMaxDocumentSize())
                 .build();
-    }
-
-
-    // UNSUPPORTED METHODS for encryption/decryption
-
-    @Override
-    public WriteConcernResult insert(final MongoNamespace namespace, final boolean ordered, final InsertRequest insertRequest) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WriteConcernResult update(final MongoNamespace namespace, final boolean ordered, final UpdateRequest updateRequest) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WriteConcernResult delete(final MongoNamespace namespace, final boolean ordered, final DeleteRequest deleteRequest) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

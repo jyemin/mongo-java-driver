@@ -51,7 +51,6 @@ import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection;
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotSix;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 
 /**
@@ -391,9 +390,7 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
             commandDocument.put("bypassDocumentValidation", BsonBoolean.valueOf(bypassDocumentValidation));
         }
 
-        if (serverIsAtLeastVersionThreeDotSix(description)) {
-            commandDocument.put("cursor", new BsonDocument());
-        }
+        commandDocument.put("cursor", new BsonDocument());
 
         appendWriteConcernToCommand(writeConcern, commandDocument);
         if (readConcern != null && !readConcern.isServerDefault()) {

@@ -54,7 +54,6 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionThreeDotSix;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -92,11 +91,8 @@ final class OperationHelper {
         }
     }
 
-    private static void validateArrayFilters(final ConnectionDescription connectionDescription, final WriteConcern writeConcern) {
-        if (serverIsLessThanVersionThreeDotSix(connectionDescription)) {
-            throw new IllegalArgumentException(format("Array filters not supported by wire version: %s",
-                    connectionDescription.getMaxWireVersion()));
-        } else if (!writeConcern.isAcknowledged()) {
+    private static void validateArrayFilters(final WriteConcern writeConcern) {
+        if (!writeConcern.isAcknowledged()) {
             throw new MongoClientException("Specifying array filters with an unacknowledged WriteConcern is not supported");
         }
     }
@@ -131,15 +127,14 @@ final class OperationHelper {
         validateCollationAndWriteConcern(collation, writeConcern);
     }
 
-    static void validateUpdateRequestArrayFilters(final ConnectionDescription connectionDescription,
-                                                  final List<? extends WriteRequest> requests, final WriteConcern writeConcern) {
+    static void validateUpdateRequestArrayFilters(final List<? extends WriteRequest> requests, final WriteConcern writeConcern) {
         for (WriteRequest request : requests) {
             List<BsonDocument> arrayFilters = null;
             if (request instanceof UpdateRequest) {
                 arrayFilters = ((UpdateRequest) request).getArrayFilters();
             }
             if (arrayFilters != null) {
-                validateArrayFilters(connectionDescription, writeConcern);
+                validateArrayFilters(writeConcern);
                 break;
             }
         }
@@ -163,11 +158,11 @@ final class OperationHelper {
         }
     }
 
-    static void validateWriteRequests(final ConnectionDescription connectionDescription, final Boolean bypassDocumentValidation,
+    static void validateWriteRequests(final Boolean bypassDocumentValidation,
                                       final List<? extends WriteRequest> requests, final WriteConcern writeConcern) {
         checkBypassDocumentValidationIsSupported(bypassDocumentValidation, writeConcern);
         validateWriteRequestCollations(requests, writeConcern);
-        validateUpdateRequestArrayFilters(connectionDescription, requests, writeConcern);
+        validateUpdateRequestArrayFilters(requests, writeConcern);
         validateWriteRequestHints(requests, writeConcern);
     }
 
@@ -175,7 +170,7 @@ final class OperationHelper {
                                       final List<? extends WriteRequest> requests, final WriteConcern writeConcern,
                                       final AsyncCallableWithConnection callable) {
         try {
-            validateWriteRequests(connection.getDescription(), bypassDocumentValidation, requests, writeConcern);
+            validateWriteRequests(bypassDocumentValidation, requests, writeConcern);
             callable.call(connection, null);
         } catch (Throwable t) {
             callable.call(connection, t);
@@ -206,10 +201,7 @@ final class OperationHelper {
 
     static boolean canRetryWrite(final ServerDescription serverDescription, final ConnectionDescription connectionDescription,
                                  final SessionContext sessionContext) {
-        if (serverIsLessThanVersionThreeDotSix(connectionDescription)) {
-            LOGGER.debug("retryWrites set to true but the server does not support retryable writes.");
-            return false;
-        } else if (serverDescription.getLogicalSessionTimeoutMinutes() == null && serverDescription.getType() != ServerType.LOAD_BALANCER) {
+        if (serverDescription.getLogicalSessionTimeoutMinutes() == null && serverDescription.getType() != ServerType.LOAD_BALANCER) {
             LOGGER.debug("retryWrites set to true but the server does not have 3.6 feature compatibility enabled.");
             return false;
         } else if (connectionDescription.getServerType().equals(ServerType.STANDALONE)) {
@@ -224,23 +216,19 @@ final class OperationHelper {
     }
 
     static boolean isRetryableRead(final boolean retryReads, final ServerDescription serverDescription,
-                                   final ConnectionDescription connectionDescription, final SessionContext sessionContext) {
+            final SessionContext sessionContext) {
         if (!retryReads) {
             return false;
         } else if (sessionContext.hasActiveTransaction()) {
             LOGGER.debug("retryReads set to true but in an active transaction.");
             return false;
         } else {
-            return canRetryRead(serverDescription, connectionDescription, sessionContext);
+            return canRetryRead(serverDescription, sessionContext);
         }
     }
 
-    static boolean canRetryRead(final ServerDescription serverDescription, final ConnectionDescription connectionDescription,
-                                final SessionContext sessionContext) {
-        if (serverIsLessThanVersionThreeDotSix(connectionDescription)) {
-            LOGGER.debug("retryReads set to true but the server does not support retryable reads.");
-            return false;
-        } else if (serverDescription.getLogicalSessionTimeoutMinutes() == null && serverDescription.getType() != ServerType.LOAD_BALANCER) {
+    static boolean canRetryRead(final ServerDescription serverDescription, final SessionContext sessionContext) {
+        if (serverDescription.getLogicalSessionTimeoutMinutes() == null && serverDescription.getType() != ServerType.LOAD_BALANCER) {
             LOGGER.debug("retryReads set to true but the server does not have 3.6 feature compatibility enabled.");
             return false;
         } else if (serverDescription.getType() != ServerType.STANDALONE && !sessionContext.hasSession()) {
