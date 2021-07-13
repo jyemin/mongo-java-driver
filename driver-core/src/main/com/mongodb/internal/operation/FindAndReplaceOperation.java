@@ -21,9 +21,9 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.validator.MappedFieldNameValidator;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
-import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.validator.ReplacingDocumentFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBoolean;
@@ -44,7 +44,6 @@ import static com.mongodb.internal.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.internal.operation.DocumentHelper.putIfTrue;
 import static com.mongodb.internal.operation.OperationHelper.validateCollation;
 import static com.mongodb.internal.operation.OperationHelper.validateHint;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
@@ -370,10 +369,10 @@ public class FindAndReplaceOperation<T> extends BaseFindAndModifyOperation<T> {
         putIfTrue(commandDocument, "upsert", isUpsert());
         putIfNotZero(commandDocument, "maxTimeMS", getMaxTime(MILLISECONDS));
         commandDocument.put("update", getReplacement());
-        if (bypassDocumentValidation != null && serverIsAtLeastVersionThreeDotTwo(connectionDescription)) {
+        if (bypassDocumentValidation != null) {
             commandDocument.put("bypassDocumentValidation", BsonBoolean.valueOf(bypassDocumentValidation));
         }
-        addWriteConcernToCommand(connectionDescription, commandDocument, sessionContext);
+        addWriteConcernToCommand(commandDocument, sessionContext);
         if (collation != null) {
             commandDocument.put("collation", collation.asDocument());
         }

@@ -21,7 +21,6 @@ import com.mongodb.ExplainVerbosity;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoQueryException;
-import com.mongodb.ReadPreference;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
@@ -48,10 +47,8 @@ import org.bson.codecs.Decoder;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ReadPreference.primary;
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.connection.ServerType.SHARD_ROUTER;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.CommandOperationHelper.CommandCreator;
 import static com.mongodb.internal.operation.CommandOperationHelper.CommandReadTransformer;
@@ -64,13 +61,11 @@ import static com.mongodb.internal.operation.ExplainHelper.asExplainCommand;
 import static com.mongodb.internal.operation.OperationHelper.AsyncCallableWithConnectionAndSource;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.cursorDocumentToQueryResult;
-import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.OperationHelper.validateFindOptions;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncReadConnection;
 import static com.mongodb.internal.operation.OperationHelper.withReadConnectionSource;
 import static com.mongodb.internal.operation.OperationReadConcernHelper.appendReadConcernToCommand;
 import static com.mongodb.internal.operation.ServerVersionHelper.MIN_WIRE_VERSION;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 
 /**
  * An operation that queries a collection using the provided criteria.
@@ -93,7 +88,6 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
     private int skip;
     private BsonDocument sort;
     private CursorType cursorType = CursorType.NonTailable;
-    private boolean slaveOk;
     private boolean oplogReplay;
     private boolean noCursorTimeout;
     private boolean partial;
@@ -348,28 +342,6 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
      */
     public FindOperation<T> cursorType(final CursorType cursorType) {
         this.cursorType = notNull("cursorType", cursorType);
-        return this;
-    }
-
-    /**
-     * Returns true if set to allowed to query non-primary replica set members.
-     *
-     * @return true if set to allowed to query non-primary replica set members.
-     * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query OP_QUERY
-     */
-    public boolean isSlaveOk() {
-        return slaveOk;
-    }
-
-    /**
-     * Sets if allowed to query non-primary replica set members.
-     *
-     * @param slaveOk true if allowed to query non-primary replica set members.
-     * @return this
-     * @mongodb.driver.manual ../meta-driver/latest/legacy/mongodb-wire-protocol/#op-query OP_QUERY
-     */
-    public FindOperation<T> slaveOk(final boolean slaveOk) {
-        this.slaveOk = slaveOk;
         return this;
     }
 
@@ -654,34 +626,12 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
             @Override
             public BatchCursor<T> call(final ConnectionSource source) {
                 Connection connection = source.getConnection();
-                if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-                    try {
-                        return executeCommandWithConnection(binding, source, namespace.getDatabaseName(),
-                                getCommandCreator(binding.getSessionContext()),
-                                CommandResultDocumentCodec.create(decoder, FIRST_BATCH), transformer(), retryReads, connection);
-                    } catch (MongoCommandException e) {
-                        throw new MongoQueryException(e);
-                    }
-                } else {
-                    try {
-                        validateFindOptions(connection, binding.getSessionContext().getReadConcern(), collation, allowDiskUse);
-                        QueryResult<T> queryResult = connection.query(namespace,
-                                asDocument(connection.getDescription(), binding.getReadPreference()),
-                                projection,
-                                skip,
-                                limit,
-                                batchSize,
-                                isSlaveOk() || binding.getReadPreference().isSlaveOk(),
-                                isTailableCursor(),
-                                isAwaitData(),
-                                isNoCursorTimeout(),
-                                isPartial(),
-                                isOplogReplay(),
-                                decoder);
-                        return new QueryBatchCursor<T>(queryResult, limit, batchSize, getMaxTimeForCursor(), decoder, source, connection);
-                    } finally {
-                        connection.release();
-                    }
+                try {
+                    return executeCommandWithConnection(binding, source, namespace.getDatabaseName(),
+                            getCommandCreator(binding.getSessionContext()),
+                            CommandResultDocumentCodec.create(decoder, FIRST_BATCH), transformer(), retryReads, connection);
+                } catch (MongoCommandException e) {
+                    throw new MongoQueryException(e);
                 }
             }
         });
@@ -696,44 +646,11 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
                 if (t != null) {
                     errHandlingCallback.onResult(null, t);
                 } else {
-                    if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-                        final SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback =
-                                exceptionTransformingCallback(errHandlingCallback);
-                        executeCommandAsyncWithConnection(binding, source, namespace.getDatabaseName(),
-                                getCommandCreator(binding.getSessionContext()), CommandResultDocumentCodec.create(decoder, FIRST_BATCH),
-                                asyncTransformer(), retryReads, connection, wrappedCallback);
-                    } else {
-                        final SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback =
-                                releasingCallback(errHandlingCallback, source, connection);
-                        validateFindOptions(source, connection, binding.getSessionContext().getReadConcern(), collation,
-                                allowDiskUse,
-                                new AsyncCallableWithConnectionAndSource() {
-                                    @Override
-                                    public void call(final AsyncConnectionSource source, final AsyncConnection connection, final
-                                    Throwable t) {
-                                        if (t != null) {
-                                            wrappedCallback.onResult(null, t);
-                                        } else {
-                                            connection.queryAsync(namespace, asDocument(connection.getDescription(),
-                                                    binding.getReadPreference()), projection, skip, limit, batchSize,
-                                                    isSlaveOk() || binding.getReadPreference().isSlaveOk(),
-                                                    isTailableCursor(), isAwaitData(), isNoCursorTimeout(), isPartial(), isOplogReplay(),
-                                                    decoder, new SingleResultCallback<QueryResult<T>>() {
-                                                        @Override
-                                                        public void onResult(final QueryResult<T> result, final Throwable t) {
-                                                            if (t != null) {
-                                                                wrappedCallback.onResult(null, t);
-                                                            } else {
-                                                                wrappedCallback.onResult(new AsyncQueryBatchCursor<T>(result, limit,
-                                                                        batchSize, getMaxTimeForCursor(), decoder, source, connection),
-                                                                        null);
-                                                            }
-                                                        }
-                                                    });
-                                        }
-                                    }
-                        });
-                    }
+                    final SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback =
+                            exceptionTransformingCallback(errHandlingCallback);
+                    executeCommandAsyncWithConnection(binding, source, namespace.getDatabaseName(),
+                            getCommandCreator(binding.getSessionContext()), CommandResultDocumentCodec.create(decoder, FIRST_BATCH),
+                            asyncTransformer(), retryReads, connection, wrappedCallback);
                 }
             }
         });
@@ -773,48 +690,6 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
         return new CommandReadOperation<R>(getNamespace().getDatabaseName(),
                 asExplainCommand(getCommand(NoOpSessionContext.INSTANCE, MIN_WIRE_VERSION), verbosity),
                 resultDecoder);
-    }
-
-    private BsonDocument asDocument(final ConnectionDescription connectionDescription, final ReadPreference readPreference) {
-        BsonDocument document = new BsonDocument();
-
-        if (sort != null) {
-            document.put("$orderby", sort);
-        }
-        if (maxTimeMS > 0) {
-            document.put("$maxTimeMS", new BsonInt64(maxTimeMS));
-        }
-        if (connectionDescription.getServerType() == SHARD_ROUTER && !readPreference.equals(primary())) {
-            document.put("$readPreference", readPreference.toDocument());
-        }
-        if (comment != null) {
-            document.put("$comment", new BsonString(comment));
-        }
-        if (hint != null) {
-            document.put("$hint", hint);
-        }
-        if (max != null) {
-            document.put("$max", max);
-        }
-        if (min != null) {
-            document.put("$min", min);
-        }
-        if (returnKey) {
-            document.put("$returnKey", BsonBoolean.TRUE);
-        }
-        if (showRecordId) {
-            document.put("$showDiskLoc", BsonBoolean.TRUE);
-        }
-
-        if (document.isEmpty()) {
-            document = filter != null ? filter : new BsonDocument();
-        } else if (filter != null) {
-            document.put("$query", filter);
-        } else if (!document.containsKey("$query")) {
-            document.put("$query", new BsonDocument());
-        }
-
-        return document;
     }
 
     private BsonDocument getCommand(final SessionContext sessionContext, final int maxWireVersion) {
@@ -890,7 +765,7 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
         return new CommandOperationHelper.CommandCreator() {
             @Override
             public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
-                validateFindOptions(connectionDescription, sessionContext.getReadConcern(), collation, allowDiskUse);
+                validateFindOptions(connectionDescription, collation);
                 return getCommand(sessionContext, connectionDescription.getMaxWireVersion());
             }
         };

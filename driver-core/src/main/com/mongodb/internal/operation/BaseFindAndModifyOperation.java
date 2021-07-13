@@ -18,9 +18,9 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.MongoNamespace;
 import com.mongodb.WriteConcern;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.internal.session.SessionContext;
@@ -33,7 +33,6 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.operation.CommandOperationHelper.CommandCreator;
 import static com.mongodb.internal.operation.CommandOperationHelper.executeRetryableCommand;
 import static com.mongodb.internal.operation.OperationHelper.isRetryableWrite;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 
 /**
  * Abstract base class for findAndModify-based operations
@@ -129,10 +128,8 @@ public abstract class BaseFindAndModifyOperation<T> implements AsyncWriteOperati
         }
     }
 
-    protected void addWriteConcernToCommand(final ConnectionDescription connectionDescription, final BsonDocument commandDocument,
-                                            final SessionContext sessionContext) {
-        if (getWriteConcern().isAcknowledged() && !getWriteConcern().isServerDefault()
-                && serverIsAtLeastVersionThreeDotTwo(connectionDescription) && !sessionContext.hasActiveTransaction()) {
+    protected void addWriteConcernToCommand(final BsonDocument commandDocument, final SessionContext sessionContext) {
+        if (getWriteConcern().isAcknowledged() && !getWriteConcern().isServerDefault() && !sessionContext.hasActiveTransaction()) {
             commandDocument.put("writeConcern", getWriteConcern().asDocument());
         }
     }

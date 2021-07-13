@@ -34,10 +34,7 @@ import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
 
-import java.util.List;
-
 import static com.mongodb.assertions.Assertions.isTrue;
-import static com.mongodb.connection.ServerType.SHARD_ROUTER;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 
 public class DefaultServerConnection extends AbstractReferenceCounted implements Connection, AsyncConnection {
@@ -145,65 +142,8 @@ public class DefaultServerConnection extends AbstractReferenceCounted implements
     }
 
     @Override
-    public <T> QueryResult<T> query(final MongoNamespace namespace, final BsonDocument queryDocument, final BsonDocument fields,
-                                    final int skip, final int limit, final int batchSize,
-                                    final boolean slaveOk, final boolean tailableCursor,
-                                    final boolean awaitData, final boolean noCursorTimeout,
-                                    final boolean partial, final boolean oplogReplay,
-                                    final Decoder<T> resultDecoder) {
-        return executeProtocol(new QueryProtocol<T>(namespace, skip, limit, batchSize, queryDocument, fields, resultDecoder)
-                               .tailableCursor(tailableCursor)
-                               .slaveOk(getSlaveOk(slaveOk))
-                               .oplogReplay(oplogReplay)
-                               .noCursorTimeout(noCursorTimeout)
-                               .awaitData(awaitData)
-                               .partial(partial));
-    }
-
-    @Override
-    public <T> void queryAsync(final MongoNamespace namespace, final BsonDocument queryDocument, final BsonDocument fields, final int skip,
-                               final int limit, final int batchSize, final boolean slaveOk, final boolean tailableCursor,
-                               final boolean awaitData, final boolean noCursorTimeout, final boolean partial, final boolean oplogReplay,
-                               final Decoder<T> resultDecoder, final SingleResultCallback<QueryResult<T>> callback) {
-        executeProtocolAsync(new QueryProtocol<T>(namespace, skip, limit, batchSize, queryDocument, fields, resultDecoder)
-                             .tailableCursor(tailableCursor)
-                             .slaveOk(getSlaveOk(slaveOk))
-                             .oplogReplay(oplogReplay)
-                             .noCursorTimeout(noCursorTimeout)
-                             .awaitData(awaitData)
-                             .partial(partial), callback);
-    }
-
-    @Override
-    public <T> QueryResult<T> getMore(final MongoNamespace namespace, final long cursorId, final int numberToReturn,
-                                      final Decoder<T> resultDecoder) {
-        return executeProtocol(new GetMoreProtocol<T>(namespace, cursorId, numberToReturn, resultDecoder));
-    }
-
-    @Override
-    public <T> void getMoreAsync(final MongoNamespace namespace, final long cursorId, final int numberToReturn,
-                                 final Decoder<T> resultDecoder, final SingleResultCallback<QueryResult<T>> callback) {
-        executeProtocolAsync(new GetMoreProtocol<T>(namespace, cursorId, numberToReturn, resultDecoder), callback);
-    }
-
-    @Override
-    public void killCursor(final MongoNamespace namespace, final List<Long> cursors) {
-        executeProtocol(new KillCursorProtocol(namespace, cursors));
-    }
-
-    @Override
     public void markAsPinned(final PinningMode pinningMode) {
         wrapped.markAsPinned(pinningMode);
-    }
-
-    @Override
-    public void killCursorAsync(final MongoNamespace namespace, final List<Long> cursors, final SingleResultCallback<Void> callback) {
-        executeProtocolAsync(new KillCursorProtocol(namespace, cursors), callback);
-    }
-
-    private boolean getSlaveOk(final boolean slaveOk) {
-        return slaveOk
-               || (clusterConnectionMode == ClusterConnectionMode.SINGLE && wrapped.getDescription().getServerType() != SHARD_ROUTER);
     }
 
     private <T> T executeProtocol(final LegacyProtocol<T> protocol) {

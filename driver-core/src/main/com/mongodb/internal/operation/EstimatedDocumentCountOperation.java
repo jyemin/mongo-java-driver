@@ -43,7 +43,6 @@ import static com.mongodb.internal.operation.CommandOperationHelper.isNamespaceE
 import static com.mongodb.internal.operation.CommandOperationHelper.rethrowIfNotNamespaceError;
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.internal.operation.OperationHelper.cursorDocumentToQueryResult;
-import static com.mongodb.internal.operation.OperationHelper.validateReadConcern;
 import static com.mongodb.internal.operation.OperationReadConcernHelper.appendReadConcernToCommand;
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionFiveDotZero;
 import static java.util.Arrays.asList;
@@ -116,7 +115,6 @@ public class EstimatedDocumentCountOperation implements AsyncReadOperation<Long>
             if (serverIsAtLeastVersionFiveDotZero(connectionDescription)) {
                 return getAggregateCommand(sessionContext, connectionDescription);
             } else {
-                validateReadConcern(connectionDescription, sessionContext.getReadConcern());
                 return getCountCommand(sessionContext, connectionDescription);
             }
         };

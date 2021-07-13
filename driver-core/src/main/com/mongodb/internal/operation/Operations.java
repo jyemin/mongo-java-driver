@@ -180,7 +180,6 @@ public final class Operations<TDocument> {
                 .noCursorTimeout(options.isNoCursorTimeout())
                 .oplogReplay(options.isOplogReplay())
                 .partial(options.isPartial())
-                .slaveOk(readPreference.isSlaveOk())
                 .collation(options.getCollation())
                 .comment(options.getComment())
                 .min(toBsonDocumentOrNull(options.getMin()))

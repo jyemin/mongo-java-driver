@@ -92,7 +92,6 @@ class QueryBatchCursorSpecification extends Specification {
             _ * getDescription() >> Stub(ConnectionDescription) {
                 getMaxWireVersion() >> 4
             }
-            _ * killCursor(_, _) >> { throw new MongoSocketException('No MongoD', serverAddress) }
             _ * command(_, _, _, _, _) >> { throw new MongoSocketException('No MongoD', serverAddress) }
         }
         def connectionSource = Stub(ConnectionSource) {

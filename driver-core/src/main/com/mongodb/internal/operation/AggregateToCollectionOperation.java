@@ -54,7 +54,6 @@ import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotFour;
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotSix;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 
 /**
@@ -401,7 +400,7 @@ public class AggregateToCollectionOperation implements AsyncWriteOperation<Void>
         if (allowDiskUse != null) {
             commandDocument.put("allowDiskUse", BsonBoolean.valueOf(allowDiskUse));
         }
-        if (bypassDocumentValidation != null && serverIsAtLeastVersionThreeDotTwo(description)) {
+        if (bypassDocumentValidation != null) {
             commandDocument.put("bypassDocumentValidation", BsonBoolean.valueOf(bypassDocumentValidation));
         }
 

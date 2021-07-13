@@ -52,7 +52,6 @@ import static com.mongodb.internal.operation.CursorHelper.getNumberToReturn;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.getMoreCursorDocumentToQueryResult;
 import static com.mongodb.internal.operation.QueryHelper.translateCommandException;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 import static java.util.Collections.singletonList;
 
 class AsyncQueryBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
@@ -241,17 +240,11 @@ class AsyncQueryBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
     }
 
     private void getMore(final AsyncConnection connection, final ServerCursor cursor, final SingleResultCallback<List<T>> callback) {
-        if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-            connection.commandAsync(namespace.getDatabaseName(), asGetMoreCommandDocument(cursor.getId()), NO_OP_FIELD_NAME_VALIDATOR,
-                    ReadPreference.primary(), CommandResultDocumentCodec.create(decoder, "nextBatch"),
-                    connectionSource.getSessionContext(), connectionSource.getServerApi(),
-                    new CommandResultSingleResultCallback(connection, cursor, callback));
-
-        } else {
-            connection.getMoreAsync(namespace, cursor.getId(), getNumberToReturn(limit, batchSize, count.get()),
-                                    decoder, new QueryResultSingleResultCallback(connection, callback));
-        }
-    }
+        connection.commandAsync(namespace.getDatabaseName(), asGetMoreCommandDocument(cursor.getId()), NO_OP_FIELD_NAME_VALIDATOR,
+                ReadPreference.primary(), CommandResultDocumentCodec.create(decoder, "nextBatch"),
+                connectionSource.getSessionContext(), connectionSource.getServerApi(),
+                new CommandResultSingleResultCallback(connection, cursor, callback));
+   }
 
     private BsonDocument asGetMoreCommandDocument(final long cursorId) {
         BsonDocument document = new BsonDocument("getMore", new BsonInt64(cursorId))
@@ -299,25 +292,15 @@ class AsyncQueryBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
     }
 
     private void killCursorAsynchronouslyAndReleaseConnectionAndSource(final AsyncConnection connection, final ServerCursor localCursor) {
-        if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-            connection.commandAsync(namespace.getDatabaseName(), asKillCursorsCommandDocument(localCursor), NO_OP_FIELD_NAME_VALIDATOR,
-                    ReadPreference.primary(), new BsonDocumentCodec(), connectionSource.getSessionContext(),
-                    connectionSource.getServerApi(), new SingleResultCallback<BsonDocument>() {
-                        @Override
-                        public void onResult(final BsonDocument result, final Throwable t) {
-                            connection.release();
-                            connectionSource.release();
-                        }
-                    });
-        } else {
-            connection.killCursorAsync(namespace, singletonList(localCursor.getId()), new SingleResultCallback<Void>() {
-                @Override
-                public void onResult(final Void result, final Throwable t) {
-                    connection.release();
-                    connectionSource.release();
-                }
-            });
-        }
+        connection.commandAsync(namespace.getDatabaseName(), asKillCursorsCommandDocument(localCursor), NO_OP_FIELD_NAME_VALIDATOR,
+                ReadPreference.primary(), new BsonDocumentCodec(), connectionSource.getSessionContext(),
+                connectionSource.getServerApi(), new SingleResultCallback<BsonDocument>() {
+                    @Override
+                    public void onResult(final BsonDocument result, final Throwable t) {
+                        connection.release();
+                        connectionSource.release();
+                    }
+                });
     }
 
     private BsonDocument asKillCursorsCommandDocument(final ServerCursor localCursor) {
@@ -398,27 +381,6 @@ class AsyncQueryBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T> {
                         connection.getDescription().getServerAddress());
                 postBatchResumeToken = getPostBatchResumeTokenFromResponse(result);
                 handleGetMoreQueryResult(connection, callback, queryResult);
-            }
-        }
-    }
-
-    private class QueryResultSingleResultCallback implements SingleResultCallback<QueryResult<T>> {
-        private final AsyncConnection connection;
-        private final SingleResultCallback<List<T>> callback;
-
-        QueryResultSingleResultCallback(final AsyncConnection connection, final SingleResultCallback<List<T>> callback) {
-            this.connection = connection;
-            this.callback = errorHandlingCallback(callback, LOGGER);
-        }
-
-        @Override
-        public void onResult(final QueryResult<T> result, final Throwable t) {
-            if (t != null) {
-                connection.release();
-                endOperationInProgress();
-                callback.onResult(null, t);
-            } else {
-                handleGetMoreQueryResult(connection, callback, result);
             }
         }
     }

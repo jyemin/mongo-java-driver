@@ -30,9 +30,7 @@ import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
 
-import java.util.List;
-
-@SuppressWarnings({"rawtypes", "unchecked", "deprecation"})
+@SuppressWarnings({"rawtypes", "unchecked"})
 class TestConnection implements Connection, AsyncConnection {
     private final InternalConnection internalConnection;
     private final ProtocolExecutor executor;
@@ -132,50 +130,8 @@ class TestConnection implements Connection, AsyncConnection {
     }
 
     @Override
-    public <T> QueryResult<T> query(final MongoNamespace namespace, final BsonDocument queryDocument, final BsonDocument fields,
-                                    final int skip, final int limit,
-                                    final int batchSize, final boolean slaveOk, final boolean tailableCursor, final boolean awaitData,
-                                    final boolean noCursorTimeout,
-                                    final boolean partial, final boolean oplogReplay, final Decoder<T> resultDecoder) {
-        return executeEnqueuedLegacyProtocol();
-    }
-
-    @Override
-    public <T> void queryAsync(final MongoNamespace namespace, final BsonDocument queryDocument, final BsonDocument fields, final int skip,
-                               final int limit,
-                               final int batchSize, final boolean slaveOk, final boolean tailableCursor, final boolean awaitData,
-                               final boolean noCursorTimeout,
-                               final boolean partial, final boolean oplogReplay, final Decoder<T> resultDecoder,
-                               final SingleResultCallback<QueryResult<T>> callback) {
-        executeEnqueuedLegacyProtocolAsync(callback);
-    }
-
-    @Override
-    public <T> QueryResult<T> getMore(final MongoNamespace namespace, final long cursorId, final int numberToReturn,
-                                      final Decoder<T> resultDecoder) {
-        return executeEnqueuedLegacyProtocol();
-    }
-
-    @Override
-    public <T> void getMoreAsync(final MongoNamespace namespace, final long cursorId, final int numberToReturn,
-                                 final Decoder<T> resultDecoder,
-                                 final SingleResultCallback<QueryResult<T>> callback) {
-        executeEnqueuedLegacyProtocolAsync(callback);
-    }
-
-    @Override
-    public void killCursor(final MongoNamespace namespace, final List<Long> cursors) {
-        executeEnqueuedLegacyProtocol();
-    }
-
-    @Override
     public void markAsPinned(final PinningMode pinningMode) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void killCursorAsync(final MongoNamespace namespace, final List<Long> cursors, final SingleResultCallback<Void> callback) {
-        executeEnqueuedLegacyProtocolAsync(callback);
     }
 
     @SuppressWarnings("unchecked")

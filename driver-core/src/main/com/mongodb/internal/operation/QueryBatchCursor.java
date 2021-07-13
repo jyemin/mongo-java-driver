@@ -47,7 +47,6 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.operation.CursorHelper.getNumberToReturn;
 import static com.mongodb.internal.operation.OperationHelper.getMoreCursorDocumentToQueryResult;
 import static com.mongodb.internal.operation.QueryHelper.translateCommandException;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo;
 import static java.util.Collections.singletonList;
 
 class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
@@ -265,22 +264,16 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private void getMore() {
         Connection connection = getConnection();
         try {
-            if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-                try {
-                    initFromCommandResult(connection.command(namespace.getDatabaseName(),
-                            asGetMoreCommandDocument(),
-                            NO_OP_FIELD_NAME_VALIDATOR,
-                            ReadPreference.primary(),
-                            CommandResultDocumentCodec.create(decoder, "nextBatch"),
-                            connectionSource.getSessionContext(),
-                            connectionSource.getServerApi()));
-                } catch (MongoCommandException e) {
-                    throw translateCommandException(e, serverCursor);
-                }
-            } else {
-                QueryResult<T> getMore = connection.getMore(namespace, serverCursor.getId(),
-                        getNumberToReturn(limit, batchSize, count), decoder);
-                initFromQueryResult(getMore);
+            try {
+                initFromCommandResult(connection.command(namespace.getDatabaseName(),
+                        asGetMoreCommandDocument(),
+                        NO_OP_FIELD_NAME_VALIDATOR,
+                        ReadPreference.primary(),
+                        CommandResultDocumentCodec.create(decoder, "nextBatch"),
+                        connectionSource.getSessionContext(),
+                        connectionSource.getServerApi()));
+            } catch (MongoCommandException e) {
+                throw translateCommandException(e, serverCursor);
             }
             if (limitReached()) {
                 killCursor(connection);
@@ -357,13 +350,9 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         if (serverCursor != null) {
             notNull("connection", connection);
             try {
-                if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-                    connection.command(namespace.getDatabaseName(), asKillCursorsCommandDocument(), NO_OP_FIELD_NAME_VALIDATOR,
-                            ReadPreference.primary(), new BsonDocumentCodec(), connectionSource.getSessionContext(),
-                            connectionSource.getServerApi());
-                } else {
-                    connection.killCursor(namespace, singletonList(serverCursor.getId()));
-                }
+                connection.command(namespace.getDatabaseName(), asKillCursorsCommandDocument(), NO_OP_FIELD_NAME_VALIDATOR,
+                        ReadPreference.primary(), new BsonDocumentCodec(), connectionSource.getSessionContext(),
+                        connectionSource.getServerApi());
             } finally {
                 serverCursor = null;
             }

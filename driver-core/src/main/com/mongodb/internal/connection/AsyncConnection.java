@@ -21,8 +21,8 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerApi;
 import com.mongodb.WriteConcernResult;
 import com.mongodb.annotations.ThreadSafe;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.ReferenceCounted;
 import com.mongodb.internal.bulk.DeleteRequest;
 import com.mongodb.internal.bulk.InsertRequest;
@@ -31,8 +31,6 @@ import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
-
-import java.util.List;
 
 /**
  * An asynchronous connection to a MongoDB server with non-blocking operations.
@@ -125,53 +123,6 @@ public interface AsyncConnection extends ReferenceCounted {
                           ReadPreference readPreference, Decoder<T> commandResultDecoder, SessionContext sessionContext,
                           ServerApi serverApi, boolean responseExpected, SplittablePayload payload,
                           FieldNameValidator payloadFieldNameValidator, SingleResultCallback<T> callback);
-
-    /**
-     * Execute the query asynchronously.
-     *
-     * @param namespace       the namespace to query
-     * @param queryDocument   the query document
-     * @param fields          the field to include or exclude
-     * @param skip            the number of documents to skip
-     * @param limit           the maximum number of documents to return in all batches
-     * @param batchSize       the maximum number of documents to return in this batch
-     * @param slaveOk         whether the query can run on a secondary
-     * @param tailableCursor  whether to return a tailable cursor
-     * @param awaitData       whether a tailable cursor should wait before returning if no documents are available
-     * @param noCursorTimeout whether the cursor should not timeout
-     * @param partial         whether partial results from sharded clusters are acceptable
-     * @param oplogReplay     whether to replay the oplog
-     * @param resultDecoder   the decoder for the query result documents
-     * @param <T>             the query result document type
-     * @param callback        the callback to be passed the write result
-     * @since 3.1
-     */
-    <T> void queryAsync(MongoNamespace namespace, BsonDocument queryDocument, BsonDocument fields,
-                        int skip, int limit, int batchSize, boolean slaveOk, boolean tailableCursor, boolean awaitData,
-                        boolean noCursorTimeout, boolean partial, boolean oplogReplay, Decoder<T> resultDecoder,
-                        SingleResultCallback<QueryResult<T>> callback);
-
-    /**
-     * Get more result documents from a cursor asynchronously.
-     *
-     * @param namespace      the namespace to get more documents from
-     * @param cursorId       the cursor id
-     * @param numberToReturn the number of documents to return
-     * @param resultDecoder  the decoder for the query result documents
-     * @param callback       the callback to be passed the query result
-     * @param <T>            the type of the query result documents
-     */
-    <T> void getMoreAsync(MongoNamespace namespace, long cursorId, int numberToReturn, Decoder<T> resultDecoder,
-                          SingleResultCallback<QueryResult<T>> callback);
-
-    /**
-     * Asynchronously Kills the given list of cursors.
-     *
-     * @param namespace the namespace in which the cursors live
-     * @param cursors   the cursors
-     * @param callback  the callback that is called once the cursors have been killed
-     */
-    void killCursorAsync(MongoNamespace namespace, List<Long> cursors, SingleResultCallback<Void> callback);
 
     void markAsPinned(Connection.PinningMode pinningMode);
 }

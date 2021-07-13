@@ -21,8 +21,8 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
-import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.internal.session.SessionContext;
+import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
@@ -272,7 +272,7 @@ public class FindAndDeleteOperation<T> extends BaseFindAndModifyOperation<T> {
         putIfNotNull(commandDocument, "sort", getSort());
         putIfNotZero(commandDocument, "maxTimeMS", getMaxTime(MILLISECONDS));
         commandDocument.put("remove", BsonBoolean.TRUE);
-        addWriteConcernToCommand(connectionDescription, commandDocument, sessionContext);
+        addWriteConcernToCommand(commandDocument, sessionContext);
         if (collation != null) {
             commandDocument.put("collation", collation.asDocument());
         }

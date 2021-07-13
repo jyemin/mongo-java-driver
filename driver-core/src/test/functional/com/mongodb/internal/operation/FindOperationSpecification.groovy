@@ -39,7 +39,6 @@ import com.mongodb.internal.binding.ConnectionSource
 import com.mongodb.internal.binding.ReadBinding
 import com.mongodb.internal.connection.AsyncConnection
 import com.mongodb.internal.connection.Connection
-import com.mongodb.internal.connection.QueryResult
 import com.mongodb.internal.session.SessionContext
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
@@ -96,7 +95,6 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
         !operation.isNoCursorTimeout()
         !operation.isOplogReplay()
         !operation.isPartial()
-        !operation.isSlaveOk()
         operation.isAllowDiskUse() == null
     }
 
@@ -119,7 +117,6 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
                 .cursorType(Tailable)
                 .collation(defaultCollation)
                 .partial(true)
-                .slaveOk(true)
                 .oplogReplay(true)
                 .noCursorTimeout(true)
                 .allowDiskUse(true)
@@ -137,7 +134,6 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
         operation.isNoCursorTimeout()
         operation.isOplogReplay()
         operation.isPartial()
-        operation.isSlaveOk()
         operation.isAllowDiskUse()
     }
 
@@ -677,37 +673,6 @@ class FindOperationSpecification extends OperationFunctionalSpecification {
                 }
         ]
     }
-
-    def 'should call query on Connection with no $query when there are no other meta operators'() {
-        given:
-        def operation = new FindOperation<Document>(getNamespace(), new DocumentCodec())
-                .projection(new BsonDocument('x', new BsonInt32(1)))
-                .filter(new BsonDocument('z', new BsonString('val')))
-        def binding = Stub(ReadBinding) {
-            getSessionContext() >> Stub(SessionContext) {
-                getReadConcern() >> ReadConcern.DEFAULT
-            }
-        }
-        def source = Stub(ConnectionSource)
-        def connection = Mock(Connection)
-        binding.readPreference >> ReadPreference.primary()
-        binding.readConnectionSource >> source
-        source.connection >> connection
-        source.retain() >> source
-
-        when:
-        operation.execute(binding)
-
-        then:
-        _ * connection.description >> new ConnectionDescription(new ConnectionId(new ServerId(new ClusterId(), new ServerAddress())),
-                 2, STANDALONE, 1000, 100000, 100000, [])
-
-
-        1 * connection.query(getNamespace(), operation.filter, operation.projection, 0, 0, 0, false, false, false, false,
-                false, false, _) >> new QueryResult(getNamespace(), [new BsonDocument('n', new BsonInt32(1))], 0, new ServerAddress())
-        1 * connection.release()
-    }
-
 
     //  sanity check that the server accepts tailable and await data flags
     def 'should pass tailable and await data flags through'() {

@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.operation
 
+import com.mongodb.MongoCommandException
 import com.mongodb.MongoCursorNotFoundException
 import com.mongodb.MongoException
 import com.mongodb.MongoTimeoutException
@@ -61,7 +62,6 @@ import static com.mongodb.ClusterFixture.serverVersionLessThan
 import static com.mongodb.internal.connection.ServerHelper.waitForLastRelease
 import static com.mongodb.internal.connection.ServerHelper.waitForRelease
 import static com.mongodb.internal.operation.OperationHelper.cursorDocumentToQueryResult
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionThreeDotTwo
 import static java.util.Arrays.asList
 import static java.util.Collections.singletonList
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -360,7 +360,7 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
         makeAdditionalGetMoreCall(firstBatch.cursor, connection)
 
         then:
-        thrown(MongoCursorNotFoundException)
+        thrown(MongoCommandException)
     }
 
     @SuppressWarnings('BracesForTryCatchFinally')
@@ -417,38 +417,34 @@ class AsyncQueryBatchCursorFunctionalSpecification extends OperationFunctionalSp
     }
 
     private QueryResult<Document> executeQuery(BsonDocument filter, int limit, int batchSize, boolean tailable, boolean awaitData) {
-        if (serverIsAtLeastVersionThreeDotTwo(connection.getDescription())) {
-            def findCommand = new BsonDocument('find', new BsonString(getCollectionName()))
-                    .append('filter', filter)
-                    .append('tailable', BsonBoolean.valueOf(tailable))
-                    .append('awaitData', BsonBoolean.valueOf(awaitData))
+        def findCommand = new BsonDocument('find', new BsonString(getCollectionName()))
+                .append('filter', filter)
+                .append('tailable', BsonBoolean.valueOf(tailable))
+                .append('awaitData', BsonBoolean.valueOf(awaitData))
 
-            findCommand.append('limit', new BsonInt32(Math.abs(limit)))
+        findCommand.append('limit', new BsonInt32(Math.abs(limit)))
 
-            if (limit >= 0) {
-                if (batchSize < 0 && Math.abs(batchSize) < limit) {
-                    findCommand.append('limit', new BsonInt32(Math.abs(batchSize)))
-                } else {
-                    findCommand.append('batchSize', new BsonInt32(Math.abs(batchSize)))
-                }
+        if (limit >= 0) {
+            if (batchSize < 0 && Math.abs(batchSize) < limit) {
+                findCommand.append('limit', new BsonInt32(Math.abs(batchSize)))
+            } else {
+                findCommand.append('batchSize', new BsonInt32(Math.abs(batchSize)))
             }
-
-            def futureResultCallback = new FutureResultCallback<BsonDocument>();
-            connection.commandAsync(getDatabaseName(), findCommand, NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(),
-                    CommandResultDocumentCodec.create(new DocumentCodec(), 'firstBatch'),
-                    connectionSource.sessionContext, binding.getServerApi(), futureResultCallback)
-            def response = futureResultCallback.get()
-            cursorDocumentToQueryResult(response.getDocument('cursor'), connection.getDescription().getServerAddress())
-        } else {
-            def futureResultCallback = new FutureResultCallback<QueryResult<Document>>();
-            connection.queryAsync(getNamespace(), filter, null, 0, limit, batchSize,
-                                  true, tailable, awaitData, false, false, false,
-                                  new DocumentCodec(), futureResultCallback);
-            futureResultCallback.get();
         }
+
+        def futureResultCallback = new FutureResultCallback<BsonDocument>();
+        connection.commandAsync(getDatabaseName(), findCommand, NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(),
+                CommandResultDocumentCodec.create(new DocumentCodec(), 'firstBatch'),
+                connectionSource.sessionContext, binding.getServerApi(), futureResultCallback)
+        def response = futureResultCallback.get()
+        cursorDocumentToQueryResult(response.getDocument('cursor'), connection.getDescription().getServerAddress())
     }
 
     private void makeAdditionalGetMoreCall(ServerCursor serverCursor, Connection connection) {
-        connection.getMore(getNamespace(), serverCursor.getId(), 1, new DocumentCodec())
+        connection.command(getNamespace().databaseName,
+                new BsonDocument('getMore', new BsonInt64(serverCursor.getId()))
+                        .append('collection', new BsonString(namespace.getCollectionName())),
+                NO_OP_FIELD_NAME_VALIDATOR, ReadPreference.primary(), new BsonDocumentCodec(), connectionSource.getSessionContext(),
+                connectionSource.getServerApi());
     }
 }
