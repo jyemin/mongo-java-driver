@@ -616,6 +616,14 @@ class QueryBatchCursorFunctionalSpecification extends OperationFunctionalSpecifi
     }
 
     private void makeAdditionalGetMoreCall(ServerCursor serverCursor, Connection connection) {
-        connection.getMore(getNamespace(), serverCursor.getId(), 1, new DocumentCodec())
+        if (serverVersionLessThan(3, 6)) {
+            connection.getMore(getNamespace(), serverCursor.getId(), 1, new DocumentCodec())
+        } else {
+            connection.command(getNamespace().databaseName,
+                    new BsonDocument('getMore', new BsonInt64(serverCursor.getId()))
+                            .append('collection', new BsonString(namespace.getCollectionName())),
+                    new NoOpFieldNameValidator(), ReadPreference.primary(),
+                    new BsonDocumentCodec(), new NoOpSessionContext(), getServerApi())
+        }
     }
 }
