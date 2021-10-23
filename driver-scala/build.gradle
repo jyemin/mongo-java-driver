@@ -18,8 +18,8 @@ description = "A Scala wrapper of the MongoDB Reactive Streams Java driver"
 archivesBaseName = 'mongo-scala-driver'
 
 dependencies {
-    compile project(path: ':bson-scala', configuration: 'default')
-    compile project(path: ':driver-reactive-streams', configuration: 'default')
+    api project(path: ':bson-scala', configuration: 'default')
+    api project(path: ':driver-reactive-streams', configuration: 'default')
 
     testImplementation project(':util')
     testImplementation project(':driver-sync')

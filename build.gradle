@@ -73,7 +73,7 @@ configure(coreProjects) {
         google()
         mavenCentral()
         maven {
-            url 'http://oss.sonatype.org/content/repositories/snapshots'
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
         }
 
     }
@@ -97,6 +97,7 @@ configure(javaProjects) {
 }
 
 configure(scalaProjects) {
+    apply plugin: 'java-library'
     apply plugin: 'scala'
     apply plugin: 'idea'
     apply plugin: "com.adtran.scala-multiversion-plugin"
@@ -108,8 +109,9 @@ configure(scalaProjects) {
     targetCompatibility = JavaVersion.VERSION_1_8
 
     dependencies {
-        compile ('org.scala-lang:scala-library:%scala-version%')
-        compile ('org.scala-lang:scala-reflect:%scala-version%')
+        // TODO: api or implementation?
+        api('org.scala-lang:scala-library:%scala-version%')
+        api('org.scala-lang:scala-reflect:%scala-version%')
 
         testImplementation(platform("org.junit:junit-bom:$junitBomVersion"))
         testImplementation("org.junit.vintage:junit-vintage-engine")

@@ -98,17 +98,18 @@ allprojects {
                     | </script>'''.stripMargin()
         }
 
-        afterEvaluate {
-            destinationDir = new File(rootDir, "build/docs/${project.archivesBaseName}")
-            def version = project.version as String
-            if (project.name != 'bson') {
-                options.linksOffline(*buildDocsUrl(version, 'bson'))
-                if (project.name != 'driver-core') options.linksOffline(*buildDocsUrl(version, 'mongodb-driver-core'))
-                if (project.name == 'driver-legacy') {
-                    dependsOn javaMainProjects.find({ it.name == 'driver-sync' }).javadoc
-                    options.linksOffline(*buildDocsUrl(version, 'mongodb-driver-sync'))
-                }
-            }
-        }
+        // TODO: fix this to work with Gradle 7+
+//        afterEvaluate {
+//            destinationDir = new File(rootDir, "build/docs/${project.archivesBaseName}")
+//            def version = project.version as String
+//            if (project.name != 'bson') {
+//                options.linksOffline(*buildDocsUrl(version, 'bson'))
+//                if (project.name != 'driver-core') options.linksOffline(*buildDocsUrl(version, 'mongodb-driver-core'))
+//                if (project.name == 'driver-legacy') {
+//                    dependsOn javaMainProjects.find({ it.name == 'driver-sync' }).javadoc
+//                    options.linksOffline(*buildDocsUrl(version, 'mongodb-driver-sync'))
+//                }
+//            }
+//        }
     }
 }

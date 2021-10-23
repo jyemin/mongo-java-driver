@@ -27,6 +27,12 @@ ext {
     pomName = 'MongoDB Java Driver Core'
 }
 
+// Workaround issue with gradle-buildconfig-plugin plugin
+// See https://github.com/mfuerstenau/gradle-buildconfig-plugin/issues/30
+configurations {
+    create("compile")
+}
+
 // Add native-image.properties
 sourceSets.main.resources.srcDirs = ['src/resources']
 
