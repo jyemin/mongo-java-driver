@@ -21,11 +21,14 @@ import com.mongodb.internal.connection.ConcurrentPool.Prune;
 import org.bson.ByteBuf;
 import org.bson.ByteBufNIO;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.internal.connection.ConcurrentPool.INFINITE_SIZE;
 
@@ -34,9 +37,45 @@ import static com.mongodb.internal.connection.ConcurrentPool.INFINITE_SIZE;
  *
  * <p>This class should not be considered a part of the public API.</p>
  */
-public class PowerOfTwoBufferPool implements BufferProvider {
+public class PowerOfTwoBufferPool implements BufferProvider, Closeable {
 
-    private final Map<Integer, ConcurrentPool<ByteBuffer>> powerOfTwoToPoolMap = new HashMap<Integer, ConcurrentPool<ByteBuffer>>();
+    private static final long MAX_IDLE_TIME_NANOS = TimeUnit.MINUTES.toNanos(1);
+
+    private static final class LastUseWrapper {
+        private final ByteBuffer byteBuffer;
+        private final long lastUseNanos;
+
+        private LastUseWrapper(final ByteBuffer byteBuffer) {
+            this.byteBuffer = byteBuffer;
+            this.lastUseNanos = System.currentTimeMillis();
+        }
+    }
+
+    private final class ItemFactory implements ConcurrentPool.ItemFactory<LastUseWrapper> {
+        private final int size;
+
+        private ItemFactory(final int size) {
+            this.size = size;
+        }
+
+        @Override
+        public LastUseWrapper create() {
+            return new LastUseWrapper(createNew(size));
+        }
+
+        @Override
+        public void close(final LastUseWrapper byteBuffer) {
+        }
+
+        @Override
+        public Prune shouldPrune(final LastUseWrapper byteBuffer) {
+            long curTime = System.nanoTime();
+            return curTime > byteBuffer.lastUseNanos + MAX_IDLE_TIME_NANOS
+                    ? Prune.YES : Prune.NO;
+        }
+    }
+
+    private final Map<Integer, ConcurrentPool<LastUseWrapper>> powerOfTwoToPoolMap = new HashMap<>();
 
     /**
      * Construct an instance with a highest power of two of 24.
@@ -54,24 +93,10 @@ public class PowerOfTwoBufferPool implements BufferProvider {
         int powerOfTwo = 1;
         for (int i = 0; i <= highestPowerOfTwo; i++) {
             final int size = powerOfTwo;
-            powerOfTwoToPoolMap.put(i, new ConcurrentPool<>(INFINITE_SIZE,
-                                                                         new ConcurrentPool.ItemFactory<ByteBuffer>() {
-                                                                             @Override
-                                                                             public ByteBuffer create() {
-                                                                                 return createNew(size);
-                                                                             }
-
-                                                                             @Override
-                                                                             public void close(final ByteBuffer byteBuffer) {
-                                                                             }
-
-                                                                             @Override
-                                                                             public Prune shouldPrune(final ByteBuffer byteBuffer) {
-                                                                                 return Prune.STOP;
-                                                                             }
-                                                                         }));
+            powerOfTwoToPoolMap.put(i, new ConcurrentPool<>(INFINITE_SIZE, new ItemFactory(size)));
             powerOfTwo = powerOfTwo << 1;
         }
+
     }
 
     @Override
@@ -79,9 +104,14 @@ public class PowerOfTwoBufferPool implements BufferProvider {
         return new PooledByteBufNIO(getByteBuffer(size));
     }
 
+    @Override
+    public void close() throws IOException {
+
+    }
+
     public ByteBuffer getByteBuffer(final int size) {
-        ConcurrentPool<ByteBuffer> pool = powerOfTwoToPoolMap.get(log2(roundUpToNextHighestPowerOfTwo(size)));
-        ByteBuffer byteBuffer = (pool == null) ? createNew(size) : pool.get();
+        ConcurrentPool<LastUseWrapper> pool = powerOfTwoToPoolMap.get(log2(roundUpToNextHighestPowerOfTwo(size)));
+        ByteBuffer byteBuffer = (pool == null) ? createNew(size) : pool.get().byteBuffer;
 
         ((Buffer) byteBuffer).clear();
         ((Buffer) byteBuffer).limit(size);
@@ -95,9 +125,9 @@ public class PowerOfTwoBufferPool implements BufferProvider {
     }
 
     public void release(final ByteBuffer buffer) {
-        ConcurrentPool<ByteBuffer> pool = powerOfTwoToPoolMap.get(log2(roundUpToNextHighestPowerOfTwo(buffer.capacity())));
+        ConcurrentPool<LastUseWrapper> pool = powerOfTwoToPoolMap.get(log2(roundUpToNextHighestPowerOfTwo(buffer.capacity())));
         if (pool != null) {
-            pool.release(buffer);
+            pool.release(new LastUseWrapper(buffer));
         }
     }
 
