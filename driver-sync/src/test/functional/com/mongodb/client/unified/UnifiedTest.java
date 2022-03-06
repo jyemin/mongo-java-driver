@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.mongodb.ClusterFixture.checkForBufferLeak;
 import static com.mongodb.ClusterFixture.getServerVersion;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
@@ -169,6 +170,7 @@ public abstract class UnifiedTest {
             failPoint.disableFailPoint();
         }
         entities.close();
+        checkForBufferLeak();
     }
 
     @Test

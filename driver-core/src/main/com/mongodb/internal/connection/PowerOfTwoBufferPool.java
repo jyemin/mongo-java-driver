@@ -157,6 +157,12 @@ public class PowerOfTwoBufferPool implements BufferProvider, AutoCloseable {
         return byteBuffer;
     }
 
+    public long getInUseBytes() {
+        return powerOfTwoToPoolMap.entrySet().stream()
+                .mapToLong(entry -> (long) Math.pow(2, entry.getKey()) * entry.getValue().getInUseCount())
+                .sum();
+    }
+
     private ByteBuffer createNew(final int size) {
         ByteBuffer buf = ByteBuffer.allocate(size);
         buf.order(ByteOrder.LITTLE_ENDIAN);

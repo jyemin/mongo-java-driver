@@ -88,4 +88,13 @@ public class PowerOfTwoBufferPoolTest {
             assertNotSame(wrappedByteBuf, newByteBuf.asNIO());
         }
     }
+
+    @Test
+    public void testInUseBytes() {
+        pool.getBuffer(15);
+        pool.getBuffer(15);
+        pool.getBuffer(31);
+        pool.getBuffer(63);
+        assertEquals(128, pool.getInUseBytes());
+    }
 }

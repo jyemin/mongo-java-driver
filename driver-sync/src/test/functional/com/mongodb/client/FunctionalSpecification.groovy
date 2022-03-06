@@ -19,6 +19,8 @@ package com.mongodb.client
 import org.bson.Document
 import spock.lang.Specification
 
+import static com.mongodb.ClusterFixture.checkForBufferLeak
+
 class FunctionalSpecification extends Specification {
     protected MongoDatabase database;
     protected MongoCollection<Document> collection;
@@ -33,6 +35,7 @@ class FunctionalSpecification extends Specification {
         if (collection != null) {
             collection.drop()
         }
+        checkForBufferLeak()
     }
 
     String getDatabaseName() {
