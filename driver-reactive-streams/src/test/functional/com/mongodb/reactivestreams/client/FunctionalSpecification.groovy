@@ -22,6 +22,7 @@ import spock.lang.Specification
 
 import static Fixture.dropDatabase
 import static Fixture.initializeCollection
+import static com.mongodb.ClusterFixture.checkForBufferLeak
 import static com.mongodb.ClusterFixture.getDefaultDatabaseName
 import static com.mongodb.reactivestreams.client.Fixture.drop
 import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabase
@@ -51,6 +52,7 @@ class FunctionalSpecification extends Specification {
         }
 
         waitForLastServerSessionPoolRelease();
+        checkForBufferLeak()
     }
 
     String getDatabaseName() {

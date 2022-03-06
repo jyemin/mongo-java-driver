@@ -52,6 +52,7 @@ import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
 import com.mongodb.internal.connection.InternalConnectionPoolSettings;
 import com.mongodb.internal.connection.MongoCredentialWithCache;
+import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.operation.AsyncReadOperation;
 import com.mongodb.internal.operation.AsyncWriteOperation;
 import com.mongodb.internal.operation.BatchCursor;
@@ -707,6 +708,13 @@ public final class ClusterFixture {
             throw new MongoTimeoutException(
                     format("Timed out waiting for reference count to drop to %d.  Now at %d for %s", target, count,
                             referenceCounted));
+        }
+    }
+
+    public static void checkForBufferLeak() {
+        if (PowerOfTwoBufferPool.DEFAULT.getInUseBytes() > 1024 * 32) {
+            throw new IllegalStateException(format("Possible memory leak. Expected < %d, actual %d", 1024 * 32,
+                    PowerOfTwoBufferPool.DEFAULT.getInUseBytes()));
         }
     }
 

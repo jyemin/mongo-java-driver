@@ -73,4 +73,13 @@ public class PowerOfTwoBufferPoolTest {
         buf.release();
         assertNotSame(buf, pool.getBuffer((int) Math.pow(2, 10) + 1));
     }
+
+    @Test
+    public void testInUseBytes() {
+        pool.getBuffer(15);
+        pool.getBuffer(15);
+        pool.getBuffer(31);
+        pool.getBuffer(63);
+        assertEquals(128, pool.getInUseBytes());
+    }
 }

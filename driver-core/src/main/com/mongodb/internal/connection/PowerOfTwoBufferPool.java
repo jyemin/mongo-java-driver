@@ -90,6 +90,12 @@ public class PowerOfTwoBufferPool implements BufferProvider {
         return byteBuffer;
     }
 
+    public long getInUseBytes() {
+        return powerOfTwoToPoolMap.entrySet().stream()
+                .mapToLong(entry -> (long) Math.pow(2, entry.getKey()) * entry.getValue().getInUseCount())
+                .sum();
+    }
+
     private ByteBuffer createNew(final int size) {
         ByteBuffer buf = ByteBuffer.allocate(size);  // TODO: configure whether this uses allocateDirect or allocate
         buf.order(ByteOrder.LITTLE_ENDIAN);

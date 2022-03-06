@@ -71,6 +71,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.mongodb.ClusterFixture.checkForBufferLeak;
 import static com.mongodb.ClusterFixture.getConnectionString;
 import static com.mongodb.ClusterFixture.getMultiMongosConnectionString;
 import static com.mongodb.ClusterFixture.isDataLakeTest;
@@ -372,6 +373,7 @@ public abstract class AbstractUnifiedTest {
                     definition.getDocument("failPoint").getString("configureFailPoint"))
                     .append("mode", new BsonString("off")));
         }
+        checkForBufferLeak();
     }
 
     private void closeAllSessions() {
