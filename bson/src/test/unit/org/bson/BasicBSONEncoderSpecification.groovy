@@ -16,6 +16,8 @@
 
 package org.bson
 
+import org.bson.codecs.BsonDocumentCodec
+import org.bson.codecs.DecoderContext
 import org.bson.io.BasicOutputBuffer
 import org.bson.io.OutputBuffer
 import org.bson.types.BSONTimestamp
@@ -32,7 +34,12 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
+import java.nio.ByteBuffer
 import java.util.regex.Pattern
+
+import static org.bson.BasicBSONEncoder.setDefaultUuidRepresentation
+import static org.bson.UuidRepresentation.JAVA_LEGACY
+import static org.bson.UuidRepresentation.STANDARD
 
 @SuppressWarnings(['LineLength', 'DuplicateMapLiteral'])
 class BasicBSONEncoderSpecification extends Specification {
@@ -179,5 +186,27 @@ class BasicBSONEncoderSpecification extends Specification {
         then:
         1 * buffer.writeCString('a')
         1 * buffer.writeInt32(2)
+    }
+
+    def 'should encode UUID according to default uuid representation'() {
+        given:
+        def uuid = new UUID(1, 2)
+        def document = new BasicBSONObject()
+        document.append('u', uuid)
+
+        when:
+        setDefaultUuidRepresentation(uuidRepresentation)
+        def bytes = bsonEncoder.encode(new BasicBSONObject(document))
+        def decodedDocument = new BsonDocumentCodec().decode(new BsonBinaryReader(ByteBuffer.wrap(bytes)),
+                DecoderContext.builder().build())
+
+        then:
+        decodedDocument.getBinary('u').asUuid(uuidRepresentation) == uuid
+
+        cleanup:
+        setDefaultUuidRepresentation(JAVA_LEGACY)
+
+        where:
+        uuidRepresentation << [JAVA_LEGACY, STANDARD]
     }
 }

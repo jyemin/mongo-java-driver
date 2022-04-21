@@ -16,6 +16,9 @@
 
 package org.bson
 
+import org.bson.codecs.BsonDocumentCodec
+import org.bson.codecs.EncoderContext
+import org.bson.io.BasicOutputBuffer
 import org.bson.types.BSONTimestamp
 import org.bson.types.Binary
 import org.bson.types.Code
@@ -29,6 +32,13 @@ import spock.lang.Subject
 import spock.lang.Unroll
 
 import java.util.regex.Pattern
+
+import static org.bson.BSONCallbackAdapter.setDefaultUuidRepresentation
+import static org.bson.BsonBinarySubType.UUID_LEGACY
+import static org.bson.BsonBinarySubType.UUID_STANDARD
+import static org.bson.UuidRepresentation.JAVA_LEGACY
+import static org.bson.UuidRepresentation.STANDARD
+import static org.bson.internal.UuidHelper.encodeUuidToBinary
 
 @SuppressWarnings(['LineLength', 'DuplicateMapLiteral', 'UnnecessaryBooleanExpression'])
 class BasicBSONDecoderSpecification extends Specification {
@@ -165,5 +175,38 @@ class BasicBSONDecoderSpecification extends Specification {
         BsonSerializationException | [12, 0, 2, 0, 16, 97, 0, 1, 0, 0, 0, 0]
         BsonSerializationException | [5, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0]
         BsonSerializationException | [5, 0, 0, 0, 16, 97, 45, 1, 0, 0, 0, 0]
+    }
+
+    @Unroll
+    def 'should decode UUID according to default uuid representation'() {
+        given:
+        def uuid = new UUID(1, 2)
+        def output = new BasicOutputBuffer()
+        new BsonDocumentCodec().encode(new BsonBinaryWriter(output),
+                new BsonDocument('u', new BsonBinary(uuid, encodedUuidRepresentation)), EncoderContext.builder().build())
+
+        when:
+        setDefaultUuidRepresentation(decodedUuidRepresentation)
+        def decodedBsonObject = bsonDecoder.readObject(output.getInternalBuffer())
+        def decodedUuid = decodedBsonObject.get('u')
+
+        then:
+        decodedUuid == expectedUuid
+
+        cleanup:
+        setDefaultUuidRepresentation(JAVA_LEGACY)
+
+        where:
+        [encodedUuidRepresentation, decodedUuidRepresentation, expectedUuid] << [
+                [JAVA_LEGACY, JAVA_LEGACY,
+                 new UUID(1, 2)],
+                [JAVA_LEGACY, STANDARD,
+                 new Binary(UUID_LEGACY, encodeUuidToBinary(new UUID(1, 2), JAVA_LEGACY))],
+                [STANDARD, JAVA_LEGACY,
+                 new Binary(UUID_STANDARD, encodeUuidToBinary(new UUID(1, 2), STANDARD))],
+                [STANDARD, STANDARD,
+                 new UUID(1, 2)]
+
+        ]
     }
 }
