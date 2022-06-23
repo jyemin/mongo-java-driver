@@ -50,7 +50,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
     @IgnoreIf({ getSslSettings().isEnabled() })
     def 'should throw a MongoSocketOpenException when the AsynchronousSocket Stream fails to open'() {
         given:
-        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE,
+        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE, false,
                 new AsynchronousSocketChannelStreamFactory(openSocketSettings, getSslSettings()), getCredentialWithCache(), null, null,
                 [], null, getServerApi())
                 .create(new ServerId(new ClusterId(), new ServerAddress(new InetSocketAddress('192.168.255.255', 27017))))
@@ -65,7 +65,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
     @IgnoreIf({ getSslSettings().isEnabled() })
     def 'should throw a MongoSocketReadTimeoutException with the AsynchronousSocket stream'() {
         given:
-        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE,
+        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE, false,
                 new AsynchronousSocketChannelStreamFactory(readSocketSettings, getSslSettings()), getCredentialWithCache(), null, null,
                 [], null, getServerApi()).create(new ServerId(new ClusterId(), getPrimary()))
         connection.open()
@@ -86,7 +86,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
 
     def 'should throw a MongoSocketOpenException when the Netty Stream fails to open'() {
         given:
-        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE,
+        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE, false,
                 new NettyStreamFactory(openSocketSettings, getSslSettings()), getCredentialWithCache(), null, null,
                 [], null, getServerApi()).create(new ServerId(new ClusterId(),
                 new ServerAddress(new InetSocketAddress('192.168.255.255', 27017))))
@@ -101,7 +101,7 @@ class AsyncStreamTimeoutsSpecification extends OperationFunctionalSpecification 
 
     def 'should throw a MongoSocketReadTimeoutException with the Netty stream'() {
         given:
-        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE,
+        def connection = new InternalStreamConnectionFactory(ClusterConnectionMode.SINGLE, false,
                 new NettyStreamFactory(readSocketSettings, getSslSettings()), getCredentialWithCache(), null, null,
                 [], null, getServerApi()).create(new ServerId(new ClusterId(), getPrimary()))
         connection.open()

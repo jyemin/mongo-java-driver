@@ -107,7 +107,7 @@ class PlainAuthenticationSpecification extends Specification {
     }
 
     private static InternalStreamConnection createConnection(final boolean async, final MongoCredential credential) {
-        new InternalStreamConnection(SINGLE,
+        new InternalStreamConnection(SINGLE, false,
                 new ServerId(new ClusterId(), new ServerAddress(getConnectionString().getHosts().get(0))),
                 new TestConnectionGenerationSupplier(),
                 async ? new NettyStreamFactory(SocketSettings.builder().build(), getSslSettings())

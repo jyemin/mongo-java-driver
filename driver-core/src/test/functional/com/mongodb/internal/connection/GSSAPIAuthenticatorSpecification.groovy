@@ -48,7 +48,7 @@ class GSSAPIAuthenticatorSpecification extends Specification {
         def credential = ClusterFixture.getCredential().withMechanismProperty(JAVA_SUBJECT_PROVIDER_KEY, subjectProvider)
         def credentialWithCache = new MongoCredentialWithCache(credential)
         def streamFactory = new SocketStreamFactory(SocketSettings.builder().build(), getSslSettings())
-        def internalConnection = new InternalStreamConnectionFactory(SINGLE, streamFactory, credentialWithCache, null,
+        def internalConnection = new InternalStreamConnectionFactory(SINGLE, false, streamFactory, credentialWithCache, null,
                 null, Collections.<MongoCompressor> emptyList(), null, getServerApi())
                 .create(new ServerId(new ClusterId(), getPrimary()))
 

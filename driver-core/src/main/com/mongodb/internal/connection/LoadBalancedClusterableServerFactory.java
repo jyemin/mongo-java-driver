@@ -73,7 +73,7 @@ public class LoadBalancedClusterableServerFactory implements ClusterableServerFa
     @Override
     public ClusterableServer create(final Cluster cluster, final ServerAddress serverAddress) {
         ConnectionPool connectionPool = new DefaultConnectionPool(new ServerId(cluster.getClusterId(), serverAddress),
-                new InternalStreamConnectionFactory(ClusterConnectionMode.LOAD_BALANCED, streamFactory, credential, applicationName,
+                new InternalStreamConnectionFactory(ClusterConnectionMode.LOAD_BALANCED, false, streamFactory, credential, applicationName,
                         mongoDriverInformation, compressorList, commandListener, serverApi),
                 connectionPoolSettings, internalConnectionPoolSettings, EmptyProvider.instance());
         connectionPool.ready();
