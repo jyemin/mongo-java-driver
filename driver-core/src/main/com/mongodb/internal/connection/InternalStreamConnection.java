@@ -30,6 +30,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.annotations.NotThreadSafe;
 import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerConnectionState;
@@ -40,6 +41,7 @@ import com.mongodb.connection.Stream;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.event.CommandListener;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.logging.StructuredLogger;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.internal.session.SessionContext;
@@ -837,15 +839,19 @@ public class InternalStreamConnection implements InternalConnection {
         }
     }
 
-    private static final Logger COMMAND_PROTOCOL_LOGGER = Loggers.getLogger("protocol.command");
+    private static final StructuredLogger COMMAND_PROTOCOL_LOGGER = new StructuredLogger("protocol.command");
 
     private CommandEventSender createCommandEventSender(final CommandMessage message, final ByteBufferBsonOutput bsonOutput,
             final RequestContext requestContext) {
-        if (opened() && (commandListener != null || COMMAND_PROTOCOL_LOGGER.isDebugEnabled())) {
+        if (!isMonitoringConnection && opened() && (commandListener != null || COMMAND_PROTOCOL_LOGGER.isDebugEnabled(getClusterId()))) {
             return new LoggingCommandEventSender(SECURITY_SENSITIVE_COMMANDS, SECURITY_SENSITIVE_HELLO_COMMANDS, description,
                     commandListener, requestContext, message, bsonOutput, COMMAND_PROTOCOL_LOGGER);
         } else {
             return new NoOpCommandEventSender();
         }
+    }
+
+    private ClusterId getClusterId() {
+        return description.getConnectionId().getServerId().getClusterId();
     }
 }

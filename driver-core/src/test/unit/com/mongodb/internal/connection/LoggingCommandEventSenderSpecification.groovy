@@ -23,12 +23,13 @@ import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ServerId
-import com.mongodb.internal.diagnostics.logging.Logger
 import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandListener
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
 import com.mongodb.internal.IgnorableRequestContext
+import com.mongodb.internal.diagnostics.logging.Logger
+import com.mongodb.internal.logging.StructuredLogger
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonBinary
 import org.bson.BsonDocument
@@ -59,7 +60,7 @@ class LoggingCommandEventSenderSpecification extends Specification {
             isDebugEnabled() >> debugLoggingEnabled
         }
         def sender = new LoggingCommandEventSender([] as Set, [] as Set, connectionDescription, commandListener,
-                IgnorableRequestContext.INSTANCE, message, bsonOutput, logger)
+                IgnorableRequestContext.INSTANCE, message, bsonOutput, new StructuredLogger(logger))
 
         when:
         sender.sendStartedEvent()
@@ -99,8 +100,7 @@ class LoggingCommandEventSenderSpecification extends Specification {
             isDebugEnabled() >> true
         }
         def sender = new LoggingCommandEventSender([] as Set, [] as Set, connectionDescription, commandListener,
-                IgnorableRequestContext.INSTANCE, message, bsonOutput,
-                logger)
+                IgnorableRequestContext.INSTANCE, message, bsonOutput, new StructuredLogger(logger))
         when:
         sender.sendStartedEvent()
         sender.sendSucceededEventForOneWayCommand()
@@ -109,24 +109,28 @@ class LoggingCommandEventSenderSpecification extends Specification {
 
         then:
         1 * logger.debug {
-            it == "Sending command \'{\"ping\": 1, \"\$db\": \"test\"}\' with request id ${message.getId()} to database test " +
-                    "on connection [connectionId{localValue:${connectionDescription.connectionId.localValue}}] " +
-                    'to server 127.0.0.1:27017'
+            it == "Sending ping command with request id ${message.getId()} to database test " +
+                    "on connection [local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}] " +
+                    "to server 127.0.0.1:27017: {\"ping\": 1, \"\$db\": \"test\"}"
         }
         1 * logger.debug {
-            it.matches("Execution of one-way command with request id ${message.getId()} completed successfully in \\d+\\.\\d+ ms " +
-                    "on connection \\[connectionId\\{localValue:${connectionDescription.connectionId.localValue}\\}] " +
-                    'to server 127\\.0\\.0\\.1:27017')
+            it.matches("Execution of one-way command ping with request id ${message.getId()} completed successfully in \\d+\\.\\d+ ms " +
+                    "on connection \\[local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}\\] " +
+                    'to server 127.0.0.1:27017')
         }
         1 * logger.debug {
-            it.matches("Execution of command with request id ${message.getId()} completed successfully in \\d+\\.\\d+ ms " +
-                    "on connection \\[connectionId\\{localValue:${connectionDescription.connectionId.localValue}\\}] " +
-                    'to server 127\\.0\\.0\\.1:27017')
+            it.matches("Execution of command ping with request id ${message.getId()} completed successfully in \\d+\\.\\d+ ms " +
+                    "on connection \\[local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}] " +
+                    'to server 127.0.0.1:27017: \\{"ok": 1}')
         }
         1 * logger.debug({
-            it.matches("Execution of command with request id ${message.getId()} failed to complete successfully in \\d+\\.\\d+ ms " +
-                    "on connection \\[connectionId\\{localValue:${connectionDescription.connectionId.localValue}\\}] " +
-                    'to server 127\\.0\\.0\\.1:27017')
+            it.matches("Execution of command ping with request id ${message.getId()} failed to complete successfully in \\d+\\.\\d+ ms " +
+                    "on connection \\[local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}] " +
+                    'to server 127.0.0.1:27017')
         }, failureException)
 
         where:
@@ -146,17 +150,18 @@ class LoggingCommandEventSenderSpecification extends Specification {
         def logger = Mock(Logger) {
             isDebugEnabled() >> true
         }
-        def sender = new LoggingCommandEventSender([] as Set, [] as Set, connectionDescription, null, null, message, bsonOutput, logger)
+        def sender = new LoggingCommandEventSender([] as Set, [] as Set, connectionDescription, null, null, message, bsonOutput,
+                new StructuredLogger(logger))
 
         when:
         sender.sendStartedEvent()
 
         then:
         1 * logger.debug {
-            it == "Sending command \'{\"fake\": {\"\$binary\": {\"base64\": \"${'A' * 967} ...\' " +
-                    "with request id ${message.getId()} to database test " +
-                    "on connection [connectionId{localValue:${connectionDescription.connectionId.localValue}}] " +
-                    'to server 127.0.0.1:27017'
+            it == "Sending fake command with request id ${message.getId()} to database test " +
+                    "on connection [local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}] " +
+                    "to server 127.0.0.1:27017: {\"fake\": {\"\$binary\": {\"base64\": \"${'A' * 967} ..."
         }
     }
 
@@ -174,17 +179,17 @@ class LoggingCommandEventSenderSpecification extends Specification {
             isDebugEnabled() >> true
         }
         def sender = new LoggingCommandEventSender(['createUser'] as Set, [] as Set, connectionDescription, null,
-                IgnorableRequestContext.INSTANCE, message, bsonOutput, logger)
+                IgnorableRequestContext.INSTANCE, message, bsonOutput, new StructuredLogger(logger))
 
         when:
         sender.sendStartedEvent()
 
         then:
         1 * logger.debug {
-            it == "Sending command \'{\"createUser\": ...\' " +
-                    "with request id ${message.getId()} to database test " +
-                    "on connection [connectionId{localValue:${connectionDescription.connectionId.localValue}}] " +
-                    'to server 127.0.0.1:27017'
+            it == "Sending createUser command with request id ${message.getId()} to database test " +
+                    "on connection [local id ${connectionDescription.connectionId.localValue}, " +
+                    "server id ${connectionDescription.connectionId.serverValue}] " +
+                    'to server 127.0.0.1:27017: {}'
         }
     }
 }
