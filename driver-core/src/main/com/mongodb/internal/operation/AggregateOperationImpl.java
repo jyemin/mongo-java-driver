@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.operation;
 
+import com.mongodb.MongoInternalException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
@@ -61,6 +62,7 @@ import static com.mongodb.internal.operation.OperationReadConcernHelper.appendRe
 class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T>>, ReadOperation<BatchCursor<T>> {
     private static final String RESULT = "result";
     private static final String CURSOR = "cursor";
+    private static final String CURSORS = "cursos";
     private static final String FIRST_BATCH = "firstBatch";
     private static final List<String> FIELD_NAMES_WITH_RESULT = Arrays.asList(RESULT, FIRST_BATCH);
 
@@ -267,9 +269,13 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
     private List<QueryResult<T>> createQueryResults(final BsonDocument result, final ConnectionDescription description) {
         if (result.containsKey(CURSOR)) {
            return Collections.singletonList(cursorDocumentToQueryResult(result.getDocument(CURSOR), description.getServerAddress()));
+        } else if (result.containsKey(CURSORS)) {
+            return result.getArray(CURSORS).stream().map(BsonValue::asDocument)
+                    .map((Function<BsonDocument, QueryResult<T>>) cursorDocument ->
+                            cursorDocumentToQueryResult(cursorDocument, description.getServerAddress()))
+                    .collect(Collectors.toList());
         } else {
-            // TODO: add code here for multiple cursors.
-            throw new UnsupportedOperationException();
+            throw new MongoInternalException("Expected either cursor or cursors field in aggregate reply document");
         }
     }
 
