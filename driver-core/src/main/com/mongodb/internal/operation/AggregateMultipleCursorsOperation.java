@@ -16,25 +16,16 @@
 
 package com.mongodb.internal.operation;
 
-import com.mongodb.ExplainVerbosity;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.model.Collation;
-import com.mongodb.internal.async.AsyncBatchCursor;
-import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.client.model.AggregationLevel;
-import com.mongodb.internal.connection.NoOpSessionContext;
-import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.codecs.Decoder;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.mongodb.internal.operation.ExplainHelper.asExplainCommand;
-import static com.mongodb.internal.operation.ServerVersionHelper.MIN_WIRE_VERSION;
 
 /**
  * An operation that executes an aggregation query.
@@ -43,18 +34,8 @@ import static com.mongodb.internal.operation.ServerVersionHelper.MIN_WIRE_VERSIO
  * @mongodb.driver.manual aggregation/ Aggregation
  * @since 3.0
  */
-public class AggregateOperation<T> implements AsyncExplainableReadOperation<AsyncBatchCursor<T>>, ExplainableReadOperation<BatchCursor<T>> {
+public class AggregateMultipleCursorsOperation<T> implements ReadOperation<List<BatchCursor<T>>> {
     private final AggregateOperationImpl<T> wrapped;
-    /**
-     * Construct a new instance.
-     *
-     * @param namespace the database and collection namespace for the operation.
-     * @param pipeline the aggregation pipeline.
-     * @param decoder the decoder for the result documents.
-     */
-    public AggregateOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline, final Decoder<T> decoder) {
-        this(namespace, pipeline, decoder, AggregationLevel.COLLECTION);
-    }
 
     /**
      * Construct a new instance.
@@ -65,9 +46,9 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @param aggregationLevel the aggregation level
      * @since 3.10
      */
-    public AggregateOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline, final Decoder<T> decoder,
-                              final AggregationLevel aggregationLevel) {
-        this.wrapped = new AggregateOperationImpl<T>(namespace, pipeline, decoder, aggregationLevel);
+    public AggregateMultipleCursorsOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline, final Decoder<T> decoder,
+                                             final AggregationLevel aggregationLevel) {
+        this.wrapped = new AggregateOperationImpl<>(namespace, pipeline, decoder, aggregationLevel);
     }
 
     /**
@@ -97,7 +78,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @return this
      * @mongodb.driver.manual reference/command/aggregate/ Aggregation
      */
-    public AggregateOperation<T> allowDiskUse(final Boolean allowDiskUse) {
+    public AggregateMultipleCursorsOperation<T> allowDiskUse(final Boolean allowDiskUse) {
         wrapped.allowDiskUse(allowDiskUse);
         return this;
     }
@@ -119,7 +100,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @return this
      * @mongodb.driver.manual reference/method/cursor.batchSize/#cursor.batchSize Batch Size
      */
-    public AggregateOperation<T> batchSize(final Integer batchSize) {
+    public AggregateMultipleCursorsOperation<T> batchSize(final Integer batchSize) {
         wrapped.batchSize(batchSize);
         return this;
     }
@@ -149,7 +130,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @return this
      * @mongodb.server.release 3.6
      */
-    public AggregateOperation<T> maxAwaitTime(final long maxAwaitTime, final TimeUnit timeUnit) {
+    public AggregateMultipleCursorsOperation<T> maxAwaitTime(final long maxAwaitTime, final TimeUnit timeUnit) {
         wrapped.maxAwaitTime(maxAwaitTime, timeUnit);
         return this;
     }
@@ -173,7 +154,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @return this
      * @mongodb.driver.manual reference/method/cursor.maxTimeMS/#cursor.maxTimeMS Max Time
      */
-    public AggregateOperation<T> maxTime(final long maxTime, final TimeUnit timeUnit) {
+    public AggregateMultipleCursorsOperation<T> maxTime(final long maxTime, final TimeUnit timeUnit) {
         wrapped.maxTime(maxTime, timeUnit);
         return this;
     }
@@ -200,7 +181,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @mongodb.driver.manual reference/command/aggregate/ Aggregation
      * @mongodb.server.release 3.4
      */
-    public AggregateOperation<T> collation(final Collation collation) {
+    public AggregateMultipleCursorsOperation<T> collation(final Collation collation) {
         wrapped.collation(collation);
         return this;
     }
@@ -224,12 +205,12 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @since 4.6
      * @mongodb.server.release 3.6
      */
-    public AggregateOperation<T> comment(final BsonValue comment) {
+    public AggregateMultipleCursorsOperation<T> comment(final BsonValue comment) {
         wrapped.comment(comment);
         return this;
     }
 
-    public AggregateOperation<T> let(final BsonDocument variables) {
+    public AggregateMultipleCursorsOperation<T> let(final BsonDocument variables) {
         wrapped.let(variables);
         return this;
     }
@@ -242,7 +223,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @since 3.11
      * @mongodb.server.release 3.6
      */
-    public AggregateOperation<T> retryReads(final boolean retryReads) {
+    public AggregateMultipleCursorsOperation<T> retryReads(final boolean retryReads) {
         wrapped.retryReads(retryReads);
         return this;
     }
@@ -296,46 +277,15 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
      * @since 3.6
      * @mongodb.server.release 3.6
      */
-    public AggregateOperation<T> hint(final BsonValue hint) {
+    public AggregateMultipleCursorsOperation<T> hint(final BsonValue hint) {
         wrapped.hint(hint);
         return this;
     }
 
     @Override
-    public BatchCursor<T> execute(final ReadBinding binding) {
-        return wrapped.execute(binding);
+    public List<BatchCursor<T>> execute(final ReadBinding binding) {
+        return wrapped.executeMultipleCursors(binding);
     }
-
-    @Override
-    public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
-        wrapped.executeAsync(binding, callback);
-    }
-
-    /**
-     * Gets an operation whose execution explains this operation.
-     *
-     * @param verbosity the explain verbosity
-     * @return a read operation that when executed will explain this operation
-     */
-    public <R> ReadOperation<R> asExplainableOperation(@Nullable final ExplainVerbosity verbosity, final Decoder<R> resultDecoder) {
-        return new CommandReadOperation<R>(getNamespace().getDatabaseName(),
-                asExplainCommand(wrapped.getCommand(NoOpSessionContext.INSTANCE, MIN_WIRE_VERSION, false), verbosity),
-                resultDecoder);
-    }
-
-    /**
-     * Gets an operation whose execution explains this operation.
-     *
-     * @param verbosity the explain verbosity
-     * @return a read operation that when executed will explain this operation
-     */
-    public <R> AsyncReadOperation<R> asAsyncExplainableOperation(@Nullable final ExplainVerbosity verbosity,
-                                                                 final Decoder<R> resultDecoder) {
-        return new CommandReadOperation<R>(getNamespace().getDatabaseName(),
-                asExplainCommand(wrapped.getCommand(NoOpSessionContext.INSTANCE, MIN_WIRE_VERSION, false), verbosity),
-                resultDecoder);
-    }
-
 
     MongoNamespace getNamespace() {
         return wrapped.getNamespace();
@@ -347,7 +297,7 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
 
     @Override
     public String toString() {
-        return "AggregateOperation{"
+        return "AggregateMultipleCursorsOperation{"
                 + "namespace=" + getNamespace()
                 + ", pipeline=" + getPipeline()
                 + ", decoder=" + getDecoder()

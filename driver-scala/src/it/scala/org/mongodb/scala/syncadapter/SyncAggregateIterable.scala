@@ -16,13 +16,14 @@
 package org.mongodb.scala.syncadapter
 
 import com.mongodb.ExplainVerbosity
-import com.mongodb.client.AggregateIterable
 import com.mongodb.client.model.Collation
+import com.mongodb.client.{AggregateIterable, MongoCursor}
 import org.bson.conversions.Bson
-import org.bson.{ BsonValue, Document }
+import org.bson.{BsonValue, Document}
 import org.mongodb.scala.AggregateObservable
 import org.mongodb.scala.bson.DefaultHelper.DefaultsTo
 
+import java.util
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
@@ -31,6 +32,22 @@ case class SyncAggregateIterable[T](wrapped: AggregateObservable[T])
     extends SyncMongoIterable[T]
     with AggregateIterable[T] {
   override def toCollection(): Unit = wrapped.toCollection().toFuture().get()
+
+  /**
+   * Returns a list of cursors used for iterating over elements of type TResult.
+   *
+   * @return a list of cursors
+   */
+  override def cursors(): util.List[MongoCursor[T]] = throw new UnsupportedOperationException()
+
+  /**
+   * Iterates over all the documents, adding each to the given targets
+   *
+   * @param targets a list of collections to insert into
+   * @return the targets
+   */
+  override def intoMultiple[A <: util.Collection[_ >: T]](targets: util.List[A]): util.List[A] =
+    throw new UnsupportedOperationException()
 
   override def allowDiskUse(allowDiskUse: java.lang.Boolean): AggregateIterable[T] = {
     wrapped.allowDiskUse(allowDiskUse)

@@ -17,6 +17,7 @@ package com.mongodb.reactivestreams.client.syncadapter;
 
 import com.mongodb.ExplainVerbosity;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Collation;
 import com.mongodb.lang.Nullable;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
@@ -25,6 +26,8 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
@@ -41,6 +44,16 @@ class SyncAggregateIterable<T> extends SyncMongoIterable<T> implements Aggregate
     @Override
     public void toCollection() {
         Mono.from(wrapped.toCollection()).block(TIMEOUT_DURATION);
+    }
+
+    @Override
+    public List<MongoCursor<T>> cursors() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <A extends Collection<? super T>> List<A> intoMultiple(final List<A> targets) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

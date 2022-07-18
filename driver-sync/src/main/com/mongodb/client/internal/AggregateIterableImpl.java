@@ -23,6 +23,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Collation;
 import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.client.model.FindOptions;
@@ -38,8 +39,11 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.mongodb.assertions.Assertions.notNull;
 
@@ -102,6 +106,38 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
 
         getExecutor().execute(operations.aggregateToCollection(pipeline, maxTimeMS, allowDiskUse, bypassDocumentValidation, collation, hint,
                 hintString, comment, variables, aggregationLevel), getReadPreference(), getReadConcern(), getClientSession());
+    }
+
+    @Override
+    public List<MongoCursor<TResult>> cursors() {
+        return executeMultipleCursors().stream()
+                .map((Function<BatchCursor<TResult>, MongoCursor<TResult>>) MongoBatchCursorAdapter::new)
+                .collect(Collectors.toList());
+    }
+
+    private List<BatchCursor<TResult>> executeMultipleCursors() {
+        return getExecutor().execute(asMultipleCursorsAggregateOperation(),
+                getReadPreference(), getReadConcern(), getClientSession());
+    }
+
+    private ReadOperation<List<BatchCursor<TResult>>> asMultipleCursorsAggregateOperation() {
+        return operations.aggregateMultipleCursors(pipeline, resultClass, maxTimeMS, maxAwaitTimeMS, getBatchSize(), collation,
+                hint, hintString, comment, variables, allowDiskUse, aggregationLevel);
+    }
+
+    @Override
+    public <A extends Collection<? super TResult>> List<A> intoMultiple(final List<A> targets) {
+        List<MongoCursor<TResult>> cursors = cursors();
+
+        for (int i = 0; i < cursors.size(); i++) {
+        try (MongoCursor<TResult> cursor = cursors.get(i)) {
+                A target = targets.get(i);
+                while (cursor.hasNext()) {
+                    target.add(cursor.next());
+                }
+            }
+        }
+        return targets;
     }
 
     @Override

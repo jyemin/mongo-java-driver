@@ -232,6 +232,26 @@ public final class Operations<TDocument> {
                 .let(toBsonDocument(variables));
     }
 
+    public <TResult> AggregateMultipleCursorsOperation<TResult> aggregateMultipleCursors(final List<? extends Bson> pipeline,
+            final Class<TResult> resultClass,
+            final long maxTimeMS, final long maxAwaitTimeMS, final Integer batchSize,
+            final Collation collation, final Bson hint, final String hintString,
+            final BsonValue comment,
+            final Bson variables, final Boolean allowDiskUse,
+            final AggregationLevel aggregationLevel) {
+        return new AggregateMultipleCursorsOperation<>(namespace, toBsonDocumentList(pipeline), codecRegistry.get(resultClass),
+                aggregationLevel)
+                .retryReads(retryReads)
+                .maxTime(maxTimeMS, MILLISECONDS)
+                .maxAwaitTime(maxAwaitTimeMS, MILLISECONDS)
+                .allowDiskUse(allowDiskUse)
+                .batchSize(batchSize)
+                .collation(collation)
+                .hint(hint != null ? toBsonDocument(hint) : (hintString != null ? new BsonString(hintString) : null))
+                .comment(comment)
+                .let(toBsonDocument(variables));
+    }
+
     public AggregateToCollectionOperation aggregateToCollection(final List<? extends Bson> pipeline, final long maxTimeMS,
             final Boolean allowDiskUse, final Boolean bypassDocumentValidation,
             final Collation collation, final Bson hint, final String hintString, final BsonValue comment,

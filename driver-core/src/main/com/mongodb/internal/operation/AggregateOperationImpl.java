@@ -17,18 +17,16 @@
 package com.mongodb.internal.operation;
 
 import com.mongodb.MongoNamespace;
-import com.mongodb.internal.async.AsyncBatchCursor;
-import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.async.AsyncBatchCursor;
+import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadBinding;
-import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.connection.AsyncConnection;
-import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.QueryResult;
 import com.mongodb.internal.operation.CommandOperationHelper.CommandCreator;
 import com.mongodb.internal.operation.CommandOperationHelper.CommandReadTransformer;
@@ -44,8 +42,11 @@ import org.bson.BsonValue;
 import org.bson.codecs.Decoder;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
@@ -192,28 +193,37 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
 
     @Override
     public BatchCursor<T> execute(final ReadBinding binding) {
-        return executeRetryableRead(binding, namespace.getDatabaseName(), getCommandCreator(binding.getSessionContext()),
+        return executeRetryableRead(binding, namespace.getDatabaseName(), getCommandCreator(binding.getSessionContext(), false),
                 CommandResultDocumentCodec.create(decoder, FIELD_NAMES_WITH_RESULT), transformer(), retryReads);
+    }
+
+    public List<BatchCursor<T>> executeMultipleCursors(final ReadBinding binding) {
+        List<AggregateResponseBatchCursor<T>> aggregateResponseBatchCursors = executeRetryableRead(binding, namespace.getDatabaseName(),
+                getCommandCreator(binding.getSessionContext(), true),
+                CommandResultDocumentCodec.create(decoder, FIELD_NAMES_WITH_RESULT), transformerMultipleCursors(), retryReads);
+        return aggregateResponseBatchCursors.stream()
+                .map((Function<AggregateResponseBatchCursor<T>, BatchCursor<T>>) aggregateResponseBatchCursor -> aggregateResponseBatchCursor)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
         SingleResultCallback<AsyncBatchCursor<T>> errHandlingCallback = errorHandlingCallback(callback, LOGGER);
-        executeRetryableReadAsync(binding, namespace.getDatabaseName(), getCommandCreator(binding.getSessionContext()),
+        executeRetryableReadAsync(binding, namespace.getDatabaseName(), getCommandCreator(binding.getSessionContext(), false),
                 CommandResultDocumentCodec.create(decoder, FIELD_NAMES_WITH_RESULT), asyncTransformer(), retryReads, errHandlingCallback);
     }
 
-    private CommandCreator getCommandCreator(final SessionContext sessionContext) {
+    private CommandCreator getCommandCreator(final SessionContext sessionContext, final boolean requestMultipleCursors) {
         return new CommandCreator() {
             @Override
             public BsonDocument create(final ServerDescription serverDescription, final ConnectionDescription connectionDescription) {
                 validateReadConcernAndCollation(connectionDescription, sessionContext.getReadConcern(), collation);
-                return getCommand(sessionContext, connectionDescription.getMaxWireVersion());
+                return getCommand(sessionContext, connectionDescription.getMaxWireVersion(), requestMultipleCursors);
             }
         };
     }
 
-    BsonDocument getCommand(final SessionContext sessionContext, final int maxWireVersion) {
+    BsonDocument getCommand(final SessionContext sessionContext, final int maxWireVersion, final boolean requestMultipleCursors) {
         BsonDocument commandDocument = new BsonDocument("aggregate", aggregateTarget.create());
 
         appendReadConcernToCommand(sessionContext, maxWireVersion, commandDocument);
@@ -225,6 +235,10 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         BsonDocument cursor = new BsonDocument();
         if (batchSize != null) {
             cursor.put("batchSize", new BsonInt32(batchSize));
+        }
+        // TODO: this is temporary
+        if (requestMultipleCursors) {
+            cursor.put("multiple", BsonBoolean.TRUE);
         }
         commandDocument.put(CURSOR, cursor);
         if (allowDiskUse != null) {
@@ -250,15 +264,26 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         return cursorDocumentToQueryResult(result.getDocument(CURSOR), description.getServerAddress());
     }
 
+    private List<QueryResult<T>> createQueryResults(final BsonDocument result, final ConnectionDescription description) {
+        if (result.containsKey(CURSOR)) {
+           return Collections.singletonList(cursorDocumentToQueryResult(result.getDocument(CURSOR), description.getServerAddress()));
+        } else {
+            // TODO: add code here for multiple cursors.
+            throw new UnsupportedOperationException();
+        }
+    }
+
     private CommandReadTransformer<BsonDocument, AggregateResponseBatchCursor<T>> transformer() {
-        return new CommandReadTransformer<BsonDocument, AggregateResponseBatchCursor<T>>() {
-            @Override
-            public AggregateResponseBatchCursor<T> apply(final BsonDocument result, final ConnectionSource source,
-                                                         final Connection connection) {
-                QueryResult<T> queryResult = createQueryResult(result, connection.getDescription());
-                return new QueryBatchCursor<T>(queryResult, 0, batchSize != null ? batchSize : 0, maxAwaitTimeMS, decoder, comment,
-                        source, connection, result);
-            }
+        return (bsonDocument, source, connection) -> transformerMultipleCursors().apply(bsonDocument, source, connection).get(0);
+    }
+
+    private CommandReadTransformer<BsonDocument, List<AggregateResponseBatchCursor<T>>> transformerMultipleCursors() {
+        return (result, source, connection) -> {
+            List<QueryResult<T>> queryResults = createQueryResults(result, connection.getDescription());
+            return queryResults.stream()
+                    .map((Function<QueryResult<T>, AggregateResponseBatchCursor<T>>) queryResult ->
+                            new QueryBatchCursor<T>(queryResult, 0, batchSize != null ? batchSize : 0, maxAwaitTimeMS, decoder,
+                            comment, source, connection, result)).collect(Collectors.toList());
         };
     }
 

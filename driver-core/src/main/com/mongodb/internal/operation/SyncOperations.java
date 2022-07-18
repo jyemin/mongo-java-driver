@@ -124,6 +124,20 @@ public final class SyncOperations<TDocument> {
                 variables, allowDiskUse, aggregationLevel);
     }
 
+    public <TResult> ReadOperation<List<BatchCursor<TResult>>> aggregateMultipleCursors(final List<? extends Bson> pipeline,
+            final Class<TResult> resultClass,
+            final long maxTimeMS, final long maxAwaitTimeMS,
+            final Integer batchSize,
+            final Collation collation, final Bson hint,
+            final String hintString,
+            final BsonValue comment,
+            final Bson variables,
+            final Boolean allowDiskUse,
+            final AggregationLevel aggregationLevel) {
+        return operations.aggregateMultipleCursors(pipeline, resultClass, maxTimeMS, maxAwaitTimeMS, batchSize, collation, hint, hintString,
+                comment, variables, allowDiskUse, aggregationLevel);
+    }
+
     public ReadOperation<Void> aggregateToCollection(final List<? extends Bson> pipeline, final long maxTimeMS,
             final Boolean allowDiskUse, final Boolean bypassDocumentValidation,
             final Collation collation, final Bson hint, final String hintString, final BsonValue comment,

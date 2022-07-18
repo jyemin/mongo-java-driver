@@ -23,6 +23,8 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,6 +45,22 @@ public interface AggregateIterable<TResult> extends MongoIterable<TResult> {
      * @since 3.4
      */
     void toCollection();
+
+    /**
+     * Returns a list of cursors used for iterating over elements of type {@code TResult}.
+     *
+     * @return a list of cursors
+     */
+    List<MongoCursor<TResult>> cursors();
+
+    /**
+     * Iterates over all the documents, adding each to the given targets
+     *
+     * @param targets a list of collections to insert into
+     * @param <A> the collection type
+     * @return the targets
+     */
+    <A extends Collection<? super TResult>> List<A> intoMultiple(List<A> targets);
 
     /**
      * Enables writing to temporary files. A null value indicates that it's unspecified.
