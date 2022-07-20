@@ -62,12 +62,13 @@ import static com.mongodb.internal.operation.OperationReadConcernHelper.appendRe
 class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T>>, ReadOperation<BatchCursor<T>> {
     private static final String RESULT = "result";
     private static final String CURSOR = "cursor";
-    private static final String CURSORS = "cursos";
+    private static final String CURSORS = "cursors";
     private static final String FIRST_BATCH = "firstBatch";
     private static final List<String> FIELD_NAMES_WITH_RESULT = Arrays.asList(RESULT, FIRST_BATCH);
 
     private final MongoNamespace namespace;
     private final List<BsonDocument> pipeline;
+    private List<List<BsonDocument>> facetPipelines;
     private final Decoder<T> decoder;
     private final AggregateTarget aggregateTarget;
     private final PipelineCreator pipelineCreator;
@@ -88,10 +89,27 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
                 notNull("namespace", namespace).getCollectionName()), defaultPipelineCreator(pipeline));
     }
 
+    AggregateOperationImpl(final MongoNamespace namespace, final List<BsonDocument> pipeline,
+            final List<List<BsonDocument>> facetPipelines, final Decoder<T> decoder, final AggregationLevel aggregationLevel) {
+        this(namespace, pipeline, facetPipelines, decoder, defaultAggregateTarget(notNull("aggregationLevel", aggregationLevel),
+                notNull("namespace", namespace).getCollectionName()), defaultPipelineCreator(pipeline));
+    }
+
     AggregateOperationImpl(final MongoNamespace namespace, final List<BsonDocument> pipeline, final Decoder<T> decoder,
                            final AggregateTarget aggregateTarget, final PipelineCreator pipelineCreator) {
         this.namespace = notNull("namespace", namespace);
         this.pipeline = notNull("pipeline", pipeline);
+        this.decoder = notNull("decoder", decoder);
+        this.aggregateTarget = notNull("aggregateTarget", aggregateTarget);
+        this.pipelineCreator = notNull("pipelineCreator", pipelineCreator);
+    }
+
+    AggregateOperationImpl(final MongoNamespace namespace, final List<BsonDocument> pipeline,
+            final List<List<BsonDocument>> facetPipelines, final Decoder<T> decoder, final AggregateTarget aggregateTarget,
+            final PipelineCreator pipelineCreator) {
+        this.namespace = notNull("namespace", namespace);
+        this.pipeline = notNull("pipeline", pipeline);
+        this.facetPipelines = facetPipelines;
         this.decoder = notNull("decoder", decoder);
         this.aggregateTarget = notNull("aggregateTarget", aggregateTarget);
         this.pipelineCreator = notNull("pipelineCreator", pipelineCreator);
@@ -230,6 +248,12 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
 
         appendReadConcernToCommand(sessionContext, maxWireVersion, commandDocument);
         commandDocument.put("pipeline", pipelineCreator.create());
+
+        if (facetPipelines != null) {
+            commandDocument.put("facetCursors", new BsonArray(facetPipelines.stream()
+                    .map(BsonArray::new).collect(Collectors.toList())));
+        }
+
         if (maxTimeMS > 0) {
             commandDocument.put("maxTimeMS", maxTimeMS > Integer.MAX_VALUE
                     ? new BsonInt64(maxTimeMS) : new BsonInt32((int) maxTimeMS));
@@ -237,11 +261,14 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         BsonDocument cursor = new BsonDocument();
         if (batchSize != null) {
             cursor.put("batchSize", new BsonInt32(batchSize));
+        } else {
+            cursor.put("batchSize", new BsonInt32(0));
         }
         // TODO: this is temporary
         if (requestMultipleCursors) {
             cursor.put("multiple", BsonBoolean.TRUE);
         }
+
         commandDocument.put(CURSOR, cursor);
         if (allowDiskUse != null) {
             commandDocument.put("allowDiskUse", BsonBoolean.valueOf(allowDiskUse));
@@ -270,7 +297,7 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         if (result.containsKey(CURSOR)) {
            return Collections.singletonList(cursorDocumentToQueryResult(result.getDocument(CURSOR), description.getServerAddress()));
         } else if (result.containsKey(CURSORS)) {
-            return result.getArray(CURSORS).stream().map(BsonValue::asDocument)
+            return result.getArray(CURSORS).stream().map(bsonValue -> bsonValue.asDocument().getDocument(CURSOR))
                     .map((Function<BsonDocument, QueryResult<T>>) cursorDocument ->
                             cursorDocumentToQueryResult(cursorDocument, description.getServerAddress()))
                     .collect(Collectors.toList());

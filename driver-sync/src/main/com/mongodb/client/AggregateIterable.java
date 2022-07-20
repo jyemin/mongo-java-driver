@@ -26,6 +26,7 @@ import org.bson.conversions.Bson;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Iterable for aggregate.
@@ -56,11 +57,14 @@ public interface AggregateIterable<TResult> extends MongoIterable<TResult> {
     /**
      * Iterates over all the documents, adding each to the given targets
      *
-     * @param targets a list of collections to insert into
+     * @param collectionSupplier a supplier of empty collections to insert into
      * @param <A> the collection type
      * @return the targets
      */
-    <A extends Collection<? super TResult>> List<A> intoMultiple(List<A> targets);
+    <A extends Collection<? super TResult>> List<A> into(Supplier<A> collectionSupplier);
+
+    AggregateIterable<TResult> facets(List<List<? extends Bson>> facets);
+
 
     /**
      * Enables writing to temporary files. A null value indicates that it's unspecified.

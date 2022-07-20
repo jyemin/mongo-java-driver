@@ -29,6 +29,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
 import static java.util.Objects.requireNonNull;
@@ -52,7 +53,12 @@ class SyncAggregateIterable<T> extends SyncMongoIterable<T> implements Aggregate
     }
 
     @Override
-    public <A extends Collection<? super T>> List<A> intoMultiple(final List<A> targets) {
+    public <A extends Collection<? super T>> List<A> into(final Supplier<A> collectionSupplier) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public final AggregateIterable<T> facets(final List<List<? extends Bson>> facets) {
         throw new UnsupportedOperationException();
     }
 

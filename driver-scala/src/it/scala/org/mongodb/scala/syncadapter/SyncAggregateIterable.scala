@@ -40,13 +40,15 @@ case class SyncAggregateIterable[T](wrapped: AggregateObservable[T])
    */
   override def cursors(): util.List[MongoCursor[T]] = throw new UnsupportedOperationException()
 
+  override def facets(facets: util.List[Bson]*): AggregateIterable[T] = throw new UnsupportedOperationException()
+
   /**
    * Iterates over all the documents, adding each to the given targets
    *
    * @param targets a list of collections to insert into
    * @return the targets
    */
-  override def intoMultiple[A <: util.Collection[_ >: T]](targets: util.List[A]): util.List[A] =
+  override def intoFacets[A <: util.Collection[_ >: T]](targets: util.List[A]): util.List[A] =
     throw new UnsupportedOperationException()
 
   override def allowDiskUse(allowDiskUse: java.lang.Boolean): AggregateIterable[T] = {

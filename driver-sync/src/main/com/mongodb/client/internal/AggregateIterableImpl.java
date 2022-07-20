@@ -39,10 +39,12 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -54,6 +56,7 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
     private final Class<TResult> resultClass;
     private final CodecRegistry codecRegistry;
     private final List<? extends Bson> pipeline;
+    private List<List<? extends Bson>> facetPipelines;
     private final AggregationLevel aggregationLevel;
 
     private Boolean allowDiskUse;
@@ -121,23 +124,30 @@ class AggregateIterableImpl<TDocument, TResult> extends MongoIterableImpl<TResul
     }
 
     private ReadOperation<List<BatchCursor<TResult>>> asMultipleCursorsAggregateOperation() {
-        return operations.aggregateMultipleCursors(pipeline, resultClass, maxTimeMS, maxAwaitTimeMS, getBatchSize(), collation,
+        return operations.aggregateMultipleCursors(pipeline, facetPipelines, resultClass, maxTimeMS, maxAwaitTimeMS, getBatchSize(), collation,
                 hint, hintString, comment, variables, allowDiskUse, aggregationLevel);
     }
 
     @Override
-    public <A extends Collection<? super TResult>> List<A> intoMultiple(final List<A> targets) {
+    public <A extends Collection<? super TResult>> List<A> into(final Supplier<A> collectionSupplier) {
         List<MongoCursor<TResult>> cursors = cursors();
-
-        for (int i = 0; i < cursors.size(); i++) {
-        try (MongoCursor<TResult> cursor = cursors.get(i)) {
-                A target = targets.get(i);
+        List<A> facetResults = new ArrayList<>();
+        for (MongoCursor<TResult> cur : cursors) {
+            try (MongoCursor<TResult> cursor = cur) {
+                A target = collectionSupplier.get();
                 while (cursor.hasNext()) {
                     target.add(cursor.next());
                 }
+                facetResults.add(target);
             }
         }
-        return targets;
+        return facetResults;
+    }
+
+    @Override
+    public final AggregateIterable<TResult> facets(final List<List<? extends Bson>> facets) {
+        this.facetPipelines = facets;
+        return this;
     }
 
     @Override

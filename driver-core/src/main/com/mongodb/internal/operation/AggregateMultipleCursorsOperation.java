@@ -46,9 +46,10 @@ public class AggregateMultipleCursorsOperation<T> implements ReadOperation<List<
      * @param aggregationLevel the aggregation level
      * @since 3.10
      */
-    public AggregateMultipleCursorsOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline, final Decoder<T> decoder,
-                                             final AggregationLevel aggregationLevel) {
-        this.wrapped = new AggregateOperationImpl<>(namespace, pipeline, decoder, aggregationLevel);
+    public AggregateMultipleCursorsOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline,
+            final List<List<BsonDocument>> facetPipelines, final Decoder<T> decoder,
+            final AggregationLevel aggregationLevel) {
+        this.wrapped = new AggregateOperationImpl<>(namespace, pipeline, facetPipelines, decoder, aggregationLevel);
     }
 
     /**

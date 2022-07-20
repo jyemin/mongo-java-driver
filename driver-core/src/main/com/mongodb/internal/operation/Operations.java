@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.lang.String.format;
@@ -233,14 +234,16 @@ public final class Operations<TDocument> {
     }
 
     public <TResult> AggregateMultipleCursorsOperation<TResult> aggregateMultipleCursors(final List<? extends Bson> pipeline,
+            final List<List<? extends Bson>> facetPipelines,
             final Class<TResult> resultClass,
             final long maxTimeMS, final long maxAwaitTimeMS, final Integer batchSize,
             final Collation collation, final Bson hint, final String hintString,
             final BsonValue comment,
             final Bson variables, final Boolean allowDiskUse,
             final AggregationLevel aggregationLevel) {
-        return new AggregateMultipleCursorsOperation<>(namespace, toBsonDocumentList(pipeline), codecRegistry.get(resultClass),
-                aggregationLevel)
+        return new AggregateMultipleCursorsOperation<>(namespace, toBsonDocumentList(pipeline),
+                facetPipelines.stream().map(this::toBsonDocumentList).collect(Collectors.toList()),
+                codecRegistry.get(resultClass), aggregationLevel)
                 .retryReads(retryReads)
                 .maxTime(maxTimeMS, MILLISECONDS)
                 .maxAwaitTime(maxAwaitTimeMS, MILLISECONDS)
