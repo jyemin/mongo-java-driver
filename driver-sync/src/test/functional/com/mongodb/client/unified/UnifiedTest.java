@@ -31,6 +31,7 @@ import com.mongodb.event.CommandEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.internal.connection.TestCommandListener;
 import com.mongodb.internal.connection.TestConnectionPoolListener;
+import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -39,7 +40,6 @@ import org.bson.BsonDouble;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.codecs.BsonDocumentCodec;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -110,7 +110,7 @@ public abstract class UnifiedTest {
         return entities;
     }
 
-    @NotNull
+    @NonNull
     protected static Collection<Object[]> getTestData(final String directory) throws URISyntaxException, IOException {
         List<Object[]> data = new ArrayList<>();
         for (File file : getTestFiles("/" + directory + "/")) {
@@ -123,7 +123,7 @@ public abstract class UnifiedTest {
         return data;
     }
 
-    @NotNull
+    @NonNull
     private static Object[] createTestData(final BsonDocument fileDocument, final BsonDocument testDocument) {
         return new Object[]{
                 fileDocument.getString("description").getValue(),
