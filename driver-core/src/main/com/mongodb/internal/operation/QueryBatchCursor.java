@@ -64,7 +64,6 @@ import static com.mongodb.internal.operation.CursorHelper.getNumberToReturn;
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.internal.operation.OperationHelper.getMoreCursorDocumentToQueryResult;
 import static com.mongodb.internal.operation.QueryHelper.translateCommandException;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionFourDotFour;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
@@ -313,9 +312,7 @@ class QueryBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         if (maxTimeMS != 0) {
             document.append("maxTimeMS", new BsonInt64(maxTimeMS));
         }
-        if (serverIsAtLeastVersionFourDotFour(connectionDescription)) {
-            putIfNotNull(document, "comment", comment);
-        }
+        putIfNotNull(document, "comment", comment);
         return document;
     }
 

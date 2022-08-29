@@ -16,7 +16,6 @@
 
 package com.mongodb.reactivestreams.client.internal.crypt;
 
-import com.mongodb.MongoClientException;
 import com.mongodb.ReadPreference;
 import com.mongodb.RequestContext;
 import com.mongodb.ServerApi;
@@ -52,7 +51,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
 import static com.mongodb.reactivestreams.client.internal.MongoOperationPublisher.sinkToCallback;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
@@ -105,11 +103,6 @@ class CryptConnection implements AsyncConnection {
             final boolean responseExpected,
                                  @Nullable final SplittablePayload payload, @Nullable final FieldNameValidator payloadFieldNameValidator,
                                  final SingleResultCallback<T> callback) {
-
-        if (serverIsLessThanVersionFourDotTwo(wrapped.getDescription())) {
-            callback.onResult(null, new MongoClientException("Auto-encryption requires a minimum MongoDB version of 4.2"));
-            return;
-        }
 
         try {
             BasicOutputBuffer bsonOutput = new BasicOutputBuffer();

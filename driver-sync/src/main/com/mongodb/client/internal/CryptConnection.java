@@ -16,7 +16,6 @@
 
 package com.mongodb.client.internal;
 
-import com.mongodb.MongoClientException;
 import com.mongodb.ReadPreference;
 import com.mongodb.RequestContext;
 import com.mongodb.ServerApi;
@@ -48,7 +47,6 @@ import org.bson.io.BasicOutputBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
 // because this class implements deprecated methods
@@ -90,10 +88,6 @@ class CryptConnection implements Connection {
             final ReadPreference readPreference, final Decoder<T> commandResultDecoder, final SessionContext sessionContext,
             @Nullable final ServerApi serverApi, final RequestContext requestContext, final boolean responseExpected,
             @Nullable final SplittablePayload payload, @Nullable final FieldNameValidator payloadFieldNameValidator) {
-
-        if (serverIsLessThanVersionFourDotTwo(wrapped.getDescription())) {
-            throw new MongoClientException("Auto-encryption requires a minimum MongoDB version of 4.2");
-        }
 
         BasicOutputBuffer bsonOutput = new BasicOutputBuffer();
         BsonBinaryWriter bsonBinaryWriter = new BsonBinaryWriter(new BsonWriterSettings(),

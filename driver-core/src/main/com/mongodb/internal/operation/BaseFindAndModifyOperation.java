@@ -42,7 +42,6 @@ import static com.mongodb.internal.operation.CommandOperationHelper.executeRetry
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotZero;
 import static com.mongodb.internal.operation.OperationHelper.isRetryableWrite;
-import static com.mongodb.internal.operation.OperationHelper.validateHintForFindAndModify;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
@@ -371,7 +370,6 @@ public abstract class BaseFindAndModifyOperation<T> implements AsyncWriteOperati
                 commandDocument.put("collation", getCollation().asDocument());
             }
             if (getHint() != null || getHintString() != null) {
-                validateHintForFindAndModify(connectionDescription, getWriteConcern());
                 if (getHint() != null) {
                     commandDocument.put("hint", getHint().toBsonDocument(BsonDocument.class, null));
                 } else {

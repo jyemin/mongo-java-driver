@@ -51,7 +51,6 @@ import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection;
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionFourDotFour;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 import static com.mongodb.internal.operation.WriteConcernHelper.throwOnWriteConcernError;
 import static java.util.Arrays.asList;
@@ -585,10 +584,6 @@ MapReduceToCollectionOperation implements AsyncWriteOperation<MapReduceStatistic
 
     private BsonDocument getCommand(final ConnectionDescription description) {
         BsonDocument outputDocument = new BsonDocument(getAction(), new BsonString(getCollectionName()));
-        if (description != null && !serverIsAtLeastVersionFourDotFour(description)) {
-            putIfTrue(outputDocument, "sharded", isSharded());
-            putIfTrue(outputDocument, "nonAtomic", isNonAtomic());
-        }
         if (getDatabaseName() != null) {
             outputDocument.put("db", new BsonString(getDatabaseName()));
         }

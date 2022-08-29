@@ -19,7 +19,6 @@ package com.mongodb.internal.operation;
 import com.mongodb.CreateIndexCommitQuorum;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
-import com.mongodb.MongoClientException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
@@ -59,7 +58,6 @@ import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.OperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.OperationHelper.withAsyncConnection;
 import static com.mongodb.internal.operation.OperationHelper.withConnection;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsAtLeastVersionFourDotFour;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 
 /**
@@ -307,12 +305,7 @@ public class CreateIndexesOperation implements AsyncWriteOperation<Void>, WriteO
         putIfNotZero(command, "maxTimeMS", maxTimeMS);
         appendWriteConcernToCommand(writeConcern, command);
         if (commitQuorum != null) {
-            if (serverIsAtLeastVersionFourDotFour(description)) {
-                command.put("commitQuorum", commitQuorum.toBsonValue());
-            } else {
-                throw new MongoClientException("Specifying a value for the create index commit quorum option "
-                        + "requires a minimum MongoDB version of 4.4");
-            }
+            command.put("commitQuorum", commitQuorum.toBsonValue());
         }
         return command;
     }

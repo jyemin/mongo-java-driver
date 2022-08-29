@@ -50,7 +50,6 @@ import org.bson.BsonDocument;
 import org.bson.BsonInt64;
 import org.bson.BsonValue;
 import org.bson.codecs.Decoder;
-import org.bson.conversions.Bson;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,9 +60,6 @@ import java.util.function.Supplier;
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotFour;
-import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
 final class OperationHelper {
@@ -101,31 +97,6 @@ final class OperationHelper {
         }
     }
 
-    private static void validateWriteRequestHint(final ConnectionDescription connectionDescription, final WriteConcern writeConcern,
-                                                 final WriteRequest request) {
-        if (!writeConcern.isAcknowledged()) {
-            if (request instanceof UpdateRequest && serverIsLessThanVersionFourDotTwo(connectionDescription)) {
-                throw new IllegalArgumentException(format("Hint not supported by wire version: %s",
-                        connectionDescription.getMaxWireVersion()));
-            }
-            if (request instanceof DeleteRequest && serverIsLessThanVersionFourDotFour(connectionDescription)) {
-                throw new IllegalArgumentException(format("Hint not supported by wire version: %s",
-                        connectionDescription.getMaxWireVersion()));
-            }
-        }
-    }
-
-    static void validateHintForFindAndModify(final ConnectionDescription connectionDescription, final WriteConcern writeConcern) {
-        if (serverIsLessThanVersionFourDotTwo(connectionDescription)) {
-            throw new IllegalArgumentException(format("Hint not supported by wire version: %s",
-                    connectionDescription.getMaxWireVersion()));
-        }
-        if (!writeConcern.isAcknowledged() && serverIsLessThanVersionFourDotFour(connectionDescription)) {
-            throw new IllegalArgumentException(format("Hint not supported by wire version: %s",
-                    connectionDescription.getMaxWireVersion()));
-        }
-    }
-
     static void validateWriteRequestCollations(final List<? extends WriteRequest> requests, final WriteConcern writeConcern) {
         Collation collation = null;
         for (WriteRequest request : requests) {
@@ -154,31 +125,11 @@ final class OperationHelper {
         }
     }
 
-    static void validateWriteRequestHints(final ConnectionDescription connectionDescription, final List<? extends WriteRequest> requests,
-            final WriteConcern writeConcern) {
-        for (WriteRequest request : requests) {
-            Bson hint = null;
-            String hintString = null;
-            if (request instanceof UpdateRequest) {
-                hint = ((UpdateRequest) request).getHint();
-                hintString = ((UpdateRequest) request).getHintString();
-            } else if (request instanceof DeleteRequest) {
-                hint = ((DeleteRequest) request).getHint();
-                hintString = ((DeleteRequest) request).getHintString();
-            }
-            if (hint != null || hintString != null) {
-                validateWriteRequestHint(connectionDescription, writeConcern, request);
-                break;
-            }
-        }
-    }
-
     static void validateWriteRequests(final ConnectionDescription connectionDescription, final Boolean bypassDocumentValidation,
                                       final List<? extends WriteRequest> requests, final WriteConcern writeConcern) {
         checkBypassDocumentValidationIsSupported(bypassDocumentValidation, writeConcern);
         validateWriteRequestCollations(requests, writeConcern);
         validateUpdateRequestArrayFilters(requests, writeConcern);
-        validateWriteRequestHints(connectionDescription, requests, writeConcern);
     }
 
     static <R> boolean validateWriteRequestsAndCompleteIfInvalid(final ConnectionDescription connectionDescription,
