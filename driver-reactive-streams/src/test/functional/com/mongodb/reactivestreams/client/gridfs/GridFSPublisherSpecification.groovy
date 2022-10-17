@@ -50,8 +50,8 @@ import static com.mongodb.reactivestreams.client.Fixture.getMongoClient
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString
 import static com.mongodb.reactivestreams.client.MongoClients.getDefaultCodecRegistry
 import static java.util.Arrays.asList
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries
+import static org.bson.internal.CodecRegistries.fromCodecs
+import static org.bson.internal.CodecRegistries.fromRegistries
 
 class GridFSPublisherSpecification extends FunctionalSpecification {
     protected MongoDatabase mongoDatabase

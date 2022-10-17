@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.MongoNamespace.checkDatabaseNameValidity;
 import static com.mongodb.assertions.Assertions.notNull;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.withUuidRepresentation;
 
 /**
  * This class is not part of the public API and may be removed or changed at any time.

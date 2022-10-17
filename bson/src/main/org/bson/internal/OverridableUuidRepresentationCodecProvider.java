@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.Codec;
 import org.bson.codecs.OverridableUuidRepresentationCodec;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import static org.bson.assertions.Assertions.notNull;
 
-final class OverridableUuidRepresentationCodecProvider implements CodecProvider {
+public final class OverridableUuidRepresentationCodecProvider implements CodecProvider {
 
     private final CodecProvider wrapped;
     private final UuidRepresentation uuidRepresentation;
 
-    OverridableUuidRepresentationCodecProvider(final CodecProvider wrapped, final UuidRepresentation uuidRepresentation) {
+    public OverridableUuidRepresentationCodecProvider(final CodecProvider wrapped, final UuidRepresentation uuidRepresentation) {
         this.uuidRepresentation = notNull("uuidRepresentation", uuidRepresentation);
         this.wrapped = notNull("wrapped", wrapped);
     }

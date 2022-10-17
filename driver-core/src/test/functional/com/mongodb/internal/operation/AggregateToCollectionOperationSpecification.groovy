@@ -51,7 +51,7 @@ import static com.mongodb.WriteConcern.ACKNOWLEDGED
 import static com.mongodb.client.model.Filters.gte
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class AggregateToCollectionOperationSpecification extends OperationFunctionalSpecification {
     def registry = fromProviders([new BsonValueCodecProvider()])

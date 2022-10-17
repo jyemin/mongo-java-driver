@@ -21,12 +21,13 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.BsonBinarySubType;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.UuidCodec;
-import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.configuration.CodecProvider;
 import org.junit.After;
 
 import java.util.UUID;
 
-public class ExplicitUuidCodecUuidRepresentationTest extends AbstractExplicitUuidCodecUuidRepresentationTest {
+public class
+ExplicitUuidCodecUuidRepresentationTest extends AbstractExplicitUuidCodecUuidRepresentationTest {
     private MongoClient mongoClient;
 
     public ExplicitUuidCodecUuidRepresentationTest(final UuidRepresentation uuidRepresentationForClient,
@@ -39,10 +40,10 @@ public class ExplicitUuidCodecUuidRepresentationTest extends AbstractExplicitUui
     }
 
     @Override
-    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecRegistry codecRegistry) {
+    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecProvider codecProvider) {
         mongoClient = new com.mongodb.MongoClient(Fixture.getMongoClientURI(MongoClientOptions.builder(Fixture.getOptions())
                 .uuidRepresentation(uuidRepresentation)
-                .codecRegistry(codecRegistry)));
+                .codecProvider(codecProvider)));
     }
 
     @Override

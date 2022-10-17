@@ -54,7 +54,7 @@ import java.util.function.Function;
 
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
 import static com.mongodb.reactivestreams.client.internal.MongoOperationPublisher.sinkToCallback;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 class CryptConnection implements AsyncConnection {
     private static final CodecRegistry REGISTRY = fromProviders(new BsonValueCodecProvider());

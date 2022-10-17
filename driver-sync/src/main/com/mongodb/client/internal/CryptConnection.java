@@ -49,7 +49,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.mongodb.internal.operation.ServerVersionHelper.serverIsLessThanVersionFourDotTwo;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 // because this class implements deprecated methods
 class CryptConnection implements Connection {

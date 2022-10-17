@@ -86,7 +86,7 @@ import org.bson.codecs.DocumentCodec
 import org.bson.codecs.UuidCodec
 import org.bson.codecs.ValueCodecProvider
 import org.bson.codecs.configuration.CodecConfigurationException
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import org.bson.conversions.Bson
 import spock.lang.Specification
 
@@ -107,7 +107,7 @@ import static com.mongodb.internal.bulk.WriteRequest.Type.UPDATE
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static org.bson.UuidRepresentation.C_SHARP_LEGACY
 import static org.bson.UuidRepresentation.JAVA_LEGACY
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
 @SuppressWarnings('ClassSize')

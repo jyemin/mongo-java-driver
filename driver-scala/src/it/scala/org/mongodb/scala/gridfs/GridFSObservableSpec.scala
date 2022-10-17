@@ -23,7 +23,7 @@ import java.util.UUID
 
 import org.bson.UuidRepresentation
 import org.bson.codecs.UuidCodec
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import org.mongodb.scala._
 import org.mongodb.scala.bson.{ BsonBinary, BsonDocument, BsonString, ObjectId }
 import org.mongodb.scala.model.{ Filters, Updates }

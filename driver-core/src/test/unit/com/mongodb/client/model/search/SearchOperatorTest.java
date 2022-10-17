@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
 import static com.mongodb.client.model.search.FuzzySearchOptions.fuzzySearchOptions;
 import static com.mongodb.client.model.search.SearchPath.fieldPath;
 import static com.mongodb.client.model.search.SearchPath.wildcardPath;
@@ -39,6 +40,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -497,7 +499,7 @@ final class SearchOperatorTest {
                                 fieldPath("fieldName1")
                                         // multi must be ignored
                                         .multi("analyzeName"))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 ),
                 () -> assertEquals(
                         new BsonDocument("near",
@@ -513,7 +515,7 @@ final class SearchOperatorTest {
                                 asList(
                                         fieldPath("fieldName1"),
                                         fieldPath("fieldName2")))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 ),
                 () -> assertEquals(
                         new BsonDocument("near",
@@ -527,7 +529,7 @@ final class SearchOperatorTest {
                                 fieldPath("fieldName1")
                                         // multi must be ignored
                                         .multi("analyzeName"))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 ),
                 () -> assertEquals(
                         new BsonDocument("near",
@@ -542,7 +544,7 @@ final class SearchOperatorTest {
                                 Duration.ofMillis(3),
                                 fieldPath("fieldName1"),
                                 fieldPath("fieldName2"))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 ),
                 () -> assertEquals(
                         new BsonDocument("near",
@@ -558,7 +560,7 @@ final class SearchOperatorTest {
                                 fieldPath("fieldName1")
                                     // multi must be ignored
                                     .multi("analyzeName"))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 ),
                 () -> assertEquals(
                         new BsonDocument("near",
@@ -576,7 +578,7 @@ final class SearchOperatorTest {
                                 asList(
                                         fieldPath("fieldName1"),
                                         fieldPath("fieldName2")))
-                                .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry())
+                                .toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider()))
                 )
         );
     }

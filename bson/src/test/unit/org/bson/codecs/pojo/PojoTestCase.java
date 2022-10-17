@@ -77,7 +77,7 @@ import java.util.concurrent.Executors;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.bson.codecs.pojo.Conventions.DEFAULT_CONVENTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

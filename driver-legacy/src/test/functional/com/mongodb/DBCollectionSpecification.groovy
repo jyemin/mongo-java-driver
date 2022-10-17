@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit
 import static Fixture.getMongoClient
 import static com.mongodb.CustomMatchers.isTheSameAs
 import static java.util.Arrays.asList
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs
+import static org.bson.internal.CodecRegistries.fromCodecs
 import static spock.util.matcher.HamcrestSupport.expect
 
 class DBCollectionSpecification extends Specification {

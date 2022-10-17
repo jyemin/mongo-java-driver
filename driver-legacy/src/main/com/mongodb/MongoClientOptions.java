@@ -30,6 +30,7 @@ import com.mongodb.event.ServerMonitorListener;
 import com.mongodb.lang.Nullable;
 import com.mongodb.selector.ServerSelector;
 import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import javax.net.ssl.SSLContext;
@@ -476,6 +477,20 @@ public class MongoClientOptions {
     }
 
     /**
+     * <p>The codec provider to use.  By default, a {@code MongoClient} will be able to encode and decode instances of {@code
+     * Document}.</p>
+     *
+     * <p>Note that instances of {@code DB} and {@code DBCollection} do not use the provider, so it's not necessary to include a codec for
+     * DBObject in the provider.</p>
+     *
+     * @return the codec provider
+     * @since 4.8
+     */
+    public CodecProvider getCodecProvider() {
+        return wrapped.getCodecProvider();
+    }
+
+    /**
      * <p>The codec registry to use.  By default, a {@code MongoClient} will be able to encode and decode instances of {@code
      * Document}.</p>
      *
@@ -485,7 +500,10 @@ public class MongoClientOptions {
      * @return the codec registry
      * @see MongoClient#getDatabase
      * @since 3.0
+     * @deprecated Superseded by {@link #getCodecProvider()}
      */
+    @Deprecated
+    @Nullable
     public CodecRegistry getCodecRegistry() {
         return wrapped.getCodecRegistry();
     }
@@ -1036,11 +1054,29 @@ public class MongoClientOptions {
          * <p>Note that instances of {@code DB} and {@code DBCollection} do not use the registry, so it's not necessary to include a
          * codec for DBObject in the registry.</p>
          *
+         * @param codecProvider the codec provider
+         * @return {@code this}
+         * @see MongoClientOptions#getCodecProvider() ()
+         * @since 3.0
+         */
+        public Builder codecProvider(final CodecProvider codecProvider) {
+            wrapped.codecProvider(codecProvider);
+            return this;
+        }
+
+        /**
+         * Sets the codec registry
+         *
+         * <p>Note that instances of {@code DB} and {@code DBCollection} do not use the registry, so it's not necessary to include a
+         * codec for DBObject in the registry.</p>
+         *
          * @param codecRegistry the codec registry
          * @return {@code this}
          * @see MongoClientOptions#getCodecRegistry()
          * @since 3.0
+         * @deprecated Superseded byt {@link #codecProvider(CodecProvider)}
          */
+        @Deprecated
         public Builder codecRegistry(final CodecRegistry codecRegistry) {
             wrapped.codecRegistry(codecRegistry);
             return this;

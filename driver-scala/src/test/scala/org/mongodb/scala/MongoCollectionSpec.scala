@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import com.mongodb.reactivestreams.client.{ MongoCollection => JMongoCollection }
 import org.bson.BsonDocument
 import org.bson.codecs.BsonValueCodecProvider
-import org.bson.codecs.configuration.CodecRegistries.fromProviders
+import org.bson.internal.CodecRegistries.fromProviders
 import org.mockito.Mockito.{ times, verify }
 import org.mongodb.scala.model._
 import org.scalatestplus.mockito.MockitoSugar

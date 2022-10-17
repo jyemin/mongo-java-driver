@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mongodb.assertions.Assertions.notNull;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * Abstract base class for all MongoDB Wire Protocol request messages.

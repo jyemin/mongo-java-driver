@@ -23,10 +23,11 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 final class BsonHelper {
-    private static final CodecRegistry CODEC_REGISTRY = getDefaultCodecRegistry();
+    private static final CodecRegistry CODEC_REGISTRY = fromProviders(getDefaultCodecProvider());
 
     @SuppressWarnings("unchecked")
     static BsonDocument toBson(final Bson bson) {

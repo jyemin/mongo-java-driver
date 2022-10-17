@@ -62,7 +62,7 @@ import static com.mongodb.internal.operation.OperationReadConcernHelper.appendRe
 import static com.mongodb.internal.operation.ServerVersionHelper.MIN_WIRE_VERSION
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.SECONDS
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class DistinctOperationSpecification extends OperationFunctionalSpecification {
 

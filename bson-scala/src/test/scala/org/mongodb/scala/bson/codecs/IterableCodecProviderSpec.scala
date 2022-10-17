@@ -16,7 +16,7 @@
 
 package org.mongodb.scala.bson.codecs
 
-import org.bson.codecs.configuration.CodecRegistries.fromProviders
+import org.bson.internal.CodecRegistries.fromProviders
 import org.mongodb.scala.bson.BaseSpec
 
 class IterableCodecProviderSpec extends BaseSpec {

@@ -20,7 +20,7 @@ import scala.collection.JavaConverters._
 
 import org.bson.BsonDocument
 import org.bson.codecs.BsonValueCodecProvider
-import org.bson.codecs.configuration.CodecRegistries.fromProviders
+import org.bson.internal.CodecRegistries.fromProviders
 import com.mongodb.reactivestreams.client.{ ListCollectionsPublisher, MongoDatabase => JMongoDatabase }
 import org.mockito.Mockito.{ verify, when }
 import org.mongodb.scala.bson.conversions.Bson

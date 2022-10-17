@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.bson.codecs.BsonValueCodecProvider.getClassForBsonType;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 abstract class AbstractByteBufBsonDocument extends BsonDocument {
     private static final long serialVersionUID = 1L;

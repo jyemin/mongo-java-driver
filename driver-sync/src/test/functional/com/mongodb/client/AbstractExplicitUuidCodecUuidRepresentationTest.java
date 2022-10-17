@@ -25,7 +25,7 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.UuidCodec;
-import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.types.Binary;
 import org.junit.Before;
@@ -39,7 +39,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static org.bson.BsonBinarySubType.UUID_LEGACY;
@@ -48,9 +48,8 @@ import static org.bson.UuidRepresentation.C_SHARP_LEGACY;
 import static org.bson.UuidRepresentation.JAVA_LEGACY;
 import static org.bson.UuidRepresentation.PYTHON_LEGACY;
 import static org.bson.UuidRepresentation.STANDARD;
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.codecs.configuration.CodecProviders.fromCodecs;
+import static org.bson.codecs.configuration.CodecProviders.fromProviders;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -84,17 +83,17 @@ public abstract class AbstractExplicitUuidCodecUuidRepresentationTest {
         this.standardEncodedValue = standardEncodedValue;
     }
 
-    protected abstract void createMongoClient(UuidRepresentation uuidRepresentation, CodecRegistry codecRegistry);
+    protected abstract void createMongoClient(UuidRepresentation uuidRepresentation, CodecProvider codecProvider);
 
     protected abstract MongoDatabase getDatabase(String databaseName);
 
     @Before
     public void setUp() {
-        CodecRegistry codecRegistry = fromRegistries(
-                fromCodecs(uuidCodec), getDefaultCodecRegistry(),
-                fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+        CodecProvider codecProvider = fromProviders(
+                fromCodecs(uuidCodec), getDefaultCodecProvider(),
+                PojoCodecProvider.builder().automatic(true).build());
 
-        createMongoClient(uuidRepresentationForClient, codecRegistry);
+        createMongoClient(uuidRepresentationForClient, codecProvider);
         MongoDatabase database = getDatabase(getDefaultDatabaseName());
         documentCollection = database.getCollection(getClass().getName());
         dbObjectCollection = documentCollection.withDocumentClass(DBObject.class);

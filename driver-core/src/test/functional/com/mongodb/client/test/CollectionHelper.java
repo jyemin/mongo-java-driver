@@ -66,13 +66,15 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.ClusterFixture.executeAsync;
 import static com.mongodb.ClusterFixture.getBinding;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 public final class CollectionHelper<T> {
 
     private Codec<T> codec;
-    private CodecRegistry registry = MongoClientSettings.getDefaultCodecRegistry();
+    private CodecRegistry registry = fromProviders(getDefaultCodecProvider());
     private MongoNamespace namespace;
 
     public CollectionHelper(final Codec<T> codec, final MongoNamespace namespace) {

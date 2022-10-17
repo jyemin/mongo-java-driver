@@ -20,7 +20,7 @@ import com.mongodb.client.model.geojson.codecs.GeoJsonCodecProvider;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.Codec;
 import org.bson.codecs.EncoderContext;
-import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.internal.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;

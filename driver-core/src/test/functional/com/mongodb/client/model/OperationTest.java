@@ -35,7 +35,8 @@ import static com.mongodb.ClusterFixture.checkReferenceCountReachesTarget;
 import static com.mongodb.ClusterFixture.getAsyncBinding;
 import static com.mongodb.ClusterFixture.getBinding;
 import static com.mongodb.ClusterFixture.getPrimary;
-import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 public abstract class OperationTest {
 
@@ -78,6 +79,7 @@ public abstract class OperationTest {
     }
 
     public static Document toDocument(final BsonDocument bsonDocument) {
-        return getDefaultCodecRegistry().get(Document.class).decode(bsonDocument.asBsonReader(), DecoderContext.builder().build());
+        return fromProviders(getDefaultCodecProvider()).get(Document.class)
+                .decode(bsonDocument.asBsonReader(), DecoderContext.builder().build());
     }
 }

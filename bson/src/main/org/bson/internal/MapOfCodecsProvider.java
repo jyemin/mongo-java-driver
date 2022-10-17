@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class MapOfCodecsProvider implements CodecProvider {
+public final class MapOfCodecsProvider implements CodecProvider {
     private final Map<Class<?>, Codec<?>> codecsMap = new HashMap<Class<?>, Codec<?>>();
 
-    MapOfCodecsProvider(final List<? extends Codec<?>> codecsList) {
+    public MapOfCodecsProvider(final List<? extends Codec<?>> codecsList) {
        for (Codec<?> codec : codecsList) {
            codecsMap.put(codec.getEncoderClass(), codec);
        }

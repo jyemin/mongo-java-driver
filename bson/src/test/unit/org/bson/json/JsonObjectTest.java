@@ -22,7 +22,7 @@ import org.bson.codecs.BsonCodecProvider;
 import org.bson.codecs.JsonObjectCodecProvider;
 import org.junit.Test;
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;

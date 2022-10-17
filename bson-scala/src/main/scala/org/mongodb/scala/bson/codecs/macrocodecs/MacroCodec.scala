@@ -20,7 +20,8 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 import org.bson._
-import org.bson.codecs.configuration.{ CodecRegistries, CodecRegistry }
+import org.bson.internal.CodecRegistries
+import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.{ Codec, DecoderContext, Encoder, EncoderContext }
 
 import org.mongodb.scala.bson.BsonNull

@@ -41,7 +41,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.connection.SplittablePayload.Type.INSERT;
 import static com.mongodb.internal.connection.SplittablePayload.Type.REPLACE;
 import static com.mongodb.internal.connection.SplittablePayload.Type.UPDATE;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * A Splittable payload for write commands.

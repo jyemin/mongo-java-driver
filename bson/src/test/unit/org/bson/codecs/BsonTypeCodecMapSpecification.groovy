@@ -20,8 +20,8 @@ import org.bson.BsonType
 import org.bson.codecs.configuration.CodecConfigurationException
 import spock.lang.Specification
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries
+import static org.bson.internal.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromRegistries
 
 class BsonTypeCodecMapSpecification extends Specification {
     def bsonTypeClassMap = new BsonTypeClassMap()

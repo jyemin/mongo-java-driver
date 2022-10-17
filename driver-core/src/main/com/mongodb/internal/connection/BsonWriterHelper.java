@@ -30,7 +30,7 @@ import org.bson.io.BsonOutput;
 import java.util.List;
 
 import static java.lang.String.format;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 final class BsonWriterHelper {
     private static final int DOCUMENT_HEADROOM = 1024 * 16;

@@ -17,6 +17,7 @@
 
 package com.mongodb.benchmark.benchmarks;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.benchmark.framework.Benchmark;
 import com.mongodb.benchmark.framework.BenchmarkResult;
 import com.mongodb.benchmark.framework.BenchmarkResultWriter;
@@ -24,11 +25,10 @@ import com.mongodb.benchmark.framework.BenchmarkRunner;
 import com.mongodb.benchmark.framework.EvergreenBenchmarkResultWriter;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.internal.CodecRegistries;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class BenchmarkSuite {
@@ -44,7 +44,8 @@ public class BenchmarkSuite {
             document.remove("_id");
         }
     };
-    private static final Codec<Document> DOCUMENT_CODEC = getDefaultCodecRegistry().get(DOCUMENT_CLASS);
+    private static final Codec<Document> DOCUMENT_CODEC = CodecRegistries.fromProviders(MongoClientSettings.getDefaultCodecProvider())
+            .get(DOCUMENT_CLASS);
 
     private static final List<BenchmarkResultWriter> WRITERS = Arrays.<BenchmarkResultWriter>asList(
             new EvergreenBenchmarkResultWriter());

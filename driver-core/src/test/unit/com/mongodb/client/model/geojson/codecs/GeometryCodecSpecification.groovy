@@ -36,7 +36,7 @@ import org.bson.codecs.configuration.CodecConfigurationException
 import spock.lang.Specification
 
 import static org.bson.BsonDocument.parse
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class GeometryCodecSpecification extends Specification {
     def registry = fromProviders([new GeoJsonCodecProvider()])

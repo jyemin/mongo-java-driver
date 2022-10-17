@@ -21,7 +21,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonObject;
 import org.junit.Test;
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 

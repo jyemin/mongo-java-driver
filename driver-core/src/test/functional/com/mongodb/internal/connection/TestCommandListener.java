@@ -32,7 +32,7 @@ import org.bson.codecs.BsonValueCodecProvider;
 import org.bson.codecs.Codec;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.internal.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.ArrayList;

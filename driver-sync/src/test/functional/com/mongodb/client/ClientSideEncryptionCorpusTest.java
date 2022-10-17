@@ -50,8 +50,9 @@ import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static java.util.Arrays.asList;
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static java.util.Collections.singletonList;
+import static org.bson.codecs.configuration.CodecProviders.fromCodecs;
+import static org.bson.codecs.configuration.CodecProviders.fromProviders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
@@ -75,8 +76,8 @@ public class ClientSideEncryptionCorpusTest {
         assumeTrue("Corpus tests disabled", hasEncryptionTestsEnabled());
 
         MongoClientSettings clientSettings = getMongoClientSettingsBuilder()
-                .codecRegistry(fromRegistries(fromCodecs(new UuidCodec(UuidRepresentation.STANDARD)),
-                        MongoClientSettings.getDefaultCodecRegistry())).build();
+                .codecProvider(fromProviders(fromCodecs(singletonList(new UuidCodec(UuidRepresentation.STANDARD))),
+                        MongoClientSettings.getDefaultCodecProvider())).build();
 
         // Step 1: create unencrypted client
         client = MongoClients.create(clientSettings);
@@ -136,8 +137,8 @@ public class ClientSideEncryptionCorpusTest {
         }
 
         clientSettings = getMongoClientSettingsBuilder()
-                .codecRegistry(fromRegistries(
-                        fromCodecs(new UuidCodec(UuidRepresentation.STANDARD)), MongoClientSettings.getDefaultCodecRegistry()))
+                .codecProvider(fromProviders(
+                        fromCodecs(new UuidCodec(UuidRepresentation.STANDARD)), MongoClientSettings.getDefaultCodecProvider()))
                 .autoEncryptionSettings(autoEncryptionSettingsBuilder.build())
                 .build();
         autoEncryptingClient = MongoClients.create(clientSettings);

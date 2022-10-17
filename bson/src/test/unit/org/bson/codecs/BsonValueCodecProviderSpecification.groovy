@@ -41,7 +41,7 @@ import org.bson.RawBsonArray
 import org.bson.RawBsonDocument
 import spock.lang.Specification
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class BsonValueCodecProviderSpecification extends Specification {
 

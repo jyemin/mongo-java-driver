@@ -39,8 +39,8 @@ import spock.lang.Specification
 
 import java.nio.ByteBuffer
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries
+import static org.bson.internal.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromRegistries
 
 class GridFSFileCodecSpecification extends Specification {
 

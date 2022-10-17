@@ -16,6 +16,7 @@
 
 package com.mongodb.client.model;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
 import org.bson.BsonDocument;
@@ -25,14 +26,17 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.conversions.Bson;
+import org.bson.internal.CodecRegistries;
 import org.junit.jupiter.api.Test;
 
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 import static com.mongodb.client.model.GeoNearOptions.geoNearOptions;
 import static com.mongodb.client.model.Aggregates.geoNear;
 import static com.mongodb.client.model.Aggregates.unset;
 import static java.util.Arrays.asList;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -41,7 +45,8 @@ public class AggregatesTest extends OperationTest {
     private List<Bson> assertPipeline(final String stageAsString, final Bson stage) {
         BsonDocument expectedStage = BsonDocument.parse(stageAsString);
         List<Bson> pipeline = Collections.singletonList(stage);
-        assertEquals(expectedStage, pipeline.get(0).toBsonDocument(BsonDocument.class, getDefaultCodecRegistry()));
+        assertEquals(expectedStage, pipeline.get(0).toBsonDocument(BsonDocument.class,
+                fromProviders(getDefaultCodecProvider())));
         return pipeline;
     }
 

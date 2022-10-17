@@ -17,7 +17,7 @@
 package com.mongodb
 
 import org.bson.codecs.DateCodec
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import org.bson.types.BSONTimestamp
 import spock.lang.Specification
 

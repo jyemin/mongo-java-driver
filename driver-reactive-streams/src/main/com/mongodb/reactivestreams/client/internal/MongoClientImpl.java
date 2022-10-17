@@ -36,6 +36,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.internal.crypt.Crypt;
 import com.mongodb.reactivestreams.client.internal.crypt.Crypts;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecProviders;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -50,7 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.connection.ClientMetadataHelper.createClientMetadataDocument;
 import static java.lang.String.format;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 
 /**
@@ -81,6 +82,7 @@ public final class MongoClientImpl implements MongoClient {
         this(settings, mongoDriverInformation, cluster, executor, null);
     }
 
+    @SuppressWarnings("deprecation")
     private MongoClientImpl(final MongoClientSettings settings, final MongoDriverInformation mongoDriverInformation, final Cluster cluster,
                             @Nullable final OperationExecutor executor, @Nullable final Closeable externalResourceCloser) {
         this.settings = notNull("settings", settings);
@@ -96,14 +98,15 @@ public final class MongoClientImpl implements MongoClient {
         }
         this.externalResourceCloser = externalResourceCloser;
         this.mongoOperationPublisher = new MongoOperationPublisher<>(Document.class,
-                                                                     withUuidRepresentation(settings.getCodecRegistry(),
-                                                                     settings.getUuidRepresentation()),
-                                                                     settings.getReadPreference(),
-                                                                     settings.getReadConcern(), settings.getWriteConcern(),
-                                                                     settings.getRetryWrites(), settings.getRetryReads(),
-                                                                     settings.getUuidRepresentation(),
-                                                                     settings.getAutoEncryptionSettings(),
-                                                                     this.executor);
+                fromProviders(CodecProviders.withUuidRepresentation(
+                        settings.getCodecRegistry() != null ? settings.getCodecRegistry() : settings.getCodecProvider(),
+                        settings.getUuidRepresentation())),
+                settings.getReadPreference(),
+                settings.getReadConcern(), settings.getWriteConcern(),
+                settings.getRetryWrites(), settings.getRetryReads(),
+                settings.getUuidRepresentation(),
+                settings.getAutoEncryptionSettings(),
+                this.executor);
         this.closed = new AtomicBoolean();
         LOGGER.info(format("MongoClient with metadata %s created with settings %s",
                 createClientMetadataDocument(settings.getApplicationName(), mongoDriverInformation).toJson(), settings));

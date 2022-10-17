@@ -18,7 +18,7 @@ package org.bson.codecs
 
 import spock.lang.Specification
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class IterableCodecProviderSpecification extends Specification {
 

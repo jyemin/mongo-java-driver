@@ -22,7 +22,7 @@ import com.mongodb.Block
 import com.mongodb.connection.{ ClusterSettings, SslSettings }
 import org.bson.UuidRepresentation
 import org.bson.codecs.UuidCodec
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import org.mongodb.scala._
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{

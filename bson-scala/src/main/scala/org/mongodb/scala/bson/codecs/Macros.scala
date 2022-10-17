@@ -33,7 +33,7 @@ import org.mongodb.scala.bson.codecs.macrocodecs.{ CaseClassCodec, CaseClassProv
  * The recommended approach is to use the implicit [[Macros.createCodecProvider[T](clazz:Class[T])*]] method to help build a codecRegistry:
  * ```
  * import org.mongodb.scala.bson.codecs.Macros.createCodecProvider
- * import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProviders}
+ * import org.bson.internal.CodecRegistries.{fromRegistries, fromProviders}
  *
  * case class Contact(phone: String)
  * case class User(_id: Int, username: String, age: Int, hobbies: List[String], contacts: List[Contact])

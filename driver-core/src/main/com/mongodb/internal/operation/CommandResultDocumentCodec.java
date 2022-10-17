@@ -30,7 +30,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import java.util.Collections;
 import java.util.List;
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 class CommandResultDocumentCodec<T> extends BsonDocumentCodec {
     private final Decoder<T> payloadDecoder;

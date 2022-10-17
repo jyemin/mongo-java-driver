@@ -55,7 +55,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.bson.codecs.BsonValueCodecProvider.getClassForBsonType;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * This class is NOT part of the public API. It may change at any time without notification.

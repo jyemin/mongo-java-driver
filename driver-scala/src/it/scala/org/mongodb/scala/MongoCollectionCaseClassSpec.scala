@@ -17,7 +17,7 @@
 package org.mongodb.scala
 
 import org.mongodb.scala.bson.codecs.Macros.createCodecProvider
-import org.bson.codecs.configuration.CodecRegistries.{ fromProviders, fromRegistries }
+import org.bson.internal.CodecRegistries.{ fromProviders, fromRegistries }
 import org.bson.codecs.configuration.CodecRegistry
 
 class MongoCollectionCaseClassSpec extends RequiresMongoDBISpec with FuturesSpec {

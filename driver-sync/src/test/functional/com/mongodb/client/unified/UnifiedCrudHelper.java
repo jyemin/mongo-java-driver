@@ -84,7 +84,7 @@ import org.bson.codecs.BsonCodecProvider;
 import org.bson.codecs.Codec;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.ValueCodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.internal.CodecRegistries;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -16,6 +16,7 @@
 
 package org.bson.codecs.configuration;
 
+import org.bson.annotations.Evolving;
 import org.bson.assertions.Assertions;
 import org.bson.codecs.Codec;
 
@@ -36,8 +37,8 @@ import java.util.List;
  * <p>Applications are encouraged to NOT implement this interface, but rather use the factory methods in {@link CodecRegistries}.</p>
  *
  * @since 3.0
- * @see CodecRegistries
  */
+@Evolving
 public interface CodecRegistry extends CodecProvider {
     /**
      * Gets a {@code Codec} for the given Class.

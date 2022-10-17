@@ -55,7 +55,7 @@ private[codecs] object CaseClassCodec {
       c.Expr[CodecRegistry](
         q"""
          import org.bson.codecs.{ BsonValueCodecProvider, ValueCodecProvider }
-         import org.bson.codecs.configuration.CodecRegistries.fromProviders
+         import org.bson.internal.CodecRegistries.fromProviders
          fromProviders(
               DocumentCodecProvider(),
               IterableCodecProvider(),

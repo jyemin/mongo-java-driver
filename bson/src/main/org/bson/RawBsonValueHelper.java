@@ -22,7 +22,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.io.BsonInputMark;
 
 import static org.bson.codecs.BsonValueCodecProvider.getClassForBsonType;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 final class RawBsonValueHelper {
     private static final CodecRegistry REGISTRY = fromProviders(new BsonValueCodecProvider());

@@ -21,7 +21,8 @@ import java.util
 import java.util.Date
 
 import org.bson._
-import org.bson.codecs.configuration.{ CodecProvider, CodecRegistries, CodecRegistry }
+import org.bson.internal.CodecRegistries
+import org.bson.codecs.configuration.{ CodecProvider, CodecRegistry }
 import org.bson.codecs.{ Codec, DecoderContext, EncoderContext }
 import org.bson.io.{ BasicOutputBuffer, ByteBufferBsonInput, OutputBuffer }
 import org.bson.types.ObjectId

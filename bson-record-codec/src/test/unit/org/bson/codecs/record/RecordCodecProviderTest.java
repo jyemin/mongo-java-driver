@@ -19,6 +19,7 @@ package org.bson.codecs.record;
 import com.mongodb.MongoClientSettings;
 import org.bson.codecs.record.samples.TestRecordWithPojoAnnotations;
 import org.bson.conversions.Bson;
+import org.bson.internal.CodecRegistries;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,9 +51,10 @@ public class RecordCodecProviderTest {
     }
 
     @Test
-    public void shouldReturnRecordCodecForRecordUsingDefaultRegistry() {
+    public void shouldReturnRecordCodecForRecordUsingDefaultProvider() {
         // when
-        var codec = MongoClientSettings.getDefaultCodecRegistry().get(TestRecordWithPojoAnnotations.class);
+        var codec = CodecRegistries.fromProviders(MongoClientSettings.getDefaultCodecProvider())
+                .get(TestRecordWithPojoAnnotations.class);
 
         // then
         assertTrue(codec instanceof RecordCodec);

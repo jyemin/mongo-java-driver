@@ -83,7 +83,7 @@ import static com.mongodb.internal.bulk.WriteRequest.Type.INSERT;
 import static com.mongodb.internal.bulk.WriteRequest.Type.REPLACE;
 import static com.mongodb.internal.bulk.WriteRequest.Type.UPDATE;
 import static java.util.Collections.singletonList;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.withUuidRepresentation;
 
 class MongoCollectionImpl<TDocument> implements MongoCollection<TDocument> {
     private final MongoNamespace namespace;

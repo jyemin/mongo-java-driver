@@ -15,6 +15,7 @@
  */
 package com.mongodb;
 
+import org.bson.internal.CodecRegistries;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
@@ -34,7 +35,8 @@ public class Jep395RecordCodecProviderTest {
     @Test
     void doesNotErrorWhenCheckingNonRecords() {
         try {
-            assertNull(new Jep395RecordCodecProvider().get(Integer.class, MongoClientSettings.getDefaultCodecRegistry()));
+            assertNull(new Jep395RecordCodecProvider().get(Integer.class,
+                    CodecRegistries.fromProviders(MongoClientSettings.getDefaultCodecProvider())));
         } catch (Exception e) {
             fail("Should return null when checking for class");
         }

@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package org.bson.codecs.configuration;
+package org.bson.internal;
 
 import org.bson.UuidRepresentation;
 import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.List;
 
-/**
- * A helper class for creating and combining codecs, codec providers, and codec registries
- *
- * @since 3.0
- * @deprecated Supersedec by {@link CodecProviders}
- */
-@Deprecated
+import static java.util.Arrays.asList;
+
 public final class CodecRegistries {
 
     /**
@@ -39,7 +36,7 @@ public final class CodecRegistries {
      * @since 4.5
      */
     public static CodecRegistry withUuidRepresentation(final CodecRegistry codecRegistry, final UuidRepresentation uuidRepresentation) {
-        return org.bson.internal.CodecRegistries.withUuidRepresentation(codecRegistry, uuidRepresentation);
+        return fromProviders(new OverridableUuidRepresentationCodecProvider(codecRegistry, uuidRepresentation));
     }
 
     /**
@@ -52,7 +49,7 @@ public final class CodecRegistries {
      * @return a {@code CodecRegistry} for the given list of {@code Codec} instances.
      */
     public static CodecRegistry fromCodecs(final Codec<?>... codecs) {
-        return org.bson.internal.CodecRegistries.fromCodecs(codecs);
+        return fromCodecs(asList(codecs));
     }
 
     /**
@@ -65,7 +62,7 @@ public final class CodecRegistries {
      * @return a {@code CodecRegistry} for the given list of {@code Codec} instances.
      */
     public static CodecRegistry fromCodecs(final List<? extends Codec<?>> codecs) {
-        return org.bson.internal.CodecRegistries.fromCodecs(codecs);
+        return fromProviders(new MapOfCodecsProvider(codecs));
     }
 
     /**
@@ -77,11 +74,11 @@ public final class CodecRegistries {
      * @param providers the codec provider
      * @return a {@code CodecRegistry} with the ordered list of {@code CodecProvider} instances. The registry is also guaranteed to be an
      * instance of {code CodecProvider}, so that when one is passed to {@link #fromRegistries(CodecRegistry...)} or {@link
-     * #fromRegistries(java.util.List)} it will be treated as a {@code CodecProvider} and properly resolve any dependencies between
+     * #fromRegistries(List)} it will be treated as a {@code CodecProvider} and properly resolve any dependencies between
      * registries.
      */
     public static CodecRegistry fromProviders(final CodecProvider... providers) {
-        return org.bson.internal.CodecRegistries.fromProviders(providers);
+        return fromProviders(asList(providers));
     }
 
     /**
@@ -93,11 +90,11 @@ public final class CodecRegistries {
      * @param providers the codec provider
      * @return a {@code CodecRegistry} with the ordered list of {@code CodecProvider} instances. The registry is also guaranteed to be an
      * instance of {code CodecProvider}, so that when one is passed to {@link #fromRegistries(CodecRegistry...)} or {@link
-     * #fromRegistries(java.util.List)} it will be treated as a {@code CodecProvider} and properly resolve any dependencies between
+     * #fromRegistries(List)} it will be treated as a {@code CodecProvider} and properly resolve any dependencies between
      * registries.
      */
     public static CodecRegistry fromProviders(final List<? extends CodecProvider> providers) {
-        return org.bson.internal.CodecRegistries.fromProviders(providers);
+        return new ProvidersCodecRegistry(providers);
     }
 
     /**
@@ -116,7 +113,7 @@ public final class CodecRegistries {
      * @return a {@code CodecRegistry} that combines the list of {@code CodecRegistry} instances into a single one
      */
     public static CodecRegistry fromRegistries(final CodecRegistry... registries) {
-        return org.bson.internal.CodecRegistries.fromRegistries(registries);
+        return fromRegistries(asList(registries));
     }
 
     /**
@@ -135,7 +132,7 @@ public final class CodecRegistries {
      * @return a {@code CodecRegistry} that combines the list of {@code CodecRegistry} instances into a single one
      */
     public static CodecRegistry fromRegistries(final List<? extends CodecRegistry> registries) {
-        return org.bson.internal.CodecRegistries.fromRegistries(registries);
+        return new ProvidersCodecRegistry(registries);
     }
 
     private CodecRegistries() {

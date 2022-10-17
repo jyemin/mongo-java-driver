@@ -15,7 +15,6 @@
  */
 package com.mongodb.client.model.search;
 
-import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
 import com.mongodb.assertions.Assertions;
 import com.mongodb.client.model.Aggregates;
@@ -49,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.mongodb.ClusterFixture.isAtlasSearchTest;
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider;
 import static com.mongodb.client.model.Aggregates.limit;
 import static com.mongodb.client.model.Aggregates.project;
 import static com.mongodb.client.model.Aggregates.replaceWith;
@@ -88,6 +88,7 @@ import static java.time.ZoneOffset.UTC;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -250,7 +251,7 @@ final class AggregatesSearchIntegrationTest {
             pipeline.addAll(accessory.postStages);
             Supplier<String> msgSupplier = () -> "For reference, the pipeline (" + pipeline.size() + " elements) used in the test is\n[\n"
                     + pipeline.stream()
-                    .map(stage -> stage.toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry()))
+                    .map(stage -> stage.toBsonDocument(BsonDocument.class, fromProviders(getDefaultCodecProvider())))
                     .map(doc -> doc.toJson(JsonWriterSettings.builder().indent(true).build()))
                     .collect(Collectors.joining(",\n"))
                     + "\n]\n";

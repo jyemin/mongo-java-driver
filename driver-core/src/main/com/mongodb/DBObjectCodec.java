@@ -57,7 +57,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.Arrays.asList;
 import static org.bson.BsonBinarySubType.BINARY;
 import static org.bson.BsonBinarySubType.OLD_BINARY;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * A collectible codec for a DBObject.

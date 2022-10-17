@@ -44,8 +44,8 @@ import java.util.Map;
 
 import static com.mongodb.ClusterFixture.isServerlessTest;
 import static java.util.Arrays.asList;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.internal.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromRegistries;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

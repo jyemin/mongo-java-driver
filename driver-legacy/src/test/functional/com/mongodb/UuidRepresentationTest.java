@@ -20,7 +20,7 @@ import com.mongodb.client.AbstractUuidRepresentationTest;
 import com.mongodb.client.MongoDatabase;
 import org.bson.BsonBinarySubType;
 import org.bson.UuidRepresentation;
-import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.configuration.CodecProvider;
 import org.junit.After;
 
 import java.util.UUID;
@@ -38,10 +38,10 @@ public class UuidRepresentationTest extends AbstractUuidRepresentationTest {
 
 
     @Override
-    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecRegistry codecRegistry) {
+    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecProvider codecProvider) {
         mongoClient = new MongoClient(getMongoClientSettingsBuilder()
                 .uuidRepresentation(uuidRepresentation)
-                .codecRegistry(codecRegistry)
+                .codecProvider(codecProvider)
                 .build());
     }
 

@@ -31,7 +31,7 @@ import static CodecRegistries.fromProviders
 import static CodecRegistries.fromRegistries
 import static org.bson.UuidRepresentation.STANDARD
 import static org.bson.UuidRepresentation.UNSPECIFIED
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation
+import static org.bson.internal.CodecRegistries.withUuidRepresentation
 
 class CodeRegistriesSpecification extends Specification {
     def 'fromCodec should return a SingleCodecRegistry'() {

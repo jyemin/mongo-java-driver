@@ -47,7 +47,7 @@ import static com.mongodb.reactivestreams.client.internal.gridfs.GridFSPublisher
 import static com.mongodb.reactivestreams.client.internal.gridfs.GridFSPublisherCreator.createGridFSFindPublisher;
 import static com.mongodb.reactivestreams.client.internal.gridfs.GridFSPublisherCreator.createGridFSUploadPublisher;
 import static com.mongodb.reactivestreams.client.internal.gridfs.GridFSPublisherCreator.createRenamePublisher;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.internal.CodecRegistries.fromRegistries;
 
 
 /**

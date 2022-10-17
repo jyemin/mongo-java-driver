@@ -36,9 +36,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.internal.CodecRegistries.fromCodecs;
+import static org.bson.internal.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromRegistries;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

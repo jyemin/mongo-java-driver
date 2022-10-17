@@ -17,7 +17,7 @@
 package org.bson.codecs
 
 import org.bson.Document
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import org.bson.types.Binary
 import org.bson.types.Code
 import org.bson.types.Decimal128

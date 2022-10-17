@@ -41,8 +41,8 @@ import static com.mongodb.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder
 import static com.mongodb.client.model.Filters.eq
 import static com.mongodb.client.model.Updates.unset
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries
+import static org.bson.internal.CodecRegistries.fromCodecs
+import static org.bson.internal.CodecRegistries.fromRegistries
 
 class GridFSBucketSmokeTestSpecification extends FunctionalSpecification {
     protected MongoDatabase mongoDatabase;

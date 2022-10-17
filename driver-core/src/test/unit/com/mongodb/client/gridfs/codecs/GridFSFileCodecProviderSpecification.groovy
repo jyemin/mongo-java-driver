@@ -20,7 +20,7 @@ import com.mongodb.client.gridfs.model.GridFSFile
 import org.bson.codecs.BsonValueCodecProvider
 import org.bson.codecs.DocumentCodecProvider
 import org.bson.codecs.ValueCodecProvider
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.internal.CodecRegistries
 import spock.lang.Specification
 
 class GridFSFileCodecProviderSpecification extends Specification {

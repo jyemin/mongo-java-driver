@@ -29,7 +29,7 @@ import static com.mongodb.client.model.geojson.NamedCoordinateReferenceSystem.CR
 import static com.mongodb.client.model.geojson.NamedCoordinateReferenceSystem.EPSG_4326
 import static com.mongodb.client.model.geojson.NamedCoordinateReferenceSystem.EPSG_4326_STRICT_WINDING
 import static org.bson.BsonDocument.parse
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 final class NamedCoordinateReferenceSystemSpecification extends Specification {
     def registry = fromProviders([new GeoJsonCodecProvider()])

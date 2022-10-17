@@ -25,6 +25,7 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecConfigurationException;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.types.Binary;
@@ -44,8 +45,8 @@ import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static org.bson.UuidRepresentation.JAVA_LEGACY;
 import static org.bson.UuidRepresentation.STANDARD;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.internal.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromRegistries;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -75,7 +76,7 @@ public abstract class AbstractUuidRepresentationTest {
         this.standardEncodedValue = standardEncodedValue;
     }
 
-    protected abstract void createMongoClient(UuidRepresentation uuidRepresentation, CodecRegistry codecRegistry);
+    protected abstract void createMongoClient(UuidRepresentation uuidRepresentation, CodecProvider codecProvider);
 
     protected abstract MongoDatabase getDatabase(String databaseName);
 

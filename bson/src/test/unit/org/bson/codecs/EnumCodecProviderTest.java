@@ -16,7 +16,7 @@
 
 package org.bson.codecs;
 
-import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.internal.CodecRegistries;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

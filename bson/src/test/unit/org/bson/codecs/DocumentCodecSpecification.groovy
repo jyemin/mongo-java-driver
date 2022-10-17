@@ -56,9 +56,9 @@ import static org.bson.UuidRepresentation.JAVA_LEGACY
 import static org.bson.UuidRepresentation.PYTHON_LEGACY
 import static org.bson.UuidRepresentation.STANDARD
 import static org.bson.UuidRepresentation.UNSPECIFIED
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries
+import static org.bson.internal.CodecRegistries.fromCodecs
+import static org.bson.internal.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromRegistries
 
 class DocumentCodecSpecification extends Specification {
     static final CodecRegistry REGISTRY = fromRegistries(fromCodecs(new UuidCodec(STANDARD)),

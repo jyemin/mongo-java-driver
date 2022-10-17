@@ -20,7 +20,7 @@ import java.io.Closeable
 
 import com.mongodb.connection.ClusterDescription
 import com.mongodb.reactivestreams.client.{ MongoClient => JMongoClient, MongoClients }
-import org.bson.codecs.configuration.CodecRegistries.{ fromProviders, fromRegistries }
+import org.bson.internal.CodecRegistries.{ fromProviders, fromRegistries }
 import org.bson.codecs.configuration.CodecRegistry
 import org.mongodb.scala.bson.DefaultHelper.DefaultsTo
 import org.mongodb.scala.bson.codecs.{ DocumentCodecProvider, IterableCodecProvider }

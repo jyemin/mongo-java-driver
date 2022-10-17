@@ -49,8 +49,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.bson.assertions.Assertions.isTrue;
 import static org.bson.assertions.Assertions.notNull;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.withUuidRepresentation;
 
 /**
  * A representation of a document as a {@code Map}.  All iterators will traverse the elements in insertion order, as with {@code

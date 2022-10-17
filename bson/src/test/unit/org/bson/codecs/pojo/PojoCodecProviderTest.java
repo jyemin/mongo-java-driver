@@ -23,7 +23,7 @@ import org.bson.codecs.pojo.entities.SimpleModel;
 import org.bson.codecs.pojo.entities.conventions.CreatorInvalidMethodModel;
 import org.junit.Test;
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 

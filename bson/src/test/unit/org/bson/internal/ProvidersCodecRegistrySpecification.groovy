@@ -43,7 +43,7 @@ import java.nio.ByteBuffer
 
 import static java.util.Arrays.asList
 import static org.bson.codecs.ContainerCodecHelper.getCodec
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs
+import static org.bson.internal.CodecRegistries.fromCodecs
 
 class ProvidersCodecRegistrySpecification extends Specification {
 

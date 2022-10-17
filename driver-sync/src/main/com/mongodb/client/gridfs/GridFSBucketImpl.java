@@ -50,7 +50,7 @@ import java.util.Map;
 import static com.mongodb.ReadPreference.primary;
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.lang.String.format;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.internal.CodecRegistries.fromRegistries;
 
 final class GridFSBucketImpl implements GridFSBucket {
     private static final int DEFAULT_CHUNKSIZE_BYTES = 255 * 1024;

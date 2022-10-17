@@ -51,7 +51,7 @@ import static com.mongodb.ReadPreference.secondary
 import static com.mongodb.client.internal.TestHelper.execute
 import static org.bson.UuidRepresentation.C_SHARP_LEGACY
 import static org.bson.UuidRepresentation.JAVA_LEGACY
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
 class MongoDatabaseSpecification extends Specification {

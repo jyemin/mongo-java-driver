@@ -33,7 +33,7 @@ import org.bson.codecs.ValueCodecProvider
 import spock.lang.Specification
 
 import static java.util.Collections.singletonList
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class ChangeStreamDocumentCodecSpecification extends Specification {
 

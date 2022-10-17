@@ -39,7 +39,7 @@ import static com.mongodb.connection.ClusterConnectionMode.SINGLE
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static org.bson.UuidRepresentation.C_SHARP_LEGACY
 import static org.bson.UuidRepresentation.STANDARD
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
 class MongoClientSpecification extends Specification {

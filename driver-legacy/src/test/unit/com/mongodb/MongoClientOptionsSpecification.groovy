@@ -46,7 +46,8 @@ class MongoClientOptionsSpecification extends Specification {
         options.getWriteConcern() == WriteConcern.ACKNOWLEDGED
         options.getRetryWrites()
         options.getRetryReads()
-        options.getCodecRegistry() == MongoClientSettings.defaultCodecRegistry
+        options.getCodecProvider() == MongoClientSettings.defaultCodecProvider
+        options.getCodecRegistry() == null
         options.getUuidRepresentation() == UuidRepresentation.UNSPECIFIED
         options.getMinConnectionsPerHost() == 0
         options.getConnectionsPerHost() == 100

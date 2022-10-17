@@ -32,7 +32,7 @@ import java.util.Map;
 
 import static org.bson.assertions.Assertions.notNull;
 import static org.bson.codecs.BsonValueCodecProvider.getBsonTypeClassMap;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * A codec for BsonDocument instances.

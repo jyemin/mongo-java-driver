@@ -22,7 +22,7 @@ import org.bson.BsonDocumentWrapper
 import org.bson.RawBsonDocument
 import spock.lang.Specification
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 
 class BsonCodecProviderSpecification extends Specification {
 

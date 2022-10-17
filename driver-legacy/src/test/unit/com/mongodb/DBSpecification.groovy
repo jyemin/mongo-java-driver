@@ -17,14 +17,7 @@
 package com.mongodb
 
 import com.mongodb.client.internal.TestOperationExecutor
-import com.mongodb.client.model.Collation
-import com.mongodb.client.model.CollationAlternate
-import com.mongodb.client.model.CollationCaseFirst
-import com.mongodb.client.model.CollationMaxVariable
-import com.mongodb.client.model.CollationStrength
-import com.mongodb.client.model.DBCreateViewOptions
-import com.mongodb.client.model.ValidationAction
-import com.mongodb.client.model.ValidationLevel
+import com.mongodb.client.model.*
 import com.mongodb.internal.operation.BatchCursor
 import com.mongodb.internal.operation.CreateCollectionOperation
 import com.mongodb.internal.operation.CreateViewOperation
@@ -36,7 +29,8 @@ import spock.lang.Specification
 
 import static Fixture.getMongoClient
 import static com.mongodb.CustomMatchers.isTheSameAs
-import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry
+import static com.mongodb.MongoClientSettings.getDefaultCodecProvider
+import static org.bson.internal.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
 class DBSpecification extends Specification {
@@ -73,7 +67,7 @@ class DBSpecification extends Specification {
         given:
         def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
-        mongo.codecRegistry >> getDefaultCodecRegistry()
+        mongo.codecRegistry >> fromProviders(getDefaultCodecProvider())
         def executor = new TestOperationExecutor([1L, 2L, 3L])
         def db = new DB(mongo, 'test', executor)
         db.setReadConcern(ReadConcern.MAJORITY)
@@ -189,7 +183,8 @@ class DBSpecification extends Specification {
         def operation = executor.getReadOperation() as ListCollectionsOperation
 
         then:
-        expect operation, isTheSameAs(new ListCollectionsOperation(databaseName, new DBObjectCodec(getDefaultCodecRegistry()))
+        expect operation, isTheSameAs(new ListCollectionsOperation(databaseName,
+                new DBObjectCodec(fromProviders(getDefaultCodecProvider())))
                 .nameOnly(true))
 
         when:
@@ -197,7 +192,8 @@ class DBSpecification extends Specification {
         operation = executor.getReadOperation() as ListCollectionsOperation
 
         then:
-        expect operation, isTheSameAs(new ListCollectionsOperation(databaseName, new DBObjectCodec(getDefaultCodecRegistry()))
+        expect operation, isTheSameAs(new ListCollectionsOperation(databaseName,
+                new DBObjectCodec(fromProviders(getDefaultCodecProvider())))
                 .nameOnly(true))
     }
 
@@ -205,7 +201,7 @@ class DBSpecification extends Specification {
         given:
         def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
-        mongo.codecRegistry >> getDefaultCodecRegistry()
+        mongo.codecRegistry >> fromProviders(getDefaultCodecProvider())
         def executor = new TestOperationExecutor([new BsonDocument('ok', new BsonDouble(1.0))])
         def database = new DB(mongo, 'test', executor)
         database.setReadPreference(ReadPreference.secondary())
@@ -237,7 +233,7 @@ class DBSpecification extends Specification {
         given:
         def mongo = Stub(MongoClient)
         mongo.mongoClientOptions >> MongoClientOptions.builder().build()
-        mongo.codecRegistry >> getDefaultCodecRegistry()
+        mongo.codecRegistry >> fromProviders(getDefaultCodecProvider())
         def executor = new TestOperationExecutor([new BsonDocument('ok', new BsonDouble(1.0))])
         def database = new DB(mongo, 'test', executor)
         database.setReadPreference(ReadPreference.secondary())

@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.withUuidRepresentation;
 
 /**
  * A basic implementation of BSON object that is MongoDB specific. A {@code DBObject} can be created as follows, using this class:

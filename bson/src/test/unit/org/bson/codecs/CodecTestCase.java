@@ -35,7 +35,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 import static java.util.Arrays.asList;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 import static org.junit.Assert.assertEquals;
 
 abstract class CodecTestCase {

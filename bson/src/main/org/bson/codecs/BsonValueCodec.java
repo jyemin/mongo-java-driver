@@ -21,7 +21,7 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 /**
  * A codec for unknown BsonValues.

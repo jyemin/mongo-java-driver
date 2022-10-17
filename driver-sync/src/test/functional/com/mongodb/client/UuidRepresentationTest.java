@@ -18,7 +18,7 @@ package com.mongodb.client;
 
 import org.bson.BsonBinarySubType;
 import org.bson.UuidRepresentation;
-import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.configuration.CodecProvider;
 import org.junit.After;
 
 import java.util.UUID;
@@ -33,10 +33,10 @@ public class UuidRepresentationTest extends AbstractUuidRepresentationTest{
 
 
     @Override
-    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecRegistry codecRegistry) {
+    protected void createMongoClient(final UuidRepresentation uuidRepresentation, final CodecProvider codecProvider) {
         mongoClient = MongoClients.create(Fixture.getMongoClientSettingsBuilder()
                 .uuidRepresentation(uuidRepresentation)
-                .codecRegistry(codecRegistry)
+                .codecProvider(codecProvider)
                 .build());
     }
 

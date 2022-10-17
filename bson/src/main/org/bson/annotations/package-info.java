@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package org.mongodb.scala.bson.codecs
-
-import org.bson.internal.CodecRegistries.fromProviders
-import org.bson.codecs.configuration.CodecRegistry
-import org.bson.codecs.{ BsonValueCodecProvider, ValueCodecProvider }
-
-object Registry {
-
-  val DEFAULT_CODEC_REGISTRY: CodecRegistry = fromProviders(
-    DocumentCodecProvider(),
-    IterableCodecProvider(),
-    new ValueCodecProvider(),
-    new BsonValueCodecProvider()
-  )
-
-}
+/**
+ * Contains annotations that can apply to any part of the bson module.
+ */
+package org.bson.annotations;

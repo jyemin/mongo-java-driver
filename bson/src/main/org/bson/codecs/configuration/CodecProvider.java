@@ -27,6 +27,7 @@ import org.bson.codecs.Codec;
  * {@code Object.equals}. It is not necessary to do so, and the simplest course of action is to rely on Object's implementation, but the
  * implementer may wish to implement a "value comparison" in place of the default "reference comparison."</p>
  *
+ * @see CodecProviders
  * @since 3.0
  */
 public interface CodecProvider {

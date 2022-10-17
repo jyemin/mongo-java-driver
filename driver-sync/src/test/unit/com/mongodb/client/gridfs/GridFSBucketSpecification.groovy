@@ -49,7 +49,7 @@ import static com.mongodb.CustomMatchers.isTheSameAs
 import static com.mongodb.ReadPreference.primary
 import static com.mongodb.ReadPreference.secondary
 import static org.bson.UuidRepresentation.JAVA_LEGACY
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders
+import static org.bson.internal.CodecRegistries.fromProviders
 import static spock.util.matcher.HamcrestSupport.expect
 
 @SuppressWarnings('ClosureAsLastMethodParameter')

@@ -57,7 +57,8 @@ import static com.mongodb.client.internal.Crypts.createCrypt;
 import static com.mongodb.internal.connection.ClientMetadataHelper.createClientMetadataDocument;
 import static com.mongodb.internal.event.EventListenerHelper.getCommandListener;
 import static java.lang.String.format;
-import static org.bson.codecs.configuration.CodecRegistries.withUuidRepresentation;
+import static org.bson.codecs.configuration.CodecProviders.withUuidRepresentation;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 public final class MongoClientImpl implements MongoClient {
     private static final Logger LOGGER = Loggers.getLogger("client");
@@ -70,6 +71,7 @@ public final class MongoClientImpl implements MongoClient {
         this(createCluster(settings, mongoDriverInformation), mongoDriverInformation, settings, null);
     }
 
+    @SuppressWarnings("deprecation")
     public MongoClientImpl(final Cluster cluster, final MongoDriverInformation mongoDriverInformation,
                            final MongoClientSettings settings,
                            @Nullable final OperationExecutor operationExecutor) {
@@ -81,7 +83,9 @@ public final class MongoClientImpl implements MongoClient {
                     + SynchronousContextProvider.class.getName() + " when using the synchronous driver");
         }
         this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
-                withUuidRepresentation(settings.getCodecRegistry(), settings.getUuidRepresentation()), this, operationExecutor,
+                fromProviders(withUuidRepresentation(
+                        settings.getCodecRegistry() != null ? settings.getCodecRegistry() : settings.getCodecProvider(),
+                        settings.getUuidRepresentation())), this, operationExecutor,
                 autoEncryptionSettings == null ? null : createCrypt(this, autoEncryptionSettings), settings.getServerApi(),
                 (SynchronousContextProvider) settings.getContextProvider());
         LOGGER.info(format("MongoClient with metadata %s created with settings %s",

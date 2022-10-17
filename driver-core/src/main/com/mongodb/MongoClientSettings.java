@@ -37,6 +37,8 @@ import org.bson.codecs.IterableCodecProvider;
 import org.bson.codecs.JsonObjectCodecProvider;
 import org.bson.codecs.MapCodecProvider;
 import org.bson.codecs.ValueCodecProvider;
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecProviders;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.jsr310.Jsr310CodecProvider;
 
@@ -50,7 +52,7 @@ import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.internal.CodecRegistries.fromProviders;
 
 
 /**
@@ -60,8 +62,8 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
  */
 @Immutable
 public final class MongoClientSettings {
-    private static final CodecRegistry DEFAULT_CODEC_REGISTRY =
-            fromProviders(asList(new ValueCodecProvider(),
+    private static final CodecProvider DEFAULT_CODEC_PROVIDER =
+            CodecProviders.fromProviders(asList(new ValueCodecProvider(),
                     new BsonValueCodecProvider(),
                     new DBRefCodecProvider(),
                     new DBObjectCodecProvider(),
@@ -76,6 +78,8 @@ public final class MongoClientSettings {
                     new EnumCodecProvider(),
                     new Jep395RecordCodecProvider()));
 
+    private static final CodecRegistry DEFAULT_CODEC_REGISTRY = fromProviders(DEFAULT_CODEC_PROVIDER);
+
     private final ReadPreference readPreference;
     private final WriteConcern writeConcern;
     private final boolean retryWrites;
@@ -84,6 +88,7 @@ public final class MongoClientSettings {
     private final MongoCredential credential;
     private final StreamFactoryFactory streamFactoryFactory;
     private final List<CommandListener> commandListeners;
+    private final CodecProvider codecProvider;
     private final CodecRegistry codecRegistry;
 
     private final ClusterSettings clusterSettings;
@@ -102,6 +107,36 @@ public final class MongoClientSettings {
     private final boolean heartbeatConnectTimeoutSetExplicitly;
 
     private final ContextProvider contextProvider;
+
+    /**
+     * Gets the default codec provider.  It includes the following providers:
+     *
+     * <ul>
+     * <li>{@link org.bson.codecs.ValueCodecProvider}</li>
+     * <li>{@link org.bson.codecs.BsonValueCodecProvider}</li>
+     * <li>{@link com.mongodb.DBRefCodecProvider}</li>
+     * <li>{@link com.mongodb.DBObjectCodecProvider}</li>
+     * <li>{@link org.bson.codecs.DocumentCodecProvider}</li>
+     * <li>{@link org.bson.codecs.IterableCodecProvider}</li>
+     * <li>{@link org.bson.codecs.MapCodecProvider}</li>
+     * <li>{@link com.mongodb.client.model.geojson.codecs.GeoJsonCodecProvider}</li>
+     * <li>{@link com.mongodb.client.gridfs.codecs.GridFSFileCodecProvider}</li>
+     * <li>{@link org.bson.codecs.jsr310.Jsr310CodecProvider}</li>
+     * <li>{@link org.bson.codecs.JsonObjectCodecProvider}</li>
+     * <li>{@link org.bson.codecs.BsonCodecProvider}</li>
+     * <li>{@link org.bson.codecs.EnumCodecProvider}</li>
+     * <li>{@link com.mongodb.Jep395RecordCodecProvider}</li>
+     * </ul>
+     *
+     * <p>
+     * Additional providers may be added in a future release.
+     * </p>
+     *
+     * @return the default codec provider
+     */
+    public static CodecProvider getDefaultCodecProvider() {
+        return DEFAULT_CODEC_PROVIDER;
+    }
 
     /**
      * Gets the default codec registry.  It includes the following providers:
@@ -163,7 +198,8 @@ public final class MongoClientSettings {
         private boolean retryWrites = true;
         private boolean retryReads = true;
         private ReadConcern readConcern = ReadConcern.DEFAULT;
-        private CodecRegistry codecRegistry = MongoClientSettings.getDefaultCodecRegistry();
+        private CodecProvider codecProvider = MongoClientSettings.getDefaultCodecProvider();
+        private CodecRegistry codecRegistry;
         private StreamFactoryFactory streamFactoryFactory;
         private List<CommandListener> commandListeners = new ArrayList<CommandListener>();
 
@@ -193,6 +229,7 @@ public final class MongoClientSettings {
             applicationName = settings.getApplicationName();
             commandListeners = new ArrayList<CommandListener>(settings.getCommandListeners());
             compressorList = new ArrayList<MongoCompressor>(settings.getCompressorList());
+            codecProvider = settings.getCodecProvider();
             codecRegistry = settings.getCodecRegistry();
             readPreference = settings.getReadPreference();
             writeConcern = settings.getWriteConcern();
@@ -397,13 +434,32 @@ public final class MongoClientSettings {
             return this;
         }
 
+
         /**
-         * Sets the codec registry
+         * Sets the codec provider.
+         *
+         * @param codecProvider the codec provider
+         * @return this
+         * @see CodecProviders
+         * @since {@link #getDefaultCodecRegistry()}
+         * @see MongoClientSettings#getCodecProvider() ()
+         * @since 4.8
+         */
+        public Builder codecProvider(final CodecProvider codecProvider) {
+            this.codecProvider = notNull("codecProvider", codecProvider);
+            return this;
+        }
+
+        /**
+         * Sets the codec registry.
+         *
          *
          * @param codecRegistry the codec registry
          * @return this
          * @see MongoClientSettings#getCodecRegistry()
+         * @deprecated Superseded by {@link #codecProvider(CodecProvider)} ()}
          */
+        @Deprecated
         public Builder codecRegistry(final CodecRegistry codecRegistry) {
             this.codecRegistry = notNull("codecRegistry", codecRegistry);
             return this;
@@ -643,10 +699,23 @@ public final class MongoClientSettings {
     }
 
     /**
+     * The codec provider to use.  Ignored if {@link #getCodecRegistry()} is not null
+     *
+     * @return the codec provider
+     * @since 4.8
+     */
+    public CodecProvider getCodecProvider() {
+        return codecProvider;
+    }
+
+    /**
      * The codec registry to use, or null if not set.
      *
-     * @return the codec registry
+     * @return the codec registry, which may be null
+     * @deprecated Superseded by {@link #getCodecProvider()}
      */
+    @Nullable
+    @Deprecated
     public CodecRegistry getCodecRegistry() {
         return codecRegistry;
     }
@@ -887,6 +956,7 @@ public final class MongoClientSettings {
                 + ", credential=" + credential
                 + ", streamFactoryFactory=" + streamFactoryFactory
                 + ", commandListeners=" + commandListeners
+                + ", codecProvider=" + codecProvider
                 + ", codecRegistry=" + codecRegistry
                 + ", clusterSettings=" + clusterSettings
                 + ", socketSettings=" + socketSettings
@@ -911,6 +981,7 @@ public final class MongoClientSettings {
         readConcern = builder.readConcern;
         credential = builder.credential;
         streamFactoryFactory = builder.streamFactoryFactory;
+        codecProvider = builder.codecProvider;
         codecRegistry = builder.codecRegistry;
         commandListeners = builder.commandListeners;
         applicationName = builder.applicationName;
