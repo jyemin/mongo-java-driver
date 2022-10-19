@@ -16,6 +16,7 @@
 
 include ':bson'
 include ':bson-record-codec'
+include ':bson-jackson-codec'
 include ':driver-benchmarks'
 include ':driver-workload-executor'
 include ':driver-core'
