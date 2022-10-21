@@ -53,7 +53,6 @@ class MongoClientSessionSpecification extends FunctionalSpecification {
         thrown(IllegalArgumentException)
     }
 
-    @IgnoreIf({ serverVersionLessThan(3, 6) })
     def 'should create session with correct defaults'() {
         when:
         def options = ClientSessionOptions.builder().build()

@@ -64,23 +64,22 @@ public class OperationExecutorImpl implements OperationExecutor {
 
     @Override
     public <T> Mono<T> execute(final AsyncReadOperation<T> operation, final ReadPreference readPreference, final ReadConcern readConcern,
-            @Nullable final ClientSession session) {
+            @Nullable final ClientSession clientSessionFromOperation) {
         notNull("operation", operation);
         notNull("readPreference", readPreference);
         notNull("readConcern", readConcern);
 
-        if (session != null) {
-            session.notifyOperationInitiated(operation);
+        if (clientSessionFromOperation != null) {
+            clientSessionFromOperation.notifyOperationInitiated(operation);
         }
 
+        ClientSession clientSession = clientSessionHelper.getClientSession(clientSessionFromOperation, this);
+
         return Mono.from(subscriber ->
-                clientSessionHelper.withClientSession(session, OperationExecutorImpl.this)
-                        .map(clientSession -> getReadWriteBinding(getContext(subscriber), readPreference, readConcern, clientSession,
-                                session == null && clientSession != null))
-                        .switchIfEmpty(Mono.fromCallable(() ->
-                                getReadWriteBinding(getContext(subscriber), readPreference, readConcern, session, false)))
+                Mono.fromCallable(() -> getReadWriteBinding(getContext(subscriber), readPreference, readConcern, clientSession,
+                                clientSessionFromOperation == null))
                         .flatMap(binding -> {
-                            if (session != null && session.hasActiveTransaction() && !binding.getReadPreference().equals(primary())) {
+                            if (clientSessionFromOperation != null && clientSessionFromOperation.hasActiveTransaction() && !binding.getReadPreference().equals(primary())) {
                                 binding.release();
                                 return Mono.error(new MongoClientException("Read preference in a transaction must be primary"));
                             } else {
@@ -91,8 +90,8 @@ public class OperationExecutorImpl implements OperationExecutor {
                                         sinkToCallback(sink).onResult(result, t);
                                     }
                                 })).doOnError((t) -> {
-                                    labelException(session, t);
-                                    unpinServerAddressOnTransientTransactionError(session, t);
+                                    labelException(clientSession, t);
+                                    unpinServerAddressOnTransientTransactionError(clientSession, t);
                                 });
                             }
                         }).subscribe(subscriber)
@@ -101,32 +100,31 @@ public class OperationExecutorImpl implements OperationExecutor {
 
     @Override
     public <T> Mono<T> execute(final AsyncWriteOperation<T> operation, final ReadConcern readConcern,
-            @Nullable final ClientSession session) {
+            @Nullable final ClientSession clientSessionFromOperation) {
         notNull("operation", operation);
         notNull("readConcern", readConcern);
 
-        if (session != null) {
-            session.notifyOperationInitiated(operation);
+        if (clientSessionFromOperation != null) {
+            clientSessionFromOperation.notifyOperationInitiated(operation);
         }
 
+        ClientSession clientSession = clientSessionHelper.getClientSession(clientSessionFromOperation, this);
+
         return Mono.from(subscriber ->
-                clientSessionHelper.withClientSession(session, OperationExecutorImpl.this)
-                        .map(clientSession -> getReadWriteBinding(getContext(subscriber), ReadPreference.primary(), readConcern,
-                                clientSession, session == null && clientSession != null))
-                        .switchIfEmpty(Mono.fromCallable(() ->
-                                getReadWriteBinding(getContext(subscriber), ReadPreference.primary(), readConcern, session, false)))
-                        .flatMap(binding ->
-                                Mono.<T>create(sink -> operation.executeAsync(binding, (result, t) -> {
-                                    try {
-                                        binding.release();
-                                    } finally {
-                                        sinkToCallback(sink).onResult(result, t);
-                                    }
-                                })).doOnError((t) -> {
-                                    labelException(session, t);
-                                    unpinServerAddressOnTransientTransactionError(session, t);
-                                })
-                        ).subscribe(subscriber)
+            Mono.fromCallable(() -> getReadWriteBinding(getContext(subscriber), primary(), readConcern,
+                            clientSession, clientSessionFromOperation == null))
+                    .flatMap(binding ->
+                            Mono.<T>create(sink -> operation.executeAsync(binding, (result, t) -> {
+                                try {
+                                    binding.release();
+                                } finally {
+                                    sinkToCallback(sink).onResult(result, t);
+                                }
+                            })).doOnError((t) -> {
+                                labelException(clientSession, t);
+                                unpinServerAddressOnTransientTransactionError(clientSession, t);
+                            })
+                    ).subscribe(subscriber)
         );
     }
 
@@ -138,8 +136,8 @@ public class OperationExecutorImpl implements OperationExecutor {
         return context == null ? IgnorableRequestContext.INSTANCE : context;
     }
 
-    private void labelException(@Nullable final ClientSession session, @Nullable final Throwable t) {
-        if (session != null && session.hasActiveTransaction()
+    private void labelException(final ClientSession session, @Nullable final Throwable t) {
+        if (session.hasActiveTransaction()
                 && (t instanceof MongoSocketException || t instanceof MongoTimeoutException
                 || (t instanceof MongoQueryException && ((MongoQueryException) t).getErrorCode() == 91))
                 && !((MongoException) t).hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
@@ -147,16 +145,15 @@ public class OperationExecutorImpl implements OperationExecutor {
         }
     }
 
-    private void unpinServerAddressOnTransientTransactionError(@Nullable final ClientSession session,
+    private void unpinServerAddressOnTransientTransactionError(final ClientSession session,
             @Nullable final Throwable throwable) {
-        if (session != null && throwable instanceof MongoException
-                && ((MongoException) throwable).hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+        if (throwable instanceof MongoException && ((MongoException) throwable).hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
             session.clearTransactionContext();
         }
     }
 
     private AsyncReadWriteBinding getReadWriteBinding(final RequestContext requestContext, final ReadPreference readPreference,
-            final ReadConcern readConcern, @Nullable final ClientSession session, final boolean ownsSession) {
+            final ReadConcern readConcern, final ClientSession session, final boolean ownsSession) {
         notNull("readPreference", readPreference);
         AsyncClusterAwareReadWriteBinding readWriteBinding = new AsyncClusterBinding(mongoClient.getCluster(),
             getReadPreferenceForBinding(readPreference, session), readConcern, mongoClient.getSettings().getServerApi(), requestContext);
@@ -165,12 +162,7 @@ public class OperationExecutorImpl implements OperationExecutor {
             readWriteBinding = new CryptBinding(readWriteBinding, crypt);
         }
 
-        final AsyncClusterAwareReadWriteBinding asyncReadWriteBinding = readWriteBinding;
-        if (session != null) {
-            return new ClientSessionBinding(session, ownsSession, asyncReadWriteBinding);
-        } else {
-            return asyncReadWriteBinding;
-        }
+        return new ClientSessionBinding(session, ownsSession, readWriteBinding);
     }
 
     private ReadPreference getReadPreferenceForBinding(final ReadPreference readPreference, @Nullable final ClientSession session) {
