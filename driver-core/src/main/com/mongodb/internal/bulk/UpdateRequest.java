@@ -28,7 +28,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * An update to one or more documents.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public final class UpdateRequest extends WriteRequest {
     private final BsonValue update;
@@ -80,7 +80,6 @@ public final class UpdateRequest extends WriteRequest {
      * Note: Starting with server version 4.2+, the update can be either a document or a pipeline.
      *
      * @return the update
-     * @since 3.11
      */
     public BsonValue getUpdateValue() {
         return update;
@@ -131,7 +130,6 @@ public final class UpdateRequest extends WriteRequest {
      * Returns the collation options
      *
      * @return the collation options
-     * @since 3.4
      * @mongodb.server.release 3.4
      */
     public Collation getCollation() {
@@ -144,7 +142,6 @@ public final class UpdateRequest extends WriteRequest {
      * <p>A null value represents the server default.</p>
      * @param collation the collation options to use
      * @return this
-     * @since 3.4
      * @mongodb.server.release 3.4
      */
     public UpdateRequest collation(final Collation collation) {
@@ -157,7 +154,6 @@ public final class UpdateRequest extends WriteRequest {
      *
      * @param arrayFilters the array filters, which may be null
      * @return this
-     * @since 3.6
      * @mongodb.server.release 3.6
      */
     public UpdateRequest arrayFilters(final List<BsonDocument> arrayFilters) {
@@ -169,7 +165,6 @@ public final class UpdateRequest extends WriteRequest {
      * Returns the array filters option
      *
      * @return the array filters, which may be null
-     * @since 3.6
      * @mongodb.server.release 3.6
      */
     public List<BsonDocument> getArrayFilters() {

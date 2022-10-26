@@ -29,7 +29,7 @@ import static com.mongodb.internal.connection.ClusterDescriptionHelper.getPrimar
 /**
  * A server selector that chooses servers that are writable.
  *
- * @since 3.1
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public final class WritableServerSelector implements ServerSelector {
 

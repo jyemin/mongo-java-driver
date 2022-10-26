@@ -25,7 +25,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * A representation of a delete.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public final class DeleteRequest extends WriteRequest {
     private final BsonDocument filter;

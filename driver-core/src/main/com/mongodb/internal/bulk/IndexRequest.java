@@ -30,7 +30,7 @@ import static java.util.Arrays.asList;
  * The settings to apply to the creation of an index.
  *
  * @mongodb.driver.manual reference/method/db.collection.ensureIndex/#options Index options
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class IndexRequest {
     private final BsonDocument keys;
@@ -473,7 +473,6 @@ public class IndexRequest {
      * @return the filter expression for the documents to be included in the index or null if not set
      * @mongodb.server.release 3.2
      * @mongodb.driver.manual /core/index-partial/ Partial Indexes
-     * @since 3.2
      */
     public BsonDocument getPartialFilterExpression() {
         return partialFilterExpression;
@@ -486,7 +485,6 @@ public class IndexRequest {
      * @return this
      * @mongodb.server.release 3.2
      * @mongodb.driver.manual /core/index-partial/ Partial Indexes
-     * @since 3.2
      */
     public IndexRequest partialFilterExpression(final BsonDocument partialFilterExpression) {
         this.partialFilterExpression = partialFilterExpression;
@@ -498,7 +496,6 @@ public class IndexRequest {
      *
      * @return the collation options
      * @mongodb.server.release 3.4
-     * @since 3.4
      */
     public Collation getCollation() {
         return collation;
@@ -511,7 +508,6 @@ public class IndexRequest {
      * @param collation the collation options to use
      * @return this
      * @mongodb.server.release 3.4
-     * @since 3.4
      */
     public IndexRequest collation(final Collation collation) {
         this.collation = collation;
@@ -523,7 +519,6 @@ public class IndexRequest {
      *
      * @return the wildcard projection
      * @mongodb.server.release 4.2
-     * @since 3.10
      */
     public BsonDocument getWildcardProjection() {
         return wildcardProjection;
@@ -535,7 +530,6 @@ public class IndexRequest {
      * @param wildcardProjection the wildcard projection
      * @return this
      * @mongodb.server.release 4.2
-     * @since 3.10
      */
     public IndexRequest wildcardProjection(final BsonDocument wildcardProjection) {
         this.wildcardProjection = wildcardProjection;

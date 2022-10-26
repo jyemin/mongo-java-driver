@@ -34,7 +34,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * A simple binding where all connection sources are bound to the server specified in the constructor.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class SingleServerBinding extends AbstractReferenceCounted implements ReadWriteBinding {
     private final Cluster cluster;

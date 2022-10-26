@@ -25,7 +25,7 @@ import com.mongodb.lang.Nullable;
 /**
  * A factory of connection sources to servers that can be read from and that satisfy the specified read preference.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public interface ReadBinding extends ReferenceCounted {
     /**
@@ -57,7 +57,7 @@ public interface ReadBinding extends ReferenceCounted {
      *
      * @return the session context, which may not be null
      *
-     * @since 3.6
+     * <p>This is part of an internal package and is not a stable part of the API</p>
      */
     SessionContext getSessionContext();
 

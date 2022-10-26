@@ -23,7 +23,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * A representation of a document to insert.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public final class InsertRequest extends WriteRequest {
     private final BsonDocument document;

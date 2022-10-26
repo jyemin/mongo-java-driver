@@ -27,7 +27,7 @@ import com.mongodb.lang.Nullable;
 /**
  * A source of connections to a single MongoDB server.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public interface ConnectionSource extends ReferenceCounted {
 
@@ -43,7 +43,6 @@ public interface ConnectionSource extends ReferenceCounted {
      *
      * @return the session context, which may not be null
      *
-     * @since 3.6
      */
     @Nullable
     SessionContext getSessionContext();

@@ -20,6 +20,9 @@ import com.mongodb.ExplainVerbosity;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.Decoder;
 
+/**
+ * <p>This is part of an internal package and is not a stable part of the API</p>
+ */
 public interface AsyncExplainableReadOperation<T> extends AsyncReadOperation<T> {
     <R> AsyncReadOperation<R> asAsyncExplainableOperation(@Nullable ExplainVerbosity verbosity, Decoder<R> resultDecoder);
 }

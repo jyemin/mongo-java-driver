@@ -41,7 +41,7 @@ import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 /**
  * A base class for transaction-related operations
  *
- * @since 3.8
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public abstract class TransactionOperation implements WriteOperation<Void>, AsyncWriteOperation<Void> {
     private final WriteConcern writeConcern;

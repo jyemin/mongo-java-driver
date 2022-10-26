@@ -37,7 +37,7 @@ import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
  * }
  * }</pre>
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public interface ReferenceCounted {
     /**

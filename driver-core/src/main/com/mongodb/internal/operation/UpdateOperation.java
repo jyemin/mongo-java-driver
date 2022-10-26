@@ -29,7 +29,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * An operation that updates a document in a collection.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class UpdateOperation extends BaseWriteOperation {
     private final List<UpdateRequest> updates;
@@ -55,7 +55,6 @@ public class UpdateOperation extends BaseWriteOperation {
      * @param writeConcern the write concern for the operation.
      * @param retryWrites   if writes should be retried if they fail due to a network error.
      * @param updates the update requests.
-     * @since 3.6
      */
     public UpdateOperation(final MongoNamespace namespace, final boolean ordered, final WriteConcern writeConcern,
                            final boolean retryWrites, final List<UpdateRequest> updates) {

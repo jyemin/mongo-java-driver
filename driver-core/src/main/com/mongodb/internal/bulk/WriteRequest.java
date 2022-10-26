@@ -19,7 +19,7 @@ package com.mongodb.internal.bulk;
 /**
  * An abstract base class for a write request.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public abstract class WriteRequest {
 

@@ -41,7 +41,7 @@ import static com.mongodb.assertions.Assertions.notNull;
  * A simple ReadWriteBinding implementation that supplies write connection sources bound to a possibly different primary each time, and a
  * read connection source bound to a possible different server each time.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class ClusterBinding extends AbstractReferenceCounted implements ClusterAwareReadWriteBinding {
     private final Cluster cluster;
@@ -58,7 +58,6 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
      * @param readConcern    a non-null read concern
      * @param serverApi      a server API, which may be null
      * @param requestContext the request context
-     * @since 3.8
      */
     public ClusterBinding(final Cluster cluster, final ReadPreference readPreference, final ReadConcern readConcern,
             final @Nullable ServerApi serverApi, final RequestContext requestContext) {
@@ -72,7 +71,6 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
     /**
      * Return the cluster.
      * @return the cluster
-     * @since 3.11
      */
     public Cluster getCluster() {
         return cluster;

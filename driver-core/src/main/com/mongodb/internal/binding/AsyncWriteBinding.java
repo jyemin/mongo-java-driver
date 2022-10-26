@@ -25,7 +25,7 @@ import com.mongodb.lang.Nullable;
 /**
  * An asynchronous factory of connection sources to servers that can be written to, e.g, a standalone, a mongos, or a replica set primary.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public interface AsyncWriteBinding extends ReferenceCounted {
 
@@ -41,7 +41,6 @@ public interface AsyncWriteBinding extends ReferenceCounted {
      *
      * @return the session context, which may not be null
      *
-     * @since 3.6
      */
     SessionContext getSessionContext();
 

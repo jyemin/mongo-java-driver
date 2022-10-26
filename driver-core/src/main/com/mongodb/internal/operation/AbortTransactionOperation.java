@@ -25,27 +25,15 @@ import org.bson.BsonDocument;
 /**
  * An operation that aborts a transaction.
  *
- * @since 3.8
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class AbortTransactionOperation extends TransactionOperation {
     private BsonDocument recoveryToken;
 
-    /**
-     * Construct an instance.
-     *
-     * @param writeConcern the write concern
-     */
     public AbortTransactionOperation(final WriteConcern writeConcern) {
         super(writeConcern);
     }
 
-    /**
-     * Set the recovery token.
-     *
-     * @param recoveryToken the recovery token
-     * @return the AbortTransactionOperation
-     * @since 3.11
-     */
     public AbortTransactionOperation recoveryToken(final BsonDocument recoveryToken) {
         this.recoveryToken = recoveryToken;
         return this;

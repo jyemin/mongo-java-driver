@@ -19,7 +19,7 @@ package com.mongodb.internal.operation;
 /**
  * Common statistics returned by running all types of map-reduce operations.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public class MapReduceStatistics {
 

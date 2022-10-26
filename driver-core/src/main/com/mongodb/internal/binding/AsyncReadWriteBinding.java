@@ -20,7 +20,7 @@ package com.mongodb.internal.binding;
 /**
  * An asynchronous factory of connection sources to servers that can be read from or written to.
  *
- * @since 3.0
+ * <p>This is part of an internal package and is not a stable part of the API</p>
  */
 public interface AsyncReadWriteBinding extends AsyncReadBinding, AsyncWriteBinding, ReferenceCounted {
     @Override
