@@ -21,6 +21,8 @@ import com.mongodb.MongoException
 import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ClusterType
+import com.mongodb.internal.cluster.srv.DefaultDnsSrvRecordMonitor
+import com.mongodb.internal.cluster.srv.DnsSrvRecordInitializer
 import com.mongodb.internal.dns.DnsResolver
 import spock.lang.Specification
 

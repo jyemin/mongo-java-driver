@@ -13,6 +13,9 @@ import com.mongodb.connection.ServerId
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SocketStreamFactory
 import com.mongodb.internal.authentication.AwsCredentialHelper
+import com.mongodb.internal.connection.auth.Authenticator
+import com.mongodb.internal.connection.auth.AwsAuthenticator
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache
 import org.bson.BsonDocument
 import org.bson.BsonString
 import spock.lang.IgnoreIf

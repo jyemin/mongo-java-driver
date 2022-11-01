@@ -27,6 +27,8 @@ import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.netty.NettyStreamFactory
+import com.mongodb.internal.cluster.ClusterClock
+import com.mongodb.internal.session.ClusterClockAdvancingSessionContext
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import org.bson.BsonTimestamp

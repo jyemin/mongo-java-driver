@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.connection.message.ByteBufBsonDocument
 import org.bson.BsonArray
 import org.bson.BsonBinaryWriter
 import org.bson.BsonBoolean

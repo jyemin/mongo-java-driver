@@ -17,6 +17,11 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.event.ServerDescriptionChangedEvent
+import com.mongodb.internal.cluster.BaseCluster
+import com.mongodb.internal.cluster.ClusterableServer
+import com.mongodb.internal.cluster.MultiServerCluster
+import com.mongodb.internal.cluster.ServerTuple
+import com.mongodb.internal.server.Server
 import util.spock.annotations.Slow
 import com.mongodb.ClusterFixture
 import com.mongodb.MongoClientException

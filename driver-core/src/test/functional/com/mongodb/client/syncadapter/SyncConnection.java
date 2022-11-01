@@ -21,7 +21,7 @@ import com.mongodb.ServerApi;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Connection;
-import com.mongodb.internal.connection.SplittablePayload;
+import com.mongodb.internal.connection.message.SplittablePayload;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;

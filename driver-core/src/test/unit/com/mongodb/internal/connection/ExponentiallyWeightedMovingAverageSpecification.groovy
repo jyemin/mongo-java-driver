@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.server.monitor.ExponentiallyWeightedMovingAverage
 import spock.lang.Specification
 
 

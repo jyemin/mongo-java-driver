@@ -23,6 +23,8 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.ServerDescriptionChangedEvent;
 import com.mongodb.event.ServerListener;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.cluster.Cluster;
+import com.mongodb.internal.cluster.ClusterableServer;
 
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 

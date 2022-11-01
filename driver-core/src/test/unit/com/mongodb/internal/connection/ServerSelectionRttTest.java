@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.internal.server.monitor.ExponentiallyWeightedMovingAverage;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.junit.Test;

@@ -21,6 +21,10 @@ import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.event.ClusterListener
+import com.mongodb.internal.cluster.DnsMultiServerCluster
+import com.mongodb.internal.cluster.srv.DnsSrvRecordInitializer
+import com.mongodb.internal.cluster.srv.DnsSrvRecordMonitor
+import com.mongodb.internal.cluster.srv.DnsSrvRecordMonitorFactory
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit

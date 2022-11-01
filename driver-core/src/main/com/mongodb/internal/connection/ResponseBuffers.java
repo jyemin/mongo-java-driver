@@ -16,6 +16,8 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.internal.connection.message.ReplyHeader;
+import com.mongodb.internal.connection.message.ReplyMessage;
 import org.bson.BsonDocument;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;

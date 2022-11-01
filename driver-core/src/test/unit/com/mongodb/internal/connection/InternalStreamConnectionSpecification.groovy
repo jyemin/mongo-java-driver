@@ -40,6 +40,9 @@ import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
 import com.mongodb.internal.IgnorableRequestContext
+import com.mongodb.internal.connection.message.CommandMessage
+import com.mongodb.internal.connection.message.MessageSettings
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.session.SessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument

@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.connection.message.IdHoldingBsonWriter
 import org.bson.BsonArray
 import org.bson.BsonBinaryReader
 import org.bson.BsonBinaryWriter

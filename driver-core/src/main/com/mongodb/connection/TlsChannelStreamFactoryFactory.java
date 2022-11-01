@@ -21,7 +21,7 @@ import com.mongodb.MongoSocketOpenException;
 import com.mongodb.ServerAddress;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
-import com.mongodb.internal.connection.AsynchronousChannelStream;
+import com.mongodb.internal.connection.stream.AsynchronousChannelStream;
 import com.mongodb.internal.connection.ExtendedAsynchronousByteChannel;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.connection.tlschannel.BufferAllocator;

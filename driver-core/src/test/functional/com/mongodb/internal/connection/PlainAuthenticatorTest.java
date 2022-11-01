@@ -27,6 +27,8 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache;
+import com.mongodb.internal.connection.auth.PlainAuthenticator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

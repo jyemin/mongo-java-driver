@@ -26,7 +26,7 @@ import com.mongodb.client.model.CreateCollectionOptions
 import com.mongodb.internal.IgnorableRequestContext
 import com.mongodb.internal.binding.ConnectionSource
 import com.mongodb.internal.connection.Connection
-import com.mongodb.internal.connection.NoOpSessionContext
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.connection.QueryResult
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonArray

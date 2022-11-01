@@ -25,6 +25,10 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.connection.message.CommandMessage;
+import com.mongodb.internal.connection.message.MessageHeader;
+import com.mongodb.internal.connection.message.ReplyHeader;
+import com.mongodb.internal.connection.message.ReplyMessage;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
@@ -166,7 +170,7 @@ class TestInternalConnection implements InternalConnection {
 
     @Override
     public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
-            final RequestContext requestContext) {
+                                final RequestContext requestContext) {
         ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this);
         try {
             message.encode(bsonOutput, sessionContext);

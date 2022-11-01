@@ -24,6 +24,8 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache;
+import com.mongodb.internal.connection.auth.X509Authenticator;
 import org.bson.io.BsonInput;
 import org.junit.Before;
 import org.junit.Test;

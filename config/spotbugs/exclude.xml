@@ -29,12 +29,12 @@
     </Match>
 
     <Match>
-        <Class name="com.mongodb.internal.connection.AwsAuthenticator$AwsSaslClient"/>
+        <Class name="com.mongodb.internal.connection.auth.AwsAuthenticator$AwsSaslClient"/>
         <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
     </Match>
 
     <Match>
-        <Class name="com.mongodb.internal.connection.ScramShaAuthenticator$DefaultRandomStringGenerator"/>
+        <Class name="com.mongodb.internal.connection.auth.ScramShaAuthenticator$DefaultRandomStringGenerator"/>
         <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
     </Match>
 
@@ -62,7 +62,7 @@
 
     <!-- Deliberately ignoring return value of CountDownLatch.await -->
     <Match>
-        <Class name="com.mongodb.internal.connection.BaseCluster"/>
+        <Class name="com.mongodb.internal.cluster.BaseCluster"/>
         <Bug pattern="RV_RETURN_VALUE_IGNORED"/>
     </Match>
 
@@ -156,7 +156,7 @@
     </Match>
 
     <Match>
-        <Class name="~com.mongodb.internal.connection.AbstractByteBufBsonDocument.*"/>
+        <Class name="~com.mongodb.internal.connection.message.AbstractByteBufBsonDocument.*"/>
         <Bug pattern="NP_BOOLEAN_RETURN_NULL"/>
     </Match>
 
@@ -182,7 +182,7 @@
 
     <!-- Spotbugs assumes that SSLSocket#getSSLParameters never returns null, when that is not the case for all JDKs -->
     <Match>
-        <Class name="com.mongodb.internal.connection.SocketStreamHelper"/>
+        <Class name="com.mongodb.internal.connection.stream.SocketStreamHelper"/>
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
     </Match>
 
@@ -206,37 +206,37 @@
 
     <!-- AWS use UNIX-style line endings -->
     <Match>
-        <Class name="com.mongodb.internal.connection.AuthorizationHeader"/>
+        <Class name="com.mongodb.internal.connection.auth.AuthorizationHeader"/>
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
     </Match>
 
     <!-- The method is a wrapper for `Condition.await`, naturally it does not call it in a loop. -->
     <Match>
-        <Class name="com.mongodb.internal.connection.DefaultConnectionPool$OpenConcurrencyLimiter"/>
+        <Class name="com.mongodb.internal.connection.pool.DefaultConnectionPool$OpenConcurrencyLimiter"/>
         <Method name="awaitNanos"/>
         <Bug pattern="WA_AWAIT_NOT_IN_LOOP"/>
     </Match>
 
     <!-- The checker fails to see that the code prevents concurrent incrementation by using exclusive locking. -->
     <Match>
-        <Class name="com.mongodb.internal.connection.DefaultConnectionPool$StateAndGeneration"/>
+        <Class name="com.mongodb.internal.connection.pool.DefaultConnectionPool$StateAndGeneration"/>
         <Field name="generation"/>
         <Bug pattern="VO_VOLATILE_INCREMENT"/>
     </Match>
     <Match>
-        <Class name="com.mongodb.internal.connection.ConcurrentPool$StateAndPermits"/>
+        <Class name="com.mongodb.internal.connection.pool.ConcurrentPool$StateAndPermits"/>
         <Field name="permits"/>
         <Bug pattern="VO_VOLATILE_INCREMENT"/>
     </Match>
 
     <!-- Non-short-circuit operators are used intentionally. -->
     <Match>
-        <Class name="com.mongodb.internal.connection.ConcurrentPool$StateAndPermits"/>
+        <Class name="com.mongodb.internal.connection.pool.ConcurrentPool$StateAndPermits"/>
         <Method name="acquirePermit"/>
         <Bug pattern="NS_DANGEROUS_NON_SHORT_CIRCUIT"/>
     </Match>
     <Match>
-        <Class name="com.mongodb.internal.connection.DefaultConnectionPool$OpenConcurrencyLimiter"/>
+        <Class name="com.mongodb.internal.connection.pool.DefaultConnectionPool$OpenConcurrencyLimiter"/>
         <Method name="acquirePermitOrGetAvailableOpenedConnection"/>
         <Bug pattern="NS_NON_SHORT_CIRCUIT"/>
     </Match>

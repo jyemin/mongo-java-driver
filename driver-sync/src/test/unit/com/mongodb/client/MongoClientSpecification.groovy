@@ -33,7 +33,7 @@ import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerType
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
-import com.mongodb.internal.connection.Cluster
+import com.mongodb.internal.cluster.Cluster
 import org.bson.BsonDocument
 import org.bson.Document
 import org.bson.codecs.UuidCodec

@@ -1,5 +1,6 @@
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.connection.stream.AsynchronousSocketChannelStream
 import util.spock.annotations.Slow
 import com.mongodb.MongoSocketException
 import com.mongodb.MongoSocketOpenException

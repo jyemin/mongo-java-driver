@@ -30,7 +30,9 @@ import com.mongodb.event.ServerHeartbeatFailedEvent
 import com.mongodb.event.ServerHeartbeatStartedEvent
 import com.mongodb.event.ServerHeartbeatSucceededEvent
 import com.mongodb.event.ServerMonitorListener
+import com.mongodb.internal.cluster.ClusterClock
 import com.mongodb.internal.inject.SameObjectProvider
+import com.mongodb.internal.server.monitor.DefaultServerMonitor
 import org.bson.BsonDocument
 import org.bson.ByteBufNIO
 import spock.lang.Specification

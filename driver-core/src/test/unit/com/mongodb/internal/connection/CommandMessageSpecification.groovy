@@ -24,6 +24,15 @@ import com.mongodb.connection.ClusterConnectionMode
 import com.mongodb.connection.ServerType
 import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.bulk.WriteRequestWithIndex
+import com.mongodb.internal.connection.message.CommandMessage
+import com.mongodb.internal.connection.message.MessageHeader
+import com.mongodb.internal.connection.message.MessageSettings
+import com.mongodb.internal.connection.message.OpCode
+import com.mongodb.internal.connection.message.ReplyHeader
+import com.mongodb.internal.connection.message.ReplyMessage
+import com.mongodb.internal.connection.message.RequestMessage
+import com.mongodb.internal.connection.message.SplittablePayload
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.session.SessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonArray
@@ -45,7 +54,7 @@ import spock.lang.Specification
 
 import java.nio.ByteBuffer
 
-import static com.mongodb.internal.connection.SplittablePayload.Type.INSERT
+import static com.mongodb.internal.connection.message.SplittablePayload.Type.INSERT
 import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_ZERO_WIRE_VERSION
 import static com.mongodb.internal.operation.ServerVersionHelper.THREE_DOT_SIX_WIRE_VERSION
 

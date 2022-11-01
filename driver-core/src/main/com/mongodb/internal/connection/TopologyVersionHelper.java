@@ -18,6 +18,8 @@ package com.mongodb.internal.connection;
 import com.mongodb.MongoCommandException;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.TopologyVersion;
+import com.mongodb.internal.pool.ConnectionPool;
+import com.mongodb.internal.server.monitor.ServerMonitor;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 

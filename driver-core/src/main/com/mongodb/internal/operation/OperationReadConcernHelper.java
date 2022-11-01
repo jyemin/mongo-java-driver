@@ -20,7 +20,7 @@ import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonDocument;
 
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.internal.connection.ReadConcernHelper.getReadConcernDocument;
+import static com.mongodb.internal.util.ReadConcernHelper.getReadConcernDocument;
 
 final class OperationReadConcernHelper {
     static void appendReadConcernToCommand(final SessionContext sessionContext, final int maxWireVersion,

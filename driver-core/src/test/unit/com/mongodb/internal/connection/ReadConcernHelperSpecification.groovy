@@ -23,7 +23,7 @@ import org.bson.BsonString
 import org.bson.BsonTimestamp
 import spock.lang.Specification
 
-import static com.mongodb.internal.connection.ReadConcernHelper.getReadConcernDocument
+import static com.mongodb.internal.util.ReadConcernHelper.getReadConcernDocument
 import static com.mongodb.internal.operation.ServerVersionHelper.MIN_WIRE_VERSION
 
 class ReadConcernHelperSpecification extends Specification {

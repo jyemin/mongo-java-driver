@@ -21,7 +21,7 @@ import com.mongodb.client.internal.MongoDatabaseImpl
 import com.mongodb.client.internal.TestOperationExecutor
 import com.mongodb.client.model.geojson.MultiPolygon
 import com.mongodb.connection.ClusterSettings
-import com.mongodb.internal.connection.Cluster
+import com.mongodb.internal.cluster.Cluster
 import org.bson.BsonDocument
 import org.bson.Document
 import org.bson.codecs.UuidCodec

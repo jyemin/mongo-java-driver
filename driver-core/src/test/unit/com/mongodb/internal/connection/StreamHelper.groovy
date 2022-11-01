@@ -19,6 +19,9 @@ package com.mongodb.internal.connection
 import com.mongodb.MongoNamespace
 import com.mongodb.ReadPreference
 import com.mongodb.async.FutureResultCallback
+import com.mongodb.internal.connection.message.CommandMessage
+import com.mongodb.internal.connection.message.MessageSettings
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonBinaryWriter
 import org.bson.BsonDocument

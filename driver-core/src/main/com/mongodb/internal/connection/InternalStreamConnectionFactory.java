@@ -23,6 +23,14 @@ import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.event.CommandListener;
+import com.mongodb.internal.connection.auth.Authenticator;
+import com.mongodb.internal.connection.auth.AwsAuthenticator;
+import com.mongodb.internal.connection.auth.DefaultAuthenticator;
+import com.mongodb.internal.connection.auth.GSSAPIAuthenticator;
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache;
+import com.mongodb.internal.connection.auth.PlainAuthenticator;
+import com.mongodb.internal.connection.auth.ScramShaAuthenticator;
+import com.mongodb.internal.connection.auth.X509Authenticator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 
@@ -31,7 +39,7 @@ import java.util.List;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.connection.ClientMetadataHelper.createClientMetadataDocument;
 
-class InternalStreamConnectionFactory implements InternalConnectionFactory {
+public class InternalStreamConnectionFactory implements InternalConnectionFactory {
     private final ClusterConnectionMode clusterConnectionMode;
     private final StreamFactory streamFactory;
     private final BsonDocument clientMetadataDocument;
@@ -41,11 +49,11 @@ class InternalStreamConnectionFactory implements InternalConnectionFactory {
     private final ServerApi serverApi;
     private final MongoCredentialWithCache credential;
 
-    InternalStreamConnectionFactory(final ClusterConnectionMode clusterConnectionMode, final StreamFactory streamFactory,
-                                    final MongoCredentialWithCache credential,
-                                    final String applicationName, final MongoDriverInformation mongoDriverInformation,
-                                    final List<MongoCompressor> compressorList,
-                                    final CommandListener commandListener, @Nullable final ServerApi serverApi) {
+    public InternalStreamConnectionFactory(final ClusterConnectionMode clusterConnectionMode, final StreamFactory streamFactory,
+                                           final MongoCredentialWithCache credential,
+                                           final String applicationName, final MongoDriverInformation mongoDriverInformation,
+                                           final List<MongoCompressor> compressorList,
+                                           final CommandListener commandListener, @Nullable final ServerApi serverApi) {
         this.clusterConnectionMode = clusterConnectionMode;
         this.streamFactory = notNull("streamFactory", streamFactory);
         this.compressorList = notNull("compressorList", compressorList);

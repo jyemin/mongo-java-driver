@@ -23,6 +23,9 @@ import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache
+import com.mongodb.internal.connection.auth.ScramShaAuthenticator
+import com.mongodb.internal.connection.auth.SpeculativeAuthenticator
 import org.bson.BsonDocument
 import spock.lang.Specification
 

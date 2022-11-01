@@ -20,6 +20,9 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.ServerType;
+import com.mongodb.internal.cluster.Cluster;
+import com.mongodb.internal.cluster.ClusterableServer;
+import com.mongodb.internal.cluster.ClusterableServerFactory;
 import org.bson.types.ObjectId;
 
 import java.util.Collections;

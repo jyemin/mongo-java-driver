@@ -21,11 +21,10 @@ import com.mongodb.connection.ClusterDescription
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerSettings
-import com.mongodb.internal.connection.Cluster
+import com.mongodb.internal.cluster.Cluster
 import com.mongodb.internal.connection.Connection
-import com.mongodb.internal.connection.NoOpSessionContext
-import com.mongodb.internal.connection.Server
-import com.mongodb.internal.connection.ServerTuple
+import com.mongodb.internal.server.Server
+import com.mongodb.internal.cluster.ServerTuple
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonArray
 import org.bson.BsonBinarySubType

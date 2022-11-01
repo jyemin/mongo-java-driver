@@ -18,6 +18,7 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.MongoException;
 import com.mongodb.MongoTimeoutException;
+import com.mongodb.internal.pool.ConcurrentPool;
 import org.junit.Test;
 
 import java.io.Closeable;

@@ -26,6 +26,8 @@ import com.mongodb.MongoQueryException;
 import com.mongodb.RequestContext;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.internal.connection.message.MessageSettings;
+import com.mongodb.internal.connection.message.RequestMessage;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.event.CommandFailedEvent;
@@ -33,6 +35,7 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import com.mongodb.internal.IgnorableRequestContext;
+import com.mongodb.internal.session.NoOpSessionContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonDocument;
@@ -214,7 +217,7 @@ public final class ProtocolHelper {
         return new MongoQueryException(serverAddress, getErrorCode(errorDocument), getErrorMessage(errorDocument, "$err"));
     }
 
-    static MessageSettings getMessageSettings(final ConnectionDescription connectionDescription) {
+    public static MessageSettings getMessageSettings(final ConnectionDescription connectionDescription) {
         return MessageSettings.builder()
                 .maxDocumentSize(connectionDescription.getMaxDocumentSize())
                 .maxMessageSize(connectionDescription.getMaxMessageSize())

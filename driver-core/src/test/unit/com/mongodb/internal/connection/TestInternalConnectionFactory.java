@@ -23,6 +23,7 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.connection.message.CommandMessage;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.ByteBuf;
 import org.bson.codecs.Decoder;
@@ -105,7 +106,7 @@ class TestInternalConnectionFactory implements InternalConnectionFactory {
 
         @Override
         public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
-                final RequestContext requestContext) {
+                                    final RequestContext requestContext) {
             return null;
         }
 

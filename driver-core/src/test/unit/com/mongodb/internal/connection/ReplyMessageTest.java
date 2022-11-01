@@ -17,6 +17,9 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoInternalException;
+import com.mongodb.internal.connection.message.MessageHeader;
+import com.mongodb.internal.connection.message.ReplyHeader;
+import com.mongodb.internal.connection.message.ReplyMessage;
 import org.bson.ByteBufNIO;
 import org.bson.Document;
 import org.junit.Test;

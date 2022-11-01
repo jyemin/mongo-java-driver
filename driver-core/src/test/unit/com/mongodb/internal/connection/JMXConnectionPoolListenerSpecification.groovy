@@ -20,6 +20,7 @@ import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionPoolSettings
 import com.mongodb.connection.ServerId
+import com.mongodb.internal.pool.DefaultConnectionPool
 import com.mongodb.internal.inject.SameObjectProvider
 import com.mongodb.management.JMXConnectionPoolListener
 import spock.lang.Specification

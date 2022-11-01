@@ -24,7 +24,7 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.ConnectionSource;
 import com.mongodb.internal.binding.ReadWriteBinding;
-import com.mongodb.internal.connection.Cluster;
+import com.mongodb.internal.cluster.Cluster;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;

@@ -23,6 +23,11 @@ import com.mongodb.async.FutureResultCallback
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ServerId
 import com.mongodb.internal.IgnorableRequestContext
+import com.mongodb.internal.connection.message.CommandMessage
+import com.mongodb.internal.connection.message.MessageSettings
+import com.mongodb.internal.pool.DefaultConnectionPool
+import com.mongodb.internal.pool.UsageTrackingInternalConnection
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument
 import org.bson.BsonInt32

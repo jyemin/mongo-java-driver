@@ -20,8 +20,8 @@ import com.mongodb.MongoClientException;
 import com.mongodb.ServerAddress;
 import com.mongodb.UnixServerAddress;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
-import com.mongodb.internal.connection.SocketStream;
-import com.mongodb.internal.connection.UnixSocketChannelStream;
+import com.mongodb.internal.connection.stream.SocketStream;
+import com.mongodb.internal.connection.stream.UnixSocketChannelStream;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;

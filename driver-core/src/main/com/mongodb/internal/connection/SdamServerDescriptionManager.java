@@ -27,13 +27,14 @@ import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.TopologyVersion;
+import com.mongodb.internal.pool.ConnectionPool;
 import com.mongodb.lang.Nullable;
 
 import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.assertTrue;
-import static com.mongodb.internal.connection.ClusterableServer.SHUTDOWN_CODES;
+import static com.mongodb.internal.cluster.ClusterableServer.SHUTDOWN_CODES;
 import static com.mongodb.internal.connection.ServerDescriptionHelper.unknownConnectingServerDescription;
 import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WIRE_VERSION;
 
@@ -43,6 +44,7 @@ import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WI
  * Server Discovery And Monitoring</a> specification.
  */
 @ThreadSafe
+public
 interface SdamServerDescriptionManager {
     /**
      * @param candidateDescription A {@link ServerDescription} that may or may not be applied
@@ -88,14 +90,14 @@ interface SdamServerDescriptionManager {
         /**
          * @see #unspecified(Context)
          */
-        static SdamIssue specific(final Throwable exception, final Context context) {
+        public static SdamIssue specific(final Throwable exception, final Context context) {
             return new SdamIssue(assertNotNull(exception), assertNotNull(context));
         }
 
         /**
          * @see #specific(Throwable, Context)
          */
-        static SdamIssue unspecified(final Context context) {
+        public static SdamIssue unspecified(final Context context) {
             return new SdamIssue(null, assertNotNull(context));
         }
 
@@ -181,7 +183,7 @@ interface SdamServerDescriptionManager {
          * A context in which an {@link SdamIssue} occurred. It is used to determine the freshness of the exception.
          */
         @Immutable
-        static final class Context {
+        public static final class Context {
             private final ServerId serverId;
             private final int connectionPoolGeneration;
             private final int serverMaxWireVersion;

@@ -23,6 +23,9 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
 import com.mongodb.event.ServerDescriptionChangedEvent;
 import com.mongodb.event.ServerListener;
+import com.mongodb.internal.cluster.Cluster;
+import com.mongodb.internal.pool.ConnectionPool;
+import com.mongodb.internal.server.monitor.ServerMonitor;
 
 import static com.mongodb.assertions.Assertions.assertFalse;
 import static com.mongodb.assertions.Assertions.assertNotNull;
@@ -32,7 +35,7 @@ import static com.mongodb.internal.connection.EventHelper.wouldDescriptionsGener
 import static com.mongodb.internal.connection.ServerDescriptionHelper.unknownConnectingServerDescription;
 
 @ThreadSafe
-final class DefaultSdamServerDescriptionManager implements SdamServerDescriptionManager {
+public final class DefaultSdamServerDescriptionManager implements SdamServerDescriptionManager {
     private final Cluster cluster;
     private final ServerId serverId;
     private final ServerListener serverListener;
@@ -41,11 +44,11 @@ final class DefaultSdamServerDescriptionManager implements SdamServerDescription
     private final ClusterConnectionMode connectionMode;
     private volatile ServerDescription description;
 
-    DefaultSdamServerDescriptionManager(final Cluster cluster,
-                                        final ServerId serverId,
-                                        final ServerListener serverListener, final ServerMonitor serverMonitor,
-                                        final ConnectionPool connectionPool,
-                                        final ClusterConnectionMode connectionMode) {
+    public DefaultSdamServerDescriptionManager(final Cluster cluster,
+                                               final ServerId serverId,
+                                               final ServerListener serverListener, final ServerMonitor serverMonitor,
+                                               final ConnectionPool connectionPool,
+                                               final ClusterConnectionMode connectionMode) {
         this.cluster = cluster;
         this.serverId = assertNotNull(serverId);
         this.serverListener = assertNotNull(serverListener);

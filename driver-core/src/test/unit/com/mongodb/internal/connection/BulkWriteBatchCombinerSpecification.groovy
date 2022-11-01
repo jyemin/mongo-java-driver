@@ -23,6 +23,8 @@ import com.mongodb.bulk.BulkWriteInsert
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.bulk.BulkWriteUpsert
 import com.mongodb.bulk.WriteConcernError
+import com.mongodb.internal.operation.BulkWriteBatchCombiner
+import com.mongodb.internal.operation.IndexMap
 import org.bson.BsonDocument
 import org.bson.BsonString
 import spock.lang.Specification

@@ -19,6 +19,7 @@ package com.mongodb.internal.connection;
 import com.mongodb.RequestContext;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.event.CommandListener;
+import com.mongodb.internal.connection.message.RequestMessage;
 import org.bson.io.OutputBuffer;
 
 import static com.mongodb.assertions.Assertions.notNull;

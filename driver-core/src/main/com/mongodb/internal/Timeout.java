@@ -16,6 +16,7 @@
 package com.mongodb.internal;
 
 import com.mongodb.annotations.Immutable;
+import com.mongodb.internal.pool.ConcurrentPool;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +52,7 @@ public final class Timeout {
      * and then acts identically to {@link #startNow(long)}.
      * <p>
      * Note that the contract of this method is also used in some places to specify the behavior of methods that accept
-     * {@code (long timeout, TimeUnit unit)}, e.g., {@link com.mongodb.internal.connection.ConcurrentPool#get(long, TimeUnit)},
+     * {@code (long timeout, TimeUnit unit)}, e.g., {@link ConcurrentPool#get(long, TimeUnit)},
      * so it cannot be changed without updating those methods.
      * @see #startNow(long)
      */
@@ -67,7 +68,7 @@ public final class Timeout {
      * otherwise an object that represents the specified {@code durationNanos}.
      * <p>
      * Note that the contract of this method is also used in some places to specify the behavior of methods that accept
-     * {@code (long timeout, TimeUnit unit)}, e.g., {@link com.mongodb.internal.connection.ConcurrentPool#get(long, TimeUnit)},
+     * {@code (long timeout, TimeUnit unit)}, e.g., {@link ConcurrentPool#get(long, TimeUnit)},
      * so it cannot be changed without updating those methods.
      */
     public static Timeout startNow(final long durationNanos) {

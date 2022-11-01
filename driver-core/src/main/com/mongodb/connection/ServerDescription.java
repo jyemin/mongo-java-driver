@@ -20,7 +20,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.TagSet;
 import com.mongodb.annotations.Immutable;
 import com.mongodb.annotations.NotThreadSafe;
-import com.mongodb.internal.connection.DecimalFormatHelper;
+import com.mongodb.internal.util.DecimalFormatHelper;
 import com.mongodb.internal.connection.Time;
 import com.mongodb.lang.Nullable;
 import org.bson.types.ObjectId;

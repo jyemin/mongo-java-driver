@@ -20,6 +20,7 @@ import com.mongodb.ClusterFixture
 import com.mongodb.MongoInternalException
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SslSettings
+import com.mongodb.internal.connection.stream.SocketStreamHelper
 import jdk.net.ExtendedSocketOptions
 import spock.lang.IgnoreIf
 import spock.lang.Specification

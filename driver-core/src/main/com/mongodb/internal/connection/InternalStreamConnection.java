@@ -38,6 +38,16 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerType;
 import com.mongodb.connection.Stream;
 import com.mongodb.connection.StreamFactory;
+import com.mongodb.internal.connection.compression.Compressor;
+import com.mongodb.internal.connection.compression.SnappyCompressor;
+import com.mongodb.internal.connection.compression.ZlibCompressor;
+import com.mongodb.internal.connection.compression.ZstdCompressor;
+import com.mongodb.internal.connection.message.CommandMessage;
+import com.mongodb.internal.connection.message.CompressedHeader;
+import com.mongodb.internal.connection.message.CompressedMessage;
+import com.mongodb.internal.connection.message.MessageHeader;
+import com.mongodb.internal.connection.message.ReplyHeader;
+import com.mongodb.internal.connection.message.ReplyMessage;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.event.CommandListener;
@@ -69,8 +79,8 @@ import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandli
 import static com.mongodb.internal.connection.CommandHelper.HELLO;
 import static com.mongodb.internal.connection.CommandHelper.LEGACY_HELLO;
 import static com.mongodb.internal.connection.CommandHelper.LEGACY_HELLO_LOWER;
-import static com.mongodb.internal.connection.MessageHeader.MESSAGE_HEADER_LENGTH;
-import static com.mongodb.internal.connection.OpCode.OP_COMPRESSED;
+import static com.mongodb.internal.connection.message.MessageHeader.MESSAGE_HEADER_LENGTH;
+import static com.mongodb.internal.connection.message.OpCode.OP_COMPRESSED;
 import static com.mongodb.internal.connection.ProtocolHelper.createSpecialWriteConcernException;
 import static com.mongodb.internal.connection.ProtocolHelper.getClusterTime;
 import static com.mongodb.internal.connection.ProtocolHelper.getCommandFailureException;
@@ -321,7 +331,7 @@ public class InternalStreamConnection implements InternalConnection {
 
     @Override
     public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
-            final RequestContext requestContext) {
+                                final RequestContext requestContext) {
         CommandEventSender commandEventSender;
 
         try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(this)) {

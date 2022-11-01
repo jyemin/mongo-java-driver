@@ -36,6 +36,7 @@ import com.mongodb.event.ServerHeartbeatSucceededEvent;
 import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerMonitorListener;
 import com.mongodb.event.ServerOpeningEvent;
+import com.mongodb.internal.cluster.AsynchronousClusterEventListener;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.Test;
 

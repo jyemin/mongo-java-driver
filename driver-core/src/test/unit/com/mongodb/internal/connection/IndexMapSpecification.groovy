@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.MongoInternalException
+import com.mongodb.internal.operation.IndexMap
 import spock.lang.Specification
 
 class IndexMapSpecification extends Specification {

@@ -30,9 +30,9 @@ import com.mongodb.internal.IgnorableRequestContext
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding
 import com.mongodb.internal.binding.AsyncClusterBinding
 import com.mongodb.internal.binding.AsyncConnectionSource
-import com.mongodb.internal.connection.Cluster
-import com.mongodb.internal.connection.Server
-import com.mongodb.internal.connection.ServerTuple
+import com.mongodb.internal.cluster.Cluster
+import com.mongodb.internal.server.Server
+import com.mongodb.internal.cluster.ServerTuple
 import com.mongodb.internal.session.ClientSessionContext
 import com.mongodb.reactivestreams.client.ClientSession
 import spock.lang.Specification

@@ -23,6 +23,8 @@ import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache;
+import com.mongodb.internal.connection.auth.PlainAuthenticator;
 import org.bson.io.BsonInput;
 import org.junit.Before;
 import org.junit.Test;

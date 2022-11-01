@@ -28,7 +28,10 @@ import com.mongodb.connection.ServerSettings
 import com.mongodb.connection.ServerType
 import com.mongodb.connection.SocketSettings
 import com.mongodb.connection.SocketStreamFactory
+import com.mongodb.internal.cluster.ClusterClock
 import com.mongodb.internal.inject.SameObjectProvider
+import com.mongodb.internal.server.monitor.DefaultServerMonitor
+import com.mongodb.internal.server.monitor.ServerMonitor
 import org.bson.types.ObjectId
 
 import java.util.concurrent.CountDownLatch
@@ -43,7 +46,7 @@ import static com.mongodb.connection.ClusterConnectionMode.SINGLE
 import static com.mongodb.connection.ServerConnectionState.CONNECTED
 import static com.mongodb.connection.ServerConnectionState.CONNECTING
 import static com.mongodb.connection.ServerDescription.builder
-import static com.mongodb.internal.connection.DefaultServerMonitor.shouldLogStageChange
+import static com.mongodb.internal.server.monitor.DefaultServerMonitor.shouldLogStageChange
 import static java.util.Arrays.asList
 
 class ServerMonitorSpecification extends OperationFunctionalSpecification {

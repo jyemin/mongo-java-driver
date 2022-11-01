@@ -23,12 +23,15 @@ import com.mongodb.ServerAddress
 import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ServerId
+import com.mongodb.internal.connection.message.CommandMessage
+import com.mongodb.internal.connection.message.MessageSettings
 import com.mongodb.internal.diagnostics.logging.Logger
 import com.mongodb.event.CommandFailedEvent
 import com.mongodb.event.CommandListener
 import com.mongodb.event.CommandStartedEvent
 import com.mongodb.event.CommandSucceededEvent
 import com.mongodb.internal.IgnorableRequestContext
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonBinary
 import org.bson.BsonDocument

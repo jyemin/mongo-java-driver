@@ -22,6 +22,7 @@ import com.mongodb.ServerApi;
 import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.binding.ReferenceCounted;
+import com.mongodb.internal.connection.message.SplittablePayload;
 import com.mongodb.internal.session.SessionContext;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
@@ -50,8 +51,8 @@ public interface Connection extends ReferenceCounted {
             Decoder<T> commandResultDecoder, SessionContext sessionContext, ServerApi serverApi, RequestContext requestContext);
 
     <T> T command(String database, BsonDocument command, FieldNameValidator commandFieldNameValidator, ReadPreference readPreference,
-            Decoder<T> commandResultDecoder, SessionContext sessionContext, ServerApi serverApi, RequestContext requestContext,
-            boolean responseExpected, SplittablePayload payload, FieldNameValidator payloadFieldNameValidator);
+                  Decoder<T> commandResultDecoder, SessionContext sessionContext, ServerApi serverApi, RequestContext requestContext,
+                  boolean responseExpected, SplittablePayload payload, FieldNameValidator payloadFieldNameValidator);
 
 
     enum PinningMode {

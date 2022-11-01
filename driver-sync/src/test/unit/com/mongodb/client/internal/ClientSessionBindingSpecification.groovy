@@ -26,7 +26,7 @@ import com.mongodb.internal.IgnorableRequestContext
 import com.mongodb.internal.binding.ClusterBinding
 import com.mongodb.internal.binding.ConnectionSource
 import com.mongodb.internal.binding.ReadWriteBinding
-import com.mongodb.internal.connection.Cluster
+import com.mongodb.internal.cluster.Cluster
 import com.mongodb.internal.session.ClientSessionContext
 import spock.lang.Specification
 

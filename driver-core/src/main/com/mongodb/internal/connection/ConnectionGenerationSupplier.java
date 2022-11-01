@@ -19,7 +19,7 @@ package com.mongodb.internal.connection;
 import com.mongodb.lang.NonNull;
 import org.bson.types.ObjectId;
 
-interface ConnectionGenerationSupplier {
+public interface ConnectionGenerationSupplier {
     int getGeneration();
 
     int getGeneration(@NonNull ObjectId serviceId);

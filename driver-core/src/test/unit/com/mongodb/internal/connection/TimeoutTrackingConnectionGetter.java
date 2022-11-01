@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoTimeoutException;
+import com.mongodb.internal.pool.ConnectionPool;
 
 import java.util.concurrent.CountDownLatch;
 

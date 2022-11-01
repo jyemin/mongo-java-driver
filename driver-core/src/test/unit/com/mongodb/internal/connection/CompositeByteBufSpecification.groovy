@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.connection.message.CompositeByteBuf
 import org.bson.ByteBufNIO
 import spock.lang.Specification
 

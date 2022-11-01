@@ -22,7 +22,15 @@ import com.mongodb.MongoTimeoutException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncConnectionSource;
+import com.mongodb.internal.cluster.Cluster;
+import com.mongodb.internal.pool.ConcurrentPool;
+import com.mongodb.internal.pool.ConnectionPool;
+import com.mongodb.internal.pool.DefaultConnectionPool;
+import com.mongodb.internal.pool.UsageTrackingInternalConnection;
 import com.mongodb.internal.selector.ServerAddressSelector;
+import com.mongodb.internal.server.DefaultServer;
+import com.mongodb.internal.server.LoadBalancedServer;
+import com.mongodb.internal.server.Server;
 
 import static com.mongodb.ClusterFixture.getAsyncCluster;
 import static com.mongodb.ClusterFixture.getCluster;

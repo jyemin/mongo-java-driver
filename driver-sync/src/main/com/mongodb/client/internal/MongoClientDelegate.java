@@ -40,7 +40,7 @@ import com.mongodb.internal.binding.ClusterBinding;
 import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.binding.ReadWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
-import com.mongodb.internal.connection.Cluster;
+import com.mongodb.internal.cluster.Cluster;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.internal.session.ServerSessionPool;

@@ -22,7 +22,13 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.event.ServerListener;
+import com.mongodb.internal.cluster.Cluster;
+import com.mongodb.internal.cluster.ClusterableServer;
+import com.mongodb.internal.cluster.ClusterableServerFactory;
+import com.mongodb.internal.pool.ConnectionPool;
 import com.mongodb.internal.inject.SameObjectProvider;
+import com.mongodb.internal.server.DefaultServer;
+import com.mongodb.internal.server.LoadBalancedServer;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -24,9 +24,9 @@ import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerType
 import com.mongodb.internal.IgnorableRequestContext
-import com.mongodb.internal.connection.Cluster
-import com.mongodb.internal.connection.Server
-import com.mongodb.internal.connection.ServerTuple
+import com.mongodb.internal.cluster.Cluster
+import com.mongodb.internal.server.Server
+import com.mongodb.internal.cluster.ServerTuple
 import spock.lang.Specification
 
 class SingleServerBindingSpecification extends Specification {

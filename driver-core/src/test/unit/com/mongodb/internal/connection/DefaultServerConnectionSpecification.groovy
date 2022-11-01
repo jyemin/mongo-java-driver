@@ -24,9 +24,13 @@ import com.mongodb.connection.ClusterId
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.connection.ConnectionId
 import com.mongodb.connection.ServerId
+import com.mongodb.internal.connection.protocol.CommandProtocolImpl
+import com.mongodb.internal.connection.protocol.ProtocolExecutor
 import com.mongodb.internal.diagnostics.logging.Logger
 import com.mongodb.internal.IgnorableRequestContext
 import com.mongodb.internal.async.SingleResultCallback
+import com.mongodb.internal.server.DefaultServerConnection
+import com.mongodb.internal.session.NoOpSessionContext
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonDocument
 import org.bson.BsonInt32

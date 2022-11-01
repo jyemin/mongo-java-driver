@@ -18,6 +18,7 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.inject.Provider;
+import com.mongodb.internal.server.monitor.ServerMonitor;
 
 class TestServerMonitor implements ServerMonitor {
     private final Provider<SdamServerDescriptionManager> sdamProvider;

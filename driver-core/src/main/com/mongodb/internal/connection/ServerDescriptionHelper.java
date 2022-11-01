@@ -22,8 +22,8 @@ import com.mongodb.lang.Nullable;
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 import static com.mongodb.connection.ServerType.UNKNOWN;
 
-final class ServerDescriptionHelper {
-    static ServerDescription unknownConnectingServerDescription(final ServerId serverId, @Nullable final Throwable cause) {
+public final class ServerDescriptionHelper {
+    public static ServerDescription unknownConnectingServerDescription(final ServerId serverId, @Nullable final Throwable cause) {
         ServerDescription.Builder result = ServerDescription.builder()
                 .type(UNKNOWN)
                 .state(CONNECTING)

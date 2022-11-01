@@ -22,6 +22,11 @@ import com.mongodb.ServerApi;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.internal.IgnorableRequestContext;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.cluster.ClusterClock;
+import com.mongodb.internal.connection.message.CommandMessage;
+import com.mongodb.internal.connection.message.MessageSettings;
+import com.mongodb.internal.session.ClusterClockAdvancingSessionContext;
+import com.mongodb.internal.session.NoOpSessionContext;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
@@ -39,12 +44,12 @@ import static com.mongodb.ReadPreference.primary;
  */
 public final class CommandHelper {
 
-    static final String HELLO = "hello";
-    static final String LEGACY_HELLO = "isMaster";
+    public static final String HELLO = "hello";
+    public static final String LEGACY_HELLO = "isMaster";
     static final String LEGACY_HELLO_LOWER = LEGACY_HELLO.toLowerCase(Locale.ROOT);
 
-    static BsonDocument executeCommand(final String database, final BsonDocument command, final ClusterConnectionMode clusterConnectionMode,
-            final @Nullable ServerApi serverApi, final InternalConnection internalConnection) {
+    public static BsonDocument executeCommand(final String database, final BsonDocument command, final ClusterConnectionMode clusterConnectionMode,
+                                              final @Nullable ServerApi serverApi, final InternalConnection internalConnection) {
         return sendAndReceive(database, command, null, clusterConnectionMode, serverApi, internalConnection);
     }
 
@@ -64,9 +69,9 @@ public final class CommandHelper {
         }
     }
 
-    static void executeCommandAsync(final String database, final BsonDocument command, final ClusterConnectionMode clusterConnectionMode,
-            final @Nullable ServerApi serverApi, final InternalConnection internalConnection,
-            final SingleResultCallback<BsonDocument> callback) {
+    public static void executeCommandAsync(final String database, final BsonDocument command, final ClusterConnectionMode clusterConnectionMode,
+                                           final @Nullable ServerApi serverApi, final InternalConnection internalConnection,
+                                           final SingleResultCallback<BsonDocument> callback) {
         internalConnection.sendAndReceiveAsync(getCommandMessage(database, command, internalConnection, clusterConnectionMode, serverApi),
                 new BsonDocumentCodec(),
                 NoOpSessionContext.INSTANCE, IgnorableRequestContext.INSTANCE, new SingleResultCallback<BsonDocument>() {

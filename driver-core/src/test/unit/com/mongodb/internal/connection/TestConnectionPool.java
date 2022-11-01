@@ -21,6 +21,8 @@ import com.mongodb.RequestContext;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.connection.message.CommandMessage;
+import com.mongodb.internal.pool.ConnectionPool;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 import org.bson.ByteBuf;
@@ -54,7 +56,7 @@ public class TestConnectionPool implements ConnectionPool {
 
             @Override
             public <T> T sendAndReceive(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
-                    final RequestContext requestContext) {
+                                        final RequestContext requestContext) {
                 throw new UnsupportedOperationException("Not implemented yet!");
             }
 

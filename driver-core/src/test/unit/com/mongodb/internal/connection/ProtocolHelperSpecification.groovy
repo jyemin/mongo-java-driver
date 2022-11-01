@@ -32,9 +32,9 @@ import org.bson.BsonNull
 import org.bson.BsonString
 import spock.lang.Specification
 
-import static com.mongodb.internal.connection.ProtocolHelper.getCommandFailureException
-import static com.mongodb.internal.connection.ProtocolHelper.getQueryFailureException
-import static com.mongodb.internal.connection.ProtocolHelper.isCommandOk
+import static ProtocolHelper.getCommandFailureException
+import static ProtocolHelper.getQueryFailureException
+import static ProtocolHelper.isCommandOk
 
 class ProtocolHelperSpecification extends Specification {
 

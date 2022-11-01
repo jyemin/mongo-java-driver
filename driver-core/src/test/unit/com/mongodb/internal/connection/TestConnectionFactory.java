@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.connection.ClusterConnectionMode;
+import com.mongodb.internal.connection.protocol.ProtocolExecutor;
 
 class TestConnectionFactory implements ConnectionFactory {
     @Override

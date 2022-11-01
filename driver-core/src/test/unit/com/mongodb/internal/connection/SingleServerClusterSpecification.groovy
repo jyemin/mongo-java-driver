@@ -25,6 +25,7 @@ import com.mongodb.connection.ClusterType
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerType
 import com.mongodb.event.ClusterListener
+import com.mongodb.internal.cluster.SingleServerCluster
 import com.mongodb.internal.selector.WritableServerSelector
 import spock.lang.Specification
 

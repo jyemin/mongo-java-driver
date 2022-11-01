@@ -18,6 +18,9 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.MongoInternalException
+import com.mongodb.internal.connection.message.CompressedHeader
+import com.mongodb.internal.connection.message.MessageHeader
+import com.mongodb.internal.connection.message.ReplyHeader
 import org.bson.io.BasicOutputBuffer
 import spock.lang.Specification
 

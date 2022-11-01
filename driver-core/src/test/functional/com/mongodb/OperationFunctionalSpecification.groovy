@@ -46,7 +46,7 @@ import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.connection.AsyncConnection
 import com.mongodb.internal.connection.Connection
 import com.mongodb.internal.connection.ServerHelper
-import com.mongodb.internal.connection.SplittablePayload
+import com.mongodb.internal.connection.message.SplittablePayload
 import com.mongodb.internal.operation.AsyncReadOperation
 import com.mongodb.internal.operation.AsyncWriteOperation
 import com.mongodb.internal.operation.InsertOperation

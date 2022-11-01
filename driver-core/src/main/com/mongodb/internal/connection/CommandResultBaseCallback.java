@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.ServerAddress;
+import com.mongodb.internal.connection.message.ReplyMessage;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import org.bson.codecs.Decoder;

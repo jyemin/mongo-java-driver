@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.internal.connection.auth.AuthorizationHeader;
 import org.junit.Test;
 
 import javax.security.sasl.SaslException;

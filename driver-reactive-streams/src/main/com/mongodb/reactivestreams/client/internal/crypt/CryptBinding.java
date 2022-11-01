@@ -25,7 +25,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.connection.AsyncConnection;
-import com.mongodb.internal.connection.Cluster;
+import com.mongodb.internal.cluster.Cluster;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 

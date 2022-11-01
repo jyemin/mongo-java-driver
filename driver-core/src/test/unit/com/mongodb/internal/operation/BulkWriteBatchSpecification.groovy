@@ -35,7 +35,7 @@ import com.mongodb.internal.bulk.DeleteRequest
 import com.mongodb.internal.bulk.InsertRequest
 import com.mongodb.internal.bulk.UpdateRequest
 import com.mongodb.internal.bulk.WriteRequest
-import com.mongodb.internal.connection.ReadConcernAwareNoOpSessionContext
+import com.mongodb.internal.session.ReadConcernAwareNoOpSessionContext
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import spock.lang.Specification

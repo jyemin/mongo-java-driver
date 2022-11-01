@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection
 
+import com.mongodb.internal.cluster.ClusterClock
 import org.bson.BsonDocument
 import org.bson.BsonTimestamp
 import spock.lang.Specification

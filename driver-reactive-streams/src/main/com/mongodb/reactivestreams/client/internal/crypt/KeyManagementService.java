@@ -27,7 +27,7 @@ import com.mongodb.connection.TlsChannelStreamFactoryFactory;
 import com.mongodb.crypt.capi.MongoKeyDecryptor;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
-import com.mongodb.internal.connection.AsynchronousChannelStream;
+import com.mongodb.internal.connection.stream.AsynchronousChannelStream;
 import org.bson.ByteBuf;
 import org.bson.ByteBufNIO;
 import reactor.core.publisher.Mono;

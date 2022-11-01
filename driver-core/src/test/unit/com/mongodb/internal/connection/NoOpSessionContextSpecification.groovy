@@ -17,6 +17,8 @@
 package com.mongodb.internal.connection
 
 import com.mongodb.ReadConcern
+import com.mongodb.internal.session.NoOpSessionContext
+import com.mongodb.internal.session.ReadConcernAwareNoOpSessionContext
 import org.bson.BsonDocument
 import org.bson.BsonTimestamp
 import spock.lang.Specification

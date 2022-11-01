@@ -20,6 +20,7 @@ import com.mongodb.MongoConnectionPoolClearedException
 import com.mongodb.connection.ConnectionDescription
 import com.mongodb.event.ConnectionCheckOutFailedEvent
 import com.mongodb.internal.async.SingleResultCallback
+import com.mongodb.internal.pool.DefaultConnectionPool
 import com.mongodb.internal.inject.SameObjectProvider
 import util.spock.annotations.Slow
 import com.mongodb.MongoTimeoutException

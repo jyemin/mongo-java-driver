@@ -27,6 +27,13 @@ import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
+import com.mongodb.internal.connection.auth.Authenticator
+import com.mongodb.internal.connection.auth.DefaultAuthenticator
+import com.mongodb.internal.connection.auth.MongoCredentialWithCache
+import com.mongodb.internal.connection.auth.PlainAuthenticator
+import com.mongodb.internal.connection.auth.ScramShaAuthenticator
+import com.mongodb.internal.connection.auth.SpeculativeAuthenticator
+import com.mongodb.internal.connection.auth.X509Authenticator
 import org.bson.BsonArray
 import org.bson.BsonBoolean
 import org.bson.BsonDocument
