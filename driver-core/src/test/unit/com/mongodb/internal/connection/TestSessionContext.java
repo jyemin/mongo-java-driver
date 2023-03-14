@@ -36,6 +36,11 @@ class TestSessionContext implements SessionContext {
     }
 
     @Override
+    public long getId() {
+        return 0;
+    }
+
+    @Override
     public boolean hasSession() {
         return false;
     }

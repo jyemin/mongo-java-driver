@@ -39,6 +39,11 @@ class SimpleSessionContext implements SessionContext {
     }
 
     @Override
+    public long getId() {
+        return 0;
+    }
+
+    @Override
     public boolean hasSession() {
         return true;
     }

@@ -35,6 +35,11 @@ public class NoOpSessionContext implements SessionContext {
     public static final NoOpSessionContext INSTANCE = new NoOpSessionContext();
 
     @Override
+    public long getId() {
+        return 0;
+    }
+
+    @Override
     public boolean hasSession() {
         return false;
     }

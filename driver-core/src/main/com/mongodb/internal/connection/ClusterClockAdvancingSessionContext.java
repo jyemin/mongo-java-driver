@@ -36,6 +36,11 @@ public final class ClusterClockAdvancingSessionContext implements SessionContext
     }
 
     @Override
+    public long getId() {
+        return wrapped.getId();
+    }
+
+    @Override
     public boolean hasSession() {
         return wrapped.hasSession();
     }

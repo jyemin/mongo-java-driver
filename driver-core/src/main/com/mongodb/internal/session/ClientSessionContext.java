@@ -21,14 +21,18 @@ import com.mongodb.session.ClientSession;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 public abstract class ClientSessionContext implements SessionContext {
+    private static final AtomicLong NEXT_OPERATION_ID = new AtomicLong(1);
 
     private final ClientSession clientSession;
+    private final long id = NEXT_OPERATION_ID.getAndIncrement();
 
     public ClientSessionContext(final ClientSession clientSession) {
         this.clientSession = notNull("clientSession", clientSession);
@@ -36,6 +40,11 @@ public abstract class ClientSessionContext implements SessionContext {
 
     public ClientSession getClientSession() {
         return clientSession;
+    }
+
+    @Override
+    public long getId() {
+        return id;
     }
 
     @Override

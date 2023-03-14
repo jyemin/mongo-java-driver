@@ -27,6 +27,13 @@ import org.bson.BsonTimestamp;
 public interface SessionContext {
 
     /**
+     * Gets the operation identifier
+     *
+     * @return the operation identifier
+     */
+    long getId();
+
+    /**
      * Returns true if there is a true server session associated with this context.
      */
     boolean hasSession();
