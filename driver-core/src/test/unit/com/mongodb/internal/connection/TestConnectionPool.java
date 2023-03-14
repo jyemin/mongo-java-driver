@@ -16,7 +16,6 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.MongoException;
 import com.mongodb.RequestContext;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerDescription;
@@ -31,11 +30,9 @@ import java.util.List;
 
 public class TestConnectionPool implements ConnectionPool {
 
-    private final MongoException exceptionToThrow;
     private int generation;
 
     public TestConnectionPool() {
-        exceptionToThrow = null;
     }
 
     @Override
@@ -138,11 +135,7 @@ public class TestConnectionPool implements ConnectionPool {
 
     @Override
     public void getAsync(final SingleResultCallback<InternalConnection> callback) {
-        if (exceptionToThrow != null) {
-            callback.onResult(null, exceptionToThrow);
-        } else {
-            callback.onResult(get(), null);
-        }
+        callback.onResult(get(), null);
     }
 
     @Override
