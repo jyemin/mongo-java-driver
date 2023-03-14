@@ -17,28 +17,20 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoConnectionPoolClearedException;
-import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.internal.async.SingleResultCallback;
-import org.bson.types.ObjectId;
 import com.mongodb.lang.Nullable;
+import org.bson.types.ObjectId;
 
 import java.io.Closeable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An instance of an implementation must be created in the {@linkplain #invalidate(Throwable) paused} state.
  */
 interface ConnectionPool extends Closeable {
     /**
-     * Is equivalent to {@link #get(long, TimeUnit)} called with {@link ConnectionPoolSettings#getMaxWaitTime(TimeUnit)}.
+     * Gets a connection from the pool
      */
     InternalConnection get() throws MongoConnectionPoolClearedException;
-
-    /**
-     * @param timeout See {@link com.mongodb.internal.Timeout#startNow(long, TimeUnit)}.
-     * @throws MongoConnectionPoolClearedException If detects that the pool is {@linkplain #invalidate(Throwable) paused}.
-     */
-    InternalConnection get(long timeout, TimeUnit timeUnit) throws MongoConnectionPoolClearedException;
 
     /**
      * Completes the {@code callback} with a {@link MongoConnectionPoolClearedException}

@@ -166,8 +166,8 @@ class DefaultConnectionPool implements ConnectionPool {
         return get(settings.getMaxWaitTime(MILLISECONDS), MILLISECONDS);
     }
 
-    @Override
-    public InternalConnection get(final long timeoutValue, final TimeUnit timeUnit) {
+    @VisibleForTesting(otherwise = PRIVATE)
+    InternalConnection get(final long timeoutValue, final TimeUnit timeUnit) {
         connectionPoolListener.connectionCheckOutStarted(new ConnectionCheckOutStartedEvent(serverId));
         Timeout timeout = Timeout.startNow(timeoutValue, timeUnit);
         try {

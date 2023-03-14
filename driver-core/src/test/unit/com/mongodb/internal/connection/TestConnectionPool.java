@@ -28,7 +28,6 @@ import org.bson.codecs.Decoder;
 import org.bson.types.ObjectId;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class TestConnectionPool implements ConnectionPool {
 
@@ -135,14 +134,6 @@ public class TestConnectionPool implements ConnectionPool {
                 return 0;
             }
         };
-    }
-
-    @Override
-    public InternalConnection get(final long timeout, final TimeUnit timeUnit) {
-        if (exceptionToThrow != null) {
-            throw exceptionToThrow;
-        }
-        return get();
     }
 
     @Override
