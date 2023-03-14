@@ -17,6 +17,7 @@
 package com.mongodb.internal.session;
 
 import com.mongodb.ReadConcern;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -24,14 +25,7 @@ import org.bson.BsonTimestamp;
 /**
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
-public interface SessionContext {
-
-    /**
-     * Gets the operation identifier
-     *
-     * @return the operation identifier
-     */
-    long getId();
+public interface SessionContext extends OperationContext {
 
     /**
      * Returns true if there is a true server session associated with this context.
