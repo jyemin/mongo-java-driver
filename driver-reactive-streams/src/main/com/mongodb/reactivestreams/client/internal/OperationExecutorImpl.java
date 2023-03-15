@@ -79,9 +79,10 @@ public class OperationExecutorImpl implements OperationExecutor {
         return Mono.from(subscriber ->
                 clientSessionHelper.withClientSession(session, this)
                         .map(clientSession -> getReadWriteBinding(getContext(subscriber), readPreference, readConcern, clientSession,
-                                session == null && clientSession != null))
-                        .switchIfEmpty(Mono.fromCallable(() ->
-                                getReadWriteBinding(getContext(subscriber), readPreference, readConcern, session, false)))
+                                session == null))
+                        // TODO: is this needed? How could it be empty
+//                        .switchIfEmpty(Mono.fromCallable(() ->
+//                                getReadWriteBinding(getContext(subscriber), readPreference, readConcern, session, false)))
                         .flatMap(binding -> {
                             if (session != null && session.hasActiveTransaction() && !binding.getReadPreference().equals(primary())) {
                                 binding.release();
@@ -115,9 +116,10 @@ public class OperationExecutorImpl implements OperationExecutor {
         return Mono.from(subscriber ->
                 clientSessionHelper.withClientSession(session, this)
                         .map(clientSession -> getReadWriteBinding(getContext(subscriber), primary(), readConcern,
-                                clientSession, session == null && clientSession != null))
-                        .switchIfEmpty(Mono.fromCallable(() ->
-                                getReadWriteBinding(getContext(subscriber), primary(), readConcern, session, false)))
+                                clientSession, session == null))
+                        // TODO: is this needed? How could it be empty
+//                        .switchIfEmpty(Mono.fromCallable(() ->
+//                                getReadWriteBinding(getContext(subscriber), primary(), readConcern, session, false)))
                         .flatMap(binding ->
                                 Mono.<T>create(sink -> operation.executeAsync(binding, (result, t) -> {
                                     try {
@@ -159,7 +161,7 @@ public class OperationExecutorImpl implements OperationExecutor {
     }
 
     private AsyncReadWriteBinding getReadWriteBinding(final RequestContext requestContext, final ReadPreference readPreference,
-            final ReadConcern readConcern, @Nullable final ClientSession session, final boolean ownsSession) {
+            final ReadConcern readConcern, final ClientSession session, final boolean ownsSession) {
         notNull("readPreference", readPreference);
         AsyncClusterAwareReadWriteBinding readWriteBinding = new AsyncClusterBinding(mongoClient.getCluster(),
             getReadPreferenceForBinding(readPreference, session), readConcern, mongoClient.getSettings().getServerApi(), requestContext);
@@ -168,12 +170,7 @@ public class OperationExecutorImpl implements OperationExecutor {
             readWriteBinding = new CryptBinding(readWriteBinding, crypt);
         }
 
-        AsyncClusterAwareReadWriteBinding asyncReadWriteBinding = readWriteBinding;
-        if (session != null) {
-            return new ClientSessionBinding(session, ownsSession, asyncReadWriteBinding);
-        } else {
-            return asyncReadWriteBinding;
-        }
+        return new ClientSessionBinding(session, ownsSession, readWriteBinding);
     }
 
     private ReadPreference getReadPreferenceForBinding(final ReadPreference readPreference, @Nullable final ClientSession session) {

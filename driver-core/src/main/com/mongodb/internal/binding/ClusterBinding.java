@@ -32,10 +32,13 @@ import com.mongodb.internal.selector.ReadPreferenceServerSelector;
 import com.mongodb.internal.selector.ReadPreferenceWithFallbackServerSelector;
 import com.mongodb.internal.selector.ServerAddressSelector;
 import com.mongodb.internal.selector.WritableServerSelector;
+import com.mongodb.internal.session.ClientSessionContext;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
+import com.mongodb.session.ClientSession;
 
 import static com.mongodb.assertions.Assertions.notNull;
+import static org.bson.assertions.Assertions.assertNotNull;
 
 /**
  * A simple ReadWriteBinding implementation that supplies write connection sources bound to a possibly different primary each time, and a
@@ -50,6 +53,9 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
     @Nullable
     private final ServerApi serverApi;
     private final RequestContext requestContext;
+    private final ClientSession session;
+    private final ClientSessionContext sessionContext;
+    private final boolean ownsSession;
 
     /**
      * Creates an instance.
@@ -60,12 +66,16 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
      * @param requestContext the request context
      */
     public ClusterBinding(final Cluster cluster, final ReadPreference readPreference, final ReadConcern readConcern,
-                          @Nullable final ServerApi serverApi, final RequestContext requestContext) {
+            @Nullable final ServerApi serverApi, final RequestContext requestContext,
+            final ClientSession session, final boolean ownsSession) {
         this.cluster = notNull("cluster", cluster);
         this.readPreference = notNull("readPreference", readPreference);
         this.readConcern = notNull("readConcern", readConcern);
         this.serverApi = serverApi;
         this.requestContext = notNull("requestContext", requestContext);
+        this.session = notNull("session", session);
+        this.sessionContext = new SyncClientSessionContext(session);
+        this.ownsSession = ownsSession;
     }
 
     /**
@@ -83,13 +93,24 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
     }
 
     @Override
+    public int release() {
+        int count = super.release();
+        if (count == 0) {
+            if (ownsSession) {
+                session.close();
+            }
+        }
+        return count;
+    }
+
+    @Override
     public ReadPreference getReadPreference() {
         return readPreference;
     }
 
     @Override
     public SessionContext getSessionContext() {
-        return new ReadConcernAwareNoOpSessionContext(readConcern);
+        return sessionContext;
     }
 
     @Override
@@ -184,6 +205,42 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
             int count = super.release();
             ClusterBinding.this.release();
             return count;
+        }
+    }
+
+    private final class SyncClientSessionContext extends ClientSessionContext {
+
+        private final ClientSession clientSession;
+
+        SyncClientSessionContext(final ClientSession clientSession) {
+            super(clientSession);
+            this.clientSession = clientSession;
+        }
+
+        @Override
+        public boolean isImplicitSession() {
+            return ownsSession;
+        }
+
+        @Override
+        public boolean notifyMessageSent() {
+            return clientSession.notifyMessageSent();
+        }
+
+        @Override
+        public boolean hasActiveTransaction() {
+            return clientSession.hasActiveTransaction();
+        }
+
+        @Override
+        public ReadConcern getReadConcern() {
+            if (clientSession.hasActiveTransaction()) {
+                return assertNotNull(clientSession.getTransactionOptions().getReadConcern());
+            } else if (isSnapshot()) {
+                return ReadConcern.SNAPSHOT;
+            } else {
+                return readConcern;
+            }
         }
     }
 }

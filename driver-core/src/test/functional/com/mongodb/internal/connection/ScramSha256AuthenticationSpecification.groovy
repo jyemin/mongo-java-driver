@@ -36,6 +36,7 @@ import spock.lang.IgnoreIf
 import spock.lang.Specification
 
 import static com.mongodb.ClusterFixture.createAsyncCluster
+import static com.mongodb.ClusterFixture.createClientSession
 import static com.mongodb.ClusterFixture.createCluster
 import static com.mongodb.ClusterFixture.getBinding
 import static com.mongodb.ClusterFixture.getServerApi
@@ -128,7 +129,7 @@ class ScramSha256AuthenticationSpecification extends Specification {
         new CommandReadOperation<Document>('admin',
                 new BsonDocumentWrapper<Document>(new Document('dbstats', 1), new DocumentCodec()), new DocumentCodec())
                 .executeAsync(new AsyncClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
-                        IgnorableRequestContext.INSTANCE),
+                        IgnorableRequestContext.INSTANCE, createClientSession(), true),
                         callback)
         callback.get()
 
@@ -150,7 +151,7 @@ class ScramSha256AuthenticationSpecification extends Specification {
         new CommandReadOperation<Document>('admin',
                 new BsonDocumentWrapper<Document>(new Document('dbstats', 1), new DocumentCodec()), new DocumentCodec())
                 .execute(new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
-                        IgnorableRequestContext.INSTANCE))
+                        IgnorableRequestContext.INSTANCE, createClientSession(), true))
 
         then:
         thrown(MongoSecurityException)
@@ -171,7 +172,7 @@ class ScramSha256AuthenticationSpecification extends Specification {
         new CommandReadOperation<Document>('admin',
                 new BsonDocumentWrapper<Document>(new Document('dbstats', 1), new DocumentCodec()), new DocumentCodec())
                 .executeAsync(new AsyncClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
-                        IgnorableRequestContext.INSTANCE), callback)
+                        IgnorableRequestContext.INSTANCE, createClientSession(), true), callback)
         callback.get()
 
         then:
@@ -192,7 +193,7 @@ class ScramSha256AuthenticationSpecification extends Specification {
         new CommandReadOperation<Document>('admin',
                 new BsonDocumentWrapper<Document>(new Document('dbstats', 1), new DocumentCodec()), new DocumentCodec())
                 .execute(new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
-                        IgnorableRequestContext.INSTANCE))
+                        IgnorableRequestContext.INSTANCE, createClientSession(), true))
 
         then:
         noExceptionThrown()
@@ -213,7 +214,7 @@ class ScramSha256AuthenticationSpecification extends Specification {
         new CommandReadOperation<Document>('admin',
                 new BsonDocumentWrapper<Document>(new Document('dbstats', 1), new DocumentCodec()), new DocumentCodec())
                 .executeAsync(new AsyncClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
-                        IgnorableRequestContext.INSTANCE), callback)
+                        IgnorableRequestContext.INSTANCE, createClientSession(), true), callback)
         callback.get()
 
         then:

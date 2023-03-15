@@ -192,13 +192,13 @@ final class MongoClientDelegate {
         ReadWriteBinding getReadWriteBinding(final ReadPreference readPreference, final ReadConcern readConcern,
                                              final ClientSession session, final boolean ownsSession) {
             ClusterAwareReadWriteBinding readWriteBinding = new ClusterBinding(cluster,
-                    getReadPreferenceForBinding(readPreference, session), readConcern, serverApi, getContext());
+                    getReadPreferenceForBinding(readPreference, session), readConcern, serverApi, getContext(), session, ownsSession);
 
             if (crypt != null) {
                 readWriteBinding = new CryptBinding(readWriteBinding, crypt);
             }
 
-            return new ClientSessionBinding(session, ownsSession, readWriteBinding);
+            return readWriteBinding;
         }
 
         private RequestContext getContext() {

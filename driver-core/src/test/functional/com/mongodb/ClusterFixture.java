@@ -59,6 +59,8 @@ import com.mongodb.internal.operation.CommandReadOperation;
 import com.mongodb.internal.operation.DropDatabaseOperation;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
+import com.mongodb.internal.session.BaseClientSessionImpl;
+import com.mongodb.internal.session.ServerSessionPool;
 import com.mongodb.lang.Nullable;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -126,6 +128,8 @@ public final class ClusterFixture {
 
     private static NettyStreamFactoryFactory nettyStreamFactoryFactory;
 
+    private static ServerSessionPool serverSessionPool;
+
     static {
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
     }
@@ -146,7 +150,7 @@ public final class ClusterFixture {
             serverVersion = getVersion(new CommandReadOperation<>("admin",
                     new BsonDocument("buildInfo", new BsonInt32(1)), new BsonDocumentCodec())
                     .execute(new ClusterBinding(getCluster(), ReadPreference.nearest(), ReadConcern.DEFAULT, getServerApi(),
-                            IgnorableRequestContext.INSTANCE)));
+                            IgnorableRequestContext.INSTANCE, createClientSession(), true)));
         }
         return serverVersion;
     }
@@ -204,6 +208,7 @@ public final class ClusterFixture {
         public void run() {
             if (cluster != null) {
                 new DropDatabaseOperation(getDefaultDatabaseName(), WriteConcern.ACKNOWLEDGED).execute(getBinding());
+                serverSessionPool.close();
                 cluster.close();
             }
         }
@@ -243,7 +248,8 @@ public final class ClusterFixture {
         try {
             BsonDocument helloResult = new CommandReadOperation<>("admin",
                     new BsonDocument(LEGACY_HELLO, new BsonInt32(1)), new BsonDocumentCodec()).execute(new ClusterBinding(cluster,
-                    ReadPreference.nearest(), ReadConcern.DEFAULT, getServerApi(), IgnorableRequestContext.INSTANCE));
+                            ReadPreference.nearest(), ReadConcern.DEFAULT, getServerApi(), IgnorableRequestContext.INSTANCE,
+                            createClientSession(), true));
             if (helloResult.containsKey("setName")) {
                 connectionString = new ConnectionString(DEFAULT_URI + "/?replicaSet="
                         + helloResult.getString("setName").getValue());
@@ -287,7 +293,8 @@ public final class ClusterFixture {
     }
 
     public static ReadWriteBinding getBinding(final Cluster cluster) {
-        return new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(), IgnorableRequestContext.INSTANCE);
+        return new ClusterBinding(cluster, ReadPreference.primary(), ReadConcern.DEFAULT, getServerApi(),
+                IgnorableRequestContext.INSTANCE, createClientSession(), true);
     }
 
     public static ReadWriteBinding getBinding() {
@@ -301,7 +308,7 @@ public final class ClusterFixture {
     private static ReadWriteBinding getBinding(final Cluster cluster, final ReadPreference readPreference) {
         if (!BINDING_MAP.containsKey(readPreference)) {
             ReadWriteBinding binding = new ClusterBinding(cluster, readPreference, ReadConcern.DEFAULT, getServerApi(),
-                    IgnorableRequestContext.INSTANCE);
+                    IgnorableRequestContext.INSTANCE, createClientSession(), true);
             if (serverVersionAtLeast(3, 6)) {
                 binding = new SessionBinding(binding);
             }
@@ -354,6 +361,13 @@ public final class ClusterFixture {
         return cluster;
     }
 
+    public static synchronized ServerSessionPool getServerSessionPool() {
+        if (serverSessionPool == null) {
+            serverSessionPool = new ServerSessionPool(getCluster(), getServerApi());
+        }
+        return serverSessionPool;
+    }
+
     public static synchronized Cluster getAsyncCluster() {
         if (asyncCluster == null) {
             asyncCluster = createCluster(getAsyncStreamFactory());
@@ -392,6 +406,9 @@ public final class ClusterFixture {
                 connectionString.getCredential(),
                 LoggerSettings.builder().build(), null, null, null,
                 connectionString.getCompressorList(), getServerApi());
+    }
+    public static BaseClientSessionImpl createClientSession() {
+        return new BaseClientSessionImpl(getServerSessionPool(), getCluster(), ClientSessionOptions.builder().build());
     }
 
     public static StreamFactory getStreamFactory() {
