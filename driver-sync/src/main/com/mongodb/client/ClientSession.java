@@ -16,9 +16,7 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ServerAddress;
 import com.mongodb.TransactionOptions;
-import com.mongodb.lang.Nullable;
 
 /**
  * A client session that supports transactions.
@@ -26,51 +24,6 @@ import com.mongodb.lang.Nullable;
  * @since 3.8
  */
 public interface ClientSession extends com.mongodb.session.ClientSession {
-    /**
-     * Returns the server address of the pinned mongos on this session.
-     *
-     * @return the server address of the pinned mongos.
-     * @mongodb.server.release 4.2
-     * @since 3.11
-     */
-    @Nullable
-    ServerAddress getPinnedServerAddress();
-
-    /**
-     * Returns true if there is an active transaction on this session, and false otherwise
-     *
-     * @return true if there is an active transaction on this session
-     * @mongodb.server.release 4.0
-     */
-    boolean hasActiveTransaction();
-
-    /**
-     *  Notify the client session that a message has been sent.
-     *  <p>
-     *      For internal use only
-     *  </p>
-     *
-     * @return true if this is the first message sent, false otherwise
-     */
-    boolean notifyMessageSent();
-
-    /**
-     *  Notify the client session that command execution is being initiated. This should be called before server selection occurs.
-     *  <p>
-     *      For internal use only
-     *  </p>
-     *
-     * @param operation the operation
-     */
-    void notifyOperationInitiated(Object operation);
-
-    /**
-     * Gets the transaction options.  Only call this method of the session has an active transaction
-     *
-     * @return the transaction options
-     */
-    TransactionOptions getTransactionOptions();
-
     /**
      * Start a transaction in the context of this session with default transaction options. A transaction can not be started if there is
      * already an active transaction on this session.

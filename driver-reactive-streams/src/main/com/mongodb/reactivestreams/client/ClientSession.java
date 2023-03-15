@@ -26,40 +26,6 @@ import org.reactivestreams.Publisher;
  * @since 1.9
  */
 public interface ClientSession extends com.mongodb.session.ClientSession {
-    /**
-     * Returns true if there is an active transaction on this session, and false otherwise
-     *
-     * @return true if there is an active transaction on this session
-     * @mongodb.server.release 4.0
-     */
-    boolean hasActiveTransaction();
-
-    /**
-     *  Notify the client session that a message has been sent.
-     *  <p>
-     *      For internal use only
-     *  </p>
-     *
-     * @return true if this is the first message sent, false otherwise
-     * @since 4.0
-     */
-    boolean notifyMessageSent();
-
-    /**
-     * Notify the client session that command execution is being initiated. This should be called before server selection occurs.
-     * <p>
-     * For internal use only
-     * </p>
-     * @param operation the operation
-     */
-    void notifyOperationInitiated(Object operation);
-
-    /**
-     * Gets the transaction options.  Only call this method of the session has an active transaction
-     *
-     * @return the transaction options
-     */
-    TransactionOptions getTransactionOptions();
 
     /**
      * Start a transaction in the context of this session with default transaction options. A transaction can not be started if there is

@@ -19,7 +19,11 @@ package com.mongodb.internal.session;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientException;
 import com.mongodb.ServerAddress;
+import com.mongodb.TransactionOptions;
 import com.mongodb.internal.binding.ReferenceCounted;
+import com.mongodb.internal.operation.CommitTransactionOperation;
+import com.mongodb.internal.operation.ReadOperation;
+import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.lang.Nullable;
 import com.mongodb.session.ClientSession;
 import com.mongodb.session.ServerSession;
@@ -45,6 +49,10 @@ public class BaseClientSessionImpl implements ClientSession {
     private ServerAddress pinnedServerAddress;
     private BsonDocument recoveryToken;
     private ReferenceCounted transactionContext;
+    private TransactionState transactionState = TransactionState.NONE;
+    private boolean messageSentInCurrentTransaction;
+    private boolean commitInProgress;
+    private TransactionOptions transactionOptions;
     private volatile boolean closed;
 
     public BaseClientSessionImpl(final ServerSessionPool serverSessionPool, final Object originator, final ClientSessionOptions options) {
@@ -181,6 +189,42 @@ public class BaseClientSessionImpl implements ClientSession {
     }
 
     @Override
+    public TransactionOptions getTransactionOptions() {
+        isTrue("in transaction", transactionState == TransactionState.IN || transactionState == TransactionState.COMMITTED);
+        return transactionOptions;
+    }
+
+
+    @Override
+    public boolean hasActiveTransaction() {
+        return transactionState == TransactionState.IN || (transactionState == TransactionState.COMMITTED && commitInProgress);
+    }
+
+    @Override
+    public boolean notifyMessageSent() {
+        if (hasActiveTransaction()) {
+            boolean firstMessageInCurrentTransaction = !messageSentInCurrentTransaction;
+            messageSentInCurrentTransaction = true;
+            return firstMessageInCurrentTransaction;
+        } else {
+            if (transactionState == TransactionState.COMMITTED || transactionState == TransactionState.ABORTED) {
+                cleanupTransaction(TransactionState.NONE);
+            }
+            return false;
+        }
+    }
+
+    @Override
+    public void notifyOperationInitiated(final Object operation) {
+        assertTrue(operation instanceof ReadOperation || operation instanceof WriteOperation);
+        if (!(hasActiveTransaction() || operation instanceof CommitTransactionOperation)) {
+            assertTrue(getPinnedServerAddress() == null
+                    || (transactionState != TransactionState.ABORTED && transactionState != TransactionState.NONE));
+            clearTransactionContext();
+        }
+    }
+
+    @Override
     public void close() {
         if (!closed) {
             closed = true;
@@ -189,5 +233,44 @@ public class BaseClientSessionImpl implements ClientSession {
             }
             clearTransactionContext();
         }
+    }
+
+    protected void cleanupTransaction(final TransactionState nextState) {
+        messageSentInCurrentTransaction = false;
+        transactionOptions = null;
+        transactionState = nextState;
+    }
+
+    protected boolean isMessageSentInCurrentTransaction() {
+        return messageSentInCurrentTransaction;
+    }
+
+    protected boolean isCommitInProgress() {
+        return commitInProgress;
+    }
+
+    protected void setCommitInProgress(final boolean commitInProgress) {
+        this.commitInProgress = commitInProgress;
+    }
+
+    protected TransactionState getTransactionState() {
+        return transactionState;
+    }
+
+    protected void setTransactionState(final TransactionState transactionState) {
+        this.transactionState = transactionState;
+    }
+
+    @Nullable
+    protected TransactionOptions getTransactionOptionsNullable() {
+        return transactionOptions;
+    }
+
+    protected void setTransactionOptions(final TransactionOptions transactionOptions) {
+        this.transactionOptions = transactionOptions;
+    }
+
+    protected enum TransactionState {
+        NONE, IN, COMMITTED, ABORTED
     }
 }

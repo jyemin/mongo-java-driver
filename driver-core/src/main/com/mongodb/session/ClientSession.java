@@ -18,6 +18,7 @@ package com.mongodb.session;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ServerAddress;
+import com.mongodb.TransactionOptions;
 import com.mongodb.annotations.NotThreadSafe;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -166,6 +167,42 @@ public interface ClientSession extends Closeable {
      */
     BsonDocument getClusterTime();
 
+    /**
+     * Gets the transaction options.  Only call this method of the session has an active transaction
+     *
+     * @return the transaction options
+     */
+    TransactionOptions getTransactionOptions();
+
     @Override
     void close();
+
+    /**
+     * Returns true if there is an active transaction on this session, and false otherwise
+     *
+     * @return true if there is an active transaction on this session
+     * @mongodb.server.release 4.0
+     */
+    boolean hasActiveTransaction();
+
+    /**
+     *  Notify the client session that a message has been sent.
+     *  <p>
+     *      For internal use only
+     *  </p>
+     *
+     * @return true if this is the first message sent, false otherwise
+     * @since 4.0
+     */
+    boolean notifyMessageSent();
+
+    /**
+     *  Notify the client session that command execution is being initiated. This should be called before server selection occurs.
+     *  <p>
+     *      For internal use only
+     *  </p>
+     *
+     * @param operation the operation
+     */
+    void notifyOperationInitiated(Object operation);
 }

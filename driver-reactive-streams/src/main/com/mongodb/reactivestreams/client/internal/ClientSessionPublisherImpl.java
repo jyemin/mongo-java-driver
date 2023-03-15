@@ -24,8 +24,6 @@ import com.mongodb.ReadConcern;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.internal.operation.AbortTransactionOperation;
-import com.mongodb.internal.operation.AsyncReadOperation;
-import com.mongodb.internal.operation.AsyncWriteOperation;
 import com.mongodb.internal.operation.CommitTransactionOperation;
 import com.mongodb.internal.session.BaseClientSessionImpl;
 import com.mongodb.internal.session.ServerSessionPool;
@@ -38,58 +36,17 @@ import reactor.core.publisher.MonoSink;
 import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
 import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
 import static com.mongodb.assertions.Assertions.assertNotNull;
-import static com.mongodb.assertions.Assertions.assertTrue;
-import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements ClientSession {
 
     private final OperationExecutor executor;
-    private TransactionState transactionState = TransactionState.NONE;
-    private boolean messageSentInCurrentTransaction;
-    private boolean commitInProgress;
-    private TransactionOptions transactionOptions;
 
     ClientSessionPublisherImpl(final ServerSessionPool serverSessionPool, final MongoClient mongoClient,
             final ClientSessionOptions options, final OperationExecutor executor) {
         super(serverSessionPool, mongoClient, options);
         this.executor = executor;
-    }
-
-    @Override
-    public boolean hasActiveTransaction() {
-        return transactionState == TransactionState.IN || (transactionState == TransactionState.COMMITTED && commitInProgress);
-    }
-
-    @Override
-    public boolean notifyMessageSent() {
-        if (hasActiveTransaction()) {
-            boolean firstMessageInCurrentTransaction = !messageSentInCurrentTransaction;
-            messageSentInCurrentTransaction = true;
-            return firstMessageInCurrentTransaction;
-        } else {
-            if (transactionState == TransactionState.COMMITTED || transactionState == TransactionState.ABORTED) {
-                cleanupTransaction(TransactionState.NONE);
-            }
-            return false;
-        }
-    }
-
-    @Override
-    public void notifyOperationInitiated(final Object operation) {
-        assertTrue(operation instanceof AsyncReadOperation || operation instanceof AsyncWriteOperation);
-        if (!(hasActiveTransaction() || operation instanceof CommitTransactionOperation)) {
-            assertTrue(getPinnedServerAddress() == null
-                    || (transactionState != TransactionState.ABORTED && transactionState != TransactionState.NONE));
-            clearTransactionContext();
-        }
-    }
-
-    @Override
-    public TransactionOptions getTransactionOptions() {
-        isTrue("in transaction", transactionState == TransactionState.IN || transactionState == TransactionState.COMMITTED);
-        return transactionOptions;
     }
 
     @Override
@@ -104,17 +61,17 @@ final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements 
         if (snapshot != null && snapshot) {
             throw new IllegalArgumentException("Transactions are not supported in snapshot sessions");
         }
-        if (transactionState == TransactionState.IN) {
+        if (getTransactionState() == TransactionState.IN) {
             throw new IllegalStateException("Transaction already in progress");
         }
-        if (transactionState == TransactionState.COMMITTED) {
+        if (getTransactionState() == TransactionState.COMMITTED) {
             cleanupTransaction(TransactionState.IN);
         } else {
-            transactionState = TransactionState.IN;
+            setTransactionState(TransactionState.IN);
         }
         getServerSession().advanceTransactionNumber();
-        this.transactionOptions = TransactionOptions.merge(transactionOptions, getOptions().getDefaultTransactionOptions());
-        WriteConcern writeConcern = this.transactionOptions.getWriteConcern();
+        this.setTransactionOptions(TransactionOptions.merge(transactionOptions, getOptions().getDefaultTransactionOptions()));
+        WriteConcern writeConcern = getTransactionOptions().getWriteConcern();
         if (writeConcern == null) {
             throw new MongoInternalException("Invariant violated. Transaction options write concern can not be null");
         }
@@ -126,31 +83,31 @@ final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements 
 
     @Override
     public Publisher<Void> commitTransaction() {
-        if (transactionState == TransactionState.ABORTED) {
+        if (getTransactionState() == TransactionState.ABORTED) {
             throw new IllegalStateException("Cannot call commitTransaction after calling abortTransaction");
         }
-        if (transactionState == TransactionState.NONE) {
+        if (getTransactionState() == TransactionState.NONE) {
             throw new IllegalStateException("There is no transaction started");
         }
-        if (!messageSentInCurrentTransaction) {
+        if (!isMessageSentInCurrentTransaction()) {
             cleanupTransaction(TransactionState.COMMITTED);
             return Mono.create(MonoSink::success);
         } else {
-            ReadConcern readConcern = transactionOptions.getReadConcern();
+            ReadConcern readConcern = getTransactionOptions().getReadConcern();
             if (readConcern == null) {
                 throw new MongoInternalException("Invariant violated. Transaction options read concern can not be null");
             }
-            boolean alreadyCommitted = commitInProgress || transactionState == TransactionState.COMMITTED;
-            commitInProgress = true;
+            boolean alreadyCommitted = isCommitInProgress() || getTransactionState() == TransactionState.COMMITTED;
+            setCommitInProgress(true);
 
             return executor.execute(
-                    new CommitTransactionOperation(assertNotNull(transactionOptions.getWriteConcern()), alreadyCommitted)
+                    new CommitTransactionOperation(assertNotNull(getTransactionOptions().getWriteConcern()), alreadyCommitted)
                             .recoveryToken(getRecoveryToken())
-                            .maxCommitTime(transactionOptions.getMaxCommitTime(MILLISECONDS), MILLISECONDS),
+                            .maxCommitTime(getTransactionOptions().getMaxCommitTime(MILLISECONDS), MILLISECONDS),
                     readConcern, this)
                     .doOnTerminate(() -> {
-                        commitInProgress = false;
-                        transactionState = TransactionState.COMMITTED;
+                        setCommitInProgress(false);
+                        setTransactionState(TransactionState.COMMITTED);
                     })
                     .doOnError(MongoException.class, this::clearTransactionContextOnError);
         }
@@ -158,25 +115,25 @@ final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements 
 
     @Override
     public Publisher<Void> abortTransaction() {
-        if (transactionState == TransactionState.ABORTED) {
+        if (getTransactionState() == TransactionState.ABORTED) {
             throw new IllegalStateException("Cannot call abortTransaction twice");
         }
-        if (transactionState == TransactionState.COMMITTED) {
+        if (getTransactionState() == TransactionState.COMMITTED) {
             throw new IllegalStateException("Cannot call abortTransaction after calling commitTransaction");
         }
-        if (transactionState == TransactionState.NONE) {
+        if (getTransactionState() == TransactionState.NONE) {
             throw new IllegalStateException("There is no transaction started");
         }
-        if (!messageSentInCurrentTransaction) {
+        if (!isMessageSentInCurrentTransaction()) {
             cleanupTransaction(TransactionState.ABORTED);
             return Mono.create(MonoSink::success);
         } else {
-            ReadConcern readConcern = transactionOptions.getReadConcern();
+            ReadConcern readConcern = getTransactionOptions().getReadConcern();
             if (readConcern == null) {
                 throw new MongoInternalException("Invariant violated. Transaction options read concern can not be null");
             }
             return executor.execute(
-                    new AbortTransactionOperation(assertNotNull(transactionOptions.getWriteConcern()))
+                    new AbortTransactionOperation(assertNotNull(getTransactionOptions().getWriteConcern()))
                             .recoveryToken(getRecoveryToken()),
                     readConcern, this)
                     .onErrorResume(Throwable.class, (e) -> Mono.empty())
@@ -195,20 +152,10 @@ final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements 
 
     @Override
     public void close() {
-        if (transactionState == TransactionState.IN) {
+        if (getTransactionState() == TransactionState.IN) {
             Mono.from(abortTransaction()).doOnSuccess(it -> close()).subscribe();
         } else {
             super.close();
         }
-    }
-
-    private void cleanupTransaction(final TransactionState nextState) {
-        messageSentInCurrentTransaction = false;
-        transactionOptions = null;
-        transactionState = nextState;
-    }
-
-    private enum TransactionState {
-        NONE, IN, COMMITTED, ABORTED
     }
 }
