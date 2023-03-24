@@ -226,8 +226,8 @@ public class TestCommandListener implements CommandListener {
         }
         lock.lock();
         try {
-            events.add(new CommandStartedEvent(event.getRequestId(), event.getConnectionDescription(), event.getDatabaseName(),
-                    event.getCommandName(),
+            events.add(new CommandStartedEvent(event.getRequestContext(), event.getOperationId(), event.getRequestId(),
+                    event.getConnectionDescription(), event.getDatabaseName(), event.getCommandName(),
                     event.getCommand() == null ? null : getWritableClone(event.getCommand())));
         } finally {
             lock.unlock();
