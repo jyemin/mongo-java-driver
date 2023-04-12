@@ -17,6 +17,7 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoException;
+import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoServerUnavailableException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ReadPreference;
@@ -201,6 +202,10 @@ class DefaultServer implements ClusterableServer {
             try {
                 protocol.sessionContext(new ClusterClockAdvancingSessionContext(sessionContext, clusterClock));
                 return protocol.execute(connection);
+            } catch (MongoInterruptedException e) {
+                // Doing this so that we don't try to grab a lock by calling into sdam machinery in the next catch block, and masking
+                // this exception as a result
+                throw e;
             } catch (MongoException e) {
                 sdam.handleExceptionAfterHandshake(SdamIssue.specific(e, sdam.context(connection)));
                 if (e instanceof MongoWriteConcernWithResponseException) {

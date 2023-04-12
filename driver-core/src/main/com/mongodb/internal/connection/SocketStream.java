@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection;
 
+import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
@@ -136,8 +137,18 @@ public class SocketStream implements Stream {
         }
         try {
             return read(numBytes);
+        } catch (IOException e) {
+            // This logic should move up, and also be on the write path, but it's a start
+            if (Thread.currentThread().isInterrupted()) {
+                throw new MongoInterruptedException("Socket read interrupted", e);
+            } else {
+                throw e;
+            }
         } finally {
-            socket.setSoTimeout(curTimeout);
+            // Adding this check because otherwise setSoTimeout throws, masking the original exception
+            if (!socket.isClosed()) {
+                socket.setSoTimeout(curTimeout);
+            }
         }
     }
 
