@@ -7,7 +7,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #       MONGODB_URI             Set the URI, including an optional username/password to use to connect to the server via MONGODB-AWS
 #                               authentication mechanism
 #       JDK                     Set the version of java to be used.  Java versions can be set from the java toolchain /opt/java
-#                               "jdk5", "jdk6", "jdk7", "jdk8", "jdk9", "jdk11"
 
 ############################################
 #            Main Program                  #

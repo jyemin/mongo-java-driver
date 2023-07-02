@@ -5,7 +5,6 @@ set -o errexit
 
 # Supported/used environment variables:
 #       JDK                     Set the version of java to be used.  Java versions can be set from the java toolchain /opt/java
-#                               "jdk5", "jdk6", "jdk7", "jdk8", "jdk9"
 # Support arguments:
 #       Pass as many MongoDB URIS as arguments to this script as required
 

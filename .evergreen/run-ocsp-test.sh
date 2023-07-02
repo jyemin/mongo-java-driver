@@ -5,7 +5,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 
 # Supported/used environment variables:
 #       JDK                     Set the version of java to be used.  Java versions can be set from the java toolchain /opt/java
-#                               "jdk5", "jdk6", "jdk7", "jdk8", "jdk9", "jdk11"
 
 OCSP_MUST_STAPLE=${OCSP_MUST_STAPLE:-}
 OCSP_TLS_SHOULD_SUCCEED=${OCSP_TLS_SHOULD_SUCCEED:-}

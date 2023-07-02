@@ -82,7 +82,7 @@ dependencies {
 
 kotlin { explicitApi() }
 
-tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = "1.8" }
+tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = "11" }
 
 // ===========================
 //     Code Quality checks
