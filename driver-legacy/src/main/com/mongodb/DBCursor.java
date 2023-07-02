@@ -806,8 +806,7 @@ public class DBCursor implements Cursor, Iterable<DBObject> {
         cursor = new MongoBatchCursorAdapter<>(executor.execute(operation, getReadPreference(), getReadConcern()));
         ServerCursor serverCursor = cursor.getServerCursor();
         if (isCursorFinalizerEnabled() && serverCursor != null) {
-            optionalCleaner = DBCursorCleaner.create(collection.getDB().getMongoClient(), collection.getNamespace(),
-                    serverCursor);
+            optionalCleaner = new DBCursorCleaner(collection.getDB().getMongoClient(), collection.getNamespace(), serverCursor);
         }
     }
 

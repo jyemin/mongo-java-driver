@@ -16,34 +16,51 @@
 
 package com.mongodb;
 
+import java.lang.ref.Cleaner;
+
+import static com.mongodb.assertions.Assertions.assertNotNull;
+
 /**
  * A cleaner for abandoned {@link DBCursor} instances.
  *
  * @see DBCursor
  */
-abstract class DBCursorCleaner {
+class DBCursorCleaner {
 
-    /**
-     * Create a new instance.
-     *
-     * <p>
-     * The implementation of this method ensures that a {@code java.lang.ref.Cleaner}-based implementation is used when
-     * the runtime is Java 9+.  Otherwise a {@link Object#finalize}-based implementation is used.
-     * </p>
-     *
-     * @param mongoClient the client from which the {@link DBCursor} came from
-     * @param namespace the namespace of the cursor
-     * @param serverCursor the server cursor
-     * @return the cleaner
-     */
-    static DBCursorCleaner create(final MongoClient mongoClient, final MongoNamespace namespace,
-                           final ServerCursor serverCursor) {
-        return new Java9DBCursorCleaner(mongoClient, namespace, serverCursor);
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    private final CleanerState cleanerState;
+    private final Cleaner.Cleanable cleanable;
+
+    DBCursorCleaner(final MongoClient mongoClient, final MongoNamespace namespace, final ServerCursor serverCursor) {
+        cleanerState = new CleanerState(mongoClient, namespace, serverCursor);
+        cleanable = CLEANER.register(this, cleanerState);
     }
 
-    /**
-     * {@link DBCursor} should call this method when the cursor has been exhausted and/or explicitly closed by the
-     * application.
-     */
-    abstract void clearCursor();
+    void clearCursor() {
+        cleanerState.clear();
+        cleanable.clean();
+    }
+
+    protected static class CleanerState implements Runnable {
+        private final MongoClient mongoClient;
+        private final MongoNamespace namespace;
+        private volatile ServerCursor serverCursor;
+
+        CleanerState(final MongoClient mongoClient, final MongoNamespace namespace, final ServerCursor serverCursor) {
+            this.mongoClient = assertNotNull(mongoClient);
+            this.namespace = assertNotNull(namespace);
+            this.serverCursor = assertNotNull(serverCursor);
+        }
+
+        public void run() {
+            if (serverCursor != null) {
+                mongoClient.addOrphanedCursor(serverCursor, namespace);
+            }
+        }
+
+        public void clear() {
+            serverCursor = null;
+        }
+    }
 }
