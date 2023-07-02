@@ -22,18 +22,6 @@ package com.mongodb;
  * @see DBCursor
  */
 abstract class DBCursorCleaner {
-    // Should be true on Java 9+
-    private static final boolean CLEANER_IS_AVAILABLE;
-
-    static {
-        boolean cleanerIsAvailable = false;
-        try {
-            Class.forName("java.lang.ref.Cleaner");
-            cleanerIsAvailable = true;
-        } catch (ClassNotFoundException ignored) {
-        }
-        CLEANER_IS_AVAILABLE = cleanerIsAvailable;
-    }
 
     /**
      * Create a new instance.
@@ -48,14 +36,9 @@ abstract class DBCursorCleaner {
      * @param serverCursor the server cursor
      * @return the cleaner
      */
-    @SuppressWarnings("deprecation")
     static DBCursorCleaner create(final MongoClient mongoClient, final MongoNamespace namespace,
                            final ServerCursor serverCursor) {
-        if (CLEANER_IS_AVAILABLE) {
-            return new Java9DBCursorCleaner(mongoClient, namespace, serverCursor);
-        } else {
-            return new Java8DBCursorCleaner(mongoClient, namespace, serverCursor);
-        }
+        return new Java9DBCursorCleaner(mongoClient, namespace, serverCursor);
     }
 
     /**
