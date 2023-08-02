@@ -40,6 +40,8 @@ dependencies {
     implementation project(path: ':bson-kotlin', configuration: 'default'), optional
     implementation project(path: ':bson-kotlinx', configuration: 'default'), optional
 
+    implementation "org.crac:crac:1.3.0"
+
     implementation "com.github.jnr:jnr-unixsocket:$jnrUnixsocketVersion", optional
     api platform("io.netty:netty-bom:$nettyVersion")
     api "io.netty:netty-buffer", optional

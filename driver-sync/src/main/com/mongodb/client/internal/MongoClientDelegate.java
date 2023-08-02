@@ -43,8 +43,12 @@ import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.internal.session.ServerSessionPool;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.crac.Context;
+import org.crac.Core;
+import org.crac.Resource;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
 import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
@@ -53,7 +57,10 @@ import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.assertions.Assertions.notNull;
 
 final class MongoClientDelegate {
-    private final Cluster cluster;
+    // CRAC Resource is stored in a weak reference by CRAC itself so must be referenced strongly here
+    @SuppressWarnings("FieldCanBeLocal")
+    private final Resource cracResource;
+    private volatile Cluster cluster;
     private final ServerSessionPool serverSessionPool;
     private final Object originator;
     private final OperationExecutor operationExecutor;
@@ -65,19 +72,36 @@ final class MongoClientDelegate {
     private final SynchronousContextProvider contextProvider;
     private final AtomicBoolean closed;
 
-    MongoClientDelegate(final Cluster cluster, final CodecRegistry codecRegistry,
-                        final Object originator, @Nullable final OperationExecutor operationExecutor,
-                        @Nullable final Crypt crypt, @Nullable final ServerApi serverApi,
-                        @Nullable final SynchronousContextProvider contextProvider) {
-        this.cluster = cluster;
+    MongoClientDelegate(final Supplier<Cluster> clusterSupplier, final CodecRegistry codecRegistry,
+            final Object originator, @Nullable final OperationExecutor operationExecutor,
+            @Nullable final Crypt crypt, @Nullable final ServerApi serverApi,
+            @Nullable final SynchronousContextProvider contextProvider) {
+        this.cluster = clusterSupplier.get();
         this.codecRegistry = codecRegistry;
         this.contextProvider = contextProvider;
+        // TODO: leaking cluster here
         this.serverSessionPool = new ServerSessionPool(cluster, serverApi);
         this.originator = originator;
         this.operationExecutor = operationExecutor == null ? new DelegateOperationExecutor() : operationExecutor;
         this.crypt = crypt;
         this.serverApi = serverApi;
         this.closed = new AtomicBoolean();
+        this.cracResource = new Resource() {
+            @Override
+            public void beforeCheckpoint(final Context<? extends Resource> context) {
+                // TODO: problems with this design:
+                // 1. It's observable by the application because of CMAP and SDAM events (this might be feature not a bug)
+                // 2. It's slower because the threads need to be recreated
+                cluster.close();
+                cluster = null;
+            }
+
+            @Override
+            public void afterRestore(final Context<? extends Resource> context) {
+                cluster = clusterSupplier.get();
+            }
+        };
+        Core.getGlobalContext().register(cracResource);
     }
 
     public OperationExecutor getOperationExecutor() {

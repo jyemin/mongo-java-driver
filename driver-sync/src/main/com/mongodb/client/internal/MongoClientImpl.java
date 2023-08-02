@@ -35,6 +35,7 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SocketStreamFactory;
 import com.mongodb.connection.StreamFactory;
 import com.mongodb.connection.StreamFactoryFactory;
+import com.mongodb.internal.VisibleForTesting;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.DefaultClusterFactory;
@@ -50,6 +51,7 @@ import org.bson.conversions.Bson;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.internal.Crypts.createCrypt;
@@ -69,12 +71,12 @@ public final class MongoClientImpl implements MongoClient {
     private final MongoClientDelegate delegate;
 
     public MongoClientImpl(final MongoClientSettings settings, final MongoDriverInformation mongoDriverInformation) {
-        this(createCluster(settings, mongoDriverInformation), mongoDriverInformation, settings, null);
+        this(() -> createCluster(settings, mongoDriverInformation), mongoDriverInformation, settings, null);
     }
 
-    public MongoClientImpl(final Cluster cluster, final MongoDriverInformation mongoDriverInformation,
-                           final MongoClientSettings settings,
-                           @Nullable final OperationExecutor operationExecutor) {
+    @VisibleForTesting(otherwise = VisibleForTesting.AccessModifier.PRIVATE)
+    public MongoClientImpl(final Supplier<Cluster> clusterSupplier, final MongoDriverInformation mongoDriverInformation,
+            final MongoClientSettings settings, @Nullable final OperationExecutor operationExecutor) {
         this.settings = notNull("settings", settings);
         this.mongoDriverInformation = mongoDriverInformation;
         AutoEncryptionSettings autoEncryptionSettings = settings.getAutoEncryptionSettings();
@@ -82,7 +84,7 @@ public final class MongoClientImpl implements MongoClient {
             throw new IllegalArgumentException("The contextProvider must be an instance of "
                     + SynchronousContextProvider.class.getName() + " when using the synchronous driver");
         }
-        this.delegate = new MongoClientDelegate(notNull("cluster", cluster),
+        this.delegate = new MongoClientDelegate(() -> notNull("cluster", clusterSupplier.get()),
                 withUuidRepresentation(settings.getCodecRegistry(), settings.getUuidRepresentation()), this, operationExecutor,
                 autoEncryptionSettings == null ? null : createCrypt(this, autoEncryptionSettings), settings.getServerApi(),
                 (SynchronousContextProvider) settings.getContextProvider());
