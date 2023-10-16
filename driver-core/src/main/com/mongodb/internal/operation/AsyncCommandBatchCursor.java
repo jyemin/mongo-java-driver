@@ -31,6 +31,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Connection;
+import com.mongodb.internal.operation.AsyncOperationHelper.AsyncCallableWithCallback;
 import com.mongodb.internal.operation.AsyncOperationHelper.AsyncCallableWithConnection;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
@@ -191,14 +192,8 @@ class AsyncCommandBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T>
     }
 
     private void getMore(final ServerCursor cursor, final SingleResultCallback<List<T>> callback) {
-        resourceManager.executeWithConnection((connection, t) -> {
-            assertTrue(connection != null || t != null);
-            if (t != null) {
-                callback.onResult(null, t);
-            } else {
-                getMore(connection, cursor, callback);
-            }
-        });
+        resourceManager.executeWithConnection((connection, wrappedCallback) ->
+                getMore(assertNotNull(connection), cursor, wrappedCallback), callback);
     }
 
     private void getMore(final AsyncConnection connection, final ServerCursor cursor, final SingleResultCallback<List<T>> callback) {
@@ -215,7 +210,6 @@ class AsyncCommandBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T>
                                         ? translateCommandException((MongoCommandException) t, cursor)
                                         : t;
 
-                        connection.release();
                         resourceManager.endOperation();
                         callback.onResult(null, translatedException);
                         return;
@@ -227,13 +221,11 @@ class AsyncCommandBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T>
 
                     if (!resourceManager.operable()) {
                         resourceManager.releaseServerAndClientResources(connection);
-                        connection.release();
                         callback.onResult(emptyList(), null);
                         return;
                     }
 
                     if (commandCursor.getResults().isEmpty() && commandCursor.getServerCursor() != null) {
-                        connection.release();
                         getMore(commandCursor.getServerCursor(), callback);
                     } else {
                         resourceManager.endOperation();
@@ -241,7 +233,6 @@ class AsyncCommandBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T>
                             resourceManager.releaseServerAndClientResources(connection);
                             close();
                         }
-                        connection.release();
                         callback.onResult(commandCursor.getResults(), null);
                     }
                 });
@@ -429,6 +420,30 @@ class AsyncCommandBatchCursor<T> implements AsyncAggregateResponseBatchCursor<T>
                         checkCorruptedConnection();
                     }
                     callable.call(connection, t);
+                });
+            }
+        }
+
+        <R> void executeWithConnection(final AsyncCallableWithCallback<R> callable, final SingleResultCallback<R> callback) {
+            assertTrue(state != State.IDLE);
+
+            if (pinnedConnection != null) {
+                callable.call(pinnedConnection, (result, t) -> {
+                    if (t instanceof MongoSocketException) {
+                        checkCorruptedConnection();
+                    }
+                    callback.onResult(result, t);
+                });
+            } else {
+                assertNotNull(connectionSource).getConnection((connection, t) -> {
+                    if (t != null) {
+                        callback.onResult(null, t);
+                        return;
+                    }
+                    callable.call(connection, (result, t1) -> {
+                        assertNotNull(connection).release();
+                        callback.onResult(result, t1);
+                    });
                 });
             }
         }
