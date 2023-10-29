@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.assertTrue;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -70,6 +71,7 @@ public abstract class AsynchronousChannelStream implements Stream {
         return bufferProvider;
     }
 
+    @Nullable
     public ExtendedAsynchronousByteChannel getChannel() {
         return channel.get();
     }
@@ -119,7 +121,7 @@ public abstract class AsynchronousChannelStream implements Stream {
             timeout += additionalTimeout;
         }
 
-        getChannel().read(buffer.asNIO(), timeout, MILLISECONDS, null, new BasicCompletionHandler(buffer, handler));
+        assertNotNull(getChannel()).read(buffer.asNIO(), timeout, MILLISECONDS, null, new BasicCompletionHandler(buffer, handler));
     }
 
     @Override
@@ -207,7 +209,7 @@ public abstract class AsynchronousChannelStream implements Stream {
 
     private class AsyncWritableByteChannelAdapter {
         void write(final ByteBuffer src, final AsyncCompletionHandler<Void> handler) {
-            getChannel().write(src, null, new AsyncWritableByteChannelAdapter.WriteCompletionHandler(handler));
+            assertNotNull(getChannel()).write(src, null, new AsyncWritableByteChannelAdapter.WriteCompletionHandler(handler));
         }
 
         private class WriteCompletionHandler extends BaseCompletionHandler<Void, Integer, Object> {
@@ -249,7 +251,7 @@ public abstract class AsynchronousChannelStream implements Stream {
                 localByteBuf.flip();
                 localHandler.completed(localByteBuf);
             } else {
-                getChannel().read(localByteBuf.asNIO(), settings.getReadTimeout(MILLISECONDS), MILLISECONDS, null,
+                assertNotNull(getChannel()).read(localByteBuf.asNIO(), settings.getReadTimeout(MILLISECONDS), MILLISECONDS, null,
                         new BasicCompletionHandler(localByteBuf, localHandler));
             }
         }

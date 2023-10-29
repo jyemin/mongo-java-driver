@@ -306,7 +306,7 @@ public class FieldTrackingBsonWriter extends BsonWriterDecorator {
     @Override
     public void pipe(final BsonReader reader) {
         // this is a faulty assumption, as we may end up piping an empty document.  But if we don't increment here, we may undercount,
-        // which in this context is worse since we'll thrown an exception when we should not.
+        // which in this context is worse since we'll throw an exception when we should not.
         hasWrittenField = true;
         super.pipe(reader);
     }

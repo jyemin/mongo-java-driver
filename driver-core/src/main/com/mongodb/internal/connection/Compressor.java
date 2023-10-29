@@ -92,7 +92,7 @@ abstract class Compressor {
                 return -1;
             }
 
-            int bytesToRead = length > source.remaining() ? source.remaining() : length;
+            int bytesToRead = Math.min(length, source.remaining());
             source.get(bytes, offset, bytesToRead);
             return bytesToRead;
         }

@@ -17,7 +17,6 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.MongoException;
-import com.mongodb.MongoInternalException;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoServerUnavailableException;
 import com.mongodb.MongoTimeoutException;
@@ -116,9 +115,7 @@ public class ConcurrentPool<T> implements Pool<T> {
      */
     @Override
     public void release(final T t, final boolean prune) {
-        if (t == null) {
-            throw new IllegalArgumentException("Can not return a null item to the pool");
-        }
+        assertNotNull(t);
         if (stateAndPermits.closed()) {
             close(t);
             return;
@@ -149,7 +146,7 @@ public class ConcurrentPool<T> implements Pool<T> {
      *
      * @param timeout See {@link Timeout#started(long, TimeUnit, TimePoint)}.
      * @param timeUnit the time unit of the timeout
-     * @return An object from the pool, or null if can't get one in the given waitTime
+     * @return An object from the pool, or null if one is not available in the given waitTime
      * @throws MongoTimeoutException if the timeout has been exceeded
      */
     @Override
@@ -220,9 +217,7 @@ public class ConcurrentPool<T> implements Pool<T> {
     private T createNewAndReleasePermitIfFailure() {
         try {
             T newMember = itemFactory.create();
-            if (newMember == null) {
-                throw new MongoInternalException("The factory for the pool created a null item");
-            }
+            assertNotNull(newMember);
             return newMember;
         } catch (Exception e) {
             stateAndPermits.releasePermit();
@@ -311,7 +306,7 @@ public class ConcurrentPool<T> implements Pool<T> {
 
     /**
      * Package-access methods are thread-safe,
-     * and only they should be called outside of the {@link StateAndPermits}'s code.
+     * and should only be called outside the {@link StateAndPermits}'s code.
      */
     @ThreadSafe
     private static final class StateAndPermits {
@@ -341,7 +336,7 @@ public class ConcurrentPool<T> implements Pool<T> {
          * comments in <a href="https://jira.mongodb.org/browse/JAVA-4452">JAVA-4452</a>.</p>
          * <p>
          * {@link ReentrantReadWriteLock#hasWaiters(Condition)} requires holding the lock to be called, therefore we cannot use it
-         * to discriminate between the two cases described above, and we use {@link #waitersEstimate} instead.
+         * to discriminate between the two cases described above, and we use this method instead.
          * This approach results in sometimes acquiring a lock unfairly when it should have been acquired fairly, and vice versa.
          * But it appears to be a good enough compromise, that results in having enough throughput when there are enough
          * available permits and tolerable high percentiles of latencies when there are not enough available permits.</p>

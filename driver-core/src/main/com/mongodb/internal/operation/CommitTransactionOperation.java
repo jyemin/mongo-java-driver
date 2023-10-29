@@ -79,15 +79,6 @@ public class CommitTransactionOperation extends TransactionOperation {
         return this;
     }
 
-    @Nullable
-    public Long getMaxCommitTime(final TimeUnit timeUnit) {
-        notNull("timeUnit", timeUnit);
-        if (maxCommitTimeMS == null) {
-            return null;
-        }
-        return timeUnit.convert(maxCommitTimeMS, MILLISECONDS);
-    }
-
     @Override
     public Void execute(final WriteBinding binding) {
         try {

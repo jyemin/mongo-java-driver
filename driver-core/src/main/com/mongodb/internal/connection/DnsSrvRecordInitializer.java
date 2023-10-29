@@ -22,7 +22,10 @@ import com.mongodb.connection.ClusterType;
 
 import java.util.Collection;
 
-interface DnsSrvRecordInitializer {
+/**
+ * <p>This class is not part of the public API and may be removed or changed at any time</p>
+ */
+public interface DnsSrvRecordInitializer {
     void initialize(Collection<ServerAddress> hosts);
 
     void initialize(MongoException initializationException);

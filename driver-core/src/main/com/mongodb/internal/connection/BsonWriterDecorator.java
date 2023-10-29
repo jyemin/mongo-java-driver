@@ -37,10 +37,6 @@ public class BsonWriterDecorator implements BsonWriter {
         this.bsonWriter = notNull("bsonWriter", bsonWriter);
     }
 
-    BsonWriter getBsonWriter() {
-        return bsonWriter;
-    }
-
     @Override
     public void writeStartDocument(final String name) {
         bsonWriter.writeStartDocument(name);

@@ -28,6 +28,7 @@ import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.authentication.NativeAuthenticationHelper.getAuthCommand;
 import static com.mongodb.internal.authentication.NativeAuthenticationHelper.getNonceCommand;
@@ -69,7 +70,7 @@ class NativeAuthenticator extends Authenticator {
                     } else {
                         executeCommandAsync(getMongoCredential().getSource(),
                                             getAuthCommand(getUserNameNonNull(), getPasswordNonNull(),
-                                                           ((BsonString) nonceResult.get("nonce")).getValue()),
+                                                           assertNotNull(nonceResult).getString("nonce").getValue()),
                                 getClusterConnectionMode(), getServerApi(), connection,
                                 (result, t1) -> {
                                     if (t1 != null) {

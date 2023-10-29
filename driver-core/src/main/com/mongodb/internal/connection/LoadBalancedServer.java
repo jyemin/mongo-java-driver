@@ -42,16 +42,14 @@ import org.bson.types.ObjectId;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.isTrue;
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 
-/**
- * <p>This class is not part of the public API and may be removed or changed at any time</p>
- */
 @ThreadSafe
-public class LoadBalancedServer implements ClusterableServer {
+class LoadBalancedServer implements ClusterableServer {
     private static final Logger LOGGER = Loggers.getLogger("connection");
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ServerId serverId;
@@ -60,8 +58,8 @@ public class LoadBalancedServer implements ClusterableServer {
     private final ServerListener serverListener;
     private final ClusterClock clusterClock;
 
-    public LoadBalancedServer(final ServerId serverId, final ConnectionPool connectionPool, final ConnectionFactory connectionFactory,
-                              final ServerListener serverListener, final ClusterClock clusterClock) {
+    LoadBalancedServer(final ServerId serverId, final ConnectionPool connectionPool, final ConnectionFactory connectionFactory,
+            final ServerListener serverListener, final ClusterClock clusterClock) {
         this.serverId = serverId;
         this.connectionPool = connectionPool;
         this.connectionFactory = connectionFactory;
@@ -97,7 +95,7 @@ public class LoadBalancedServer implements ClusterableServer {
                     connectionPool.invalidate(serviceId, generation);
                 }
             } else if (t instanceof MongoNotPrimaryException || t instanceof MongoNodeIsRecoveringException) {
-                if (SHUTDOWN_CODES.contains(((MongoCommandException) t).getErrorCode())) {
+                if (SdamServerDescriptionManager.SHUTDOWN_CODES.contains(((MongoCommandException) t).getErrorCode())) {
                     if (serviceId != null) {
                         connectionPool.invalidate(serviceId, generation);
                     }
@@ -138,7 +136,7 @@ public class LoadBalancedServer implements ClusterableServer {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
-                callback.onResult(connectionFactory.createAsync(result, new LoadBalancedServerProtocolExecutor(),
+                callback.onResult(connectionFactory.createAsync(assertNotNull(result), new LoadBalancedServerProtocolExecutor(),
                         ClusterConnectionMode.LOAD_BALANCED), null);
             }
         });

@@ -59,7 +59,7 @@ abstract class RequestMessage {
     private final OpCode opCode;
     private EncodingMetadata encodingMetadata;
 
-    static class EncodingMetadata {
+    protected static class EncodingMetadata {
         private final int firstDocumentPosition;
 
         EncodingMetadata(final int firstDocumentPosition) {

@@ -113,7 +113,7 @@ final class CommandOperationHelper {
         return defaultValue;
     }
 
-    static boolean isNamespaceError(final Throwable t) {
+    static boolean isNamespaceError(@Nullable final Throwable t) {
         if (t instanceof MongoCommandException) {
             MongoCommandException e = (MongoCommandException) t;
             return (e.getErrorMessage().contains("ns not found") || e.getErrorCode() == 26);

@@ -29,6 +29,7 @@ import org.bson.codecs.BsonDocumentCodec;
 
 import java.util.List;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommandAsync;
@@ -128,6 +129,7 @@ public class CreateViewOperation implements AsyncWriteOperation<Void>, WriteOper
         return withConnection(binding, connection -> {
             executeCommand(binding, databaseName, getCommand(), new BsonDocumentCodec(),
                     writeConcernErrorTransformer());
+            //noinspection DataFlowIssue
             return null;
         });
     }
@@ -139,7 +141,7 @@ public class CreateViewOperation implements AsyncWriteOperation<Void>, WriteOper
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
             } else {
-                SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, connection);
+                SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, assertNotNull(connection));
                 executeCommandAsync(binding, databaseName, getCommand(), connection, writeConcernErrorTransformerAsync(),
                         wrappedCallback);
             }

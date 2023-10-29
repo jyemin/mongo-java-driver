@@ -21,6 +21,7 @@ import com.mongodb.internal.binding.BindingContext;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.SplittablePayload;
+import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.FieldNameValidator;
 import org.bson.codecs.Decoder;
@@ -55,7 +56,7 @@ public final class SyncConnection implements Connection {
 
     @Override
     public <T> T command(final String database, final BsonDocument command, final FieldNameValidator fieldNameValidator,
-            final ReadPreference readPreference, final Decoder<T> commandResultDecoder,
+            @Nullable final ReadPreference readPreference, final Decoder<T> commandResultDecoder,
             final BindingContext context) {
         SupplyingCallback<T> callback = new SupplyingCallback<>();
         wrapped.commandAsync(database, command, fieldNameValidator, readPreference, commandResultDecoder, context, callback);
@@ -64,9 +65,9 @@ public final class SyncConnection implements Connection {
 
     @Override
     public <T> T command(final String database, final BsonDocument command, final FieldNameValidator commandFieldNameValidator,
-            final ReadPreference readPreference, final Decoder<T> commandResultDecoder,
-            final BindingContext context, final boolean responseExpected, final SplittablePayload payload,
-            final FieldNameValidator payloadFieldNameValidator) {
+            @Nullable final ReadPreference readPreference, final Decoder<T> commandResultDecoder,
+            final BindingContext context, final boolean responseExpected, @Nullable final SplittablePayload payload,
+            @Nullable final FieldNameValidator payloadFieldNameValidator) {
         SupplyingCallback<T> callback = new SupplyingCallback<>();
         wrapped.commandAsync(database, command, commandFieldNameValidator, readPreference, commandResultDecoder, context,
                 responseExpected, payload, payloadFieldNameValidator, callback);

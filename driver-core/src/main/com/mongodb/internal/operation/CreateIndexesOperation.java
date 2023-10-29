@@ -133,6 +133,7 @@ public class CreateIndexesOperation implements AsyncWriteOperation<Void>, WriteO
             } catch (MongoCommandException e) {
                 throw checkForDuplicateKeyError(e);
             }
+            //noinspection DataFlowIssue
             return null;
         });
     }
@@ -144,7 +145,7 @@ public class CreateIndexesOperation implements AsyncWriteOperation<Void>, WriteO
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
             } else {
-                SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, connection);
+                SingleResultCallback<Void> wrappedCallback = releasingCallback(errHandlingCallback, assertNotNull(connection));
                 try {
                     executeCommandAsync(binding, namespace.getDatabaseName(),
                             getCommand(connection.getDescription()), connection, writeConcernErrorTransformerAsync(),

@@ -18,6 +18,7 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.MongoException;
 import com.mongodb.internal.async.AsyncAggregateResponseBatchCursor;
+import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.lang.NonNull;
@@ -74,7 +75,7 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
 
     @Override
     public void next(final SingleResultCallback<List<T>> callback) {
-        resumeableOperation((cursor, callback1) -> cursor.next(callback1), callback, false);
+        resumeableOperation(AsyncBatchCursor::next, callback, false);
     }
 
     @Override
@@ -129,7 +130,7 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
 
     /**
      * This method guarantees that the {@code newValue} argument is closed even if
-     * {@link #setWrappedOrCloseIt(AsyncAggregateResponseBatchCursor)} is called concurrently with or after (in the happens-before order)
+     * this method is called concurrently with or after (in the happens-before order)
      * the method {@link #close()}.
      */
     private void setWrappedOrCloseIt(final AsyncAggregateResponseBatchCursor<RawBsonDocument> newValue) {
@@ -215,14 +216,15 @@ final class AsyncChangeStreamBatchCursor<T> implements AsyncAggregateResponseBat
             if (t != null) {
                 callback.onResult(null, t);
             } else {
-                changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, source.getServerDescription().getMaxWireVersion());
+                changeStreamOperation.setChangeStreamOptionsForResume(resumeToken,
+                        assertNotNull(source).getServerDescription().getMaxWireVersion());
                 source.release();
                 changeStreamOperation.executeAsync(binding, (result, t1) -> {
                     if (t1 != null) {
                         callback.onResult(null, t1);
                     } else {
                         try {
-                            setWrappedOrCloseIt(((AsyncChangeStreamBatchCursor<T>) result).getWrapped());
+                            setWrappedOrCloseIt(((AsyncChangeStreamBatchCursor<T>) assertNotNull(result)).getWrapped());
                         } finally {
                             try {
                                 binding.release(); // release the new change stream batch cursor's reference to the binding

@@ -31,12 +31,12 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.codecs.Decoder;
 
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.internal.operation.AsyncOperationHelper.createEmptyAsyncBatchCursor;
 import static com.mongodb.internal.operation.CommandOperationHelper.isNamespaceError;
 import static com.mongodb.internal.operation.OperationHelper.createEmptyBatchCursor;
+import static java.util.Collections.singletonList;
 
 /**
  * An operation that lists Alas Search indexes with the help of {@value #STAGE_LIST_SEARCH_INDEXES} pipeline stage.
@@ -123,9 +123,8 @@ final class ListSearchIndexesOperation<T>
 
     private AggregateOperation<T> asAggregateOperation() {
         BsonDocument searchDefinition = getSearchDefinition();
-        BsonDocument listSearchIndexesStage = new BsonDocument(STAGE_LIST_SEARCH_INDEXES, searchDefinition);
 
-        return new AggregateOperation<>(namespace, Collections.singletonList(listSearchIndexesStage), decoder)
+        return new AggregateOperation<>(namespace, singletonList(new BsonDocument(STAGE_LIST_SEARCH_INDEXES, searchDefinition)), decoder)
                 .retryReads(retryReads)
                 .collation(collation)
                 .comment(comment)

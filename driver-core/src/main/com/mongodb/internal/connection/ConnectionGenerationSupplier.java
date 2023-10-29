@@ -20,8 +20,11 @@ import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.lang.NonNull;
 import org.bson.types.ObjectId;
 
+/**
+ * <p>This class is not part of the public API and may be removed or changed at any time</p>
+ */
 @ThreadSafe
-interface ConnectionGenerationSupplier {
+public interface ConnectionGenerationSupplier {
     int getGeneration();
 
     int getGeneration(@NonNull ObjectId serviceId);

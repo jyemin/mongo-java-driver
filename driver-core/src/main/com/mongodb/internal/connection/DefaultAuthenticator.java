@@ -104,8 +104,8 @@ class DefaultAuthenticator extends Authenticator implements SpeculativeAuthentic
         }
 
         if (connectionDescription.getSaslSupportedMechanisms() != null)  {
-            BsonArray saslSupportedMechs = connectionDescription.getSaslSupportedMechanisms();
-            AuthenticationMechanism mechanism = saslSupportedMechs.contains(DEFAULT_MECHANISM_NAME) ? SCRAM_SHA_256 : SCRAM_SHA_1;
+            BsonArray saslSupportedMechanisms = connectionDescription.getSaslSupportedMechanisms();
+            AuthenticationMechanism mechanism = saslSupportedMechanisms.contains(DEFAULT_MECHANISM_NAME) ? SCRAM_SHA_256 : SCRAM_SHA_1;
             delegate = new ScramShaAuthenticator(getMongoCredentialWithCache().withMechanism(mechanism), getClusterConnectionMode(),
                     getServerApi());
         } else {

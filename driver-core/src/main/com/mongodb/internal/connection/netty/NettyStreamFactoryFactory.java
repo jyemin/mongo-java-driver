@@ -150,7 +150,7 @@ public final class NettyStreamFactoryFactory implements StreamFactoryFactory {
         /**
          * Sets a {@linkplain SslContextBuilder#forClient() client-side} {@link SslContext io.netty.handler.ssl.SslContext},
          * which overrides the standard {@link SslSettings#getContext()}.
-         * By default it is {@code null} and {@link SslSettings#getContext()} is at play.
+         * By default, it is {@code null} and {@link SslSettings#getContext()} is at play.
          * <p>
          * This option may be used as a convenient way to utilize
          * <a href="https://www.openssl.org/">OpenSSL</a> as an alternative to the TLS/SSL protocol implementation in a JDK.

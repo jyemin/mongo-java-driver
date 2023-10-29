@@ -36,6 +36,7 @@ import org.bson.BsonString;
 
 import java.util.List;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.connection.CommandHelper.HELLO;
 import static com.mongodb.internal.connection.CommandHelper.LEGACY_HELLO;
@@ -55,7 +56,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
     private final Authenticator authenticator;
     private final BsonDocument clientMetadataDocument;
     private final List<MongoCompressor> requestedCompressors;
-    private final boolean checkSaslSupportedMechs;
+    private final boolean checkSaslSupportedMechanisms;
     private final ServerApi serverApi;
 
     public InternalStreamConnectionInitializer(final ClusterConnectionMode clusterConnectionMode,
@@ -67,7 +68,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
         this.authenticator = authenticator;
         this.clientMetadataDocument = clientMetadataDocument;
         this.requestedCompressors = notNull("requestedCompressors", requestedCompressors);
-        this.checkSaslSupportedMechs = authenticator instanceof DefaultAuthenticator;
+        this.checkSaslSupportedMechanisms = authenticator instanceof DefaultAuthenticator;
         this.serverApi = serverApi;
     }
 
@@ -96,7 +97,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
                     if (t != null) {
                         callback.onResult(null, t instanceof MongoException ? mapHelloException((MongoException) t) : t);
                     } else {
-                        setSpeculativeAuthenticateResponse(helloResult);
+                        setSpeculativeAuthenticateResponse(assertNotNull(helloResult));
                         callback.onResult(createInitializationDescription(helloResult, internalConnection, startTime), null);
                     }
                 });
@@ -136,7 +137,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
     }
 
     private MongoException mapHelloException(final MongoException e) {
-        if (checkSaslSupportedMechs && e.getCode() == USER_NOT_FOUND_CODE) {
+        if (checkSaslSupportedMechanisms && e.getCode() == USER_NOT_FOUND_CODE) {
             MongoCredential credential = authenticator.getMongoCredential();
             return new MongoSecurityException(credential, format("Exception authenticating %s", credential), e);
         } else {
@@ -172,7 +173,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
             }
             helloCommandDocument.append("compression", compressors);
         }
-        if (checkSaslSupportedMechs) {
+        if (checkSaslSupportedMechanisms) {
             MongoCredential credential = authenticator.getMongoCredential();
             helloCommandDocument.append("saslSupportedMechs",
                     new BsonString(credential.getSource() + "." + credential.getUserName()));
@@ -230,7 +231,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
                     if (t != null) {
                         callback.onResult(description, null);
                     } else {
-                        callback.onResult(applyGetLastErrorResult(result, description), null);
+                        callback.onResult(applyGetLastErrorResult(assertNotNull(result), description), null);
                     }
                 });
     }

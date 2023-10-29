@@ -33,7 +33,6 @@ import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerConnectionState;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerId;
@@ -663,10 +662,6 @@ public class InternalStreamConnection implements InternalConnection {
             close();
             callback.onResult(null, translateReadException(e));
         }
-    }
-
-    private ConnectionId getId() {
-        return description.getConnectionId();
     }
 
     private ServerAddress getServerAddress() {

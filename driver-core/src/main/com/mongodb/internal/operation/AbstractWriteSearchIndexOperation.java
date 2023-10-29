@@ -26,12 +26,12 @@ import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 
-import static com.mongodb.internal.operation.SyncOperationHelper.executeCommand;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommandAsync;
-import static com.mongodb.internal.operation.SyncOperationHelper.writeConcernErrorTransformer;
-import static com.mongodb.internal.operation.AsyncOperationHelper.writeConcernErrorTransformerAsync;
 import static com.mongodb.internal.operation.AsyncOperationHelper.withAsyncSourceAndConnection;
+import static com.mongodb.internal.operation.AsyncOperationHelper.writeConcernErrorTransformerAsync;
+import static com.mongodb.internal.operation.SyncOperationHelper.executeCommand;
 import static com.mongodb.internal.operation.SyncOperationHelper.withConnection;
+import static com.mongodb.internal.operation.SyncOperationHelper.writeConcernErrorTransformer;
 
 /**
  * An abstract class for defining operations for managing Atlas Search indexes.
@@ -56,6 +56,7 @@ abstract class AbstractWriteSearchIndexOperation implements AsyncWriteOperation<
             } catch (MongoCommandException mongoCommandException) {
                 swallowOrThrow(mongoCommandException);
             }
+            //noinspection DataFlowIssue
             return null;
         });
     }

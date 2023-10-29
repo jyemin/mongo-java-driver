@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
@@ -131,8 +132,9 @@ public class CountDocumentsOperation implements AsyncReadOperation<Long>, ReadOp
 
     @Override
     public Long execute(final ReadBinding binding) {
-        BatchCursor<BsonDocument> cursor = getAggregateOperation().execute(binding);
-        return cursor.hasNext() ? getCountFromAggregateResults(cursor.next()) : 0;
+        try (BatchCursor<BsonDocument> cursor = getAggregateOperation().execute(binding)) {
+            return cursor.hasNext() ? getCountFromAggregateResults(cursor.next()) : 0;
+        }
     }
 
     @Override
@@ -141,11 +143,11 @@ public class CountDocumentsOperation implements AsyncReadOperation<Long>, ReadOp
             if (t != null) {
                 callback.onResult(null, t);
             } else {
-                result.next((result1, t1) -> {
+                assertNotNull(result).next((batch, t1) -> {
                     if (t1 != null) {
                         callback.onResult(null, t1);
                     } else {
-                        callback.onResult(getCountFromAggregateResults(result1), null);
+                        callback.onResult(getCountFromAggregateResults(batch), null);
                     }
                 });
             }
@@ -175,7 +177,7 @@ public class CountDocumentsOperation implements AsyncReadOperation<Long>, ReadOp
         return pipeline;
     }
 
-    private Long getCountFromAggregateResults(final List<BsonDocument> results) {
+    private Long getCountFromAggregateResults(@Nullable final List<BsonDocument> results) {
         if (results == null || results.isEmpty()) {
             return 0L;
         } else {

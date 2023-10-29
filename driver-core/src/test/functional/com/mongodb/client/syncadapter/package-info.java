@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package com.mongodb.internal.connection;
-
-import com.mongodb.annotations.ThreadSafe;
-import org.bson.ByteBuf;
-
 /**
- * A provider of instances of ByteBuf.
+ * The core mongodb package
  */
-@ThreadSafe
-public interface BufferProvider {
-    /**
-     * Gets a buffer with the given capacity.
-     *
-     * @param size the size required for the buffer
-     * @return a ByteBuf with the given size, which is now owned by the caller and must be released.
-     */
-    ByteBuf getBuffer(int size);
-}
+@NonNullApi
+package com.mongodb.client.syncadapter;
+
+import com.mongodb.lang.NonNullApi;

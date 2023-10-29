@@ -70,7 +70,7 @@ class BsonArrayWrapper<T> extends BsonArray {
     }
 
     @Override
-    public <T> T[] toArray(final T[] a) {
+    public <R> R[] toArray(final R[] a) {
         throw new UnsupportedOperationException();
     }
 

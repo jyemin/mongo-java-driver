@@ -36,6 +36,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommandAsync;
@@ -101,6 +102,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
                     rethrowIfNotNamespaceError(e);
                 }
             });
+            //noinspection DataFlowIssue
             return null;
         });
     }
@@ -116,8 +118,8 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
                     if (t1 != null) {
                         errHandlingCallback.onResult(null, t1);
                     } else {
-                        new ProcessCommandsCallback(binding, connection, getCommands(result), releasingCallback(errHandlingCallback,
-                                connection))
+                        new ProcessCommandsCallback(binding, assertNotNull(connection), getCommands(result),
+                                releasingCallback(errHandlingCallback, connection))
                                 .onResult(null, null);
                     }
                 });
@@ -152,7 +154,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
      *
      * @return the list of commands to run to create the collection
      */
-    private List<Supplier<BsonDocument>> getCommands(final BsonDocument encryptedFields) {
+    private List<Supplier<BsonDocument>> getCommands(@Nullable final BsonDocument encryptedFields) {
         if (encryptedFields == null) {
             return singletonList(this::dropCollectionCommand);
         } else  {
@@ -193,7 +195,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
-                    cursor.next((bsonValues, t1) -> {
+                    assertNotNull(cursor).next((bsonValues, t1) -> {
                         if (t1 != null) {
                             callback.onResult(null, t1);
                         } else {
@@ -208,7 +210,7 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
     }
     private BsonDocument getCollectionEncryptedFields(final BsonDocument defaultEncryptedFields,
             @Nullable final List<BsonValue> bsonValues) {
-        if (bsonValues != null && bsonValues.size() > 0) {
+        if (bsonValues != null && !bsonValues.isEmpty()) {
             return bsonValues.get(0).asDocument()
                     .getDocument("options", new BsonDocument())
                     .getDocument("encryptedFields", new BsonDocument());

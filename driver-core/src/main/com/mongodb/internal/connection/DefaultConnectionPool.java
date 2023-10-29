@@ -43,8 +43,6 @@ import com.mongodb.event.ConnectionPoolCreatedEvent;
 import com.mongodb.event.ConnectionPoolListener;
 import com.mongodb.event.ConnectionPoolReadyEvent;
 import com.mongodb.event.ConnectionReadyEvent;
-import com.mongodb.internal.time.TimePoint;
-import com.mongodb.internal.time.Timeout;
 import com.mongodb.internal.VisibleForTesting;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.connection.SdamServerDescriptionManager.SdamIssue;
@@ -56,6 +54,8 @@ import com.mongodb.internal.logging.LogMessage;
 import com.mongodb.internal.logging.StructuredLogger;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.thread.DaemonThreadFactory;
+import com.mongodb.internal.time.TimePoint;
+import com.mongodb.internal.time.Timeout;
 import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
 import org.bson.ByteBuf;
@@ -799,7 +799,7 @@ final class DefaultConnectionPool implements ConnectionPool {
         public <T> void sendAndReceiveAsync(final CommandMessage message, final Decoder<T> decoder, final SessionContext sessionContext,
                 final RequestContext requestContext, final OperationContext operationContext, final SingleResultCallback<T> callback) {
             isTrue("open", !isClosed.get());
-            wrapped.sendAndReceiveAsync(message, decoder, sessionContext, requestContext, operationContext, (result, t) -> callback.onResult(result, t));
+            wrapped.sendAndReceiveAsync(message, decoder, sessionContext, requestContext, operationContext, callback);
         }
 
         @Override
@@ -817,7 +817,7 @@ final class DefaultConnectionPool implements ConnectionPool {
         @Override
         public void receiveMessageAsync(final int responseTo, final SingleResultCallback<ResponseBuffers> callback) {
             isTrue("open", !isClosed.get());
-            wrapped.receiveMessageAsync(responseTo, (result, t) -> callback.onResult(result, t));
+            wrapped.receiveMessageAsync(responseTo, callback);
         }
 
         @Override
@@ -1377,7 +1377,7 @@ final class DefaultConnectionPool implements ConnectionPool {
                 } catch (InterruptedException closed) {
                     // fail the rest of the tasks and stop
                 } catch (Exception e) {
-                    LOGGER.error(null, e);
+                    LOGGER.error("", e);
                 }
             }
             failAllTasksAfterClosing();
@@ -1567,10 +1567,9 @@ final class DefaultConnectionPool implements ConnectionPool {
             });
         }
 
-        boolean ready() {
-            boolean result = false;
+        void ready() {
             if (paused) {
-                result = withLock(lock.writeLock(), () -> {
+                withLock(lock.writeLock(), () -> {
                     if (paused) {
                         paused = false;
                         cause = null;
@@ -1584,7 +1583,6 @@ final class DefaultConnectionPool implements ConnectionPool {
                     return false;
                 });
             }
-            return result;
         }
 
         /**

@@ -40,11 +40,6 @@ public class SplittablePayloadBsonWriter extends LevelCountingBsonWriter {
     }
 
     public SplittablePayloadBsonWriter(final BsonBinaryWriter writer, final BsonOutput bsonOutput, final int messageStartPosition,
-                                       final MessageSettings settings, final SplittablePayload payload) {
-        this(writer, bsonOutput, messageStartPosition, settings, payload, settings.getMaxDocumentSize());
-    }
-
-    public SplittablePayloadBsonWriter(final BsonBinaryWriter writer, final BsonOutput bsonOutput, final int messageStartPosition,
                                        final MessageSettings settings, final SplittablePayload payload,
                                        final int maxSplittableDocumentSize) {
         super(writer);

@@ -98,10 +98,6 @@ class AggregateOperationImpl<T> implements AsyncReadOperation<AsyncBatchCursor<T
         return pipeline;
     }
 
-    Decoder<T> getDecoder() {
-        return decoder;
-    }
-
     Boolean getAllowDiskUse() {
         return allowDiskUse;
     }

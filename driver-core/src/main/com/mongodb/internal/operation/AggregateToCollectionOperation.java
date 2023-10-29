@@ -190,9 +190,8 @@ public class AggregateToCollectionOperation implements AsyncReadOperation<Void>,
     @Override
     public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<Void> callback) {
         executeRetryableReadAsync(binding,
-                (connectionSourceCallback) -> {
-                        binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary(), connectionSourceCallback);
-                },
+                (connectionSourceCallback) ->
+                        binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary(), connectionSourceCallback),
                 namespace.getDatabaseName(),
                 (serverDescription, connectionDescription) -> getCommand(),
                 new BsonDocumentCodec(), (result, source, connection) -> {

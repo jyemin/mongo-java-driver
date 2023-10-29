@@ -104,6 +104,7 @@ class CommandResultCodecProvider<P> implements CodecProvider {
         codecs.put(codec.getEncoderClass(), codec);
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(final Object o) {
         if (this == o) {

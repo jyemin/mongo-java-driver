@@ -47,27 +47,33 @@ public final class EncryptOptionsHelper {
 
         RangeOptions rangeOptions = options.getRangeOptions();
         if (rangeOptions != null) {
-            BsonDocument rangeOptionsBsonDocument = new BsonDocument();
-            BsonValue min = rangeOptions.getMin();
-            if (min != null) {
-                rangeOptionsBsonDocument.put("min", min);
-            }
-            BsonValue max = rangeOptions.getMax();
-            if (max != null) {
-                rangeOptionsBsonDocument.put("max", max);
-            }
-            Long sparsity = rangeOptions.getSparsity();
-            if (sparsity != null) {
-                rangeOptionsBsonDocument.put("sparsity", new BsonInt64(sparsity));
-            }
-            Integer precision = rangeOptions.getPrecision();
-            if (precision != null) {
-                rangeOptionsBsonDocument.put("precision", new BsonInt32(precision));
-            }
+            final BsonDocument rangeOptionsBsonDocument = getRangeOptions(rangeOptions);
             encryptOptionsBuilder.rangeOptions(rangeOptionsBsonDocument);
         }
         return encryptOptionsBuilder.build();
     }
+
+    private static BsonDocument getRangeOptions(final RangeOptions rangeOptions) {
+        BsonDocument rangeOptionsBsonDocument = new BsonDocument();
+        BsonValue min = rangeOptions.getMin();
+        if (min != null) {
+            rangeOptionsBsonDocument.put("min", min);
+        }
+        BsonValue max = rangeOptions.getMax();
+        if (max != null) {
+            rangeOptionsBsonDocument.put("max", max);
+        }
+        Long sparsity = rangeOptions.getSparsity();
+        if (sparsity != null) {
+            rangeOptionsBsonDocument.put("sparsity", new BsonInt64(sparsity));
+        }
+        Integer precision = rangeOptions.getPrecision();
+        if (precision != null) {
+            rangeOptionsBsonDocument.put("precision", new BsonInt32(precision));
+        }
+        return rangeOptionsBsonDocument;
+    }
+
     private EncryptOptionsHelper() {
     }
 }

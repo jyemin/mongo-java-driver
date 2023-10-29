@@ -21,6 +21,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
 import com.mongodb.UnixServerAddress;
+import com.mongodb.lang.Nullable;
 import com.mongodb.spi.dns.InetAddressResolver;
 
 import java.net.InetSocketAddress;
@@ -33,11 +34,11 @@ import java.util.stream.Collectors;
  */
 public final class ServerAddressHelper {
 
-    public static ServerAddress createServerAddress(final String host) {
+    public static ServerAddress createServerAddress(@Nullable final String host) {
         return createServerAddress(host, ServerAddress.defaultPort());
     }
 
-    public static ServerAddress createServerAddress(final String host, final int port) {
+    public static ServerAddress createServerAddress(@Nullable final String host, final int port) {
         if (host != null && host.endsWith(".sock")) {
             return new UnixServerAddress(host);
         } else {

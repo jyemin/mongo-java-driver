@@ -65,15 +65,6 @@ public class ReplyMessage<T> {
     }
 
     /**
-     * Gets the reply header.
-     *
-     * @return the reply header
-     */
-    public ReplyHeader getReplyHeader() {
-        return replyHeader;
-    }
-
-    /**
      * Gets the documents.
      *
      * @return the documents

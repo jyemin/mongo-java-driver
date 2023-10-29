@@ -168,7 +168,7 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
         notNull("timeUnit", timeUnit);
         isTrueArgument("maxAwaitTime >= 0", maxAwaitTime >= 0);
         this.maxAwaitTimeMS = TimeUnit.MILLISECONDS.convert(maxAwaitTime, timeUnit);
-        return this;
+         return this;
     }
 
     public int getSkip() {
@@ -320,7 +320,7 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
         RetryState retryState = initialRetryState(retryReads);
         Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, binding.getOperationContext(), () ->
             withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection) -> {
-                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), binding.getSessionContext()));
+                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(binding.getSessionContext()));
                 try {
                     return createReadCommandAndExecute(retryState, binding, source, namespace.getDatabaseName(),
                             getCommandCreator(binding.getSessionContext()), CommandResultDocumentCodec.create(decoder, FIRST_BATCH),
@@ -342,8 +342,8 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
                 retryState, binding.getOperationContext(), (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
                     withAsyncSourceAndConnection(binding::getReadConnectionSource, false, funcCallback,
                             (source, connection, releasingCallback) -> {
-                                if (retryState.breakAndCompleteIfRetryAnd(() -> !canRetryRead(source.getServerDescription(),
-                                        binding.getSessionContext()), releasingCallback)) {
+                                if (retryState.breakAndCompleteIfRetryAnd(() -> !canRetryRead(binding.getSessionContext()),
+                                        releasingCallback)) {
                                     return;
                                 }
                                 SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback = exceptionTransformingCallback(releasingCallback);

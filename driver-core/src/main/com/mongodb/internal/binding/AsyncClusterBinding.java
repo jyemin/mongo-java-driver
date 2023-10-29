@@ -37,6 +37,7 @@ import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 import com.mongodb.selector.ServerSelector;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
@@ -129,8 +130,8 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
-                    callback.onResult(new AsyncClusterBindingConnectionSource(result.getServer(), result.getServerDescription(),
-                            readPreferenceWithFallbackServerSelector.getAppliedReadPreference()), null);
+                    callback.onResult(new AsyncClusterBindingConnectionSource(assertNotNull(result).getServer(),
+                            result.getServerDescription(), readPreferenceWithFallbackServerSelector.getAppliedReadPreference()), null);
                 }
             });
         }
@@ -152,7 +153,7 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
             if (t != null) {
                 callback.onResult(null, t);
             } else {
-                callback.onResult(new AsyncClusterBindingConnectionSource(result.getServer(), result.getServerDescription(),
+                callback.onResult(new AsyncClusterBindingConnectionSource(assertNotNull(result).getServer(), result.getServerDescription(),
                         readPreference), null);
             }
         });

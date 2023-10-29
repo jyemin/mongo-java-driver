@@ -40,6 +40,7 @@ public class UnixSocketChannelStream extends SocketStream {
 
     @Override
     protected Socket initializeSocket() throws IOException {
+        //noinspection resource
         return UnixSocketChannel.open(new UnixSocketAddress(address.getHost())).socket();
     }
 }

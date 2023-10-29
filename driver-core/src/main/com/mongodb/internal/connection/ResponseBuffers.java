@@ -34,7 +34,7 @@ public class ResponseBuffers implements Closeable {
     ResponseBuffers(final ReplyHeader replyHeader, final ByteBuf bodyByteBuffer) {
         this.replyHeader = replyHeader;
         this.bodyByteBuffer = bodyByteBuffer;
-        this.bodyByteBufferStartPosition = bodyByteBuffer == null ? 0 : bodyByteBuffer.position();
+        this.bodyByteBufferStartPosition = bodyByteBuffer.position();
     }
 
     /**

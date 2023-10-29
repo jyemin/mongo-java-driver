@@ -105,6 +105,7 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
                 }
 
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(getRescanFrequencyMillis());
                 } catch (InterruptedException closed) {
                     // fall through

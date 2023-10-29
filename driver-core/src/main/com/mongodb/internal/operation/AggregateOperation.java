@@ -175,8 +175,4 @@ public class AggregateOperation<T> implements AsyncExplainableReadOperation<Asyn
     MongoNamespace getNamespace() {
         return wrapped.getNamespace();
     }
-
-    Decoder<T> getDecoder() {
-        return wrapped.getDecoder();
-    }
 }

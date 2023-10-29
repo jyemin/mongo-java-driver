@@ -180,9 +180,7 @@ final class AsyncOperationHelper {
                         withAsyncSourceAndConnection(sourceAsyncSupplier, false, funcCallback,
                                 (source, connection, releasingCallback) -> {
                                     if (retryState.breakAndCompleteIfRetryAnd(
-                                            () -> !OperationHelper.canRetryRead(source.getServerDescription(),
-                                                    binding.getSessionContext()),
-                                            releasingCallback)) {
+                                            () -> !OperationHelper.canRetryRead(binding.getSessionContext()), releasingCallback)) {
                                         return;
                                     }
                                     createReadCommandAndExecuteAsync(retryState, binding, source,
@@ -233,7 +231,7 @@ final class AsyncOperationHelper {
                         SingleResultCallback<R> addingRetryableLabelCallback = firstAttempt
                                 ? releasingCallback
                                 : addingRetryableLabelCallback(releasingCallback, maxWireVersion);
-                        if (retryState.breakAndCompleteIfRetryAnd(() -> !OperationHelper.canRetryWrite(connection.getDescription(), binding.getSessionContext()),
+                        if (retryState.breakAndCompleteIfRetryAnd(() -> !OperationHelper.canRetryWrite(connection.getDescription()),
                                 addingRetryableLabelCallback)) {
                             return;
                         }

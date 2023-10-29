@@ -29,13 +29,14 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.connection.TopologyVersion;
 import com.mongodb.lang.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.assertTrue;
-import static com.mongodb.internal.connection.ClusterableServer.SHUTDOWN_CODES;
 import static com.mongodb.internal.connection.ServerDescriptionHelper.unknownConnectingServerDescription;
 import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WIRE_VERSION;
+import static java.util.Arrays.asList;
 
 /**
  * See the
@@ -44,6 +45,8 @@ import static com.mongodb.internal.operation.ServerVersionHelper.FOUR_DOT_TWO_WI
  */
 @ThreadSafe
 interface SdamServerDescriptionManager {
+    List<Integer> SHUTDOWN_CODES = asList(91, 11600);
+
     /**
      * @param candidateDescription A {@link ServerDescription} that may or may not be applied
      *                             {@linkplain TopologyVersionHelper#newer(TopologyVersion, TopologyVersion) depending on}

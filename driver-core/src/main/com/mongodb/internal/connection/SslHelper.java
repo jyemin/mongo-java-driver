@@ -23,7 +23,6 @@ import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -54,7 +53,7 @@ public final class SslHelper {
             SNIServerName sniHostName = new SNIHostName(host);
             sslParameters.setServerNames(singletonList(sniHostName));
         } catch (IllegalArgumentException e) {
-            // ignore because SNIHostName will throw this for some legit host names for connecting to MongoDB, e.g an IPV6 literal
+            // ignore because SNIHostName will throw this for some legit host names for connecting to MongoDB, e.g. an IPV6 literal
         }
     }
 

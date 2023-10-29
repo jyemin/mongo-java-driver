@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * MongoDB returns query results as batches, and this interface provideds an iterator over those batches.  The first call to
+ * MongoDB returns query results as batches, and this interface provides an iterator over those batches.  The first call to
  * the {@code next} method will return the first batch, and subsequent calls will trigger a  request to get the next batch
  * of results.  Clients can control the batch size by setting the {@code batchSize} property between calls to {@code next}.
  *

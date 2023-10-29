@@ -187,7 +187,7 @@ final class SyncOperationHelper {
         RetryState retryState = CommandOperationHelper.initialRetryState(retryReads);
         Supplier<T> read = decorateReadWithRetries(retryState, binding.getOperationContext(), () ->
                 withSourceAndConnection(readConnectionSourceSupplier, false, (source, connection) -> {
-                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), binding.getSessionContext()));
+                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(binding.getSessionContext()));
                     return createReadCommandAndExecute(retryState, binding, source, database, commandCreator, decoder, transformer, connection);
                 })
         );
@@ -229,7 +229,7 @@ final class SyncOperationHelper {
             return withSourceAndConnection(binding::getWriteConnectionSource, true, (source, connection) -> {
                 int maxWireVersion = connection.getDescription().getMaxWireVersion();
                 try {
-                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryWrite(connection.getDescription(), binding.getSessionContext()));
+                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryWrite(connection.getDescription()));
                     BsonDocument command = retryState.attachment(AttachmentKeys.command())
                             .map(previousAttemptCommand -> {
                                 assertFalse(firstAttempt);

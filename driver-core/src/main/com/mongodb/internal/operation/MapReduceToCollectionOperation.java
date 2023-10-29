@@ -267,7 +267,7 @@ MapReduceToCollectionOperation implements AsyncWriteOperation<MapReduceStatistic
                 errHandlingCallback.onResult(null, t);
             } else {
                 executeCommandAsync(binding, namespace.getDatabaseName(),
-                        getCommand(connection.getDescription()), connection, transformerAsync(),
+                        getCommand(assertNotNull(connection).getDescription()), connection, transformerAsync(),
                         releasingCallback(errHandlingCallback, connection));
 
             }
@@ -281,16 +281,6 @@ MapReduceToCollectionOperation implements AsyncWriteOperation<MapReduceStatistic
      * @return a read operation that when executed will explain this operation
      */
     public ReadOperation<BsonDocument> asExplainableOperation(final ExplainVerbosity explainVerbosity) {
-        return createExplainableOperation(explainVerbosity);
-    }
-
-    /**
-     * Gets an operation whose execution explains this operation.
-     *
-     * @param explainVerbosity the explain verbosity
-     * @return a read operation that when executed will explain this operation
-     */
-    public AsyncReadOperation<BsonDocument> asExplainableOperationAsync(final ExplainVerbosity explainVerbosity) {
         return createExplainableOperation(explainVerbosity);
     }
 

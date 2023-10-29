@@ -18,7 +18,10 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.internal.async.SingleResultCallback;
 
-interface InternalConnectionInitializer {
+/**
+ * <p>This class is not part of the public API and may be removed or changed at any time</p>
+ */
+public interface InternalConnectionInitializer {
 
     InternalConnectionInitializationDescription startHandshake(InternalConnection internalConnection);
 

@@ -33,7 +33,6 @@ import com.mongodb.connection.ServerConnectionState
 import com.mongodb.connection.ServerDescription
 import com.mongodb.connection.ServerId
 import com.mongodb.connection.ServerType
-import com.mongodb.event.CommandListener
 import com.mongodb.event.ServerDescriptionChangedEvent
 import com.mongodb.event.ServerListener
 import com.mongodb.internal.IgnorableRequestContext
@@ -68,7 +67,7 @@ class DefaultServerSpecification extends Specification {
 
         connectionPool.get(_) >> { internalConnection }
         def server = new DefaultServer(serverId, mode, connectionPool, connectionFactory, Mock(ServerMonitor),
-                Mock(SdamServerDescriptionManager), Mock(ServerListener), Mock(CommandListener), new ClusterClock(), false)
+                Mock(SdamServerDescriptionManager), Mock(ServerListener), new ClusterClock(), false)
 
         when:
         def receivedConnection = server.getConnection(new OperationContext())
@@ -93,7 +92,7 @@ class DefaultServerSpecification extends Specification {
         }
 
         def server = new DefaultServer(serverId, mode, connectionPool, connectionFactory, Mock(ServerMonitor),
-                Mock(SdamServerDescriptionManager), Mock(ServerListener), Mock(CommandListener), new ClusterClock(), false)
+                Mock(SdamServerDescriptionManager), Mock(ServerListener), new ClusterClock(), false)
 
         when:
         def callback = new SupplyingCallback<AsyncConnection>()
@@ -110,7 +109,7 @@ class DefaultServerSpecification extends Specification {
     def 'should throw MongoServerUnavailableException getting a connection when the server is closed'() {
         given:
         def server = new DefaultServer(serverId, SINGLE, Stub(ConnectionPool), Stub(ConnectionFactory), Mock(ServerMonitor),
-                Stub(SdamServerDescriptionManager), Stub(ServerListener), Stub(CommandListener), new ClusterClock(), false)
+                Stub(SdamServerDescriptionManager), Stub(ServerListener), new ClusterClock(), false)
         server.close()
 
         when:
@@ -144,7 +143,7 @@ class DefaultServerSpecification extends Specification {
         def serverMonitor = new TestServerMonitor(sdamProvider)
         sdamProvider.initialize(new DefaultSdamServerDescriptionManager(mockCluster(), serverId, serverListener, serverMonitor,
                 connectionPool, ClusterConnectionMode.MULTIPLE))
-        def server = defaultServer(Mock(ConnectionPool), serverMonitor, serverListener, sdamProvider.get(), Mock(CommandListener))
+        def server = defaultServer(Mock(ConnectionPool), serverMonitor, serverListener, sdamProvider.get())
         serverMonitor.updateServerDescription(ServerDescription.builder()
                 .address(serverId.getAddress())
                 .ok(true)
@@ -294,7 +293,7 @@ class DefaultServerSpecification extends Specification {
         def clusterClock = new ClusterClock()
         clusterClock.advance(clusterClockClusterTime)
         def server = new DefaultServer(serverId, SINGLE, Mock(ConnectionPool), new TestConnectionFactory(), Mock(ServerMonitor),
-                Mock(SdamServerDescriptionManager), Mock(ServerListener), Mock(CommandListener), clusterClock, false)
+                Mock(SdamServerDescriptionManager), Mock(ServerListener), clusterClock, false)
         def testConnection = (TestConnection) server.getConnection()
         def sessionContext = new TestSessionContext(initialClusterTime)
         def response = BsonDocument.parse(
@@ -346,16 +345,16 @@ class DefaultServerSpecification extends Specification {
         def serverListener = Mock(ServerListener)
         defaultServer(connectionPool, serverMonitor, serverListener,
                 new DefaultSdamServerDescriptionManager(mockCluster(), serverId, serverListener, serverMonitor, connectionPool,
-                        ClusterConnectionMode.MULTIPLE),
-                Mock(CommandListener))
+                        ClusterConnectionMode.MULTIPLE)
+        )
     }
 
     private DefaultServer defaultServer(final ConnectionPool connectionPool, final ServerMonitor serverMonitor,
-                                        final ServerListener serverListener,
-                                        final SdamServerDescriptionManager sdam, final CommandListener commandListener) {
+            final ServerListener serverListener,
+            final SdamServerDescriptionManager sdam) {
         serverMonitor.start()
         new DefaultServer(serverId, SINGLE, connectionPool, new TestConnectionFactory(), serverMonitor,
-                sdam, serverListener, commandListener, new ClusterClock(), false)
+                sdam, serverListener, new ClusterClock(), false)
     }
 
     class TestCommandProtocol implements CommandProtocol<BsonDocument> {

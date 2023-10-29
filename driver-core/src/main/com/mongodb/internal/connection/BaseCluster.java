@@ -132,6 +132,7 @@ abstract class BaseCluster implements Cluster {
 
                 connect();
 
+                //noinspection ResultOfMethodCallIgnored
                 currentPhase.await(Math.min(maxWaitTimeNanos - (curTimeNanos - startTimeNanos), getMinWaitTimeNanos()), NANOSECONDS);
 
                 curTimeNanos = System.nanoTime();
@@ -465,6 +466,7 @@ abstract class BaseCluster implements Cluster {
                 }
 
                 try {
+                    //noinspection ResultOfMethodCallIgnored
                     currentPhase.await(waitTimeNanos, NANOSECONDS);
                 } catch (InterruptedException closed) {
                     // The cluster has been closed and the while loop will exit.

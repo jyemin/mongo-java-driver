@@ -23,6 +23,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteConcernResult;
 import com.mongodb.bulk.WriteConcernError;
 import com.mongodb.internal.connection.ProtocolHelper;
+import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -36,7 +37,7 @@ import static com.mongodb.internal.operation.CommandOperationHelper.addRetryable
  */
 public final class WriteConcernHelper {
 
-    public static void appendWriteConcernToCommand(final WriteConcern writeConcern, final BsonDocument commandDocument) {
+    public static void appendWriteConcernToCommand(@Nullable final WriteConcern writeConcern, final BsonDocument commandDocument) {
         if (writeConcern != null && !writeConcern.isServerDefault()) {
             commandDocument.put("writeConcern", writeConcern.asDocument());
         }

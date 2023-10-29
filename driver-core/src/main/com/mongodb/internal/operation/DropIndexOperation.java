@@ -28,6 +28,7 @@ import org.bson.BsonString;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
@@ -103,6 +104,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
             } catch (MongoCommandException e) {
                 rethrowIfNotNamespaceError(e);
             }
+            //noinspection DataFlowIssue
             return null;
         });
     }
@@ -114,7 +116,7 @@ public class DropIndexOperation implements AsyncWriteOperation<Void>, WriteOpera
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
             } else {
-                SingleResultCallback<Void> releasingCallback = releasingCallback(errHandlingCallback, connection);
+                SingleResultCallback<Void> releasingCallback = releasingCallback(errHandlingCallback, assertNotNull(connection));
                 executeCommandAsync(binding, namespace.getDatabaseName(), getCommand(),
                         connection, writeConcernErrorTransformerAsync(), (result, t1) -> {
                             if (t1 != null && !isNamespaceError(t1)) {

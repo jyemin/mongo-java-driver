@@ -29,7 +29,7 @@ public interface StreamFactoryFactory {
      *
      * @param socketSettings the socket settings
      * @param sslSettings the SSL settings
-     * @return a stream factory that will apply the given settins
+     * @return a stream factory that will apply the given settings
      */
     StreamFactory create(SocketSettings socketSettings, SslSettings sslSettings);
 }

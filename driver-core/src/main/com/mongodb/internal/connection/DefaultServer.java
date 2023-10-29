@@ -23,7 +23,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
-import com.mongodb.event.CommandListener;
 import com.mongodb.event.ServerClosedEvent;
 import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerOpeningEvent;
@@ -57,7 +56,6 @@ class DefaultServer implements ClusterableServer {
     private final ServerMonitor serverMonitor;
     private final SdamServerDescriptionManager sdam;
     private final ServerListener serverListener;
-    private final CommandListener commandListener;
     private final ClusterClock clusterClock;
     @Nullable
     private final AtomicInteger operationCount;
@@ -66,10 +64,9 @@ class DefaultServer implements ClusterableServer {
     DefaultServer(final ServerId serverId, final ClusterConnectionMode clusterConnectionMode, final ConnectionPool connectionPool,
             final ConnectionFactory connectionFactory, final ServerMonitor serverMonitor,
             final SdamServerDescriptionManager sdam, final ServerListener serverListener,
-            final CommandListener commandListener, final ClusterClock clusterClock, final boolean trackOperationCount) {
+            final ClusterClock clusterClock, final boolean trackOperationCount) {
         this.sdam = assertNotNull(sdam);
         this.serverListener = notNull("serverListener", serverListener);
-        this.commandListener = commandListener;
         this.clusterClock = notNull("clusterClock", clusterClock);
         notNull("serverAddress", serverId);
         this.clusterConnectionMode = notNull("clusterConnectionMode", clusterConnectionMode);

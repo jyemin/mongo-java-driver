@@ -25,8 +25,6 @@ import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.connection.ServerType;
-import com.mongodb.internal.diagnostics.logging.Logger;
-import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.event.ServerDescriptionChangedEvent;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,15 +38,12 @@ import static java.util.Collections.singletonList;
 
 /**
  * This class needs to be final because we are leaking a reference to "this" from the constructor
- *
- * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
-public final class SingleServerCluster extends BaseCluster {
-    private static final Logger LOGGER = Loggers.getLogger("cluster");
+final class SingleServerCluster extends BaseCluster {
 
     private final AtomicReference<ClusterableServer> server;
 
-    public SingleServerCluster(final ClusterId clusterId, final ClusterSettings settings, final ClusterableServerFactory serverFactory) {
+    SingleServerCluster(final ClusterId clusterId, final ClusterSettings settings, final ClusterableServerFactory serverFactory) {
         super(clusterId, settings, serverFactory);
         isTrue("one server in a direct cluster", settings.getHosts().size() == 1);
         isTrue("connection mode is single", settings.getMode() == ClusterConnectionMode.SINGLE);

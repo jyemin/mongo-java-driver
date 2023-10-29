@@ -774,7 +774,6 @@ final class Operations<TDocument> {
         BsonDocument definition = assertNotNull(toBsonDocument(model.getDefinition()));
         String indexName = model.getName();
 
-        SearchIndexRequest indexRequest = new SearchIndexRequest(definition, indexName);
-        return indexRequest;
+        return new SearchIndexRequest(definition, indexName);
     }
 }

@@ -445,7 +445,7 @@ public final class SocksSocket extends Socket {
           nor do we get input/output streams from the superclass. While it might seem reasonable to skip calling super.close() in this case,
           the Java SE Socket documentation doesn't definitively clarify this. Therefore, it's safer to always call super.close().
          */
-        try (Socket autoClosed = socket) {
+        try (Socket ignored = socket) {
             super.close();
         }
     }

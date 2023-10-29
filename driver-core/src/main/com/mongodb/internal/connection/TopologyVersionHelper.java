@@ -39,7 +39,7 @@ final class TopologyVersionHelper {
      *     <li>A candidate {@link ServerDescription} has information besides
      *     {@linkplain ServerDescription#getTopologyVersion() topology version}, and that information must be applied by the client even if
      *     the topology version has not changed.</li>
-     *     <li>The client may {@linkplain ConnectionPool#invalidate() pause} a {@link ConnectionPool}
+     *     <li>The client may {@linkplain ConnectionPool#invalidate(Throwable)}  pause} a {@link ConnectionPool}
      *     and then {@linkplain ConnectionPool#ready() mark it ready} based on receiving a new {@link ServerDescription}
      *     from a {@link ServerMonitor}, without the server for that pool changing its topology version.
      *     Consequently, a candidate {@link ServerDescription} cannot be rejected solely based on the fact that its

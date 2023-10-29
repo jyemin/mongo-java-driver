@@ -16,16 +16,13 @@
 
 package com.mongodb.internal.connection;
 
-import java.util.List;
-
-import static java.util.Arrays.asList;
-
 /**
  * A logical connection to a MongoDB server that supports clustering along with other servers.
+ *
+ * <p>This class is not part of the public API and may be removed or changed at any time</p>
+ *
  */
-interface ClusterableServer extends Server {
-
-    List<Integer> SHUTDOWN_CODES = asList(91, 11600);
+public interface ClusterableServer extends Server {
 
     /**
      * Reset server description to connecting state

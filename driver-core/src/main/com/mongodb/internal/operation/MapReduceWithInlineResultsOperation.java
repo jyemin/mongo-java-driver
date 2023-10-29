@@ -204,10 +204,6 @@ public class MapReduceWithInlineResultsOperation<T> implements AsyncReadOperatio
         return createExplainableOperation(explainVerbosity);
     }
 
-    public AsyncReadOperation<BsonDocument> asExplainableOperationAsync(final ExplainVerbosity explainVerbosity) {
-        return createExplainableOperation(explainVerbosity);
-    }
-
     private CommandReadOperation<BsonDocument> createExplainableOperation(final ExplainVerbosity explainVerbosity) {
         return new CommandReadOperation<>(namespace.getDatabaseName(),
                 asExplainCommand(getCommand(NoOpSessionContext.INSTANCE, MIN_WIRE_VERSION),

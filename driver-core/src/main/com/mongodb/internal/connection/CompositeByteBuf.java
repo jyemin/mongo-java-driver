@@ -330,14 +330,13 @@ class CompositeByteBuf implements ByteBuf {
 
     private static final class Component {
         private final ByteBuf buffer;
-        private final int length;
         private final int offset;
         private final int endOffset;
 
         Component(final ByteBuf buffer, final int offset) {
             this.buffer = buffer;
-            length = buffer.limit() - buffer.position();
             this.offset = offset;
+            int length = buffer.limit() - buffer.position();
             this.endOffset = offset + length;
         }
     }

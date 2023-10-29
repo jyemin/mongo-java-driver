@@ -49,12 +49,12 @@ public interface InternalConnection extends BufferProvider {
     ServerDescription getInitialServerDescription();
 
     /**
-     * Opens the connection so its ready for use
+     * Opens the connection so it's ready for use
      */
     void open();
 
     /**
-     * Opens the connection so its ready for use
+     * Opens the connection so it's ready for use
      *
      * @param callback the callback to be called once the connection has been opened
      */
@@ -133,7 +133,7 @@ public interface InternalConnection extends BufferProvider {
     void sendMessage(List<ByteBuf> byteBuffers, int lastRequestId);
 
     /**
-     * Receive a response to a sent message from the server.
+     * Receive a response to a message sent from the server.
      *
      * @param responseTo the request id that this message is a response to
      * @return the response
@@ -150,7 +150,7 @@ public interface InternalConnection extends BufferProvider {
     void sendMessageAsync(List<ByteBuf> byteBuffers, int lastRequestId, SingleResultCallback<Void> callback);
 
     /**
-     * Asynchronously receive a response to a sent message from the server.
+     * Asynchronously receive a response to a message sent from the server.
      *
      * @param responseTo the request id that this message is a response to
      * @param callback the callback to invoke on completion

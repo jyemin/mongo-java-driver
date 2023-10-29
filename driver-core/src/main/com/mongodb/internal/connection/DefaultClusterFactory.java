@@ -133,19 +133,19 @@ public final class DefaultClusterFactory {
     }
 
     private static ClusterListener getClusterListener(final ClusterSettings clusterSettings) {
-        return clusterSettings.getClusterListeners().size() == 0
+        return clusterSettings.getClusterListeners().isEmpty()
                 ? NO_OP_CLUSTER_LISTENER
                 : clusterListenerMulticaster(clusterSettings.getClusterListeners());
     }
 
     private static ServerListener getServerListener(final ServerSettings serverSettings) {
-        return serverSettings.getServerListeners().size() == 0
+        return serverSettings.getServerListeners().isEmpty()
                 ? NO_OP_SERVER_LISTENER
                 : serverListenerMulticaster(serverSettings.getServerListeners());
     }
 
     private static ServerMonitorListener getServerMonitorListener(final ServerSettings serverSettings) {
-        return serverSettings.getServerMonitorListeners().size() == 0
+        return serverSettings.getServerMonitorListeners().isEmpty()
                 ? NO_OP_SERVER_MONITOR_LISTENER
                 : serverMonitorListenerMulticaster(serverSettings.getServerMonitorListeners());
     }

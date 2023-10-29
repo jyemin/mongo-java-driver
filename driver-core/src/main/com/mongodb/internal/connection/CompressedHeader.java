@@ -82,13 +82,6 @@ class CompressedHeader {
         return compressorId;
     }
 
-    /**
-     * @return the size of the compressed message.
-     */
-    public int getCompressedSize() {
-        return messageHeader.getMessageLength() - COMPRESSED_HEADER_LENGTH - MESSAGE_HEADER_LENGTH;
-    }
-
     public MessageHeader getMessageHeader() {
         return messageHeader;
     }

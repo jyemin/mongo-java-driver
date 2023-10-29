@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommandAsync;
@@ -243,6 +244,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
                executeCommand(binding, databaseName, commandCreator.get(), connection,
                       writeConcernErrorTransformer())
             );
+            //noinspection DataFlowIssue
             return null;
         });
     }
@@ -254,7 +256,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
             } else {
-                SingleResultCallback<Void> releasingCallback = releasingCallback(errHandlingCallback, connection);
+                SingleResultCallback<Void> releasingCallback = releasingCallback(errHandlingCallback, assertNotNull(connection));
                 if (!checkEncryptedFieldsSupported(connection.getDescription(), releasingCallback)) {
                     return;
                 }

@@ -41,6 +41,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.List;
 import java.util.Map;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -110,7 +111,8 @@ class KeyManagementService implements Closeable {
         if (bytesNeeded > 0) {
             AsynchronousChannelStream asyncStream = (AsynchronousChannelStream) stream;
             ByteBuf buffer = asyncStream.getBuffer(bytesNeeded);
-            asyncStream.getChannel().read(buffer.asNIO(), asyncStream.getSettings().getReadTimeout(MILLISECONDS), MILLISECONDS, null,
+            assertNotNull(asyncStream.getChannel())
+                    .read(buffer.asNIO(), asyncStream.getSettings().getReadTimeout(MILLISECONDS), MILLISECONDS, null,
                                           new CompletionHandler<Integer, Void>() {
 
                                               @Override

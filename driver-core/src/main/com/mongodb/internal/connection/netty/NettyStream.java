@@ -165,7 +165,6 @@ final class NettyStream implements Stream {
         handler.get();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void openAsync(final AsyncCompletionHandler<Void> handler) {
         Queue<SocketAddress> socketAddressQueue;
@@ -289,7 +288,7 @@ final class NettyStream implements Stream {
      */
     private void readAsync(final int numBytes, final AsyncCompletionHandler<ByteBuf> handler, final long readTimeoutMillis) {
         ByteBuf buffer = null;
-        Throwable exceptionResult = null;
+        Throwable exceptionResult;
         lock.lock();
         try {
             exceptionResult = pendingException;

@@ -85,7 +85,7 @@ public final class ClusterDescriptionHelper {
      * Get a list of all the secondaries in this cluster that match a given TagSet
      *
      * @param tagSet a Set of replica set tags
-     * @return a List of ServerDescriptions of all the secondaries this cluster that match all of the given tags
+     * @return a List of ServerDescriptions of all the secondaries this cluster that match all the given tags
      */
     public static List<ServerDescription> getSecondaries(final ClusterDescription clusterDescription, final TagSet tagSet) {
         return getServersByPredicate(clusterDescription, serverDescription ->
@@ -115,7 +115,7 @@ public final class ClusterDescriptionHelper {
      * Gets a list of all the primaries and secondaries in this cluster that match the given replica set tags.
      *
      * @param tagSet a Set of replica set tags
-     * @return a list of ServerDescriptions for all primary and secondary servers that contain all of the given tags
+     * @return a list of ServerDescriptions for all primary and secondary servers that contain all the given tags
      */
     public static List<ServerDescription> getAnyPrimaryOrSecondary(final ClusterDescription clusterDescription, final TagSet tagSet) {
         return getServersByPredicate(clusterDescription, serverDescription ->

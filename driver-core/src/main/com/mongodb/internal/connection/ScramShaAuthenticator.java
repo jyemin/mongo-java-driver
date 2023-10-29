@@ -60,7 +60,7 @@ class ScramShaAuthenticator extends SaslAuthenticator {
     ScramShaAuthenticator(final MongoCredentialWithCache credential, final ClusterConnectionMode clusterConnectionMode,
             @Nullable final ServerApi serverApi) {
         this(credential, new DefaultRandomStringGenerator(),
-                getAuthenicationHashGenerator(assertNotNull(credential.getAuthenticationMechanism())),
+                getAuthenticationHashGenerator(assertNotNull(credential.getAuthenticationMechanism())),
                 clusterConnectionMode, serverApi);
     }
 
@@ -224,7 +224,7 @@ class ScramShaAuthenticator extends SaslAuthenticator {
             String clientFinalMessageWithoutProof = "c=" + Base64.getEncoder().encodeToString(GS2_HEADER.getBytes(StandardCharsets.UTF_8)) + ",r=" + serverNonce;
             String authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
             String clientFinalMessage = clientFinalMessageWithoutProof + ",p="
-                    + getClientProof(getAuthenicationHash(), salt, iterationCount, authMessage);
+                    + getClientProof(getAuthenticationHash(), salt, iterationCount, authMessage);
             return clientFinalMessage.getBytes(StandardCharsets.UTF_8);
         }
 
@@ -327,7 +327,7 @@ class ScramShaAuthenticator extends SaslAuthenticator {
             return userName.replace("=", "=3D").replace(",", "=2C");
         }
 
-        private String getAuthenicationHash() {
+        private String getAuthenticationHash() {
             String password = authenticationHashGenerator.generate(credential.getCredential());
             if (credential.getAuthenticationMechanism() == SCRAM_SHA_256) {
                 password = SaslPrep.saslPrepStored(password);
@@ -396,7 +396,7 @@ class ScramShaAuthenticator extends SaslAuthenticator {
         return createAuthenticationHash(username, password);
     };
 
-    private static AuthenticationHashGenerator getAuthenicationHashGenerator(final AuthenticationMechanism authenticationMechanism) {
+    private static AuthenticationHashGenerator getAuthenticationHashGenerator(final AuthenticationMechanism authenticationMechanism) {
         return authenticationMechanism == SCRAM_SHA_1 ? LEGACY_AUTHENTICATION_HASH_GENERATOR : DEFAULT_AUTHENTICATION_HASH_GENERATOR;
     }
 
