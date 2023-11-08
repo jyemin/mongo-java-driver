@@ -16,6 +16,8 @@
 
 package com.mongodb.client.model;
 
+import com.mongodb.MongoNamespace;
+
 import static com.mongodb.assertions.Assertions.notNull;
 
 /**
@@ -35,6 +37,10 @@ public final class InsertOneModel<T> extends WriteModel<T> {
      */
     public InsertOneModel(final T document) {
         this.document = notNull("document", document);
+    }
+
+    public InsertOneModel(MongoNamespace namespace, T document) {
+       this(document);
     }
 
     /**

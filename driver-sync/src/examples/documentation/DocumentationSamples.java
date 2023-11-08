@@ -16,16 +16,21 @@
 
 package documentation;
 
+import com.mongodb.MongoNamespace;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.DatabaseTestCase;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.ClientWriteModelList;
+import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Field;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.Variable;
+import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import org.bson.BsonDocument;
@@ -93,6 +98,56 @@ public final class DocumentationSamples extends DatabaseTestCase {
 
     private final MongoDatabase database = getMongoClient().getDatabase(getDefaultDatabaseName());
     private final MongoCollection<Document> collection = database.getCollection("inventory");
+
+    public static class Profile {
+        private final String name;
+
+        public Profile(final String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+    public static class Purchase {
+        private final String name;
+
+        public Purchase(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    @Test
+    public void testClientBulkWrite1() {
+        Profile profile = new Profile("John Doe");
+        List<Purchase> purchases = asList(new Purchase("plant"), new Purchase("lamp"));
+
+        ClientWriteModelList clientWriteModelList = ClientWriteModelList.builder()
+                .add(new MongoNamespace("test.profiles"), new InsertOneModel<>(profile))
+                .add(new MongoNamespace("test.purchases"), purchases.stream().map(InsertOneModel::new).toList())
+                .add(new MongoNamespace("test.temp"), new DeleteOneModel<>(eq("name", profile.getName())))
+                .build();
+        getMongoClient().bulkWrite(clientWriteModelList);
+    }
+
+    @Test
+    public void testClientBulkWrite2() {
+        Profile profile = new Profile("John Doe");
+        List<Purchase> purchases = asList(new Purchase("plant"), new Purchase("lamp"));
+
+        List<WriteModel<?>> writeModels = new ArrayList<>();
+        writeModels.add(new InsertOneModel<>(new MongoNamespace("test.profiles"), profile));
+        purchases.stream().map(document -> new InsertOneModel<>(new MongoNamespace("test.purchases"), document))
+                .forEach(writeModels::add);
+        writeModels.add(new DeleteOneModel<>(new MongoNamespace("test.temp"), eq("name", profile.getName())));
+        
+        getMongoClient().bulkWrite(writeModels);
+    }
 
     @Test
     public void testInsert() {

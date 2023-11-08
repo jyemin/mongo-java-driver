@@ -16,6 +16,7 @@
 
 package com.mongodb.client.model;
 
+import com.mongodb.MongoNamespace;
 import org.bson.conversions.Bson;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -52,6 +53,10 @@ public class DeleteOneModel<T> extends WriteModel<T> {
     public DeleteOneModel(final Bson filter, final DeleteOptions options) {
         this.filter = notNull("filter", filter);
         this.options = notNull("options", options);
+    }
+
+    public DeleteOneModel(MongoNamespace namespace, Bson filter) {
+        this(filter, new DeleteOptions());
     }
 
     /**
