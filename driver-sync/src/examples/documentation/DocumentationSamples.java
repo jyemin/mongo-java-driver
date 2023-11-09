@@ -29,6 +29,7 @@ import com.mongodb.client.model.Field;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.NamespaceWriteModelsPair;
 import com.mongodb.client.model.Variable;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -110,6 +111,7 @@ public final class DocumentationSamples extends DatabaseTestCase {
             return name;
         }
     }
+
     public static class Purchase {
         private final String name;
 
@@ -120,6 +122,19 @@ public final class DocumentationSamples extends DatabaseTestCase {
         public String getName() {
             return name;
         }
+    }
+
+    @Test
+    public void testClientBulkWrite() {
+        Profile profile = new Profile("John Doe");
+        List<Purchase> purchases = asList(new Purchase("plant"), new Purchase("lamp"));
+
+        List<NamespaceWriteModelsPair> clientWriteModelList = List.of(
+                new NamespaceWriteModelsPair(new MongoNamespace("test.profiles"), new InsertOneModel<>(profile)),
+                new NamespaceWriteModelsPair(new MongoNamespace("test.purchases"), purchases.stream().map(InsertOneModel::new).toList()),
+                new NamespaceWriteModelsPair(new MongoNamespace("test.temp"), new DeleteOneModel<>(eq("name", profile.getName())))
+        );
+        getMongoClient().bulkWrite(clientWriteModelList);
     }
 
     @Test
@@ -145,8 +160,8 @@ public final class DocumentationSamples extends DatabaseTestCase {
         purchases.stream().map(document -> new InsertOneModel<>(new MongoNamespace("test.purchases"), document))
                 .forEach(writeModels::add);
         writeModels.add(new DeleteOneModel<>(new MongoNamespace("test.temp"), eq("name", profile.getName())));
-        
-        getMongoClient().bulkWrite(writeModels);
+
+        getMongoClient().bulkWrite2(writeModels);
     }
 
     @Test
@@ -479,12 +494,12 @@ public final class DocumentationSamples extends DatabaseTestCase {
 
         //Start Example 42
         collection.insertMany(asList(
-            Document.parse("{ item: 'journal', status: 'A', size: { h: 14, w: 21, uom: 'cm' }, instock: [ { warehouse: 'A', qty: 5 }]}"),
-            Document.parse("{ item: 'notebook', status: 'A',  size: { h: 8.5, w: 11, uom: 'in' }, instock: [ { warehouse: 'C', qty: 5}]}"),
-            Document.parse("{ item: 'paper', status: 'D', size: { h: 8.5, w: 11, uom: 'in' }, instock: [ { warehouse: 'A', qty: 60 }]}"),
-            Document.parse("{ item: 'planner', status: 'D', size: { h: 22.85, w: 30, uom: 'cm' }, instock: [ { warehouse: 'A', qty: 40}]}"),
-            Document.parse("{ item: 'postcard', status: 'A', size: { h: 10, w: 15.25, uom: 'cm' }, "
-                    + "instock: [ { warehouse: 'B', qty: 15 }, { warehouse: 'C', qty: 35 } ] }")
+                Document.parse("{ item: 'journal', status: 'A', size: { h: 14, w: 21, uom: 'cm' }, instock: [ { warehouse: 'A', qty: 5 }]}"),
+                Document.parse("{ item: 'notebook', status: 'A',  size: { h: 8.5, w: 11, uom: 'in' }, instock: [ { warehouse: 'C', qty: 5}]}"),
+                Document.parse("{ item: 'paper', status: 'D', size: { h: 8.5, w: 11, uom: 'in' }, instock: [ { warehouse: 'A', qty: 60 }]}"),
+                Document.parse("{ item: 'planner', status: 'D', size: { h: 22.85, w: 30, uom: 'cm' }, instock: [ { warehouse: 'A', qty: 40}]}"),
+                Document.parse("{ item: 'postcard', status: 'A', size: { h: 10, w: 15.25, uom: 'cm' }, "
+                        + "instock: [ { warehouse: 'B', qty: 15 }, { warehouse: 'C', qty: 35 } ] }")
         ));
         //End Example 42
 

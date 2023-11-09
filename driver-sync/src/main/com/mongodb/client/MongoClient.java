@@ -21,6 +21,7 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.annotations.Immutable;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.ClientWriteModelList;
+import com.mongodb.client.model.NamespaceWriteModelsPair;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.connection.ClusterDescription;
 import com.mongodb.connection.ClusterSettings;
@@ -236,9 +237,11 @@ public interface MongoClient extends Closeable {
      */
     <TResult> ChangeStreamIterable<TResult> watch(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass);
 
+    BulkWriteResult bulkWrite(List<NamespaceWriteModelsPair> writeModels);
+
     BulkWriteResult bulkWrite(ClientWriteModelList writeModelList);
 
-    BulkWriteResult bulkWrite(List<? extends WriteModel<?>> writeModelList);
+    BulkWriteResult bulkWrite2(List<? extends WriteModel<?>> writeModelList);
 
     /**
      * Gets the current cluster description.
