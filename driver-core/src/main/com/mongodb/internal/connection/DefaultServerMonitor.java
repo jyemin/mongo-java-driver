@@ -59,6 +59,7 @@ import static com.mongodb.internal.connection.CommandHelper.LEGACY_HELLO;
 import static com.mongodb.internal.connection.CommandHelper.executeCommand;
 import static com.mongodb.internal.connection.DescriptionHelper.createServerDescription;
 import static com.mongodb.internal.connection.ServerDescriptionHelper.unknownConnectingServerDescription;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static com.mongodb.internal.event.EventListenerHelper.singleServerMonitorListener;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -102,11 +103,11 @@ class DefaultServerMonitor implements ServerMonitor {
         this.serverApi = serverApi;
         this.sdamProvider = sdamProvider;
         monitor = new ServerMonitorRunnable();
-        monitorThread = new Thread(monitor, "cluster-" + this.serverId.getClusterId() + "-" + this.serverId.getAddress());
+        monitorThread = createThreadFactory("Server Monitor for " + serverId).newThread(monitor);
         monitorThread.setDaemon(true);
         roundTripTimeMonitor = new RoundTripTimeRunnable();
-        roundTripTimeMonitorThread = new Thread(roundTripTimeMonitor,
-                "cluster-rtt-" + this.serverId.getClusterId() + "-" + this.serverId.getAddress());
+        roundTripTimeMonitorThread =
+                createThreadFactory("RTT Monitor for " + serverId).newThread(roundTripTimeMonitor);
         roundTripTimeMonitorThread.setDaemon(true);
         isClosed = false;
     }

@@ -63,6 +63,7 @@ import static com.mongodb.connection.ServerDescription.MIN_DRIVER_WIRE_VERSION;
 import static com.mongodb.internal.Locks.withInterruptibleLock;
 import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static com.mongodb.internal.connection.EventHelper.wouldDescriptionsGenerateEquivalentEvents;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static com.mongodb.internal.event.EventListenerHelper.singleClusterListener;
 import static com.mongodb.internal.logging.LogMessage.Component.SERVER_SELECTION;
 import static com.mongodb.internal.logging.LogMessage.Entry.Name.FAILURE;
@@ -446,8 +447,7 @@ abstract class BaseCluster implements Cluster {
             waitQueue.add(request);
 
             if (waitQueueHandler == null) {
-                waitQueueHandler = new Thread(new WaitQueueHandler(), "cluster-" + clusterId.getValue());
-                waitQueueHandler.setDaemon(true);
+                waitQueueHandler = createThreadFactory("cluster-" + clusterId.getValue()).newThread((new WaitQueueHandler()));
                 waitQueueHandler.start();
             } else {
                 updatePhase();

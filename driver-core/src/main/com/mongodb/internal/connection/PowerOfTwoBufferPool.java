@@ -17,7 +17,6 @@
 package com.mongodb.internal.connection;
 
 import com.mongodb.connection.BufferProvider;
-import com.mongodb.internal.thread.DaemonThreadFactory;
 import org.bson.ByteBuf;
 import org.bson.ByteBufNIO;
 
@@ -30,6 +29,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 
 /**
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
@@ -95,7 +96,7 @@ public class PowerOfTwoBufferPool implements BufferProvider {
             powerOfTwo = powerOfTwo << 1;
         }
         maxIdleTimeNanos = timeUnit.toNanos(maxIdleTime);
-        pruner = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("BufferPoolPruner"));
+        pruner = Executors.newSingleThreadScheduledExecutor(createThreadFactory("Buffer Pool Pruner"));
     }
 
     /**

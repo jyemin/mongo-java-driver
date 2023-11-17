@@ -36,7 +36,6 @@ import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.internal.session.ServerSessionPool;
-import com.mongodb.internal.thread.DaemonThreadFactory;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
@@ -61,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.internal.connection.ClientMetadataHelper.createClientMetadataDocument;
 import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -825,7 +825,7 @@ public class MongoClient implements Closeable {
     }
 
     private ExecutorService createCursorCleaningService() {
-        ScheduledExecutorService newTimer = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CleanCursors"));
+        ScheduledExecutorService newTimer = Executors.newSingleThreadScheduledExecutor(createThreadFactory("CleanCursors"));
         newTimer.scheduleAtFixedRate(this::cleanCursors, 1, 1, SECONDS);
         return newTimer;
     }

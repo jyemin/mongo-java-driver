@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 
 /**
  * An implementation of a listener for all cluster-related events.  Its purpose is the following:
@@ -78,8 +79,7 @@ final class AsynchronousClusterEventListener implements ClusterListener, ServerL
         this.clusterListener = notNull("clusterListener", clusterListener);
         this.serverListener = notNull("serverListener", serverListener);
         this.serverMonitorListener = notNull("serverMonitorListener", serverMonitorListener);
-        publishingThread = new Thread(this::publishEvents, "cluster-event-publisher-" + clusterId.getValue());
-        publishingThread.setDaemon(true);
+        publishingThread = createThreadFactory("cluster-event-publisher-" + clusterId.getValue()).newThread(this::publishEvents);
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

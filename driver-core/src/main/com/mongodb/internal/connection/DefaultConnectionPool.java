@@ -55,7 +55,6 @@ import com.mongodb.internal.inject.OptionalProvider;
 import com.mongodb.internal.logging.LogMessage;
 import com.mongodb.internal.logging.StructuredLogger;
 import com.mongodb.internal.session.SessionContext;
-import com.mongodb.internal.thread.DaemonThreadFactory;
 import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
 import org.bson.ByteBuf;
@@ -105,6 +104,7 @@ import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.connection.ConcurrentPool.INFINITE_SIZE;
 import static com.mongodb.internal.connection.ConcurrentPool.sizeToString;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static com.mongodb.internal.event.EventListenerHelper.getConnectionPoolListener;
 import static com.mongodb.internal.logging.LogMessage.Component.CONNECTION;
 import static com.mongodb.internal.logging.LogMessage.Entry.Name.DRIVER_CONNECTION_ID;
@@ -172,7 +172,7 @@ final class DefaultConnectionPool implements ConnectionPool {
         backgroundMaintenance = new BackgroundMaintenanceManager();
         connectionPoolCreated(connectionPoolListener, serverId, settings);
         openConcurrencyLimiter = new OpenConcurrencyLimiter(settings.getMaxConnecting());
-        asyncWorkManager = new AsyncWorkManager(internalSettings.isPrestartAsyncWorkManager());
+        asyncWorkManager = new AsyncWorkManager(internalSettings.isPrestartAsyncWorkManager(), serverId);
         stateAndGeneration = new StateAndGeneration();
         connectionGenerationSupplier = new ConnectionGenerationSupplier() {
             @Override
@@ -1303,13 +1303,15 @@ final class DefaultConnectionPool implements ConnectionPool {
      */
     @ThreadSafe
     private static class AsyncWorkManager implements AutoCloseable {
+        private final ServerId serverId;
         private volatile State state;
         private volatile BlockingQueue<Task> tasks;
         private final Lock lock;
         @Nullable
         private ExecutorService worker;
 
-        AsyncWorkManager(final boolean prestart) {
+        AsyncWorkManager(final boolean prestart, final ServerId serverId) {
+            this.serverId = serverId;
             state = State.NEW;
             tasks = new LinkedBlockingQueue<>();
             lock = new StampedLock().asWriteLock();
@@ -1339,7 +1341,7 @@ final class DefaultConnectionPool implements ConnectionPool {
         private boolean initUnlessClosed() {
             boolean result = true;
             if (state == State.NEW) {
-                worker = Executors.newSingleThreadExecutor(new DaemonThreadFactory("AsyncGetter"));
+                worker = Executors.newSingleThreadExecutor(createThreadFactory("Connection Pool Worker for " + serverId));
                 worker.submit(() -> runAndLogUncaught(this::workerRun));
                 state = State.INITIALIZED;
             } else if (state == State.CLOSED) {
@@ -1468,7 +1470,7 @@ final class DefaultConnectionPool implements ConnectionPool {
 
         private BackgroundMaintenanceManager() {
             maintainer = settings.getMaintenanceInitialDelay(NANOSECONDS) < Long.MAX_VALUE
-                    ? Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("MaintenanceTimer"))
+                    ? Executors.newSingleThreadScheduledExecutor(createThreadFactory("Connection Pool Maintainer for " + serverId))
                     : null;
             cancellationHandle = null;
             initialStart = true;

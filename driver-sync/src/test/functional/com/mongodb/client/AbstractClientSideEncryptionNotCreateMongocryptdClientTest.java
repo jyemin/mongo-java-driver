@@ -20,7 +20,6 @@ import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
 import com.mongodb.internal.capi.MongoCryptHelper;
-import com.mongodb.internal.thread.DaemonThreadFactory;
 import com.mongodb.lang.Nullable;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +47,7 @@ import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.client.AbstractClientSideEncryptionTest.cryptSharedLibPathSysPropValue;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static com.mongodb.client.unified.UnifiedClientEncryptionHelper.localKmsProviderKey;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static java.lang.Math.toIntExact;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
@@ -156,7 +156,7 @@ public abstract class AbstractClientSideEncryptionNotCreateMongocryptdClientTest
             ServerSocket serverSocket = new ServerSocket();
             try {
                 serverSocket.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), findAvailableMongocryptdLoopbackPort()));
-                ExecutorService executor = Executors.newSingleThreadExecutor(new DaemonThreadFactory("NotConnectNotSpawnMongocryptd"));
+                ExecutorService executor = Executors.newSingleThreadExecutor(createThreadFactory("NotConnectNotSpawnMongocryptd"));
                 try {
                     return start(serverSocket, executor);
                 } catch (Exception e) {

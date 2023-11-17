@@ -59,6 +59,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.connection.ServerConnectionState.CONNECTING;
 import static com.mongodb.internal.connection.BaseCluster.logServerSelectionStarted;
 import static com.mongodb.internal.connection.BaseCluster.logServerSelectionSucceeded;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static com.mongodb.internal.event.EventListenerHelper.singleClusterListener;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static java.lang.String.format;
@@ -343,8 +344,7 @@ final class LoadBalancedCluster implements Cluster {
             waitQueue.add(request);
 
             if (waitQueueHandler == null) {
-                waitQueueHandler = new Thread(new WaitQueueHandler(), "cluster-" + clusterId.getValue());
-                waitQueueHandler.setDaemon(true);
+                waitQueueHandler = createThreadFactory("cluster-" + clusterId.getValue()).newThread(new WaitQueueHandler());
                 waitQueueHandler.start();
             } else {
                 condition.signalAll();

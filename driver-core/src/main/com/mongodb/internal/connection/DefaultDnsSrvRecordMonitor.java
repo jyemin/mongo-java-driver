@@ -21,6 +21,7 @@ import com.mongodb.MongoInternalException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ClusterType;
+import com.mongodb.connection.ServerId;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.internal.dns.DnsResolver;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.mongodb.internal.connection.ServerAddressHelper.createServerAddress;
+import static com.mongodb.internal.connection.ThreadUtil.createThreadFactory;
 import static java.util.Collections.unmodifiableSet;
 
 class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
@@ -54,8 +56,8 @@ class DefaultDnsSrvRecordMonitor implements DnsSrvRecordMonitor {
         this.noRecordsRescanFrequencyMillis = noRecordsRescanFrequencyMillis;
         this.dnsSrvRecordInitializer = dnsSrvRecordInitializer;
         this.dnsResolver = dnsResolver;
-        monitorThread = new Thread(new DnsSrvRecordMonitorRunnable(), "cluster-" + clusterId + "-srv-" + hostName);
-        monitorThread.setDaemon(true);
+        monitorThread = createThreadFactory("DNS SRV Record Monitor for " + new ServerId(clusterId, new ServerAddress(hostName)))
+                .newThread(new DnsSrvRecordMonitorRunnable());
     }
 
     @Override
