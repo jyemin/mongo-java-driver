@@ -251,7 +251,7 @@ class DefaultServerMonitor implements ServerMonitor {
         }
 
         private boolean shouldStreamResponses(final ServerDescription currentServerDescription) {
-            return currentServerDescription.getTopologyVersion() != null;
+            return false;
         }
 
         private CommandMessage createCommandMessage(final BsonDocument command, final InternalConnection connection,
