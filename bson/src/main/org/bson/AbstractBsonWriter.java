@@ -20,7 +20,9 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 
 import java.io.Closeable;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -35,7 +37,7 @@ import static org.bson.assertions.Assertions.notNull;
  */
 public abstract class AbstractBsonWriter implements BsonWriter, Closeable {
     private final BsonWriterSettings settings;
-    private final Stack<FieldNameValidator> fieldNameValidatorStack = new Stack<>();
+    private final Deque<FieldNameValidator> fieldNameValidatorStack = new ArrayDeque<>();
     private State state;
     private Context context;
     private int serializationDepth;

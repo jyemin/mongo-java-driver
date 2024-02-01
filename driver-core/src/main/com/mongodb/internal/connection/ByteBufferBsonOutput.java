@@ -22,26 +22,18 @@ import org.bson.io.OutputBuffer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
-import static com.mongodb.assertions.Assertions.notNull;
 
 /**
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 public class ByteBufferBsonOutput extends OutputBuffer {
 
-    private static final int MAX_SHIFT = 31;
     private static final int INITIAL_SHIFT = 10;
     public static final int INITIAL_BUFFER_SIZE = 1 << INITIAL_SHIFT;
-    public static final int MAX_BUFFER_SIZE = 1 << 24;
 
-    private final BufferProvider bufferProvider;
-    private final List<ByteBuf> bufferList = new ArrayList<>();
-    private int curBufferIndex = 0;
-    private int position = 0;
-    private boolean closed;
+    private ByteBuf buffer;
 
     /**
      * Construct an instance that uses the given buffer provider to allocate byte buffers as needs as it grows.
@@ -49,96 +41,49 @@ public class ByteBufferBsonOutput extends OutputBuffer {
      * @param bufferProvider the non-null buffer provider
      */
     public ByteBufferBsonOutput(final BufferProvider bufferProvider) {
-        this.bufferProvider = notNull("bufferProvider", bufferProvider);
+        // TODO: could lower this based on some other knowledge, like whether there is a payload.  For commands with no payload, the max
+        //  size is more like 16M + 16K
+        // TODO: though there are no failing tests, it seems like this hard limit would cause problem with
+        //  BsonWriterHelper.writeDocument, which expects that you can write beyond the max message size and then truncate to
+        //  the positionn of the previous document.  We could deal with that by some trickery, by sending any bytes past the buffer limit
+        //  to /dev/null, since ultimately they will be truncated anyway.  But would have to be careful.
+        buffer = bufferProvider.getBuffer(48_000_000);
     }
 
     @Override
     public void writeBytes(final byte[] bytes, final int offset, final int length) {
-        ensureOpen();
-
-        int currentOffset = offset;
-        int remainingLen = length;
-        while (remainingLen > 0) {
-            ByteBuf buf = getCurrentByteBuffer();
-            int bytesToPutInCurrentBuffer = Math.min(buf.remaining(), remainingLen);
-            buf.put(bytes, currentOffset, bytesToPutInCurrentBuffer);
-            remainingLen -= bytesToPutInCurrentBuffer;
-            currentOffset += bytesToPutInCurrentBuffer;
-        }
-        position += length;
+        buffer.put(bytes, 0, length);
     }
 
     @Override
     public void writeByte(final int value) {
-        ensureOpen();
-
-        getCurrentByteBuffer().put((byte) value);
-        position++;
-    }
-
-    private ByteBuf getCurrentByteBuffer() {
-        ByteBuf curByteBuffer = getByteBufferAtIndex(curBufferIndex);
-        if (curByteBuffer.hasRemaining()) {
-            return curByteBuffer;
-        }
-
-        curBufferIndex++;
-        return getByteBufferAtIndex(curBufferIndex);
-    }
-
-    private ByteBuf getByteBufferAtIndex(final int index) {
-        if (bufferList.size() < index + 1) {
-            bufferList.add(bufferProvider.getBuffer(index >= (MAX_SHIFT - INITIAL_SHIFT)
-                                                            ? MAX_BUFFER_SIZE
-                                                            : Math.min(INITIAL_BUFFER_SIZE << index, MAX_BUFFER_SIZE)));
-        }
-        return bufferList.get(index);
+        buffer.put((byte) value);
     }
 
     @Override
     public int getPosition() {
-        ensureOpen();
-        return position;
+        return buffer.position();
     }
 
     @Override
     public int getSize() {
-        ensureOpen();
-        return position;
+        return buffer.position();
     }
 
     protected void write(final int absolutePosition, final int value) {
-        ensureOpen();
-
-        if (absolutePosition < 0) {
-            throw new IllegalArgumentException(String.format("position must be >= 0 but was %d", absolutePosition));
-        }
-        if (absolutePosition > position - 1) {
-            throw new IllegalArgumentException(String.format("position must be <= %d but was %d", position - 1, absolutePosition));
-        }
-
-        BufferPositionPair bufferPositionPair = getBufferPositionPair(absolutePosition);
-        ByteBuf byteBuffer = getByteBufferAtIndex(bufferPositionPair.bufferIndex);
-        byteBuffer.put(bufferPositionPair.position++, (byte) value);
+        buffer.put(absolutePosition, (byte) value);
     }
 
     @Override
     public List<ByteBuf> getByteBuffers() {
-        ensureOpen();
-
-        List<ByteBuf> buffers = new ArrayList<>(bufferList.size());
-        for (final ByteBuf cur : bufferList) {
-            buffers.add(cur.duplicate().order(ByteOrder.LITTLE_ENDIAN).flip());
-        }
-        return buffers;
+        return Collections.singletonList(buffer.duplicate().order(ByteOrder.LITTLE_ENDIAN).flip());
     }
 
 
     @Override
     public int pipe(final OutputStream out) throws IOException {
-        ensureOpen();
-
-        byte[] tmp = new byte[INITIAL_BUFFER_SIZE];
+        // TODO: remove loop
+        byte[] tmp = new byte[buffer.position()];
 
         int total = 0;
         for (final ByteBuf cur : getByteBuffers()) {
@@ -155,62 +100,14 @@ public class ByteBufferBsonOutput extends OutputBuffer {
 
     @Override
     public void truncateToPosition(final int newPosition) {
-        ensureOpen();
-
-        if (newPosition > position || newPosition < 0) {
-            throw new IllegalArgumentException();
-        }
-
-        BufferPositionPair bufferPositionPair = getBufferPositionPair(newPosition);
-
-        bufferList.get(bufferPositionPair.bufferIndex).position(bufferPositionPair.position);
-
-        while (bufferList.size() > bufferPositionPair.bufferIndex + 1) {
-            ByteBuf buffer = bufferList.remove(bufferList.size() - 1);
-            buffer.release();
-        }
-
-        curBufferIndex = bufferPositionPair.bufferIndex;
-        position = newPosition;
+        buffer.position(newPosition);
     }
 
     @Override
     public void close() {
-        for (final ByteBuf cur : bufferList) {
-            cur.release();
-        }
-        bufferList.clear();
-        closed = true;
-    }
-
-    private BufferPositionPair getBufferPositionPair(final int absolutePosition) {
-        int positionInBuffer = absolutePosition;
-        int bufferIndex = 0;
-        int bufferSize = INITIAL_BUFFER_SIZE;
-        int startPositionOfBuffer = 0;
-        while (startPositionOfBuffer + bufferSize <= absolutePosition) {
-            bufferIndex++;
-            startPositionOfBuffer += bufferSize;
-            positionInBuffer -= bufferSize;
-            bufferSize = bufferList.get(bufferIndex).limit();
-        }
-
-        return new BufferPositionPair(bufferIndex, positionInBuffer);
-    }
-
-    private void ensureOpen() {
-        if (closed) {
-            throw new IllegalStateException("The output is closed");
-        }
-    }
-
-    private static final class BufferPositionPair {
-        private final int bufferIndex;
-        private int position;
-
-        BufferPositionPair(final int bufferIndex, final int position) {
-            this.bufferIndex = bufferIndex;
-            this.position = position;
+        if (buffer != null) {
+            buffer.release();
+            buffer = null;
         }
     }
 }

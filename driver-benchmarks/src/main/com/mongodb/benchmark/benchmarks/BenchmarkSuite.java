@@ -22,6 +22,7 @@ import com.mongodb.benchmark.framework.BenchmarkResult;
 import com.mongodb.benchmark.framework.BenchmarkResultWriter;
 import com.mongodb.benchmark.framework.BenchmarkRunner;
 import com.mongodb.benchmark.framework.EvergreenBenchmarkResultWriter;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 
@@ -73,10 +74,13 @@ public class BenchmarkSuite {
                 DOCUMENT_CLASS, ID_REMOVER));
 
         runBenchmark(new FindManyBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
-        runBenchmark(new InsertManyBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10000,
-                DOCUMENT_CLASS));
-        runBenchmark(new InsertManyBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
+
+        // TODO: Note that this changes the document class to one that is less widely used.  Probably don't want to keep this, but it was
+        //  done to test a perf win that is simpler to do in BsonDocumentCodec than DocumentCodec
+        runBenchmark(new InsertManyBenchmark<BsonDocument>("Small", "./single_and_multi_document/small_doc.json", 10000,
+                BsonDocument.class));
+        runBenchmark(new InsertManyBenchmark<BsonDocument>("Large", "./single_and_multi_document/large_doc.json", 10,
+                BsonDocument.class));
 
         runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
         runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
@@ -89,7 +93,7 @@ public class BenchmarkSuite {
 
     private static void runBenchmark(final Benchmark benchmark) throws Exception {
         long startTime = System.currentTimeMillis();
-        BenchmarkResult benchmarkResult = new BenchmarkRunner(benchmark, NUM_WARMUP_ITERATIONS, NUM_ITERATIONS, MIN_TIME_SECONDS,
+        BenchmarkResult benchmarkResult = new BenchmarkRunner(benchmark, 0, NUM_ITERATIONS, MIN_TIME_SECONDS,
                 MAX_TIME_SECONDS).run();
         long endTime = System.currentTimeMillis();
         System.out.println(benchmarkResult.getName() + ": " + (endTime - startTime) / 1000.0);
