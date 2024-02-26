@@ -17,7 +17,6 @@
 package org.bson.codecs;
 
 import org.bson.BsonDocument;
-import org.bson.BsonElement;
 import org.bson.BsonObjectId;
 import org.bson.BsonReader;
 import org.bson.BsonType;
@@ -26,8 +25,6 @@ import org.bson.BsonWriter;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import static org.bson.assertions.Assertions.notNull;
@@ -79,17 +76,17 @@ public class BsonDocumentCodec implements CollectibleCodec<BsonDocument> {
 
     @Override
     public BsonDocument decode(final BsonReader reader, final DecoderContext decoderContext) {
-        List<BsonElement> keyValuePairs = new ArrayList<>();
+        BsonDocument document = new BsonDocument();
 
         reader.readStartDocument();
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
-            keyValuePairs.add(new BsonElement(fieldName, readValue(reader, decoderContext)));
+            document.append(fieldName, readValue(reader, decoderContext));
         }
 
         reader.readEndDocument();
 
-        return new BsonDocument(keyValuePairs);
+        return document;
     }
 
     /**
@@ -109,8 +106,10 @@ public class BsonDocumentCodec implements CollectibleCodec<BsonDocument> {
         writer.writeStartDocument();
 
         beforeFields(writer, encoderContext, value);
+        boolean fieldSkipped = false;
         for (Map.Entry<String, BsonValue> entry : value.entrySet()) {
-            if (skipField(encoderContext, entry.getKey())) {
+            if (!fieldSkipped && skipField(encoderContext, entry.getKey())) {
+                fieldSkipped = true;
                 continue;
             }
 
@@ -122,9 +121,12 @@ public class BsonDocumentCodec implements CollectibleCodec<BsonDocument> {
     }
 
     private void beforeFields(final BsonWriter bsonWriter, final EncoderContext encoderContext, final BsonDocument value) {
-        if (encoderContext.isEncodingCollectibleDocument() && value.containsKey(ID_FIELD_NAME)) {
-            bsonWriter.writeName(ID_FIELD_NAME);
-            writeValue(bsonWriter, encoderContext, value.get(ID_FIELD_NAME));
+        if (encoderContext.isEncodingCollectibleDocument()) {
+            BsonValue idValue = value.get(ID_FIELD_NAME);
+            if (idValue != null) {
+                bsonWriter.writeName(ID_FIELD_NAME);
+                writeValue(bsonWriter, encoderContext, idValue);
+            }
         }
     }
 
