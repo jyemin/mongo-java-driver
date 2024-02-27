@@ -23,9 +23,6 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.bson.assertions.Assertions.notNull;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
@@ -62,14 +59,14 @@ public class BsonArrayCodec implements Codec<BsonArray> {
     public BsonArray decode(final BsonReader reader, final DecoderContext decoderContext) {
         reader.readStartArray();
 
-        List<BsonValue> list = new ArrayList<>();
+        BsonArray array = new BsonArray();
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-            list.add(readValue(reader, decoderContext));
+            array.add(readValue(reader, decoderContext));
         }
 
         reader.readEndArray();
 
-        return new BsonArray(list);
+        return array;
     }
 
     @Override
