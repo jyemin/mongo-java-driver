@@ -106,8 +106,10 @@ public class BsonDocumentCodec implements CollectibleCodec<BsonDocument> {
         writer.writeStartDocument();
 
         beforeFields(writer, encoderContext, value);
+        boolean fieldSkipped = false;
         for (Map.Entry<String, BsonValue> entry : value.entrySet()) {
-            if (skipField(encoderContext, entry.getKey())) {
+            if (!fieldSkipped && skipField(encoderContext, entry.getKey())) {
+                fieldSkipped = true;
                 continue;
             }
 
@@ -119,9 +121,12 @@ public class BsonDocumentCodec implements CollectibleCodec<BsonDocument> {
     }
 
     private void beforeFields(final BsonWriter bsonWriter, final EncoderContext encoderContext, final BsonDocument value) {
-        if (encoderContext.isEncodingCollectibleDocument() && value.containsKey(ID_FIELD_NAME)) {
-            bsonWriter.writeName(ID_FIELD_NAME);
-            writeValue(bsonWriter, encoderContext, value.get(ID_FIELD_NAME));
+        if (encoderContext.isEncodingCollectibleDocument()) {
+            BsonValue idValue = value.get(ID_FIELD_NAME);
+            if (idValue != null) {
+                bsonWriter.writeName(ID_FIELD_NAME);
+                writeValue(bsonWriter, encoderContext, idValue);
+            }
         }
     }
 
