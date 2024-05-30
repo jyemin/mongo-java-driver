@@ -29,7 +29,7 @@ import java.util.Objects;
 
 import static org.bson.assertions.Assertions.notNull;
 import static org.bson.codecs.BsonTypeClassMap.DEFAULT_BSON_TYPE_CLASS_MAP;
-import static org.bson.codecs.ContainerCodecHelper.getCodec;
+import static org.bson.internal.ContainerCodecHelper.getCodec;
 
 /**
  * A {@code CodecProvider} for the Map class and all the default Codec implementations on which it depends.

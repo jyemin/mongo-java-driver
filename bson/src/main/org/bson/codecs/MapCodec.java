@@ -21,6 +21,7 @@ import org.bson.BsonWriter;
 import org.bson.Transformer;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.internal.ContainerCodecHelper;
 
 import java.util.Map;
 

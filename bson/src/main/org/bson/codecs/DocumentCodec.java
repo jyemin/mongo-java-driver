@@ -32,7 +32,7 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static org.bson.assertions.Assertions.notNull;
 import static org.bson.codecs.BsonTypeClassMap.DEFAULT_BSON_TYPE_CLASS_MAP;
-import static org.bson.codecs.ContainerCodecHelper.readValue;
+import static org.bson.internal.ContainerCodecHelper.readValue;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
 /**

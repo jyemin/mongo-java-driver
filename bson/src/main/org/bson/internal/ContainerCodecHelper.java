@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package org.bson.codecs;
+package org.bson.internal;
 
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.Transformer;
 import org.bson.UuidRepresentation;
+import org.bson.codecs.BsonTypeCodecMap;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
 import org.bson.codecs.configuration.CodecConfigurationException;
 import org.bson.codecs.configuration.CodecRegistry;
 
@@ -30,10 +33,12 @@ import java.util.UUID;
 
 /**
  * Helper methods for Codec implementations for containers, e.g. {@code Map} and {@code Iterable}.
- */
-final class ContainerCodecHelper {
 
-    static Object readValue(final BsonReader reader, final DecoderContext decoderContext,
+ TODO: blah blah blah
+ */
+public final class ContainerCodecHelper {
+
+    public static Object readValue(final BsonReader reader, final DecoderContext decoderContext,
             final BsonTypeCodecMap bsonTypeCodecMap, final UuidRepresentation uuidRepresentation,
             final CodecRegistry registry, final Transformer valueTransformer) {
 
@@ -66,7 +71,7 @@ final class ContainerCodecHelper {
         }
     }
 
-    static Codec<?> getCodec(final CodecRegistry codecRegistry, final Type type) {
+    public static Codec<?> getCodec(final CodecRegistry codecRegistry, final Type type) {
         if (type instanceof Class) {
             return codecRegistry.get((Class<?>) type);
         } else if (type instanceof ParameterizedType) {

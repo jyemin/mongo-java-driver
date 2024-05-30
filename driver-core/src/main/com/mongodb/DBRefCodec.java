@@ -17,21 +17,31 @@
 package com.mongodb;
 
 import org.bson.BsonReader;
+import org.bson.BsonType;
 import org.bson.BsonWriter;
+import org.bson.Transformer;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.BsonTypeClassMap;
+import org.bson.codecs.BsonTypeCodecMap;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
+import org.bson.codecs.OverridableUuidRepresentationCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 
 import static com.mongodb.assertions.Assertions.notNull;
+import static org.bson.internal.ContainerCodecHelper.readValue;
 
 /**
  * A Codec for DBRef instances.
  *
  * @since 3.0
  */
-public class DBRefCodec implements Codec<DBRef> {
+public class DBRefCodec implements Codec<DBRef>, OverridableUuidRepresentationCodec<DBRef> {
     private final CodecRegistry registry;
+    private final UuidRepresentation uuidRepresentation;
+    private final Transformer valueTransformer = value -> value;
+    private final BsonTypeCodecMap bsonTypeCodecMap;
 
     /**
      * Construct an instance with the given registry, which is used to encode the id of the referenced document.
@@ -39,7 +49,18 @@ public class DBRefCodec implements Codec<DBRef> {
      * @param registry the non-null codec registry
      */
     public DBRefCodec(final CodecRegistry registry) {
+        this(registry, UuidRepresentation.UNSPECIFIED);
+    }
+
+    public DBRefCodec(final CodecRegistry registry, final UuidRepresentation uuidRepresentation) {
         this.registry = notNull("registry", registry);
+        this.uuidRepresentation = uuidRepresentation;
+        bsonTypeCodecMap = new BsonTypeCodecMap(new BsonTypeClassMap(), registry);
+    }
+
+    @Override
+    public Codec<DBRef> withUuidRepresentation(final UuidRepresentation uuidRepresentation) {
+        return new DBRefCodec(this.registry, uuidRepresentation);
     }
 
     @Override
@@ -63,6 +84,35 @@ public class DBRefCodec implements Codec<DBRef> {
 
     @Override
     public DBRef decode(final BsonReader reader, final DecoderContext decoderContext) {
-        throw new UnsupportedOperationException("DBRefCodec does not support decoding");
+        String databaseName = null;
+        String collectionName = null;
+        Object id = null;
+
+        reader.readStartDocument();
+
+        while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+            String fieldName = reader.readName();
+            switch (fieldName) {
+                case "$ref":
+                    collectionName = reader.readString();
+                    break;
+                case "$id":
+                    id = readValue(reader, decoderContext, bsonTypeCodecMap, uuidRepresentation, registry, valueTransformer);
+                    break;
+                case "$db":
+                    databaseName = reader.readString();
+                    break;
+                default:
+                    throw new RuntimeException("TODO");  // TODO
+            }
+        }
+
+        reader.readEndDocument();
+
+        if (collectionName == null || id == null) {
+            throw new RuntimeException("TODO");  // TODO
+        }
+
+        return new DBRef(databaseName, collectionName, id);
     }
 }

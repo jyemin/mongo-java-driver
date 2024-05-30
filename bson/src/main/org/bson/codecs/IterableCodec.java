@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.bson.assertions.Assertions.notNull;
-import static org.bson.codecs.ContainerCodecHelper.readValue;
+import static org.bson.internal.ContainerCodecHelper.readValue;
 
 /**
  * Encodes and decodes {@code Iterable} objects.
