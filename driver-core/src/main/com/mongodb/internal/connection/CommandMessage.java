@@ -23,6 +23,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerApi;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.internal.TimeoutContext;
+import com.mongodb.internal.connection.DualSplittablePayloads.EncodeResult;
 import com.mongodb.internal.connection.OpMsgSequences.EmptyOpMsgSequences;
 import com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand;
 import com.mongodb.internal.session.SessionContext;
@@ -57,7 +58,7 @@ import static com.mongodb.connection.ServerType.SHARD_ROUTER;
 import static com.mongodb.connection.ServerType.STANDALONE;
 import static com.mongodb.internal.connection.BsonWriterHelper.appendElementsToDocument;
 import static com.mongodb.internal.connection.BsonWriterHelper.backpatchLength;
-import static com.mongodb.internal.connection.BsonWriterHelper.writeOpsAndNsInfo;
+import static com.mongodb.internal.connection.BsonWriterHelper.writeDualSplittablePayloads;
 import static com.mongodb.internal.connection.BsonWriterHelper.writePayload;
 import static com.mongodb.internal.connection.ByteBufBsonDocument.createList;
 import static com.mongodb.internal.connection.ByteBufBsonDocument.createOne;
@@ -81,11 +82,11 @@ public final class CommandMessage extends RequestMessage {
     private final OpMsgSequences sequences;
     private final boolean responseExpected;
     /**
-     * {@code null} iff either {@link #sequences} is not of the {@link ClientBulkWriteCommand.OpsAndNsInfo} type,
+     * {@code null} iff either {@link #sequences} is not of the {@link DualSplittablePayloads} type,
      * or it is of that type, but it has not been {@linkplain #encodeMessageBodyWithMetadata(ByteBufferBsonOutput, OperationContext) encoded}.
      */
     @Nullable
-    private Boolean opsAndNsInfoRequireResponse;
+    private Boolean dualSplittablePayloadsRequireResponse;
     private final ClusterConnectionMode clusterConnectionMode;
     private final ServerApi serverApi;
 
@@ -122,7 +123,7 @@ public final class CommandMessage extends RequestMessage {
         this.commandFieldNameValidator = commandFieldNameValidator;
         this.readPreference = readPreference;
         this.responseExpected = responseExpected;
-        opsAndNsInfoRequireResponse = null;
+        dualSplittablePayloadsRequireResponse = null;
         this.exhaustAllowed = exhaustAllowed;
         this.sequences = sequences;
         this.clusterConnectionMode = notNull("clusterConnectionMode", clusterConnectionMode);
@@ -210,8 +211,8 @@ public final class CommandMessage extends RequestMessage {
                 ValidatableSplittablePayload validatableSplittablePayload = (ValidatableSplittablePayload) sequences;
                 SplittablePayload payload = validatableSplittablePayload.getSplittablePayload();
                 return payload.isOrdered() && payload.hasAnotherSplit();
-            } else if (sequences instanceof ClientBulkWriteCommand.OpsAndNsInfo) {
-                return assertNotNull(opsAndNsInfoRequireResponse);
+            } else if (sequences instanceof DualSplittablePayloads) {
+                return assertNotNull(dualSplittablePayloadsRequireResponse);
             } else if (!(sequences instanceof EmptyOpMsgSequences)) {
                 fail(sequences.toString());
             }
@@ -233,8 +234,8 @@ public final class CommandMessage extends RequestMessage {
             bsonOutput.writeByte(0);    // payload type
             commandStartPosition = bsonOutput.getPosition();
             ArrayList<BsonElement> extraElements = getExtraElements(operationContext);
-            // `OpsAndNsInfo` requires validation only if no response is expected, otherwise we must rely on the server validation
-            boolean validateDocumentSizeLimits = !(sequences instanceof ClientBulkWriteCommand.OpsAndNsInfo) || !responseExpected;
+            // `DualSplittablePayloads` requires validation only if no response is expected, otherwise we must rely on the server validation
+            boolean validateDocumentSizeLimits = !(sequences instanceof DualSplittablePayloads) || !responseExpected;
 
             int commandDocumentSizeInBytes = writeDocument(command, bsonOutput, commandFieldNameValidator, validateDocumentSizeLimits);
             if (sequences instanceof ValidatableSplittablePayload) {
@@ -248,23 +249,20 @@ public final class CommandMessage extends RequestMessage {
                         );
                         return null;
                 });
-            } else if (sequences instanceof ClientBulkWriteCommand.OpsAndNsInfo) {
-                ClientBulkWriteCommand.OpsAndNsInfo opsAndNsInfo = (ClientBulkWriteCommand.OpsAndNsInfo) sequences;
+            } else if (sequences instanceof DualSplittablePayloads) {
+                DualSplittablePayloads dualSplittablePayloads = (DualSplittablePayloads) sequences;
                 try (ByteBufferBsonOutput.Branch bsonOutputBranch2 = bsonOutput.branch();
                      ByteBufferBsonOutput.Branch bsonOutputBranch1 = bsonOutput.branch()) {
-                    ClientBulkWriteCommand.OpsAndNsInfo.EncodeResult opsAndNsInfoEncodeResult = writeOpMsgSectionWithPayloadType1(
-                            bsonOutputBranch1, "ops", () ->
-                                    writeOpMsgSectionWithPayloadType1(bsonOutputBranch2, "nsInfo", () ->
-                                            writeOpsAndNsInfo(
-                                                    opsAndNsInfo, commandDocumentSizeInBytes, bsonOutputBranch1,
+                    EncodeResult encodeResult = writeOpMsgSectionWithPayloadType1(
+                            bsonOutputBranch1, dualSplittablePayloads.getFirstSequenceId(), () ->
+                                    writeOpMsgSectionWithPayloadType1(bsonOutputBranch2, dualSplittablePayloads.getSecondSequenceId(), () ->
+                                            writeDualSplittablePayloads(
+                                                    dualSplittablePayloads, commandDocumentSizeInBytes, bsonOutputBranch1,
                                                     bsonOutputBranch2, getSettings(), validateDocumentSizeLimits)
                                     )
                     );
-                    opsAndNsInfoRequireResponse = opsAndNsInfoEncodeResult.isServerResponseRequired();
-                    Long txnNumber = opsAndNsInfoEncodeResult.getTxnNumber();
-                    if (txnNumber != null) {
-                        extraElements.add(new BsonElement(TXN_NUMBER_KEY, new BsonInt64(txnNumber)));
-                    }
+                    dualSplittablePayloadsRequireResponse = encodeResult.isServerResponseRequired();
+                    extraElements.addAll(encodeResult.getExtraElements());
                     appendElementsToDocument(bsonOutput, commandStartPosition, extraElements);
                 }
             } else if (sequences instanceof EmptyOpMsgSequences) {

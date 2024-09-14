@@ -16,8 +16,9 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand;
-import com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand.OpsAndNsInfo.WritersProviderAndLimitsChecker;
+import com.mongodb.internal.connection.DualSplittablePayloads.EncodeResult;
+import com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker;
+import com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.OpsBsonWriters;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBinaryWriter;
@@ -38,6 +39,9 @@ import org.bson.io.BsonOutput;
 import java.util.List;
 
 import static com.mongodb.assertions.Assertions.assertTrue;
+import static com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.WriteResult.FAIL_LIMIT_EXCEEDED;
+import static com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_NOT_REACHED;
+import static com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_REACHED;
 import static com.mongodb.internal.connection.MessageSettings.DOCUMENT_HEADROOM_SIZE;
 import static java.lang.String.format;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -98,46 +102,46 @@ public final class BsonWriterHelper {
     }
 
     /**
-     * @return See {@link ClientBulkWriteCommand.OpsAndNsInfo#encode(WritersProviderAndLimitsChecker)}.
+     * @return See {@link DualSplittablePayloads#encode(WritersProviderAndLimitsChecker)}.
      */
-    static ClientBulkWriteCommand.OpsAndNsInfo.EncodeResult writeOpsAndNsInfo(
-            final ClientBulkWriteCommand.OpsAndNsInfo opsAndNsInfo,
+    static EncodeResult writeDualSplittablePayloads(
+            final DualSplittablePayloads dualSplittablePayloads,
             final int commandDocumentSizeInBytes,
-            final BsonOutput opsOut,
-            final BsonOutput nsInfoOut,
+            final BsonOutput firstOutput,
+            final BsonOutput secondOutput,
             final MessageSettings messageSettings,
             final boolean validateDocumentSizeLimits) {
         BinaryOpsBsonWriters opsWriters = new BinaryOpsBsonWriters(
-                opsOut,
-                opsAndNsInfo.getFieldNameValidator(),
+                firstOutput,
+                dualSplittablePayloads.getFirstFieldNameValidator(),
                 validateDocumentSizeLimits ? messageSettings : null);
-        BsonBinaryWriter nsInfoWriter = new BsonBinaryWriter(nsInfoOut, NoOpFieldNameValidator.INSTANCE);
+        BsonBinaryWriter secondWriter = new BsonBinaryWriter(secondOutput, dualSplittablePayloads.getSecondFieldNameValidator());
         // the size of operation-agnostic command fields (a.k.a. extra elements) is counted towards `messageOverheadInBytes`
         int messageOverheadInBytes = 1000;
-        int maxOpsAndNsInfoSizeInBytes = messageSettings.getMaxMessageSize() - (messageOverheadInBytes + commandDocumentSizeInBytes);
-        int opsStart = opsOut.getPosition();
-        int nsInfoStart = nsInfoOut.getPosition();
+        int maxSizeInBytes = messageSettings.getMaxMessageSize() - (messageOverheadInBytes + commandDocumentSizeInBytes);
+        int firstStart = firstOutput.getPosition();
+        int secondStart = secondOutput.getPosition();
         int maxBatchCount = messageSettings.getMaxBatchCount();
-        return opsAndNsInfo.encode(write -> {
-            int opsBeforeWritePosition = opsOut.getPosition();
-            int nsInfoBeforeWritePosition = nsInfoOut.getPosition();
-            int batchCountAfterWrite = write.doAndGetBatchCount(opsWriters, nsInfoWriter);
+        return dualSplittablePayloads.encode(write -> {
+            int firstBeforeWritePosition = firstOutput.getPosition();
+            int secondBeforeWritePosition = secondOutput.getPosition();
+            int batchCountAfterWrite = write.doAndGetBatchCount(opsWriters, secondWriter);
             assertTrue(batchCountAfterWrite <= maxBatchCount);
-            int opsAndNsInfoSizeInBytes =
-                    opsOut.getPosition() - opsStart
-                    + nsInfoOut.getPosition() - nsInfoStart;
-            if (opsAndNsInfoSizeInBytes < maxOpsAndNsInfoSizeInBytes && batchCountAfterWrite < maxBatchCount) {
-                return WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_NOT_REACHED;
-            } else if (opsAndNsInfoSizeInBytes > maxOpsAndNsInfoSizeInBytes) {
-                opsOut.truncateToPosition(opsBeforeWritePosition);
-                nsInfoOut.truncateToPosition(nsInfoBeforeWritePosition);
+            int totalSizeInBytes =
+                    firstOutput.getPosition() - firstStart
+                    + secondOutput.getPosition() - secondStart;
+            if (totalSizeInBytes < maxSizeInBytes && batchCountAfterWrite < maxBatchCount) {
+                return OK_LIMIT_NOT_REACHED;
+            } else if (totalSizeInBytes > maxSizeInBytes) {
+                firstOutput.truncateToPosition(firstBeforeWritePosition);
+                secondOutput.truncateToPosition(secondBeforeWritePosition);
                 if (batchCountAfterWrite == 1) {
                     // we have failed to write a single model
                     throw createBsonMaximumSizeExceededException(messageSettings.getMaxDocumentSize());
                 }
-                return WritersProviderAndLimitsChecker.WriteResult.FAIL_LIMIT_EXCEEDED;
+                return FAIL_LIMIT_EXCEEDED;
             } else {
-                return WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_REACHED;
+                return OK_LIMIT_REACHED;
             }
         });
     }
@@ -233,7 +237,7 @@ public final class BsonWriterHelper {
     private BsonWriterHelper() {
     }
 
-    private static final class BinaryOpsBsonWriters implements WritersProviderAndLimitsChecker.OpsBsonWriters {
+    private static final class BinaryOpsBsonWriters implements OpsBsonWriters {
         private final BsonBinaryWriter writer;
         private final BsonWriter storedDocumentWriter;
 

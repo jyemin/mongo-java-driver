@@ -69,12 +69,11 @@ import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateOptions;
 import com.mongodb.internal.client.model.bulk.ConcreteClientUpdateResult;
 import com.mongodb.internal.client.model.bulk.UnacknowledgedClientBulkWriteResult;
 import com.mongodb.internal.connection.Connection;
+import com.mongodb.internal.connection.DualSplittablePayloads;
+import com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.OpsBsonWriters;
 import com.mongodb.internal.connection.IdHoldingBsonWriter;
-import com.mongodb.internal.connection.MessageSettings;
 import com.mongodb.internal.connection.MongoWriteConcernWithResponseException;
-import com.mongodb.internal.connection.OpMsgSequences;
 import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand.OpsAndNsInfo.WritersProviderAndLimitsChecker.OpsBsonWriters;
 import com.mongodb.internal.operation.retry.AttachmentKeys;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
@@ -84,7 +83,9 @@ import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
+import org.bson.BsonElement;
 import org.bson.BsonInt32;
+import org.bson.BsonInt64;
 import org.bson.BsonObjectId;
 import org.bson.BsonValue;
 import org.bson.BsonWriter;
@@ -92,10 +93,10 @@ import org.bson.FieldNameValidator;
 import org.bson.codecs.Encoder;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.io.BsonOutput;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -109,9 +110,9 @@ import static com.mongodb.assertions.Assertions.assertFalse;
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.assertTrue;
 import static com.mongodb.assertions.Assertions.fail;
+import static com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.WriteResult.FAIL_LIMIT_EXCEEDED;
+import static com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_NOT_REACHED;
 import static com.mongodb.internal.operation.BulkWriteBatch.logWriteModelDoesNotSupportRetries;
-import static com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand.OpsAndNsInfo.WritersProviderAndLimitsChecker.WriteResult.FAIL_LIMIT_EXCEEDED;
-import static com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand.OpsAndNsInfo.WritersProviderAndLimitsChecker.WriteResult.OK_LIMIT_NOT_REACHED;
 import static com.mongodb.internal.operation.CommandOperationHelper.commandWriteConcern;
 import static com.mongodb.internal.operation.CommandOperationHelper.initialRetryState;
 import static com.mongodb.internal.operation.CommandOperationHelper.shouldAttemptToRetryWriteAndAddRetryableLabel;
@@ -662,13 +663,12 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
             return opsAndNsInfo;
         }
 
-        public static final class OpsAndNsInfo extends OpMsgSequences {
+        public static final class OpsAndNsInfo extends DualSplittablePayloads {
             private final boolean effectiveRetryWrites;
             private final List<? extends ClientNamespacedWriteModel> models;
             private final BatchEncoder batchEncoder;
             private final ConcreteClientBulkWriteOptions options;
             private final Supplier<Long> doIfCommandIsRetryableAndAdvanceGetTxnNumber;
-            private final FieldNameValidator validator;
 
             OpsAndNsInfo(
                     final boolean effectiveRetryWrites,
@@ -676,18 +676,15 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                     final BatchEncoder batchEncoder,
                     final ConcreteClientBulkWriteOptions options,
                     final Supplier<Long> doIfCommandIsRetryableAndAdvanceGetTxnNumber) {
+                super("ops", new OpsFieldNameValidator(models), "nsInfo", NoOpFieldNameValidator.INSTANCE);
                 this.effectiveRetryWrites = effectiveRetryWrites;
                 this.models = models;
                 this.batchEncoder = batchEncoder;
                 this.options = options;
                 this.doIfCommandIsRetryableAndAdvanceGetTxnNumber = doIfCommandIsRetryableAndAdvanceGetTxnNumber;
-                this.validator = new OpsFieldNameValidator(models);
             }
 
-            public FieldNameValidator getFieldNameValidator() {
-                return validator;
-            }
-
+            @Override
             public EncodeResult encode(final WritersProviderAndLimitsChecker writersProviderAndLimitsChecker) {
                 // We must call `batchEncoder.reset` lazily, that is here, and not eagerly before a command retry attempt,
                 // because a retry attempt may fail before encoding,
@@ -723,77 +720,15 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                 }
                 return new EncodeResult(
                         options.isOrdered() && modelIndexInBatch < models.size() - 1,
-                        commandIsRetryable ? doIfCommandIsRetryableAndAdvanceGetTxnNumber.get() : null);
+                        commandIsRetryable
+                                ? Collections.singletonList(
+                                        new BsonElement("txnNumber",
+                                                new BsonInt64(doIfCommandIsRetryableAndAdvanceGetTxnNumber.get())))
+                                : Collections.emptyList());
             }
 
             private static boolean doesNotSupportRetries(final AbstractClientNamespacedWriteModel model) {
                 return model instanceof ConcreteClientNamespacedUpdateManyModel || model instanceof ConcreteClientNamespacedDeleteManyModel;
-            }
-
-            public static final class EncodeResult {
-                private final boolean serverResponseRequired;
-                @Nullable
-                private final Long txnNumber;
-
-                EncodeResult(final boolean serverResponseRequired, @Nullable final Long txnNumber) {
-                    this.serverResponseRequired = serverResponseRequired;
-                    this.txnNumber = txnNumber;
-                }
-
-                /**
-                 * @return {@code true} iff the operation is {@linkplain ClientBulkWriteOptions#ordered(Boolean) ordered},
-                 * and not all {@linkplain ClientNamespacedWriteModel models} were written, that is, more
-                 * {@linkplain #executeBatch(int, WriteConcern, WriteBinding, ResultAccumulator) batches} are needed.
-                 */
-                public boolean isServerResponseRequired() {
-                    return serverResponseRequired;
-                }
-
-                @Nullable
-                public Long getTxnNumber() {
-                    return txnNumber;
-                }
-            }
-
-            /**
-             * @see #tryWrite(WriteAction)
-             */
-            public interface WritersProviderAndLimitsChecker {
-                /**
-                 * Provides writers to the specified {@link WriteAction},
-                 * {@linkplain WriteAction#doAndGetBatchCount(OpsBsonWriters, BsonWriter) executes} it,
-                 * checks the {@linkplain MessageSettings limits}.
-                 */
-                WriteResult tryWrite(WriteAction write);
-
-                /**
-                 * @see #doAndGetBatchCount(OpsBsonWriters, BsonWriter)
-                 */
-                interface WriteAction {
-                    /**
-                     * Writes {@linkplain ClientNamespacedWriteModel models}
-                     * to the {@code ops} and {@code nsInfo} sequences using the provided writers.
-                     *
-                     * @return The resulting {@linkplain BatchEncoder.EncodedBatchInfo#getModelsCount() batch count}.
-                     */
-                    int doAndGetBatchCount(OpsBsonWriters opsBsonWriters, BsonWriter nsInfoWriter);
-                }
-
-                interface OpsBsonWriters {
-                    BsonWriter getWriter();
-
-                    /**
-                     * A {@link BsonWriter} to use for writing documents that are intended to be stored in a database.
-                     * Must write to the same {@linkplain BsonOutput output} as {@link #getWriter()} does.
-                     */
-                    BsonWriter getStoredDocumentWriter();
-                }
-
-                enum WriteResult {
-                    FAIL_LIMIT_EXCEEDED,
-                    OK_LIMIT_REACHED,
-                    OK_LIMIT_NOT_REACHED
-                }
             }
 
             /**
