@@ -25,7 +25,6 @@ import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.connection.DualSplittablePayloads.EncodeResult;
 import com.mongodb.internal.connection.OpMsgSequences.EmptyOpMsgSequences;
-import com.mongodb.internal.operation.ClientBulkWriteOperation.ClientBulkWriteCommand;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
@@ -234,10 +233,8 @@ public final class CommandMessage extends RequestMessage {
             bsonOutput.writeByte(0);    // payload type
             commandStartPosition = bsonOutput.getPosition();
             ArrayList<BsonElement> extraElements = getExtraElements(operationContext);
-            // `DualSplittablePayloads` requires validation only if no response is expected, otherwise we must rely on the server validation
-            boolean validateDocumentSizeLimits = !(sequences instanceof DualSplittablePayloads) || !responseExpected;
 
-            int commandDocumentSizeInBytes = writeDocument(command, bsonOutput, commandFieldNameValidator, validateDocumentSizeLimits);
+            int commandDocumentSizeInBytes = writeDocument(command, bsonOutput, commandFieldNameValidator, true);
             if (sequences instanceof ValidatableSplittablePayload) {
                 appendElementsToDocument(bsonOutput, commandStartPosition, extraElements);
                 ValidatableSplittablePayload validatableSplittablePayload = (ValidatableSplittablePayload) sequences;
@@ -258,7 +255,7 @@ public final class CommandMessage extends RequestMessage {
                                     writeOpMsgSectionWithPayloadType1(bsonOutputBranch2, dualSplittablePayloads.getSecondSequenceId(), () ->
                                             writeDualSplittablePayloads(
                                                     dualSplittablePayloads, commandDocumentSizeInBytes, bsonOutputBranch1,
-                                                    bsonOutputBranch2, getSettings(), validateDocumentSizeLimits)
+                                                    bsonOutputBranch2, getSettings())
                                     )
                     );
                     dualSplittablePayloadsRequireResponse = encodeResult.isServerResponseRequired();

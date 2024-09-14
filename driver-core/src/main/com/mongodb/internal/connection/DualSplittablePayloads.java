@@ -16,10 +16,9 @@
 
 package com.mongodb.internal.connection;
 
+import org.bson.BsonBinaryWriter;
 import org.bson.BsonElement;
-import org.bson.BsonWriter;
 import org.bson.FieldNameValidator;
-import org.bson.io.BsonOutput;
 
 import java.util.List;
 
@@ -65,30 +64,20 @@ public abstract class DualSplittablePayloads extends OpMsgSequences {
     public interface WritersProviderAndLimitsChecker {
         /**
          * Provides writers to the specified {@link WriteAction},
-         * {@linkplain WriteAction#doAndGetBatchCount(OpsBsonWriters, BsonWriter) executes} it,
+         * {@linkplain WriteAction#doAndGetBatchCount(BsonBinaryWriter, BsonBinaryWriter) executes} it,
          * checks the {@linkplain MessageSettings limits}.
          */
         WriteResult tryWrite(WriteAction write);
 
         /**
-         * @see #doAndGetBatchCount(OpsBsonWriters, BsonWriter)
+         * @see #doAndGetBatchCount(BsonBinaryWriter, BsonBinaryWriter)
          */
         interface WriteAction {
             /**.
              *
              * @return The resulting batch count}.
              */
-            int doAndGetBatchCount(OpsBsonWriters firstWriter, BsonWriter secondWriter);
-        }
-
-        interface OpsBsonWriters {
-            BsonWriter getWriter();
-
-            /**
-             * A {@link BsonWriter} to use for writing documents that are intended to be stored in a database.
-             * Must write to the same {@linkplain BsonOutput output} as {@link #getWriter()} does.
-             */
-            BsonWriter getStoredDocumentWriter();
+            int doAndGetBatchCount(BsonBinaryWriter firstWriter, BsonBinaryWriter secondWriter);
         }
 
         enum WriteResult {

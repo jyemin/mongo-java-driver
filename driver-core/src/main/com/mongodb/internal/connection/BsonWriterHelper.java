@@ -18,7 +18,6 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.internal.connection.DualSplittablePayloads.EncodeResult;
 import com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker;
-import com.mongodb.internal.connection.DualSplittablePayloads.WritersProviderAndLimitsChecker.OpsBsonWriters;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBinaryWriter;
@@ -109,12 +108,8 @@ public final class BsonWriterHelper {
             final int commandDocumentSizeInBytes,
             final BsonOutput firstOutput,
             final BsonOutput secondOutput,
-            final MessageSettings messageSettings,
-            final boolean validateDocumentSizeLimits) {
-        BinaryOpsBsonWriters opsWriters = new BinaryOpsBsonWriters(
-                firstOutput,
-                dualSplittablePayloads.getFirstFieldNameValidator(),
-                validateDocumentSizeLimits ? messageSettings : null);
+            final MessageSettings messageSettings) {
+        BsonBinaryWriter firstWriter = new BsonBinaryWriter(firstOutput, dualSplittablePayloads.getFirstFieldNameValidator());
         BsonBinaryWriter secondWriter = new BsonBinaryWriter(secondOutput, dualSplittablePayloads.getSecondFieldNameValidator());
         // the size of operation-agnostic command fields (a.k.a. extra elements) is counted towards `messageOverheadInBytes`
         int messageOverheadInBytes = 1000;
@@ -125,7 +120,7 @@ public final class BsonWriterHelper {
         return dualSplittablePayloads.encode(write -> {
             int firstBeforeWritePosition = firstOutput.getPosition();
             int secondBeforeWritePosition = secondOutput.getPosition();
-            int batchCountAfterWrite = write.doAndGetBatchCount(opsWriters, secondWriter);
+            int batchCountAfterWrite = write.doAndGetBatchCount(firstWriter, secondWriter);
             assertTrue(batchCountAfterWrite <= maxBatchCount);
             int totalSizeInBytes =
                     firstOutput.getPosition() - firstStart
@@ -237,57 +232,29 @@ public final class BsonWriterHelper {
     private BsonWriterHelper() {
     }
 
-    private static final class BinaryOpsBsonWriters implements OpsBsonWriters {
-        private final BsonBinaryWriter writer;
-        private final BsonWriter storedDocumentWriter;
+    public static final class DocumentSizeLimitCheckingBsonBinaryWriter extends BsonWriterDecorator {
+        private final int maxStoredDocumentSize;
+        private final BsonOutput out;
+        private int documentStart;
 
-        /**
-         * @param messageSettings Non-{@code null} iff the document size limits must be validated.
-         */
-        BinaryOpsBsonWriters(
-                final BsonOutput out,
-                final FieldNameValidator validator,
-                @Nullable final MessageSettings messageSettings) {
-            writer = createBsonBinaryWriter(out, validator, messageSettings);
-            storedDocumentWriter = messageSettings == null
-                    ? writer
-                    : new StoredDocumentSizeLimitCheckingBsonBinaryWriter(writer, messageSettings.getMaxDocumentSize());
+        public DocumentSizeLimitCheckingBsonBinaryWriter(final BsonBinaryWriter writer, final int maxStoredDocumentSize) {
+            super(writer);
+            this.maxStoredDocumentSize = maxStoredDocumentSize;
+            this.out = writer.getBsonOutput();
         }
 
         @Override
-        public BsonWriter getWriter() {
-            return writer;
+        public void writeStartDocument() {
+            documentStart = out.getPosition();
+            super.writeStartDocument();
         }
 
         @Override
-        public BsonWriter getStoredDocumentWriter() {
-            return storedDocumentWriter;
-        }
-
-        private static final class StoredDocumentSizeLimitCheckingBsonBinaryWriter extends BsonWriterDecorator {
-            private final int maxStoredDocumentSize;
-            private final BsonOutput out;
-            private int documentStart;
-
-            StoredDocumentSizeLimitCheckingBsonBinaryWriter(final BsonBinaryWriter writer, final int maxStoredDocumentSize) {
-                super(writer);
-                this.maxStoredDocumentSize = maxStoredDocumentSize;
-                this.out = writer.getBsonOutput();
-            }
-
-            @Override
-            public void writeStartDocument() {
-                documentStart = out.getPosition();
-                super.writeStartDocument();
-            }
-
-            @Override
-            public void writeEndDocument() throws BsonMaximumSizeExceededException {
-                super.writeEndDocument();
-                int documentSize = out.getPosition() - documentStart;
-                if (documentSize > maxStoredDocumentSize) {
-                    throw createBsonMaximumSizeExceededException(maxStoredDocumentSize);
-                }
+        public void writeEndDocument() throws BsonMaximumSizeExceededException {
+            super.writeEndDocument();
+            int documentSize = out.getPosition() - documentStart;
+            if (documentSize > maxStoredDocumentSize) {
+                throw createBsonMaximumSizeExceededException(maxStoredDocumentSize);
             }
         }
     }
