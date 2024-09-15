@@ -206,9 +206,8 @@ public final class CommandMessage extends RequestMessage {
         if (responseExpected) {
             return true;
         } else {
-            if (sequences instanceof ValidatableSplittablePayload) {
-                ValidatableSplittablePayload validatableSplittablePayload = (ValidatableSplittablePayload) sequences;
-                SplittablePayload payload = validatableSplittablePayload.getSplittablePayload();
+            if (sequences instanceof SplittablePayload) {
+                SplittablePayload payload = (SplittablePayload) sequences;
                 return payload.isOrdered() && payload.hasAnotherSplit();
             } else if (sequences instanceof DualSplittablePayloads) {
                 return assertNotNull(dualSplittablePayloadsRequireResponse);
@@ -235,13 +234,12 @@ public final class CommandMessage extends RequestMessage {
             ArrayList<BsonElement> extraElements = getExtraElements(operationContext);
 
             int commandDocumentSizeInBytes = writeDocument(command, bsonOutput, commandFieldNameValidator, true);
-            if (sequences instanceof ValidatableSplittablePayload) {
+            if (sequences instanceof SplittablePayload) {
                 appendElementsToDocument(bsonOutput, commandStartPosition, extraElements);
-                ValidatableSplittablePayload validatableSplittablePayload = (ValidatableSplittablePayload) sequences;
-                SplittablePayload payload = validatableSplittablePayload.getSplittablePayload();
+                SplittablePayload payload = (SplittablePayload) sequences;
                 writeOpMsgSectionWithPayloadType1(bsonOutput, payload.getPayloadName(), () -> {
                         writePayload(
-                                new BsonBinaryWriter(bsonOutput, validatableSplittablePayload.getFieldNameValidator()),
+                                new BsonBinaryWriter(bsonOutput, payload.getFieldNameValidator()),
                                 bsonOutput, getSettings(), messageStartPosition, payload, getSettings().getMaxDocumentSize()
                         );
                         return null;

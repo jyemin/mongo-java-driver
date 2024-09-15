@@ -29,7 +29,6 @@ import com.mongodb.internal.bulk.WriteRequestWithIndex
 import com.mongodb.internal.connection.Connection
 import com.mongodb.internal.connection.OpMsgSequences
 import com.mongodb.internal.connection.SplittablePayload
-import com.mongodb.internal.connection.ValidatableSplittablePayload
 import com.mongodb.internal.time.Timeout
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonArray
@@ -117,7 +116,7 @@ class CryptConnectionSpecification extends Specification {
         def payload = new SplittablePayload(INSERT, [
                 new BsonDocumentWrapper(new Document('_id', 1).append('ssid', '555-55-5555').append('b', bytes), codec),
                 new BsonDocumentWrapper(new Document('_id', 2).append('ssid', '666-66-6666').append('b', bytes), codec)
-        ].withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) }, true)
+        ].withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) }, true, NoOpFieldNameValidator.INSTANCE)
         def encryptedCommand = toRaw(new BsonDocument('insert', new BsonString('test')).append('documents', new BsonArray(
                 [
                         new BsonDocument('_id', new BsonInt32(1))
@@ -136,7 +135,7 @@ class CryptConnectionSpecification extends Specification {
         def response = cryptConnection.command('db',
                 new BsonDocumentWrapper(new Document('insert', 'test'), codec),
                 NoOpFieldNameValidator.INSTANCE, ReadPreference.primary(), new BsonDocumentCodec(),
-                operationContext, true, new ValidatableSplittablePayload(payload, NoOpFieldNameValidator.INSTANCE))
+                operationContext, true, payload)
 
         then:
         _ * wrappedConnection.getDescription() >> {
@@ -173,8 +172,8 @@ class CryptConnectionSpecification extends Specification {
         def payload = new SplittablePayload(INSERT, [
                 new BsonDocumentWrapper(new Document('_id', 1), codec),
                 new BsonDocumentWrapper(new Document('_id', 2), codec),
-                new BsonDocumentWrapper(new Document('_id', 3), codec)
-        ].withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) }, true)
+                new BsonDocumentWrapper(new Document('_id', 3), codec,)
+        ].withIndex().collect { doc, i -> new WriteRequestWithIndex(new InsertRequest(doc), i) }, true, NoOpFieldNameValidator.INSTANCE)
         def encryptedCommand = toRaw(new BsonDocument('insert', new BsonString('test')).append('documents', new BsonArray(
                 [
                         new BsonDocument('_id', new BsonInt32(1)),
@@ -193,7 +192,7 @@ class CryptConnectionSpecification extends Specification {
         def response = cryptConnection.command('db',
                 new BsonDocumentWrapper(new Document('insert', 'test'), codec),
                 NoOpFieldNameValidator.INSTANCE, ReadPreference.primary(), new BsonDocumentCodec(), operationContext, true,
-                new ValidatableSplittablePayload(payload, NoOpFieldNameValidator.INSTANCE))
+                payload)
 
         then:
         _ * wrappedConnection.getDescription() >> {
