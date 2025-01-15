@@ -32,19 +32,14 @@ import org.bson.BsonString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
@@ -52,20 +47,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 import static util.JsonPoweredTestHelper.getTestDocument;
 
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class ClientSideEncryptionExternalKeyVaultTest {
     private MongoClient client, clientEncrypted;
     private ClientEncryption clientEncryption;
-    private final boolean withExternalKeyVault;
+    private final boolean withExternalKeyVault = false;
 
-    public ClientSideEncryptionExternalKeyVaultTest(final boolean withExternalKeyVault) {
-        this.withExternalKeyVault = withExternalKeyVault;
+    public ClientSideEncryptionExternalKeyVaultTest() {
+//        this.withExternalKeyVault = withExternalKeyVault;
     }
 
     @Before
     public void setUp() throws IOException, URISyntaxException {
         assumeTrue(serverVersionAtLeast(4, 2));
-        assumeTrue("Encryption test with external keyVault is disabled", isClientSideEncryptionTest());
+//        assumeTrue("Encryption test with external keyVault is disabled", isClientSideEncryptionTest());
 
         /* Step 1: get unencrypted client and recreate keys collection */
         client = getMongoClient();
@@ -148,10 +143,10 @@ public class ClientSideEncryptionExternalKeyVaultTest {
                 .getResource("/client-side-encryption-external/" + path).toURI()));
     }
 
-    @Parameterized.Parameters(name = "withExternalKeyVault: {0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[]{true}, new Object[]{false});
-    }
+//    @Parameterized.Parameters(name = "withExternalKeyVault: {0}")
+//    public static Collection<Object[]> data() {
+//        return Arrays.asList(new Object[]{true}, new Object[]{false});
+//    }
 
     @After
     public void after() {

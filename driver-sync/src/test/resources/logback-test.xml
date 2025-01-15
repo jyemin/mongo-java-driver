@@ -6,6 +6,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.mongodb.driver.protocol.command" level="DEBUG" additivity="true"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

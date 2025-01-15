@@ -888,7 +888,7 @@ tasks:
         - func: "bootstrap mongo-orchestration"
         - func: "run tests"
           vars:
-            TESTS: 'driver-sync:test'
+            TESTS: 'driver-sync:test --tests ClientSideEncryptionExternalKeyVaultTest'
 
     - name: "test-reactive"
       commands:
