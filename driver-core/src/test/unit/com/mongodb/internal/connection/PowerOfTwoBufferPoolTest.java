@@ -28,28 +28,31 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 
 public class PowerOfTwoBufferPoolTest {
+    private static final int LOWEST_POOLED_POWER_OF_TWO = 4;
+    private static final int HIGHEST_POOLED_POWER_OF_TWO = 10;
+
     private PowerOfTwoBufferPool pool;
 
     @Before
     public void setUp() {
-        pool = new PowerOfTwoBufferPool(10);
+        pool = new PowerOfTwoBufferPool(LOWEST_POOLED_POWER_OF_TWO, HIGHEST_POOLED_POWER_OF_TWO);
     }
 
     @Test
-    public void testNormalRequest() {
+    public void testRequestForPooledBuffer() {
 
-        for (int i = 0; i <= 10; i++) {
+        for (int i = LOWEST_POOLED_POWER_OF_TWO; i <= HIGHEST_POOLED_POWER_OF_TWO; i++) {
             ByteBuf buf = pool.getBuffer((int) Math.pow(2, i));
             assertEquals((int) Math.pow(2, i), buf.capacity());
             assertEquals((int) Math.pow(2, i), buf.limit());
 
-            if (i > 1) {
+            if (i > LOWEST_POOLED_POWER_OF_TWO) {
                 buf = pool.getBuffer((int) Math.pow(2, i) - 1);
                 assertEquals((int) Math.pow(2, i), buf.capacity());
                 assertEquals((int) Math.pow(2, i) - 1, buf.limit());
             }
 
-            if (i < 10) {
+            if (i < HIGHEST_POOLED_POWER_OF_TWO) {
                 buf = pool.getBuffer((int) Math.pow(2, i) + 1);
                 assertEquals((int) Math.pow(2, i + 1), buf.capacity());
                 assertEquals((int) Math.pow(2, i) + 1, buf.limit());
@@ -66,19 +69,26 @@ public class PowerOfTwoBufferPoolTest {
     }
 
     @Test
-    public void testHugeBufferRequest() {
-        ByteBuf buf = pool.getBuffer((int) Math.pow(2, 10) + 1);
-        assertEquals((int) Math.pow(2, 10) + 1, buf.capacity());
-        assertEquals((int) Math.pow(2, 10) + 1, buf.limit());
+    public void testRequestForUnpooledBuffer() {
+        ByteBuf buf = pool.getBuffer((int) Math.pow(2, LOWEST_POOLED_POWER_OF_TWO) - 1);
+        assertEquals((int) Math.pow(2, LOWEST_POOLED_POWER_OF_TWO) - 1, buf.capacity());
+        assertEquals((int) Math.pow(2, LOWEST_POOLED_POWER_OF_TWO) - 1, buf.limit());
 
         buf.release();
-        assertNotSame(buf, pool.getBuffer((int) Math.pow(2, 10) + 1));
+        assertNotSame(buf, pool.getBuffer((int) Math.pow(2, LOWEST_POOLED_POWER_OF_TWO) + 1));
+
+        buf = pool.getBuffer((int) Math.pow(2, HIGHEST_POOLED_POWER_OF_TWO) + 1);
+        assertEquals((int) Math.pow(2, HIGHEST_POOLED_POWER_OF_TWO) + 1, buf.capacity());
+        assertEquals((int) Math.pow(2, HIGHEST_POOLED_POWER_OF_TWO) + 1, buf.limit());
+
+        buf.release();
+        assertNotSame(buf, pool.getBuffer((int) Math.pow(2, HIGHEST_POOLED_POWER_OF_TWO) + 1));
     }
 
     // Racy test
     @Test
     public void testPruning() throws InterruptedException {
-        PowerOfTwoBufferPool pool = new PowerOfTwoBufferPool(10, 5, TimeUnit.MILLISECONDS)
+        PowerOfTwoBufferPool pool = new PowerOfTwoBufferPool(0, 10, 5, TimeUnit.MILLISECONDS)
                 .enablePruning();
         try {
             ByteBuf byteBuf = pool.getBuffer(256);
