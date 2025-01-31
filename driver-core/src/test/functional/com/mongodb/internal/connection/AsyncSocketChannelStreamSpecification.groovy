@@ -86,7 +86,7 @@ class AsyncSocketChannelStreamSpecification extends Specification {
         }
         def stream = new AsynchronousSocketChannelStream(serverAddress, inetAddressResolver,
                 SocketSettings.builder().connectTimeout(100, MILLISECONDS).build(),
-                new PowerOfTwoBufferPool())
+                new PowerOfTwoBufferPool(13, 24))
         def callback = new CallbackErrorHolder()
 
         when:
