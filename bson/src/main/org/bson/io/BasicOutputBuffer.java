@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.String.format;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 /**
@@ -84,18 +83,14 @@ public class BasicOutputBuffer extends OutputBuffer {
         buffer[position++] = (byte) (0xFF & value);
     }
 
-    @Override
-    protected void write(final int absolutePosition, final int value) {
+    public void writeInt32(final int position, final int value) {
         ensureOpen();
+        ensure(4);
 
-        if (absolutePosition < 0) {
-            throw new IllegalArgumentException(format("position must be >= 0 but was %d", absolutePosition));
-        }
-        if (absolutePosition > position - 1) {
-            throw new IllegalArgumentException(format("position must be <= %d but was %d", position - 1, absolutePosition));
-        }
-
-        buffer[absolutePosition] = (byte) (0xFF & value);
+        buffer[position] = (byte) (0xFF & value >> 0);
+        buffer[position + 1] = (byte) (0xFF & value >> 8);
+        buffer[position + 2] = (byte) (0xFF & value >> 16);
+        buffer[position + 3] = (byte) (0xFF & value >> 24);
     }
 
     @Override

@@ -199,21 +199,6 @@ public class ByteBufferBsonOutput extends OutputBuffer {
         return position;
     }
 
-    protected void write(final int absolutePosition, final int value) {
-        ensureOpen();
-
-        if (absolutePosition < 0) {
-            throw new IllegalArgumentException(String.format("position must be >= 0 but was %d", absolutePosition));
-        }
-        if (absolutePosition > position - 1) {
-            throw new IllegalArgumentException(String.format("position must be <= %d but was %d", position - 1, absolutePosition));
-        }
-
-        BufferPositionPair bufferPositionPair = getBufferPositionPair(absolutePosition);
-        ByteBuf byteBuffer = getByteBufferAtIndex(bufferPositionPair.bufferIndex);
-        byteBuffer.put(bufferPositionPair.position++, (byte) value);
-    }
-
     @Override
     public List<ByteBuf> getByteBuffers() {
         ensureOpen();

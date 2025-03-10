@@ -70,12 +70,7 @@ public abstract class OutputBuffer extends OutputStream implements BsonOutput {
     }
 
     @Override
-    public void writeInt32(final int position, final int value) {
-        write(position, value >> 0);
-        write(position + 1, value >> 8);
-        write(position + 2, value >> 16);
-        write(position + 3, value >> 24);
-    }
+    public abstract void writeInt32(final int position, final int value);
 
     @Override
     public void writeInt64(final long value) {
@@ -177,14 +172,6 @@ public abstract class OutputBuffer extends OutputStream implements BsonOutput {
     public String toString() {
         return getClass().getName() + " size: " + size() + " pos: " + getPosition();
     }
-
-    /**
-     * Write the specified byte at the specified position.
-     *
-     * @param position the position, which must be greater than equal to 0 and at least 4 less than the stream size
-     * @param value the value to write.  The 24 high-order bits of the value are ignored.
-     */
-    protected abstract void write(int position, int value);
 
     /**
      * Writes the given long value to the buffer.
