@@ -176,6 +176,9 @@ public final class CollectionHelper<T> {
                 case "size":
                     createCollectionOptions.sizeInBytes(createOptions.getNumber("size").longValue());
                     break;
+                case "encryptedFields":
+                    createCollectionOptions.encryptedFields(createOptions.getDocument("encryptedFields"));
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported create collection option: " + option);
             }
@@ -191,6 +194,9 @@ public final class CollectionHelper<T> {
                 .sizeInBytes(options.getSizeInBytes())
                 .maxDocuments(options.getMaxDocuments());
 
+        if (options.getEncryptedFields() != null) {
+            operation.encryptedFields(options.getEncryptedFields().toBsonDocument());
+        }
         IndexOptionDefaults indexOptionDefaults = options.getIndexOptionDefaults();
         if (indexOptionDefaults.getStorageEngine() != null) {
             operation.indexOptionDefaults(new BsonDocument("storageEngine", toBsonDocument(indexOptionDefaults.getStorageEngine())));

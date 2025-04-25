@@ -108,7 +108,7 @@ public final class UnifiedClientEncryptionHelper {
                             kmsProviderOptions,
                             "key",
                             UnifiedClientEncryptionHelper::localKmsProviderKey,
-                            null);
+                            () -> decodeLocalKmsProviderKey(kmsProviderOptions.getString("key").getValue()));
                     break;
                 case "local:name2":
                     setKmsProviderProperty(

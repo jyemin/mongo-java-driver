@@ -16,6 +16,7 @@
 
 package com.mongodb.client.unified;
 
+import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
@@ -111,7 +112,7 @@ import static org.junit.Assume.assumeTrue;
 public final class Entities {
     private static final Set<String> SUPPORTED_CLIENT_ENTITY_OPTIONS = new HashSet<>(
             asList(
-                    "id", "uriOptions", "serverApi", "useMultipleMongoses", "storeEventsAsEntities",
+                    "id", "uriOptions", "serverApi", "useMultipleMongoses", "storeEventsAsEntities", "autoEncryptOpts",
                     "observeEvents", "observeLogMessages", "observeSensitiveCommands", "ignoreCommandMonitoringEvents"));
     private final Set<String> entityNames = new HashSet<>();
     private final Map<String, ExecutorService> threads = new HashMap<>();
@@ -604,6 +605,39 @@ public final class Entities {
             }
             clientSettingsBuilder.serverApi(serverApiBuilder.build());
         }
+
+        if (entity.containsKey("autoEncryptOpts")) {
+            BsonDocument autoEncryptOptsDocument = entity.getDocument("autoEncryptOpts");
+            AutoEncryptionSettings.Builder autoEncryptionSettingsBuilder = AutoEncryptionSettings.builder();
+            autoEncryptOptsDocument.forEach((key, value) -> {
+                switch (key) {
+                    case "keyVaultNamespace":
+                        autoEncryptionSettingsBuilder.keyVaultNamespace(autoEncryptOptsDocument.getString("keyVaultNamespace").getValue());
+                        break;
+                    case "bypassAutoEncryption":
+                        autoEncryptionSettingsBuilder.bypassAutoEncryption(autoEncryptOptsDocument.getBoolean("bypassAutoEncryption").getValue());
+                        break;
+                    case "bypassQueryAnalysis":
+                        autoEncryptionSettingsBuilder.bypassQueryAnalysis(autoEncryptOptsDocument.getBoolean("bypassQueryAnalysis").getValue());
+                        break;
+                    case "kmsProviders":
+                        autoEncryptionSettingsBuilder.kmsProviders(
+                                createKmsProvidersMap(autoEncryptOptsDocument.getDocument("kmsProviders")));
+                        break;
+                    case "schemaMap":
+                        autoEncryptionSettingsBuilder.schemaMap(createMapFromDocument(autoEncryptOptsDocument.getDocument("schemaMap")));
+                        break;
+                    case "encryptedFieldsMap":
+                        autoEncryptionSettingsBuilder.encryptedFieldsMap(
+                                createMapFromDocument(autoEncryptOptsDocument.getDocument("encryptedFieldsMap")));
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Unsupported autoEncryptOpts key: " + key);
+                }
+            });
+            clientSettingsBuilder.autoEncryptionSettings(autoEncryptionSettingsBuilder.build());
+        }
+
         MongoClientSettings clientSettings = clientSettingsBuilder.build();
 
         if (entity.containsKey("observeLogMessages")) {
@@ -622,6 +656,14 @@ public final class Entities {
         if (waitForPoolAsyncWorkManagerStart) {
             waitForPoolAsyncWorkManagerStart();
         }
+    }
+
+    private static Map<String, BsonDocument> createMapFromDocument(BsonDocument schemaMapDocument) {
+        Map<String, BsonDocument> schemaMap = new HashMap<>();
+        for (Map.Entry<String, BsonValue> entry : schemaMapDocument.entrySet()) {
+            schemaMap.put(entry.getKey(), entry.getValue().asDocument());
+        }
+        return schemaMap;
     }
 
     private static LogMessage.Component toComponent(final Map.Entry<String, BsonValue> entry) {
