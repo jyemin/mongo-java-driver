@@ -32,7 +32,6 @@ include(":bson-scala")
 
 include(":driver-core")
 include(":driver-sync")
-include(":driver-legacy")
 include(":driver-reactive-streams")
 include(":mongodb-crypt")
 include(":rust-crud-bindings")
