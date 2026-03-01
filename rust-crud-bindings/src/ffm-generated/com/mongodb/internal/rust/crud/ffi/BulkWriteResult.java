@@ -60,7 +60,7 @@ public class BulkWriteResult {
         return inserted_count$LAYOUT;
     }
 
-    private static final long inserted_count$OFFSET = 0;
+    private static final long inserted_count$OFFSET = $LAYOUT.byteOffset(groupElement("inserted_count"));
 
     /**
      * Offset for field:
@@ -104,7 +104,7 @@ public class BulkWriteResult {
         return matched_count$LAYOUT;
     }
 
-    private static final long matched_count$OFFSET = 8;
+    private static final long matched_count$OFFSET = $LAYOUT.byteOffset(groupElement("matched_count"));
 
     /**
      * Offset for field:
@@ -148,7 +148,7 @@ public class BulkWriteResult {
         return modified_count$LAYOUT;
     }
 
-    private static final long modified_count$OFFSET = 16;
+    private static final long modified_count$OFFSET = $LAYOUT.byteOffset(groupElement("modified_count"));
 
     /**
      * Offset for field:
@@ -192,7 +192,7 @@ public class BulkWriteResult {
         return deleted_count$LAYOUT;
     }
 
-    private static final long deleted_count$OFFSET = 24;
+    private static final long deleted_count$OFFSET = $LAYOUT.byteOffset(groupElement("deleted_count"));
 
     /**
      * Offset for field:
@@ -236,7 +236,7 @@ public class BulkWriteResult {
         return upserted_count$LAYOUT;
     }
 
-    private static final long upserted_count$OFFSET = 32;
+    private static final long upserted_count$OFFSET = $LAYOUT.byteOffset(groupElement("upserted_count"));
 
     /**
      * Offset for field:
@@ -280,7 +280,7 @@ public class BulkWriteResult {
         return inserted_ids$LAYOUT;
     }
 
-    private static final long inserted_ids$OFFSET = 40;
+    private static final long inserted_ids$OFFSET = $LAYOUT.byteOffset(groupElement("inserted_ids"));
 
     /**
      * Offset for field:
@@ -324,7 +324,7 @@ public class BulkWriteResult {
         return upserted_ids$LAYOUT;
     }
 
-    private static final long upserted_ids$OFFSET = 56;
+    private static final long upserted_ids$OFFSET = $LAYOUT.byteOffset(groupElement("upserted_ids"));
 
     /**
      * Offset for field:

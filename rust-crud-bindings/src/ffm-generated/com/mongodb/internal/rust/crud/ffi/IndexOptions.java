@@ -66,7 +66,7 @@ public class IndexOptions {
         return name$LAYOUT;
     }
 
-    private static final long name$OFFSET = 0;
+    private static final long name$OFFSET = $LAYOUT.byteOffset(groupElement("name"));
 
     /**
      * Offset for field:
@@ -110,7 +110,7 @@ public class IndexOptions {
         return unique$LAYOUT;
     }
 
-    private static final long unique$OFFSET = 8;
+    private static final long unique$OFFSET = $LAYOUT.byteOffset(groupElement("unique"));
 
     /**
      * Offset for field:
@@ -154,7 +154,7 @@ public class IndexOptions {
         return sparse$LAYOUT;
     }
 
-    private static final long sparse$OFFSET = 9;
+    private static final long sparse$OFFSET = $LAYOUT.byteOffset(groupElement("sparse"));
 
     /**
      * Offset for field:
@@ -198,7 +198,7 @@ public class IndexOptions {
         return background$LAYOUT;
     }
 
-    private static final long background$OFFSET = 10;
+    private static final long background$OFFSET = $LAYOUT.byteOffset(groupElement("background"));
 
     /**
      * Offset for field:
@@ -242,7 +242,7 @@ public class IndexOptions {
         return expire_after_seconds$LAYOUT;
     }
 
-    private static final long expire_after_seconds$OFFSET = 16;
+    private static final long expire_after_seconds$OFFSET = $LAYOUT.byteOffset(groupElement("expire_after_seconds"));
 
     /**
      * Offset for field:
@@ -286,7 +286,7 @@ public class IndexOptions {
         return partial_filter_expression$LAYOUT;
     }
 
-    private static final long partial_filter_expression$OFFSET = 24;
+    private static final long partial_filter_expression$OFFSET = $LAYOUT.byteOffset(groupElement("partial_filter_expression"));
 
     /**
      * Offset for field:
@@ -330,7 +330,7 @@ public class IndexOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 32;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -374,7 +374,7 @@ public class IndexOptions {
         return wildcard_projection$LAYOUT;
     }
 
-    private static final long wildcard_projection$OFFSET = 40;
+    private static final long wildcard_projection$OFFSET = $LAYOUT.byteOffset(groupElement("wildcard_projection"));
 
     /**
      * Offset for field:
@@ -418,7 +418,7 @@ public class IndexOptions {
         return hidden$LAYOUT;
     }
 
-    private static final long hidden$OFFSET = 48;
+    private static final long hidden$OFFSET = $LAYOUT.byteOffset(groupElement("hidden"));
 
     /**
      * Offset for field:

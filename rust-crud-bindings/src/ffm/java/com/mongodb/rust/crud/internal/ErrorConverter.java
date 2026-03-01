@@ -21,7 +21,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.ServerAddress;
-import com.mongodb.internal.rust.crud.ffi.Error;
+import com.mongodb.internal.rust.crud.ffi.Error_;
 import com.mongodb.internal.rust.crud.ffi.ErrorUnion;
 import com.mongodb.internal.rust.crud.ffi.ServerError;
 import com.mongodb.internal.rust.crud.ffi.TimeoutError;
@@ -63,8 +63,8 @@ public final class ErrorConverter {
             return new MongoException("Unknown error");
         }
 
-        byte errorType = Error.error_type(errorPtr);
-        MemorySegment errorUnion = Error.error(errorPtr);
+        byte errorType = Error_.error_type(errorPtr);
+        MemorySegment errorUnion = Error_.error(errorPtr);
 
         return switch (errorType) {
             case SERVER -> toServerException(ErrorUnion.server(errorUnion));

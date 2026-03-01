@@ -58,7 +58,7 @@ public class CursorResult {
         return cursor$LAYOUT;
     }
 
-    private static final long cursor$OFFSET = 0;
+    private static final long cursor$OFFSET = $LAYOUT.byteOffset(groupElement("cursor"));
 
     /**
      * Offset for field:
@@ -102,7 +102,7 @@ public class CursorResult {
         return exhausted$LAYOUT;
     }
 
-    private static final long exhausted$OFFSET = 8;
+    private static final long exhausted$OFFSET = $LAYOUT.byteOffset(groupElement("exhausted"));
 
     /**
      * Offset for field:
@@ -146,7 +146,7 @@ public class CursorResult {
         return first_batch$LAYOUT;
     }
 
-    private static final long first_batch$OFFSET = 16;
+    private static final long first_batch$OFFSET = $LAYOUT.byteOffset(groupElement("first_batch"));
 
     /**
      * Offset for field:
@@ -190,7 +190,7 @@ public class CursorResult {
         return server_address$LAYOUT;
     }
 
-    private static final long server_address$OFFSET = 48;
+    private static final long server_address$OFFSET = $LAYOUT.byteOffset(groupElement("server_address"));
 
     /**
      * Offset for field:
@@ -234,7 +234,7 @@ public class CursorResult {
         return server_port$LAYOUT;
     }
 
-    private static final long server_port$OFFSET = 56;
+    private static final long server_port$OFFSET = $LAYOUT.byteOffset(groupElement("server_port"));
 
     /**
      * Offset for field:

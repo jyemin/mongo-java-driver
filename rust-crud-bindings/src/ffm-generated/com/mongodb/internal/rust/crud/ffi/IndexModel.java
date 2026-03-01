@@ -50,7 +50,7 @@ public class IndexModel {
         return keys$LAYOUT;
     }
 
-    private static final long keys$OFFSET = 0;
+    private static final long keys$OFFSET = $LAYOUT.byteOffset(groupElement("keys"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class IndexModel {
         return options$LAYOUT;
     }
 
-    private static final long options$OFFSET = 8;
+    private static final long options$OFFSET = $LAYOUT.byteOffset(groupElement("options"));
 
     /**
      * Offset for field:

@@ -51,7 +51,7 @@ public class ChangeStreamError {
         return message$LAYOUT;
     }
 
-    private static final long message$OFFSET = 0;
+    private static final long message$OFFSET = $LAYOUT.byteOffset(groupElement("message"));
 
     /**
      * Offset for field:
@@ -95,7 +95,7 @@ public class ChangeStreamError {
         return resumable$LAYOUT;
     }
 
-    private static final long resumable$OFFSET = 8;
+    private static final long resumable$OFFSET = $LAYOUT.byteOffset(groupElement("resumable"));
 
     /**
      * Offset for field:

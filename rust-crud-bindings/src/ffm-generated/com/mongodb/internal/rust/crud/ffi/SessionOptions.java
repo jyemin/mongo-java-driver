@@ -53,7 +53,7 @@ public class SessionOptions {
         return causal_consistency$LAYOUT;
     }
 
-    private static final long causal_consistency$OFFSET = 0;
+    private static final long causal_consistency$OFFSET = $LAYOUT.byteOffset(groupElement("causal_consistency"));
 
     /**
      * Offset for field:
@@ -97,7 +97,7 @@ public class SessionOptions {
         return snapshot$LAYOUT;
     }
 
-    private static final long snapshot$OFFSET = 1;
+    private static final long snapshot$OFFSET = $LAYOUT.byteOffset(groupElement("snapshot"));
 
     /**
      * Offset for field:
@@ -141,7 +141,7 @@ public class SessionOptions {
         return default_transaction_options$LAYOUT;
     }
 
-    private static final long default_transaction_options$OFFSET = 8;
+    private static final long default_transaction_options$OFFSET = $LAYOUT.byteOffset(groupElement("default_transaction_options"));
 
     /**
      * Offset for field:

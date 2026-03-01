@@ -72,7 +72,7 @@ public class ErrorUnion {
         return server$LAYOUT;
     }
 
-    private static final long server$OFFSET = 0;
+    private static final long server$OFFSET = $LAYOUT.byteOffset(groupElement("server"));
 
     /**
      * Offset for field:
@@ -116,7 +116,7 @@ public class ErrorUnion {
         return insert_many$LAYOUT;
     }
 
-    private static final long insert_many$OFFSET = 0;
+    private static final long insert_many$OFFSET = $LAYOUT.byteOffset(groupElement("insert_many"));
 
     /**
      * Offset for field:
@@ -160,7 +160,7 @@ public class ErrorUnion {
         return bulk_write$LAYOUT;
     }
 
-    private static final long bulk_write$OFFSET = 0;
+    private static final long bulk_write$OFFSET = $LAYOUT.byteOffset(groupElement("bulk_write"));
 
     /**
      * Offset for field:
@@ -204,7 +204,7 @@ public class ErrorUnion {
         return io$LAYOUT;
     }
 
-    private static final long io$OFFSET = 0;
+    private static final long io$OFFSET = $LAYOUT.byteOffset(groupElement("io"));
 
     /**
      * Offset for field:
@@ -248,7 +248,7 @@ public class ErrorUnion {
         return server_selection$LAYOUT;
     }
 
-    private static final long server_selection$OFFSET = 0;
+    private static final long server_selection$OFFSET = $LAYOUT.byteOffset(groupElement("server_selection"));
 
     /**
      * Offset for field:
@@ -292,7 +292,7 @@ public class ErrorUnion {
         return timeout$LAYOUT;
     }
 
-    private static final long timeout$OFFSET = 0;
+    private static final long timeout$OFFSET = $LAYOUT.byteOffset(groupElement("timeout"));
 
     /**
      * Offset for field:
@@ -336,7 +336,7 @@ public class ErrorUnion {
         return auth$LAYOUT;
     }
 
-    private static final long auth$OFFSET = 0;
+    private static final long auth$OFFSET = $LAYOUT.byteOffset(groupElement("auth"));
 
     /**
      * Offset for field:
@@ -380,7 +380,7 @@ public class ErrorUnion {
         return invalid_argument$LAYOUT;
     }
 
-    private static final long invalid_argument$OFFSET = 0;
+    private static final long invalid_argument$OFFSET = $LAYOUT.byteOffset(groupElement("invalid_argument"));
 
     /**
      * Offset for field:
@@ -424,7 +424,7 @@ public class ErrorUnion {
         return transaction$LAYOUT;
     }
 
-    private static final long transaction$OFFSET = 0;
+    private static final long transaction$OFFSET = $LAYOUT.byteOffset(groupElement("transaction"));
 
     /**
      * Offset for field:
@@ -468,7 +468,7 @@ public class ErrorUnion {
         return incompatible_server$LAYOUT;
     }
 
-    private static final long incompatible_server$OFFSET = 0;
+    private static final long incompatible_server$OFFSET = $LAYOUT.byteOffset(groupElement("incompatible_server"));
 
     /**
      * Offset for field:
@@ -512,7 +512,7 @@ public class ErrorUnion {
         return invalid_response$LAYOUT;
     }
 
-    private static final long invalid_response$OFFSET = 0;
+    private static final long invalid_response$OFFSET = $LAYOUT.byteOffset(groupElement("invalid_response"));
 
     /**
      * Offset for field:
@@ -556,7 +556,7 @@ public class ErrorUnion {
         return change_stream$LAYOUT;
     }
 
-    private static final long change_stream$OFFSET = 0;
+    private static final long change_stream$OFFSET = $LAYOUT.byteOffset(groupElement("change_stream"));
 
     /**
      * Offset for field:
@@ -600,7 +600,7 @@ public class ErrorUnion {
         return shutdown$LAYOUT;
     }
 
-    private static final long shutdown$OFFSET = 0;
+    private static final long shutdown$OFFSET = $LAYOUT.byteOffset(groupElement("shutdown"));
 
     /**
      * Offset for field:

@@ -56,7 +56,7 @@ public class WriteConcernOptions {
         return w$LAYOUT;
     }
 
-    private static final long w$OFFSET = 0;
+    private static final long w$OFFSET = $LAYOUT.byteOffset(groupElement("w"));
 
     /**
      * Offset for field:
@@ -100,7 +100,7 @@ public class WriteConcernOptions {
         return w_tag$LAYOUT;
     }
 
-    private static final long w_tag$OFFSET = 8;
+    private static final long w_tag$OFFSET = $LAYOUT.byteOffset(groupElement("w_tag"));
 
     /**
      * Offset for field:
@@ -144,7 +144,7 @@ public class WriteConcernOptions {
         return journal$LAYOUT;
     }
 
-    private static final long journal$OFFSET = 16;
+    private static final long journal$OFFSET = $LAYOUT.byteOffset(groupElement("journal"));
 
     /**
      * Offset for field:
@@ -188,7 +188,7 @@ public class WriteConcernOptions {
         return w_timeout_ms$LAYOUT;
     }
 
-    private static final long w_timeout_ms$OFFSET = 24;
+    private static final long w_timeout_ms$OFFSET = $LAYOUT.byteOffset(groupElement("w_timeout_ms"));
 
     /**
      * Offset for field:

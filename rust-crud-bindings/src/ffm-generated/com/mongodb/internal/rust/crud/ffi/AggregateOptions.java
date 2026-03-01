@@ -62,7 +62,7 @@ public class AggregateOptions {
         return allow_disk_use$LAYOUT;
     }
 
-    private static final long allow_disk_use$OFFSET = 0;
+    private static final long allow_disk_use$OFFSET = $LAYOUT.byteOffset(groupElement("allow_disk_use"));
 
     /**
      * Offset for field:
@@ -106,7 +106,7 @@ public class AggregateOptions {
         return batch_size$LAYOUT;
     }
 
-    private static final long batch_size$OFFSET = 4;
+    private static final long batch_size$OFFSET = $LAYOUT.byteOffset(groupElement("batch_size"));
 
     /**
      * Offset for field:
@@ -150,7 +150,7 @@ public class AggregateOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 8;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -194,7 +194,7 @@ public class AggregateOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 16;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -238,7 +238,7 @@ public class AggregateOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 24;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:
@@ -282,7 +282,7 @@ public class AggregateOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 32;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -326,7 +326,7 @@ public class AggregateOptions {
         return let_vars$LAYOUT;
     }
 
-    private static final long let_vars$OFFSET = 40;
+    private static final long let_vars$OFFSET = $LAYOUT.byteOffset(groupElement("let_vars"));
 
     /**
      * Offset for field:

@@ -48,7 +48,7 @@ public class ListCollectionsOptions {
         return batch_size$LAYOUT;
     }
 
-    private static final long batch_size$OFFSET = 0;
+    private static final long batch_size$OFFSET = $LAYOUT.byteOffset(groupElement("batch_size"));
 
     /**
      * Offset for field:

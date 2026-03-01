@@ -64,7 +64,7 @@ public class ChangeStreamOptions {
         return full_document$LAYOUT;
     }
 
-    private static final long full_document$OFFSET = 0;
+    private static final long full_document$OFFSET = $LAYOUT.byteOffset(groupElement("full_document"));
 
     /**
      * Offset for field:
@@ -108,7 +108,7 @@ public class ChangeStreamOptions {
         return full_document_before_change$LAYOUT;
     }
 
-    private static final long full_document_before_change$OFFSET = 1;
+    private static final long full_document_before_change$OFFSET = $LAYOUT.byteOffset(groupElement("full_document_before_change"));
 
     /**
      * Offset for field:
@@ -152,7 +152,7 @@ public class ChangeStreamOptions {
         return resume_after$LAYOUT;
     }
 
-    private static final long resume_after$OFFSET = 8;
+    private static final long resume_after$OFFSET = $LAYOUT.byteOffset(groupElement("resume_after"));
 
     /**
      * Offset for field:
@@ -196,7 +196,7 @@ public class ChangeStreamOptions {
         return start_after$LAYOUT;
     }
 
-    private static final long start_after$OFFSET = 16;
+    private static final long start_after$OFFSET = $LAYOUT.byteOffset(groupElement("start_after"));
 
     /**
      * Offset for field:
@@ -240,7 +240,7 @@ public class ChangeStreamOptions {
         return start_at_operation_time$LAYOUT;
     }
 
-    private static final long start_at_operation_time$OFFSET = 24;
+    private static final long start_at_operation_time$OFFSET = $LAYOUT.byteOffset(groupElement("start_at_operation_time"));
 
     /**
      * Offset for field:
@@ -284,7 +284,7 @@ public class ChangeStreamOptions {
         return batch_size$LAYOUT;
     }
 
-    private static final long batch_size$OFFSET = 32;
+    private static final long batch_size$OFFSET = $LAYOUT.byteOffset(groupElement("batch_size"));
 
     /**
      * Offset for field:
@@ -328,7 +328,7 @@ public class ChangeStreamOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 40;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -372,7 +372,7 @@ public class ChangeStreamOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 48;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

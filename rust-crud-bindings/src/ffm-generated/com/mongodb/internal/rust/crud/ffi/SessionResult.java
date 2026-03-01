@@ -48,7 +48,7 @@ public class SessionResult {
         return session$LAYOUT;
     }
 
-    private static final long session$OFFSET = 0;
+    private static final long session$OFFSET = $LAYOUT.byteOffset(groupElement("session"));
 
     /**
      * Offset for field:

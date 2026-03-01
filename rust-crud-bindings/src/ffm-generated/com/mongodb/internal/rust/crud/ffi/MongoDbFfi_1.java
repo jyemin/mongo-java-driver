@@ -12,63 +12,18 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-public class MongoDbFfi_1 {
+class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     MongoDbFfi_1() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.find(symbol)
-            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("mongodb_ffi"), LIBRARY_ARENA)
             .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
-    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
-    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
-    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
-    public static final ValueLayout.OfLong C_LONG = ValueLayout.JAVA_LONG;
     private static final int __GNUC_VA_LIST = (int)1L;
     /**
      * {@snippet lang=c :
@@ -6238,7 +6193,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("signal");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("signal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6285,6 +6240,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("signal", x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6309,7 +6266,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getpriority");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getpriority");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6356,6 +6313,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getpriority", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6368,7 +6327,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getiopolicy_np");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getiopolicy_np");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6415,6 +6374,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getiopolicy_np", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6427,7 +6388,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getrlimit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getrlimit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6474,6 +6435,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getrlimit", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6486,7 +6449,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getrusage");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getrusage");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6533,6 +6496,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getrusage", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6546,7 +6511,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setpriority");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setpriority");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6593,6 +6558,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setpriority", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6606,7 +6573,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setiopolicy_np");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setiopolicy_np");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6653,6 +6620,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setiopolicy_np", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6665,7 +6634,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setrlimit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setrlimit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6712,6 +6681,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setrlimit", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6723,7 +6694,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("wait");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wait");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6770,6 +6741,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("wait", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6783,7 +6756,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("waitpid");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("waitpid");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6830,6 +6803,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("waitpid", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6844,7 +6819,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("waitid");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("waitid");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6891,6 +6866,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("waitid", x0, x1, x2, x3);
             }
             return (int)mh$.invokeExact(x0, x1, x2, x3);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6904,7 +6881,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("wait3");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wait3");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6951,6 +6928,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("wait3", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6965,7 +6944,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("wait4");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wait4");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7012,6 +6991,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("wait4", x0, x1, x2, x3);
             }
             return (int)mh$.invokeExact(x0, x1, x2, x3);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7023,7 +7004,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("alloca");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("alloca");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7070,6 +7051,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("alloca", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7095,7 +7078,7 @@ public class MongoDbFfi_1 {
 
     private static class __mb_cur_max$constants {
         public static final OfInt LAYOUT = MongoDbFfi.C_INT;
-        public static final MemorySegment SEGMENT = MongoDbFfi.findOrThrow("__mb_cur_max").reinterpret(LAYOUT.byteSize());
+        public static final MemorySegment SEGMENT = SYMBOL_LOOKUP.findOrThrow("__mb_cur_max").reinterpret(LAYOUT.byteSize());
     }
 
     /**
@@ -7151,7 +7134,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_malloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_malloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7198,6 +7181,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_malloc", size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7211,7 +7196,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_calloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_calloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7258,6 +7243,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_calloc", count, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(count, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7269,7 +7256,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_free");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_free");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7316,6 +7303,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_free", ptr, type_id);
             }
             mh$.invokeExact(ptr, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7329,7 +7318,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_realloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_realloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7376,6 +7365,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_realloc", ptr, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(ptr, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7388,7 +7379,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_valloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_valloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7435,6 +7426,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_valloc", size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7448,7 +7441,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_aligned_alloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_aligned_alloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7495,6 +7488,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_aligned_alloc", alignment, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(alignment, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7509,7 +7504,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_posix_memalign");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_posix_memalign");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7556,6 +7551,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_posix_memalign", memptr, alignment, size, type_id);
             }
             return (int)mh$.invokeExact(memptr, alignment, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7569,7 +7566,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_malloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_malloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7616,6 +7613,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_malloc", zone, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(zone, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7630,7 +7629,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_calloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_calloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7677,6 +7676,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_calloc", zone, count, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(zone, count, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7689,7 +7690,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_free");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_free");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7736,6 +7737,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_free", zone, ptr, type_id);
             }
             mh$.invokeExact(zone, ptr, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7750,7 +7753,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_realloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_realloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7797,6 +7800,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_realloc", zone, ptr, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(zone, ptr, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7810,7 +7815,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_valloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_valloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7857,6 +7862,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_valloc", zone, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(zone, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7871,7 +7878,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc_type_zone_memalign");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc_type_zone_memalign");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7918,6 +7925,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc_type_zone_memalign", zone, alignment, size, type_id);
             }
             return (MemorySegment)mh$.invokeExact(zone, alignment, size, type_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7929,7 +7938,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("malloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7976,6 +7985,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("malloc", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7988,7 +7999,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("calloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("calloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8035,6 +8046,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("calloc", __count, __size);
             }
             return (MemorySegment)mh$.invokeExact(__count, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8045,7 +8058,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("free");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("free");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8092,6 +8105,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("free", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8104,7 +8119,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("realloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8151,6 +8166,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("realloc", __ptr, __size);
             }
             return (MemorySegment)mh$.invokeExact(__ptr, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8163,7 +8180,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("reallocf");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("reallocf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8210,6 +8227,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("reallocf", __ptr, __size);
             }
             return (MemorySegment)mh$.invokeExact(__ptr, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8221,7 +8240,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("valloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("valloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8268,6 +8287,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("valloc", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8280,7 +8301,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("aligned_alloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("aligned_alloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8327,6 +8348,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("aligned_alloc", __alignment, __size);
             }
             return (MemorySegment)mh$.invokeExact(__alignment, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8340,7 +8363,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("posix_memalign");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("posix_memalign");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8387,6 +8410,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("posix_memalign", __memptr, __alignment, __size);
             }
             return (int)mh$.invokeExact(__memptr, __alignment, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8395,7 +8420,7 @@ public class MongoDbFfi_1 {
     private static class abort {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("abort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("abort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8442,6 +8467,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("abort");
             }
             mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8453,7 +8480,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("abs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("abs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8500,6 +8527,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("abs", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8511,7 +8540,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atexit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atexit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8558,6 +8587,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atexit", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8569,7 +8600,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("at_quick_exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("at_quick_exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8616,6 +8647,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("at_quick_exit", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8627,7 +8660,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atof");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atof");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8674,6 +8707,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atof", x0);
             }
             return (double)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8685,7 +8720,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atoi");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atoi");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8732,6 +8767,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atoi", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8743,7 +8780,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atol");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atol");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8790,6 +8827,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atol", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8801,7 +8840,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atoll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atoll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8848,6 +8887,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atoll", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8863,7 +8904,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("bsearch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bsearch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8910,6 +8951,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("bsearch", __key, __base, __nel, __width, __compar);
             }
             return (MemorySegment)mh$.invokeExact(__key, __base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8922,7 +8965,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("div");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("div");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8969,6 +9012,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("div", allocator, x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(allocator, x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8979,7 +9024,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9026,6 +9071,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("exit", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9037,7 +9084,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9084,6 +9131,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getenv", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9095,7 +9144,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("labs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("labs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9142,6 +9191,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("labs", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9154,7 +9205,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("ldiv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ldiv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9201,6 +9252,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("ldiv", allocator, x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(allocator, x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9212,7 +9265,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("llabs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("llabs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9259,6 +9312,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("llabs", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9271,7 +9326,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("lldiv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lldiv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9318,6 +9373,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("lldiv", allocator, x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(allocator, x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9330,7 +9387,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mblen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mblen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9377,6 +9434,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mblen", __s, __n);
             }
             return (int)mh$.invokeExact(__s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9390,7 +9449,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mbstowcs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mbstowcs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9437,6 +9496,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mbstowcs", x0, x1, __n);
             }
             return (long)mh$.invokeExact(x0, x1, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9450,7 +9511,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mbtowc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mbtowc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9497,6 +9558,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mbtowc", x0, x1, __n);
             }
             return (int)mh$.invokeExact(x0, x1, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9510,7 +9573,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("qsort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("qsort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9557,6 +9620,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("qsort", __base, __nel, __width, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9567,7 +9632,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("quick_exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("quick_exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9614,6 +9679,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("quick_exit", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9623,7 +9690,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_INT    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("rand");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rand");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9670,6 +9737,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("rand");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9680,7 +9749,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("srand");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srand");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9727,6 +9796,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("srand", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9739,7 +9810,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtod");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtod");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9786,6 +9857,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtod", x0, x1);
             }
             return (double)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9798,7 +9871,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtof");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtof");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9845,6 +9918,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtof", x0, x1);
             }
             return (float)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9858,7 +9933,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtol");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtol");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9905,6 +9980,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtol", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9918,7 +9995,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtoll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9965,6 +10042,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtoll", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9978,7 +10057,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtoul");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoul");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10025,6 +10104,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtoul", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10038,7 +10119,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtoull");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoull");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10085,6 +10166,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtoull", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10096,7 +10179,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("system");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("system");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10143,6 +10226,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("system", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10156,7 +10241,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("wcstombs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wcstombs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10203,6 +10288,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("wcstombs", x0, x1, __n);
             }
             return (long)mh$.invokeExact(x0, x1, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10215,7 +10302,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("wctomb");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wctomb");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10262,6 +10349,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("wctomb", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10272,7 +10361,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("_Exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("_Exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10319,6 +10408,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("_Exit", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10330,7 +10421,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("a64l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("a64l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10377,6 +10468,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("a64l", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10386,7 +10479,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_DOUBLE    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("drand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("drand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10433,6 +10526,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("drand48");
             }
             return (double)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10447,7 +10542,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("ecvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ecvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10494,6 +10589,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("ecvt", x0, x1, x2, x3);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, x2, x3);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10505,7 +10602,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("erand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("erand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10552,6 +10649,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("erand48", x0);
             }
             return (double)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10566,7 +10665,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("fcvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("fcvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10613,6 +10712,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("fcvt", x0, x1, x2, x3);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, x2, x3);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10626,7 +10727,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("gcvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("gcvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10673,6 +10774,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("gcvt", x0, x1, x2);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10686,7 +10789,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getsubopt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getsubopt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10733,6 +10836,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getsubopt", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10744,7 +10849,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("grantpt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("grantpt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10791,6 +10896,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("grantpt", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10804,7 +10911,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("initstate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("initstate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10851,6 +10958,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("initstate", x0, x1, __size);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10862,7 +10971,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("jrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("jrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10909,6 +11018,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("jrand48", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10920,7 +11031,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("l64a");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("l64a");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10967,6 +11078,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("l64a", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10977,7 +11090,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("lcong48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lcong48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11024,6 +11137,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("lcong48", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11033,7 +11148,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_LONG    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("lrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11080,6 +11195,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("lrand48");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11091,7 +11208,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mktemp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mktemp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11138,6 +11255,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mktemp", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11149,7 +11268,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mkstemp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mkstemp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11196,6 +11315,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mkstemp", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11205,7 +11326,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_LONG    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11252,6 +11373,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mrand48");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11263,7 +11386,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("nrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("nrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11310,6 +11433,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("nrand48", x0);
             }
             return (long)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11321,7 +11446,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("posix_openpt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("posix_openpt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11368,6 +11493,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("posix_openpt", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11379,7 +11506,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("ptsname");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ptsname");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11426,6 +11553,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("ptsname", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11439,7 +11568,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("ptsname_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ptsname_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11486,6 +11615,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("ptsname_r", fildes, buffer, buflen);
             }
             return (int)mh$.invokeExact(fildes, buffer, buflen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11497,7 +11628,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("putenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("putenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11544,6 +11675,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("putenv", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11553,7 +11686,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_LONG    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("random");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("random");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11600,6 +11733,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("random");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11611,7 +11746,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("rand_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rand_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11658,6 +11793,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("rand_r", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11670,7 +11807,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("realpath$DARWIN_EXTSN");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realpath$DARWIN_EXTSN");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11717,6 +11854,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("realpath", x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11728,7 +11867,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("seed48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("seed48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11775,6 +11914,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("seed48", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11788,7 +11929,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11835,6 +11976,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setenv", __name, __value, __overwrite);
             }
             return (int)mh$.invokeExact(__name, __value, __overwrite);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11845,7 +11988,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setkey");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setkey");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11892,6 +12035,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setkey", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11903,7 +12048,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setstate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setstate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11950,6 +12095,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setstate", x0);
             }
             return (MemorySegment)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11960,7 +12107,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("srand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12007,6 +12154,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("srand48", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12017,7 +12166,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("srandom");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srandom");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12064,6 +12213,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("srandom", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12075,7 +12226,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("unlockpt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("unlockpt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12122,6 +12273,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("unlockpt", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12133,7 +12286,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("unsetenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("unsetenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12180,6 +12333,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("unsetenv", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12201,7 +12356,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_INT    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("arc4random");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("arc4random");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12248,6 +12403,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("arc4random");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12259,7 +12416,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("arc4random_addrandom");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("arc4random_addrandom");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12306,6 +12463,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("arc4random_addrandom", x0, __datlen);
             }
             mh$.invokeExact(x0, __datlen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12317,7 +12476,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_LONG
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("arc4random_buf");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("arc4random_buf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12364,6 +12523,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("arc4random_buf", __buf, __nbytes);
             }
             mh$.invokeExact(__buf, __nbytes);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12372,7 +12533,7 @@ public class MongoDbFfi_1 {
     private static class arc4random_stir {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("arc4random_stir");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("arc4random_stir");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12419,6 +12580,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("arc4random_stir");
             }
             mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12430,7 +12593,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("arc4random_uniform");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("arc4random_uniform");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12477,6 +12640,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("arc4random_uniform", __upper_bound);
             }
             return (int)mh$.invokeExact(__upper_bound);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12488,7 +12653,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("atexit_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atexit_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12535,6 +12700,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("atexit_b", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12550,7 +12717,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("bsearch_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bsearch_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12597,6 +12764,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("bsearch_b", __key, __base, __nel, __width, __compar);
             }
             return (MemorySegment)mh$.invokeExact(__key, __base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12610,7 +12779,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetcap");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetcap");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12657,6 +12826,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetcap", x0, x1, x2);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12666,7 +12837,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_INT    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetclose");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetclose");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12713,6 +12884,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetclose");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12726,7 +12899,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetent");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetent");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12773,6 +12946,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetent", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12785,7 +12960,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetfirst");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetfirst");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12832,6 +13007,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetfirst", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12844,7 +13021,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetmatch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetmatch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12891,6 +13068,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetmatch", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12903,7 +13082,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetnext");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetnext");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12950,6 +13129,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetnext", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -12963,7 +13144,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetnum");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetnum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13010,6 +13191,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetnum", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13021,7 +13204,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetset");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetset");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13068,6 +13251,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetset", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13081,7 +13266,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetstr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetstr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13128,6 +13313,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetstr", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13141,7 +13328,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("cgetustr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("cgetustr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13188,6 +13375,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("cgetustr", x0, x1, x2);
             }
             return (int)mh$.invokeExact(x0, x1, x2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13200,7 +13389,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("daemon");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("daemon");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13247,6 +13436,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("daemon", x0, x1);
             }
             return (int)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13259,7 +13450,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_SHORT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("devname");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("devname");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13306,6 +13497,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("devname", x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13320,7 +13513,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("devname_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("devname_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13367,6 +13560,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("devname_r", x0, x1, buf, len);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1, buf, len);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13379,7 +13574,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getbsize");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getbsize");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13426,6 +13621,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getbsize", x0, x1);
             }
             return (MemorySegment)mh$.invokeExact(x0, x1);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13438,7 +13635,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getloadavg");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getloadavg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13485,6 +13682,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getloadavg", x0, __nelem);
             }
             return (int)mh$.invokeExact(x0, __nelem);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13494,7 +13693,7 @@ public class MongoDbFfi_1 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_POINTER    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("getprogname");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getprogname");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13541,6 +13740,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("getprogname");
             }
             return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13551,7 +13752,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("setprogname");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setprogname");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13598,6 +13799,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("setprogname", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13612,7 +13815,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("heapsort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("heapsort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13659,6 +13862,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("heapsort", __base, __nel, __width, __compar);
             }
             return (int)mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13673,7 +13878,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("heapsort_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("heapsort_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13720,6 +13925,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("heapsort_b", __base, __nel, __width, __compar);
             }
             return (int)mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13734,7 +13941,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mergesort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mergesort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13781,6 +13988,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mergesort", __base, __nel, __width, __compar);
             }
             return (int)mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13795,7 +14004,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mergesort_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mergesort_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13842,6 +14051,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mergesort_b", __base, __nel, __width, __compar);
             }
             return (int)mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13855,7 +14066,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("psort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("psort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13902,6 +14113,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("psort", __base, __nel, __width, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13915,7 +14128,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("psort_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("psort_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13962,6 +14175,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("psort_b", __base, __nel, __width, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -13976,7 +14191,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("psort_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("psort_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14023,6 +14238,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("psort_r", __base, __nel, __width, x3, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, x3, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14036,7 +14253,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("qsort_b");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("qsort_b");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14083,6 +14300,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("qsort_b", __base, __nel, __width, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14097,7 +14316,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("qsort_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("qsort_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14144,6 +14363,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("qsort_r", __base, __nel, __width, x3, __compar);
             }
             mh$.invokeExact(__base, __nel, __width, x3, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14158,7 +14379,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("radixsort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("radixsort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14205,6 +14426,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("radixsort", __base, __nel, __table, __endbyte);
             }
             return (int)mh$.invokeExact(__base, __nel, __table, __endbyte);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14216,7 +14439,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("rpmatch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rpmatch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14263,6 +14486,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("rpmatch", x0);
             }
             return (int)mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14277,7 +14502,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("sradixsort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("sradixsort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14324,6 +14549,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("sradixsort", __base, __nel, __table, __endbyte);
             }
             return (int)mh$.invokeExact(__base, __nel, __table, __endbyte);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14332,7 +14559,7 @@ public class MongoDbFfi_1 {
     private static class sranddev {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("sranddev");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("sranddev");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14379,6 +14606,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("sranddev");
             }
             mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14387,7 +14616,7 @@ public class MongoDbFfi_1 {
     private static class srandomdev {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(    );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("srandomdev");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srandomdev");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14434,6 +14663,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("srandomdev");
             }
             mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14448,7 +14679,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtonum");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtonum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14495,6 +14726,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtonum", __numstr, __minval, __maxval, __errstrp);
             }
             return (long)mh$.invokeExact(__numstr, __minval, __maxval, __errstrp);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14508,7 +14741,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtoq");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoq");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14555,6 +14788,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtoq", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14568,7 +14803,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("strtouq");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtouq");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14615,6 +14850,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("strtouq", __str, __endptr, __base);
             }
             return (long)mh$.invokeExact(__str, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14622,7 +14859,7 @@ public class MongoDbFfi_1 {
 
     private static class suboptarg$constants {
         public static final AddressLayout LAYOUT = MongoDbFfi.C_POINTER;
-        public static final MemorySegment SEGMENT = MongoDbFfi.findOrThrow("suboptarg").reinterpret(LAYOUT.byteSize());
+        public static final MemorySegment SEGMENT = SYMBOL_LOOKUP.findOrThrow("suboptarg").reinterpret(LAYOUT.byteSize());
     }
 
     /**
@@ -14800,7 +15037,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_insert_one");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_insert_one");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14847,6 +15084,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_insert_one", client, ctx, db_name, coll_name, document, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, document, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14864,7 +15103,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_insert_many");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_insert_many");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14911,6 +15150,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_insert_many", client, ctx, db_name, coll_name, documents, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, documents, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14929,7 +15170,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_update_one");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_update_one");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -14976,6 +15217,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_update_one", client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -14994,7 +15237,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_update_many");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_update_many");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15041,6 +15284,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_update_many", client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15058,7 +15303,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_delete_one");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_delete_one");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15105,6 +15350,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_delete_one", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15122,7 +15369,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_delete_many");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_delete_many");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15169,6 +15416,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_delete_many", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15186,7 +15435,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_find");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15233,6 +15482,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_find", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15246,7 +15497,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_cursor_get_more");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_cursor_get_more");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15293,6 +15544,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_cursor_get_more", client, cursor, userdata, callback);
             }
             mh$.invokeExact(client, cursor, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15306,7 +15559,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_cursor_close");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_cursor_close");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15353,6 +15606,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_cursor_close", client, cursor, userdata, callback);
             }
             mh$.invokeExact(client, cursor, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15370,7 +15625,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_find_one");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15417,6 +15672,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_find_one", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15435,7 +15692,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_find_one_and_update");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_update");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15482,6 +15739,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_find_one_and_update", client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, update, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15500,7 +15759,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_find_one_and_replace");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_replace");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15547,6 +15806,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_find_one_and_replace", client, ctx, db_name, coll_name, filter, replacement, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, replacement, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15564,7 +15825,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_find_one_and_delete");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_delete");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15611,6 +15872,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_find_one_and_delete", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15629,7 +15892,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_replace_one");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_replace_one");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15676,6 +15939,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_replace_one", client, ctx, db_name, coll_name, filter, replacement, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, replacement, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15693,7 +15958,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_aggregate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_aggregate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15740,6 +16005,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_aggregate", client, ctx, db_name, coll_name, pipeline, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, pipeline, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15756,7 +16023,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_aggregate_database");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_aggregate_database");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15803,6 +16070,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_aggregate_database", client, ctx, db_name, pipeline, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, pipeline, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15820,7 +16089,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_count_documents");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_count_documents");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15867,6 +16136,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_count_documents", client, ctx, db_name, coll_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15883,7 +16154,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_estimated_document_count");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_estimated_document_count");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15930,6 +16201,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_estimated_document_count", client, ctx, db_name, coll_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -15948,7 +16221,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_distinct");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_distinct");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -15995,6 +16268,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_distinct", client, ctx, db_name, coll_name, field_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, field_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16012,7 +16287,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_create_index");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_create_index");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16059,6 +16334,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_create_index", client, ctx, db_name, coll_name, index, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, index, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16077,7 +16354,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_create_indexes");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_create_indexes");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16124,6 +16401,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_create_indexes", client, ctx, db_name, coll_name, indexes, indexes_len, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, indexes, indexes_len, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16141,7 +16420,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_drop_index");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_drop_index");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16188,6 +16467,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_drop_index", client, ctx, db_name, coll_name, index_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, index_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16204,7 +16485,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_list_indexes");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_list_indexes");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16251,6 +16532,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_list_indexes", client, ctx, db_name, coll_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16267,7 +16550,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_create_collection");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_create_collection");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16314,6 +16597,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_create_collection", client, ctx, db_name, coll_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16330,7 +16615,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_drop_collection");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_drop_collection");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16377,6 +16662,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_drop_collection", client, ctx, db_name, coll_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16394,7 +16681,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_rename_collection");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_rename_collection");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16441,6 +16728,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_rename_collection", client, ctx, db_name, coll_name, new_name, drop_target, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, new_name, drop_target, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16457,7 +16746,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_list_collections");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_list_collections");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16504,6 +16793,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_list_collections", client, ctx, db_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16520,7 +16811,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_list_collection_names");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_list_collection_names");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16567,6 +16858,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_list_collection_names", client, ctx, db_name, filter, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, filter, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16582,7 +16875,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_drop_database");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_drop_database");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16629,6 +16922,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_drop_database", client, ctx, db_name, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16643,7 +16938,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_list_databases");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_list_databases");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16690,6 +16985,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_list_databases", client, ctx, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16704,7 +17001,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_list_database_names");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_list_database_names");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16751,6 +17048,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_list_database_names", client, ctx, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16767,7 +17066,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_run_command");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_run_command");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16814,6 +17113,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_run_command", client, ctx, db_name, command, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, command, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16830,7 +17131,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_run_cursor_command");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_run_cursor_command");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16877,6 +17178,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_run_cursor_command", client, ctx, db_name, command, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, command, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16894,7 +17197,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_watch_collection");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_watch_collection");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -16941,6 +17244,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_watch_collection", client, ctx, db_name, coll_name, pipeline, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, pipeline, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -16957,7 +17262,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_watch_database");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_watch_database");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17004,6 +17309,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_watch_database", client, ctx, db_name, pipeline, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, pipeline, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17019,7 +17326,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_watch_client");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_watch_client");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17066,6 +17373,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_watch_client", client, ctx, pipeline, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, pipeline, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17079,7 +17388,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_change_stream_get_more");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_change_stream_get_more");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17126,6 +17435,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_change_stream_get_more", client, change_stream, userdata, callback);
             }
             mh$.invokeExact(client, change_stream, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17139,7 +17450,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_change_stream_close");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_change_stream_close");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17186,6 +17497,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_change_stream_close", client, change_stream, userdata, callback);
             }
             mh$.invokeExact(client, change_stream, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17199,7 +17512,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_session_start");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_session_start");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17246,6 +17559,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_session_start", client, options, userdata, callback);
             }
             mh$.invokeExact(client, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17259,7 +17574,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_session_end");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_session_end");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17306,6 +17621,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_session_end", client, session, userdata, callback);
             }
             mh$.invokeExact(client, session, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17320,7 +17637,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_session_start_transaction");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_session_start_transaction");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17367,6 +17684,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_session_start_transaction", client, session, options, userdata, callback);
             }
             mh$.invokeExact(client, session, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17380,7 +17699,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_session_commit_transaction");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_session_commit_transaction");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17427,6 +17746,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_session_commit_transaction", client, session, userdata, callback);
             }
             mh$.invokeExact(client, session, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17440,7 +17761,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_session_abort_transaction");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_session_abort_transaction");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17487,6 +17808,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_session_abort_transaction", client, session, userdata, callback);
             }
             mh$.invokeExact(client, session, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17499,7 +17822,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_client_new");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_client_new");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17546,6 +17869,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_client_new", options, userdata, callback);
             }
             mh$.invokeExact(options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17558,7 +17883,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_client_destroy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_client_destroy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17605,6 +17930,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_client_destroy", client, userdata, callback);
             }
             mh$.invokeExact(client, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17617,7 +17944,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_read_preference_create");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_preference_create");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17664,6 +17991,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_read_preference_create", client, options);
             }
             return (MemorySegment)mh$.invokeExact(client, options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17675,7 +18004,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_read_preference_destroy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_preference_destroy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17722,6 +18051,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_read_preference_destroy", client, handle);
             }
             mh$.invokeExact(client, handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17734,7 +18065,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_write_concern_create");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_write_concern_create");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17781,6 +18112,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_write_concern_create", client, options);
             }
             return (MemorySegment)mh$.invokeExact(client, options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17792,7 +18125,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_write_concern_destroy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_write_concern_destroy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17839,6 +18172,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_write_concern_destroy", client, handle);
             }
             mh$.invokeExact(client, handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17851,7 +18186,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_read_concern_create");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_concern_create");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17898,6 +18233,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_read_concern_create", client, options);
             }
             return (MemorySegment)mh$.invokeExact(client, options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17909,7 +18246,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_read_concern_destroy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_concern_destroy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -17956,6 +18293,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_read_concern_destroy", client, handle);
             }
             mh$.invokeExact(client, handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -17974,7 +18313,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_bulk_write");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_bulk_write");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -18021,6 +18360,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_bulk_write", client, ctx, db_name, coll_name, models, models_len, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, models, models_len, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -18037,7 +18378,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_client_bulk_write");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_client_bulk_write");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -18084,6 +18425,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_client_bulk_write", client, ctx, models, models_len, options, userdata, callback);
             }
             mh$.invokeExact(client, ctx, models, models_len, options, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -18099,7 +18442,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_POINTER
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_init_logging");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_init_logging");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -18146,6 +18489,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_init_logging", command_level, connection_level, server_selection_level, topology_level, log_callback, userdata);
             }
             mh$.invokeExact(command_level, connection_level, server_selection_level, topology_level, log_callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -18159,7 +18504,7 @@ public class MongoDbFfi_1 {
             MongoDbFfi.C_INT
         );
 
-        public static final MemorySegment ADDR = MongoDbFfi.findOrThrow("mongo_update_log_levels");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_update_log_levels");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -18206,6 +18551,8 @@ public class MongoDbFfi_1 {
                 traceDowncall("mongo_update_log_levels", command_level, connection_level, server_selection_level, topology_level);
             }
             mh$.invokeExact(command_level, connection_level, server_selection_level, topology_level);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }

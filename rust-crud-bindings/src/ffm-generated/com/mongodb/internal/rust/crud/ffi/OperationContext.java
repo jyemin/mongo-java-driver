@@ -56,7 +56,7 @@ public class OperationContext {
         return session$LAYOUT;
     }
 
-    private static final long session$OFFSET = 0;
+    private static final long session$OFFSET = $LAYOUT.byteOffset(groupElement("session"));
 
     /**
      * Offset for field:
@@ -100,7 +100,7 @@ public class OperationContext {
         return read_preference$LAYOUT;
     }
 
-    private static final long read_preference$OFFSET = 8;
+    private static final long read_preference$OFFSET = $LAYOUT.byteOffset(groupElement("read_preference"));
 
     /**
      * Offset for field:
@@ -144,7 +144,7 @@ public class OperationContext {
         return write_concern$LAYOUT;
     }
 
-    private static final long write_concern$OFFSET = 16;
+    private static final long write_concern$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern"));
 
     /**
      * Offset for field:
@@ -188,7 +188,7 @@ public class OperationContext {
         return read_concern$LAYOUT;
     }
 
-    private static final long read_concern$OFFSET = 24;
+    private static final long read_concern$OFFSET = $LAYOUT.byteOffset(groupElement("read_concern"));
 
     /**
      * Offset for field:
@@ -232,7 +232,7 @@ public class OperationContext {
         return timeout_ms$LAYOUT;
     }
 
-    private static final long timeout_ms$OFFSET = 32;
+    private static final long timeout_ms$OFFSET = $LAYOUT.byteOffset(groupElement("timeout_ms"));
 
     /**
      * Offset for field:

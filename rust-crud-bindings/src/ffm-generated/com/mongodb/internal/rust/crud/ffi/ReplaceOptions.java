@@ -57,7 +57,7 @@ public class ReplaceOptions {
         return upsert$LAYOUT;
     }
 
-    private static final long upsert$OFFSET = 0;
+    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
 
     /**
      * Offset for field:
@@ -101,7 +101,7 @@ public class ReplaceOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 1;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -145,7 +145,7 @@ public class ReplaceOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 8;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -189,7 +189,7 @@ public class ReplaceOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 16;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -233,7 +233,7 @@ public class ReplaceOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 24;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

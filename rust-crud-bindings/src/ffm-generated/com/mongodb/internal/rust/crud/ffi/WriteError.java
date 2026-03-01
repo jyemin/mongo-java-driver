@@ -56,7 +56,7 @@ public class WriteError {
         return index$LAYOUT;
     }
 
-    private static final long index$OFFSET = 0;
+    private static final long index$OFFSET = $LAYOUT.byteOffset(groupElement("index"));
 
     /**
      * Offset for field:
@@ -100,7 +100,7 @@ public class WriteError {
         return code$LAYOUT;
     }
 
-    private static final long code$OFFSET = 4;
+    private static final long code$OFFSET = $LAYOUT.byteOffset(groupElement("code"));
 
     /**
      * Offset for field:
@@ -144,7 +144,7 @@ public class WriteError {
         return code_name$LAYOUT;
     }
 
-    private static final long code_name$OFFSET = 8;
+    private static final long code_name$OFFSET = $LAYOUT.byteOffset(groupElement("code_name"));
 
     /**
      * Offset for field:
@@ -188,7 +188,7 @@ public class WriteError {
         return message$LAYOUT;
     }
 
-    private static final long message$OFFSET = 16;
+    private static final long message$OFFSET = $LAYOUT.byteOffset(groupElement("message"));
 
     /**
      * Offset for field:
@@ -232,7 +232,7 @@ public class WriteError {
         return details$LAYOUT;
     }
 
-    private static final long details$OFFSET = 24;
+    private static final long details$OFFSET = $LAYOUT.byteOffset(groupElement("details"));
 
     /**
      * Offset for field:

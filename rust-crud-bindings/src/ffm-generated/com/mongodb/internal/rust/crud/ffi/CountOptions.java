@@ -56,7 +56,7 @@ public class CountOptions {
         return limit$LAYOUT;
     }
 
-    private static final long limit$OFFSET = 0;
+    private static final long limit$OFFSET = $LAYOUT.byteOffset(groupElement("limit"));
 
     /**
      * Offset for field:
@@ -100,7 +100,7 @@ public class CountOptions {
         return skip$LAYOUT;
     }
 
-    private static final long skip$OFFSET = 8;
+    private static final long skip$OFFSET = $LAYOUT.byteOffset(groupElement("skip"));
 
     /**
      * Offset for field:
@@ -144,7 +144,7 @@ public class CountOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 16;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -188,7 +188,7 @@ public class CountOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 24;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -232,7 +232,7 @@ public class CountOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 32;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

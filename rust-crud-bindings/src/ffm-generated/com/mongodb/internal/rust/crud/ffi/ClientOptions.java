@@ -48,7 +48,7 @@ public class ClientOptions {
         return connection_string$LAYOUT;
     }
 
-    private static final long connection_string$OFFSET = 0;
+    private static final long connection_string$OFFSET = $LAYOUT.byteOffset(groupElement("connection_string"));
 
     /**
      * Offset for field:

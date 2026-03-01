@@ -53,7 +53,7 @@ public class ChangeStreamGetMoreResult {
         return exhausted$LAYOUT;
     }
 
-    private static final long exhausted$OFFSET = 0;
+    private static final long exhausted$OFFSET = $LAYOUT.byteOffset(groupElement("exhausted"));
 
     /**
      * Offset for field:
@@ -97,7 +97,7 @@ public class ChangeStreamGetMoreResult {
         return batch$LAYOUT;
     }
 
-    private static final long batch$OFFSET = 8;
+    private static final long batch$OFFSET = $LAYOUT.byteOffset(groupElement("batch"));
 
     /**
      * Offset for field:
@@ -141,7 +141,7 @@ public class ChangeStreamGetMoreResult {
         return resume_token$LAYOUT;
     }
 
-    private static final long resume_token$OFFSET = 40;
+    private static final long resume_token$OFFSET = $LAYOUT.byteOffset(groupElement("resume_token"));
 
     /**
      * Offset for field:

@@ -54,7 +54,7 @@ public class InsertManyError {
         return write_errors$LAYOUT;
     }
 
-    private static final long write_errors$OFFSET = 0;
+    private static final long write_errors$OFFSET = $LAYOUT.byteOffset(groupElement("write_errors"));
 
     /**
      * Offset for field:
@@ -98,7 +98,7 @@ public class InsertManyError {
         return write_errors_len$LAYOUT;
     }
 
-    private static final long write_errors_len$OFFSET = 8;
+    private static final long write_errors_len$OFFSET = $LAYOUT.byteOffset(groupElement("write_errors_len"));
 
     /**
      * Offset for field:
@@ -142,7 +142,7 @@ public class InsertManyError {
         return write_concern_error$LAYOUT;
     }
 
-    private static final long write_concern_error$OFFSET = 16;
+    private static final long write_concern_error$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern_error"));
 
     /**
      * Offset for field:
@@ -186,7 +186,7 @@ public class InsertManyError {
         return inserted_ids$LAYOUT;
     }
 
-    private static final long inserted_ids$OFFSET = 24;
+    private static final long inserted_ids$OFFSET = $LAYOUT.byteOffset(groupElement("inserted_ids"));
 
     /**
      * Offset for field:

@@ -52,7 +52,7 @@ public class TransactionError {
         return message$LAYOUT;
     }
 
-    private static final long message$OFFSET = 0;
+    private static final long message$OFFSET = $LAYOUT.byteOffset(groupElement("message"));
 
     /**
      * Offset for field:
@@ -96,7 +96,7 @@ public class TransactionError {
         return labels$LAYOUT;
     }
 
-    private static final long labels$OFFSET = 8;
+    private static final long labels$OFFSET = $LAYOUT.byteOffset(groupElement("labels"));
 
     /**
      * Offset for field:
@@ -140,7 +140,7 @@ public class TransactionError {
         return labels_len$LAYOUT;
     }
 
-    private static final long labels_len$OFFSET = 16;
+    private static final long labels_len$OFFSET = $LAYOUT.byteOffset(groupElement("labels_len"));
 
     /**
      * Offset for field:

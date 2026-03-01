@@ -48,7 +48,7 @@ public class DropIndexOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 0;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

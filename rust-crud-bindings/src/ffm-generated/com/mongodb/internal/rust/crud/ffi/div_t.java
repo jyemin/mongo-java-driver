@@ -50,7 +50,7 @@ public class div_t {
         return quot$LAYOUT;
     }
 
-    private static final long quot$OFFSET = 0;
+    private static final long quot$OFFSET = $LAYOUT.byteOffset(groupElement("quot"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class div_t {
         return rem$LAYOUT;
     }
 
-    private static final long rem$OFFSET = 4;
+    private static final long rem$OFFSET = $LAYOUT.byteOffset(groupElement("rem"));
 
     /**
      * Offset for field:

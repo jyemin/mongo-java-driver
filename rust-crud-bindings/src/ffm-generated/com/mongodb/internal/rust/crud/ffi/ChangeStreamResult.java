@@ -57,7 +57,7 @@ public class ChangeStreamResult {
         return cursor$LAYOUT;
     }
 
-    private static final long cursor$OFFSET = 0;
+    private static final long cursor$OFFSET = $LAYOUT.byteOffset(groupElement("cursor"));
 
     /**
      * Offset for field:
@@ -101,7 +101,7 @@ public class ChangeStreamResult {
         return first_batch$LAYOUT;
     }
 
-    private static final long first_batch$OFFSET = 8;
+    private static final long first_batch$OFFSET = $LAYOUT.byteOffset(groupElement("first_batch"));
 
     /**
      * Offset for field:
@@ -145,7 +145,7 @@ public class ChangeStreamResult {
         return resume_token$LAYOUT;
     }
 
-    private static final long resume_token$OFFSET = 40;
+    private static final long resume_token$OFFSET = $LAYOUT.byteOffset(groupElement("resume_token"));
 
     /**
      * Offset for field:
@@ -189,7 +189,7 @@ public class ChangeStreamResult {
         return server_address$LAYOUT;
     }
 
-    private static final long server_address$OFFSET = 56;
+    private static final long server_address$OFFSET = $LAYOUT.byteOffset(groupElement("server_address"));
 
     /**
      * Offset for field:
@@ -233,7 +233,7 @@ public class ChangeStreamResult {
         return server_port$LAYOUT;
     }
 
-    private static final long server_port$OFFSET = 64;
+    private static final long server_port$OFFSET = $LAYOUT.byteOffset(groupElement("server_port"));
 
     /**
      * Offset for field:

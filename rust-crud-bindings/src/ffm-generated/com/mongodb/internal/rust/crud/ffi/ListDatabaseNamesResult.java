@@ -48,7 +48,7 @@ public class ListDatabaseNamesResult {
         return names$LAYOUT;
     }
 
-    private static final long names$OFFSET = 0;
+    private static final long names$OFFSET = $LAYOUT.byteOffset(groupElement("names"));
 
     /**
      * Offset for field:

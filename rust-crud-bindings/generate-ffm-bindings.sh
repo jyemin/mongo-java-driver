@@ -51,14 +51,44 @@ mkdir -p "$OUTPUT_DIR"
 FIXED_HEADER="/tmp/mongodb_ffi_fixed.h"
 sed 's/ChangeStream = 11/ChangeStreamError_Kind = 11/g' "$HEADER_FILE" > "$FIXED_HEADER"
 
-# Run jextract - generate bindings for all MongoDB FFI types
-# This generates full bindings for the CRUD-focused FFI API
+# Run jextract - generate bindings for all types
+# Note: jextract 25 renames "struct Error" to "Error_" because "Error" clashes
+# with java.lang.Error. Our code uses Error_ to match.
 "$JEXTRACT" \
     --header-class-name MongoDbFfi \
     -l mongodb_ffi \
     -t "$PACKAGE" \
     --output "$OUTPUT_DIR" \
     "$FIXED_HEADER"
+
+# Remove system header cruft (Darwin/pthread/signal types that leak through)
+# jextract's --include-* options don't handle transitive dependencies well,
+# so we clean up after generation instead.
+# Note: div_t, ldiv_t, lldiv_t are kept because MongoDbFfi references them.
+OUTPUT_FFI_DIR="$OUTPUT_DIR/com/mongodb/internal/rust/crud/ffi"
+echo "Removing system header cruft..."
+find "$OUTPUT_FFI_DIR" -name "*.java" \( \
+    -name "__*" -o \
+    -name "_opaque_*" -o \
+    -name "sig*" -o \
+    -name "pthread_*" -o \
+    -name "rusage*" -o \
+    -name "rlimit*" -o \
+    -name "stack_t*" -o \
+    -name "timeval*" -o \
+    -name "ucontext_t*" -o \
+    -name "wait.java" -o \
+    -name "proc_*" -o \
+    -name "qsort*" -o \
+    -name "bsearch*" -o \
+    -name "heapsort*" -o \
+    -name "mergesort*" -o \
+    -name "psort*" -o \
+    -name "atexit*" -o \
+    -name "at_quick_exit*" \
+    \) -delete
+remaining=$(find "$OUTPUT_FFI_DIR" -name "*.java" | wc -l)
+echo "  Kept $remaining types"
 
 echo ""
 echo "Generated files:"

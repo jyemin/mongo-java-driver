@@ -67,7 +67,7 @@ public class CreateCollectionOptions {
         return capped$LAYOUT;
     }
 
-    private static final long capped$OFFSET = 0;
+    private static final long capped$OFFSET = $LAYOUT.byteOffset(groupElement("capped"));
 
     /**
      * Offset for field:
@@ -111,7 +111,7 @@ public class CreateCollectionOptions {
         return size$LAYOUT;
     }
 
-    private static final long size$OFFSET = 8;
+    private static final long size$OFFSET = $LAYOUT.byteOffset(groupElement("size"));
 
     /**
      * Offset for field:
@@ -155,7 +155,7 @@ public class CreateCollectionOptions {
         return max$LAYOUT;
     }
 
-    private static final long max$OFFSET = 16;
+    private static final long max$OFFSET = $LAYOUT.byteOffset(groupElement("max"));
 
     /**
      * Offset for field:
@@ -199,7 +199,7 @@ public class CreateCollectionOptions {
         return storage_engine$LAYOUT;
     }
 
-    private static final long storage_engine$OFFSET = 24;
+    private static final long storage_engine$OFFSET = $LAYOUT.byteOffset(groupElement("storage_engine"));
 
     /**
      * Offset for field:
@@ -243,7 +243,7 @@ public class CreateCollectionOptions {
         return validator$LAYOUT;
     }
 
-    private static final long validator$OFFSET = 32;
+    private static final long validator$OFFSET = $LAYOUT.byteOffset(groupElement("validator"));
 
     /**
      * Offset for field:
@@ -287,7 +287,7 @@ public class CreateCollectionOptions {
         return validation_level$LAYOUT;
     }
 
-    private static final long validation_level$OFFSET = 40;
+    private static final long validation_level$OFFSET = $LAYOUT.byteOffset(groupElement("validation_level"));
 
     /**
      * Offset for field:
@@ -331,7 +331,7 @@ public class CreateCollectionOptions {
         return validation_action$LAYOUT;
     }
 
-    private static final long validation_action$OFFSET = 48;
+    private static final long validation_action$OFFSET = $LAYOUT.byteOffset(groupElement("validation_action"));
 
     /**
      * Offset for field:
@@ -375,7 +375,7 @@ public class CreateCollectionOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 56;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -419,7 +419,7 @@ public class CreateCollectionOptions {
         return expire_after_seconds$LAYOUT;
     }
 
-    private static final long expire_after_seconds$OFFSET = 64;
+    private static final long expire_after_seconds$OFFSET = $LAYOUT.byteOffset(groupElement("expire_after_seconds"));
 
     /**
      * Offset for field:
@@ -463,7 +463,7 @@ public class CreateCollectionOptions {
         return timeseries$LAYOUT;
     }
 
-    private static final long timeseries$OFFSET = 72;
+    private static final long timeseries$OFFSET = $LAYOUT.byteOffset(groupElement("timeseries"));
 
     /**
      * Offset for field:

@@ -55,7 +55,7 @@ public class BsonBatch {
         return data$LAYOUT;
     }
 
-    private static final long data$OFFSET = 0;
+    private static final long data$OFFSET = $LAYOUT.byteOffset(groupElement("data"));
 
     /**
      * Offset for field:
@@ -99,7 +99,7 @@ public class BsonBatch {
         return len$LAYOUT;
     }
 
-    private static final long len$OFFSET = 8;
+    private static final long len$OFFSET = $LAYOUT.byteOffset(groupElement("len"));
 
     /**
      * Offset for field:
@@ -143,7 +143,7 @@ public class BsonBatch {
         return offsets$LAYOUT;
     }
 
-    private static final long offsets$OFFSET = 16;
+    private static final long offsets$OFFSET = $LAYOUT.byteOffset(groupElement("offsets"));
 
     /**
      * Offset for field:
@@ -187,7 +187,7 @@ public class BsonBatch {
         return count$LAYOUT;
     }
 
-    private static final long count$OFFSET = 24;
+    private static final long count$OFFSET = $LAYOUT.byteOffset(groupElement("count"));
 
     /**
      * Offset for field:

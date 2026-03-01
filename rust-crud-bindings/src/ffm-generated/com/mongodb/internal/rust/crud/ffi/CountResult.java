@@ -48,7 +48,7 @@ public class CountResult {
         return count$LAYOUT;
     }
 
-    private static final long count$OFFSET = 0;
+    private static final long count$OFFSET = $LAYOUT.byteOffset(groupElement("count"));
 
     /**
      * Offset for field:

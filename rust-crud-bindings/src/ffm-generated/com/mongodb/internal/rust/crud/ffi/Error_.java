@@ -14,22 +14,23 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * struct _opaque_pthread_cond_t {
- *     long __sig;
- *     char __opaque[40];
+ * struct Error {
+ *     ErrorType error_type;
+ *     union ErrorUnion error;
  * }
  * }
  */
-public class _opaque_pthread_cond_t {
+public class Error_ {
 
-    _opaque_pthread_cond_t() {
+    Error_() {
         // Should not be called directly
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-        MongoDbFfi.C_LONG.withName("__sig"),
-        MemoryLayout.sequenceLayout(40, MongoDbFfi.C_CHAR).withName("__opaque")
-    ).withName("_opaque_pthread_cond_t");
+        MongoDbFfi.C_CHAR.withName("error_type"),
+        MemoryLayout.paddingLayout(7),
+        ErrorUnion.layout().withName("error")
+    ).withName("Error");
 
     /**
      * The layout of this struct
@@ -38,125 +39,92 @@ public class _opaque_pthread_cond_t {
         return $LAYOUT;
     }
 
-    private static final OfLong __sig$LAYOUT = (OfLong)$LAYOUT.select(groupElement("__sig"));
+    private static final OfByte error_type$LAYOUT = (OfByte)$LAYOUT.select(groupElement("error_type"));
 
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * long __sig
+     * ErrorType error_type
      * }
      */
-    public static final OfLong __sig$layout() {
-        return __sig$LAYOUT;
+    public static final OfByte error_type$layout() {
+        return error_type$LAYOUT;
     }
 
-    private static final long __sig$OFFSET = 0;
+    private static final long error_type$OFFSET = $LAYOUT.byteOffset(groupElement("error_type"));
 
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * long __sig
+     * ErrorType error_type
      * }
      */
-    public static final long __sig$offset() {
-        return __sig$OFFSET;
+    public static final long error_type$offset() {
+        return error_type$OFFSET;
     }
 
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * long __sig
+     * ErrorType error_type
      * }
      */
-    public static long __sig(MemorySegment struct) {
-        return struct.get(__sig$LAYOUT, __sig$OFFSET);
+    public static byte error_type(MemorySegment struct) {
+        return struct.get(error_type$LAYOUT, error_type$OFFSET);
     }
 
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * long __sig
+     * ErrorType error_type
      * }
      */
-    public static void __sig(MemorySegment struct, long fieldValue) {
-        struct.set(__sig$LAYOUT, __sig$OFFSET, fieldValue);
+    public static void error_type(MemorySegment struct, byte fieldValue) {
+        struct.set(error_type$LAYOUT, error_type$OFFSET, fieldValue);
     }
 
-    private static final SequenceLayout __opaque$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("__opaque"));
+    private static final GroupLayout error$LAYOUT = (GroupLayout)$LAYOUT.select(groupElement("error"));
 
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * char __opaque[40]
+     * union ErrorUnion error
      * }
      */
-    public static final SequenceLayout __opaque$layout() {
-        return __opaque$LAYOUT;
+    public static final GroupLayout error$layout() {
+        return error$LAYOUT;
     }
 
-    private static final long __opaque$OFFSET = 8;
+    private static final long error$OFFSET = $LAYOUT.byteOffset(groupElement("error"));
 
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * char __opaque[40]
+     * union ErrorUnion error
      * }
      */
-    public static final long __opaque$offset() {
-        return __opaque$OFFSET;
+    public static final long error$offset() {
+        return error$OFFSET;
     }
 
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * char __opaque[40]
+     * union ErrorUnion error
      * }
      */
-    public static MemorySegment __opaque(MemorySegment struct) {
-        return struct.asSlice(__opaque$OFFSET, __opaque$LAYOUT.byteSize());
+    public static MemorySegment error(MemorySegment struct) {
+        return struct.asSlice(error$OFFSET, error$LAYOUT.byteSize());
     }
 
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * char __opaque[40]
+     * union ErrorUnion error
      * }
      */
-    public static void __opaque(MemorySegment struct, MemorySegment fieldValue) {
-        MemorySegment.copy(fieldValue, 0L, struct, __opaque$OFFSET, __opaque$LAYOUT.byteSize());
-    }
-
-    private static long[] __opaque$DIMS = { 40 };
-
-    /**
-     * Dimensions for array field:
-     * {@snippet lang=c :
-     * char __opaque[40]
-     * }
-     */
-    public static long[] __opaque$dimensions() {
-        return __opaque$DIMS;
-    }
-    private static final VarHandle __opaque$ELEM_HANDLE = __opaque$LAYOUT.varHandle(sequenceElement());
-
-    /**
-     * Indexed getter for field:
-     * {@snippet lang=c :
-     * char __opaque[40]
-     * }
-     */
-    public static byte __opaque(MemorySegment struct, long index0) {
-        return (byte)__opaque$ELEM_HANDLE.get(struct, 0L, index0);
-    }
-
-    /**
-     * Indexed setter for field:
-     * {@snippet lang=c :
-     * char __opaque[40]
-     * }
-     */
-    public static void __opaque(MemorySegment struct, long index0, byte fieldValue) {
-        __opaque$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+    public static void error(MemorySegment struct, MemorySegment fieldValue) {
+        MemorySegment.copy(fieldValue, 0L, struct, error$OFFSET, error$LAYOUT.byteSize());
     }
 
     /**

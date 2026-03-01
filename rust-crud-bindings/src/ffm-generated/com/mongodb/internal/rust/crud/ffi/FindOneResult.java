@@ -48,7 +48,7 @@ public class FindOneResult {
         return document$LAYOUT;
     }
 
-    private static final long document$OFFSET = 0;
+    private static final long document$OFFSET = $LAYOUT.byteOffset(groupElement("document"));
 
     /**
      * Offset for field:

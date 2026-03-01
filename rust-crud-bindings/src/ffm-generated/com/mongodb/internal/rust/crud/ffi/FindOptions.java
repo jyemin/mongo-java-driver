@@ -63,7 +63,7 @@ public class FindOptions {
         return projection$LAYOUT;
     }
 
-    private static final long projection$OFFSET = 0;
+    private static final long projection$OFFSET = $LAYOUT.byteOffset(groupElement("projection"));
 
     /**
      * Offset for field:
@@ -107,7 +107,7 @@ public class FindOptions {
         return sort$LAYOUT;
     }
 
-    private static final long sort$OFFSET = 8;
+    private static final long sort$OFFSET = $LAYOUT.byteOffset(groupElement("sort"));
 
     /**
      * Offset for field:
@@ -151,7 +151,7 @@ public class FindOptions {
         return limit$LAYOUT;
     }
 
-    private static final long limit$OFFSET = 16;
+    private static final long limit$OFFSET = $LAYOUT.byteOffset(groupElement("limit"));
 
     /**
      * Offset for field:
@@ -195,7 +195,7 @@ public class FindOptions {
         return skip$LAYOUT;
     }
 
-    private static final long skip$OFFSET = 24;
+    private static final long skip$OFFSET = $LAYOUT.byteOffset(groupElement("skip"));
 
     /**
      * Offset for field:
@@ -239,7 +239,7 @@ public class FindOptions {
         return batch_size$LAYOUT;
     }
 
-    private static final long batch_size$OFFSET = 32;
+    private static final long batch_size$OFFSET = $LAYOUT.byteOffset(groupElement("batch_size"));
 
     /**
      * Offset for field:
@@ -283,7 +283,7 @@ public class FindOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 40;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -327,7 +327,7 @@ public class FindOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 48;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -371,7 +371,7 @@ public class FindOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 56;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

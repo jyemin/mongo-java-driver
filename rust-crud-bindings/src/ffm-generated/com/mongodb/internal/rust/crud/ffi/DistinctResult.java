@@ -48,7 +48,7 @@ public class DistinctResult {
         return values$LAYOUT;
     }
 
-    private static final long values$OFFSET = 0;
+    private static final long values$OFFSET = $LAYOUT.byteOffset(groupElement("values"));
 
     /**
      * Offset for field:

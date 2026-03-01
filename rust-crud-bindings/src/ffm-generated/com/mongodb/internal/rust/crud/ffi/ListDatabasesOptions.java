@@ -55,7 +55,7 @@ public class ListDatabasesOptions {
         return filter$LAYOUT;
     }
 
-    private static final long filter$OFFSET = 0;
+    private static final long filter$OFFSET = $LAYOUT.byteOffset(groupElement("filter"));
 
     /**
      * Offset for field:
@@ -99,7 +99,7 @@ public class ListDatabasesOptions {
         return name_only$LAYOUT;
     }
 
-    private static final long name_only$OFFSET = 8;
+    private static final long name_only$OFFSET = $LAYOUT.byteOffset(groupElement("name_only"));
 
     /**
      * Offset for field:
@@ -143,7 +143,7 @@ public class ListDatabasesOptions {
         return authorized_databases$LAYOUT;
     }
 
-    private static final long authorized_databases$OFFSET = 9;
+    private static final long authorized_databases$OFFSET = $LAYOUT.byteOffset(groupElement("authorized_databases"));
 
     /**
      * Offset for field:
@@ -187,7 +187,7 @@ public class ListDatabasesOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 16;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

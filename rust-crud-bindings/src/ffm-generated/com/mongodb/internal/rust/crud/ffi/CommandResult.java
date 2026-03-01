@@ -48,7 +48,7 @@ public class CommandResult {
         return response$LAYOUT;
     }
 
-    private static final long response$OFFSET = 0;
+    private static final long response$OFFSET = $LAYOUT.byteOffset(groupElement("response"));
 
     /**
      * Offset for field:

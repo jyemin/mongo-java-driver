@@ -48,7 +48,7 @@ public class ClientResult {
         return client$LAYOUT;
     }
 
-    private static final long client$OFFSET = 0;
+    private static final long client$OFFSET = $LAYOUT.byteOffset(groupElement("client"));
 
     /**
      * Offset for field:

@@ -50,7 +50,7 @@ public class DistinctOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 0;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class DistinctOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 8;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

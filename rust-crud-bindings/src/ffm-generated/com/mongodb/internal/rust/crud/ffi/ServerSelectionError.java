@@ -50,7 +50,7 @@ public class ServerSelectionError {
         return message$LAYOUT;
     }
 
-    private static final long message$OFFSET = 0;
+    private static final long message$OFFSET = $LAYOUT.byteOffset(groupElement("message"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class ServerSelectionError {
         return timeout_ms$LAYOUT;
     }
 
-    private static final long timeout_ms$OFFSET = 8;
+    private static final long timeout_ms$OFFSET = $LAYOUT.byteOffset(groupElement("timeout_ms"));
 
     /**
      * Offset for field:

@@ -48,7 +48,7 @@ public class InsertManyResult {
         return inserted_ids$LAYOUT;
     }
 
-    private static final long inserted_ids$OFFSET = 0;
+    private static final long inserted_ids$OFFSET = $LAYOUT.byteOffset(groupElement("inserted_ids"));
 
     /**
      * Offset for field:

@@ -63,7 +63,7 @@ public class FindOneAndReplaceOptions {
         return projection$LAYOUT;
     }
 
-    private static final long projection$OFFSET = 0;
+    private static final long projection$OFFSET = $LAYOUT.byteOffset(groupElement("projection"));
 
     /**
      * Offset for field:
@@ -107,7 +107,7 @@ public class FindOneAndReplaceOptions {
         return sort$LAYOUT;
     }
 
-    private static final long sort$OFFSET = 8;
+    private static final long sort$OFFSET = $LAYOUT.byteOffset(groupElement("sort"));
 
     /**
      * Offset for field:
@@ -151,7 +151,7 @@ public class FindOneAndReplaceOptions {
         return upsert$LAYOUT;
     }
 
-    private static final long upsert$OFFSET = 16;
+    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
 
     /**
      * Offset for field:
@@ -195,7 +195,7 @@ public class FindOneAndReplaceOptions {
         return return_document$LAYOUT;
     }
 
-    private static final long return_document$OFFSET = 17;
+    private static final long return_document$OFFSET = $LAYOUT.byteOffset(groupElement("return_document"));
 
     /**
      * Offset for field:
@@ -239,7 +239,7 @@ public class FindOneAndReplaceOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 18;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -283,7 +283,7 @@ public class FindOneAndReplaceOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 24;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -327,7 +327,7 @@ public class FindOneAndReplaceOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 32;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -371,7 +371,7 @@ public class FindOneAndReplaceOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 40;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

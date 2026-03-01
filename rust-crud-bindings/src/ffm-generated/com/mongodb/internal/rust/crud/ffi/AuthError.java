@@ -48,7 +48,7 @@ public class AuthError {
         return message$LAYOUT;
     }
 
-    private static final long message$OFFSET = 0;
+    private static final long message$OFFSET = $LAYOUT.byteOffset(groupElement("message"));
 
     /**
      * Offset for field:

@@ -64,7 +64,7 @@ public class BulkWriteModel {
         return operation$LAYOUT;
     }
 
-    private static final long operation$OFFSET = 0;
+    private static final long operation$OFFSET = $LAYOUT.byteOffset(groupElement("operation"));
 
     /**
      * Offset for field:
@@ -108,7 +108,7 @@ public class BulkWriteModel {
         return namespace_$LAYOUT;
     }
 
-    private static final long namespace_$OFFSET = 8;
+    private static final long namespace_$OFFSET = $LAYOUT.byteOffset(groupElement("namespace_"));
 
     /**
      * Offset for field:
@@ -152,7 +152,7 @@ public class BulkWriteModel {
         return document$LAYOUT;
     }
 
-    private static final long document$OFFSET = 16;
+    private static final long document$OFFSET = $LAYOUT.byteOffset(groupElement("document"));
 
     /**
      * Offset for field:
@@ -196,7 +196,7 @@ public class BulkWriteModel {
         return update$LAYOUT;
     }
 
-    private static final long update$OFFSET = 24;
+    private static final long update$OFFSET = $LAYOUT.byteOffset(groupElement("update"));
 
     /**
      * Offset for field:
@@ -240,7 +240,7 @@ public class BulkWriteModel {
         return array_filters$LAYOUT;
     }
 
-    private static final long array_filters$OFFSET = 32;
+    private static final long array_filters$OFFSET = $LAYOUT.byteOffset(groupElement("array_filters"));
 
     /**
      * Offset for field:
@@ -284,7 +284,7 @@ public class BulkWriteModel {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 40;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -328,7 +328,7 @@ public class BulkWriteModel {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 48;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -372,7 +372,7 @@ public class BulkWriteModel {
         return upsert$LAYOUT;
     }
 
-    private static final long upsert$OFFSET = 56;
+    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
 
     /**
      * Offset for field:

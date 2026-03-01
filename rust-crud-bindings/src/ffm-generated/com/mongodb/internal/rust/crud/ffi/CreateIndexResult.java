@@ -48,7 +48,7 @@ public class CreateIndexResult {
         return index_name$LAYOUT;
     }
 
-    private static final long index_name$OFFSET = 0;
+    private static final long index_name$OFFSET = $LAYOUT.byteOffset(groupElement("index_name"));
 
     /**
      * Offset for field:

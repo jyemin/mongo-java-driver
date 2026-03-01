@@ -58,7 +58,7 @@ public class ClientBulkWriteOptions {
         return ordered$LAYOUT;
     }
 
-    private static final long ordered$OFFSET = 0;
+    private static final long ordered$OFFSET = $LAYOUT.byteOffset(groupElement("ordered"));
 
     /**
      * Offset for field:
@@ -102,7 +102,7 @@ public class ClientBulkWriteOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 1;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -146,7 +146,7 @@ public class ClientBulkWriteOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 8;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:
@@ -190,7 +190,7 @@ public class ClientBulkWriteOptions {
         return let_vars$LAYOUT;
     }
 
-    private static final long let_vars$OFFSET = 16;
+    private static final long let_vars$OFFSET = $LAYOUT.byteOffset(groupElement("let_vars"));
 
     /**
      * Offset for field:
@@ -234,7 +234,7 @@ public class ClientBulkWriteOptions {
         return verbose_results$LAYOUT;
     }
 
-    private static final long verbose_results$OFFSET = 24;
+    private static final long verbose_results$OFFSET = $LAYOUT.byteOffset(groupElement("verbose_results"));
 
     /**
      * Offset for field:

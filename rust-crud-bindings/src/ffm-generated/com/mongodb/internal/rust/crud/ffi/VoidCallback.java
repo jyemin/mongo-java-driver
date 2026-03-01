@@ -20,9 +20,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * } *)
  * }
  */
-public class VoidCallback {
+public final class VoidCallback {
 
-    VoidCallback() {
+    private VoidCallback() {
         // Should not be called directly
     }
 
@@ -60,9 +60,11 @@ public class VoidCallback {
     /**
      * Invoke the upcall stub {@code funcPtr}, with given parameters
      */
-    public static void invoke(MemorySegment funcPtr,MemorySegment userdata, MemorySegment error) {
+    public static void invoke(MemorySegment funcPtr, MemorySegment userdata, MemorySegment error) {
         try {
              DOWN$MH.invokeExact(funcPtr, userdata, error);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }

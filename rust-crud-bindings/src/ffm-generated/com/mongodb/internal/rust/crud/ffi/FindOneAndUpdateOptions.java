@@ -65,7 +65,7 @@ public class FindOneAndUpdateOptions {
         return projection$LAYOUT;
     }
 
-    private static final long projection$OFFSET = 0;
+    private static final long projection$OFFSET = $LAYOUT.byteOffset(groupElement("projection"));
 
     /**
      * Offset for field:
@@ -109,7 +109,7 @@ public class FindOneAndUpdateOptions {
         return sort$LAYOUT;
     }
 
-    private static final long sort$OFFSET = 8;
+    private static final long sort$OFFSET = $LAYOUT.byteOffset(groupElement("sort"));
 
     /**
      * Offset for field:
@@ -153,7 +153,7 @@ public class FindOneAndUpdateOptions {
         return upsert$LAYOUT;
     }
 
-    private static final long upsert$OFFSET = 16;
+    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
 
     /**
      * Offset for field:
@@ -197,7 +197,7 @@ public class FindOneAndUpdateOptions {
         return return_document$LAYOUT;
     }
 
-    private static final long return_document$OFFSET = 17;
+    private static final long return_document$OFFSET = $LAYOUT.byteOffset(groupElement("return_document"));
 
     /**
      * Offset for field:
@@ -241,7 +241,7 @@ public class FindOneAndUpdateOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 18;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -285,7 +285,7 @@ public class FindOneAndUpdateOptions {
         return array_filters$LAYOUT;
     }
 
-    private static final long array_filters$OFFSET = 24;
+    private static final long array_filters$OFFSET = $LAYOUT.byteOffset(groupElement("array_filters"));
 
     /**
      * Offset for field:
@@ -329,7 +329,7 @@ public class FindOneAndUpdateOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 32;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -373,7 +373,7 @@ public class FindOneAndUpdateOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 40;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -417,7 +417,7 @@ public class FindOneAndUpdateOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 48;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

@@ -50,7 +50,7 @@ public class ListDatabasesResult {
         return databases$LAYOUT;
     }
 
-    private static final long databases$OFFSET = 0;
+    private static final long databases$OFFSET = $LAYOUT.byteOffset(groupElement("databases"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class ListDatabasesResult {
         return total_size$LAYOUT;
     }
 
-    private static final long total_size$OFFSET = 16;
+    private static final long total_size$OFFSET = $LAYOUT.byteOffset(groupElement("total_size"));
 
     /**
      * Offset for field:

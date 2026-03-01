@@ -48,7 +48,7 @@ public class InsertOneResult {
         return inserted_id$LAYOUT;
     }
 
-    private static final long inserted_id$OFFSET = 0;
+    private static final long inserted_id$OFFSET = $LAYOUT.byteOffset(groupElement("inserted_id"));
 
     /**
      * Offset for field:

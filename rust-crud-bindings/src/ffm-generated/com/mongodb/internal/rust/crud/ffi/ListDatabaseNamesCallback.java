@@ -22,9 +22,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * } *)
  * }
  */
-public class ListDatabaseNamesCallback {
+public final class ListDatabaseNamesCallback {
 
-    ListDatabaseNamesCallback() {
+    private ListDatabaseNamesCallback() {
         // Should not be called directly
     }
 
@@ -63,9 +63,11 @@ public class ListDatabaseNamesCallback {
     /**
      * Invoke the upcall stub {@code funcPtr}, with given parameters
      */
-    public static void invoke(MemorySegment funcPtr,MemorySegment userdata, MemorySegment result, MemorySegment error) {
+    public static void invoke(MemorySegment funcPtr, MemorySegment userdata, MemorySegment result, MemorySegment error) {
         try {
              DOWN$MH.invokeExact(funcPtr, userdata, result, error);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }

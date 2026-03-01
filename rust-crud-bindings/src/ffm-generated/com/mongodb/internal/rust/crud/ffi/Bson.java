@@ -50,7 +50,7 @@ public class Bson {
         return data$LAYOUT;
     }
 
-    private static final long data$OFFSET = 0;
+    private static final long data$OFFSET = $LAYOUT.byteOffset(groupElement("data"));
 
     /**
      * Offset for field:
@@ -94,7 +94,7 @@ public class Bson {
         return len$LAYOUT;
     }
 
-    private static final long len$OFFSET = 8;
+    private static final long len$OFFSET = $LAYOUT.byteOffset(groupElement("len"));
 
     /**
      * Offset for field:

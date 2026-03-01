@@ -52,7 +52,7 @@ public class DeleteOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 0;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -96,7 +96,7 @@ public class DeleteOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 8;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -140,7 +140,7 @@ public class DeleteOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 16;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

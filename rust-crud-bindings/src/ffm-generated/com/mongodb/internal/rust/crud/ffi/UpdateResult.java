@@ -52,7 +52,7 @@ public class UpdateResult {
         return matched_count$LAYOUT;
     }
 
-    private static final long matched_count$OFFSET = 0;
+    private static final long matched_count$OFFSET = $LAYOUT.byteOffset(groupElement("matched_count"));
 
     /**
      * Offset for field:
@@ -96,7 +96,7 @@ public class UpdateResult {
         return modified_count$LAYOUT;
     }
 
-    private static final long modified_count$OFFSET = 8;
+    private static final long modified_count$OFFSET = $LAYOUT.byteOffset(groupElement("modified_count"));
 
     /**
      * Offset for field:
@@ -140,7 +140,7 @@ public class UpdateResult {
         return upserted_id$LAYOUT;
     }
 
-    private static final long upserted_id$OFFSET = 16;
+    private static final long upserted_id$OFFSET = $LAYOUT.byteOffset(groupElement("upserted_id"));
 
     /**
      * Offset for field:

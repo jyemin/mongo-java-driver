@@ -63,7 +63,7 @@ public class TransactionOptions {
         return read_concern_level$LAYOUT;
     }
 
-    private static final long read_concern_level$OFFSET = 0;
+    private static final long read_concern_level$OFFSET = $LAYOUT.byteOffset(groupElement("read_concern_level"));
 
     /**
      * Offset for field:
@@ -107,7 +107,7 @@ public class TransactionOptions {
         return write_concern_w$LAYOUT;
     }
 
-    private static final long write_concern_w$OFFSET = 8;
+    private static final long write_concern_w$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern_w"));
 
     /**
      * Offset for field:
@@ -151,7 +151,7 @@ public class TransactionOptions {
         return write_concern_w_tag$LAYOUT;
     }
 
-    private static final long write_concern_w_tag$OFFSET = 16;
+    private static final long write_concern_w_tag$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern_w_tag"));
 
     /**
      * Offset for field:
@@ -195,7 +195,7 @@ public class TransactionOptions {
         return write_concern_j$LAYOUT;
     }
 
-    private static final long write_concern_j$OFFSET = 24;
+    private static final long write_concern_j$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern_j"));
 
     /**
      * Offset for field:
@@ -239,7 +239,7 @@ public class TransactionOptions {
         return write_concern_w_timeout_ms$LAYOUT;
     }
 
-    private static final long write_concern_w_timeout_ms$OFFSET = 32;
+    private static final long write_concern_w_timeout_ms$OFFSET = $LAYOUT.byteOffset(groupElement("write_concern_w_timeout_ms"));
 
     /**
      * Offset for field:
@@ -283,7 +283,7 @@ public class TransactionOptions {
         return read_preference_mode$LAYOUT;
     }
 
-    private static final long read_preference_mode$OFFSET = 40;
+    private static final long read_preference_mode$OFFSET = $LAYOUT.byteOffset(groupElement("read_preference_mode"));
 
     /**
      * Offset for field:
@@ -327,7 +327,7 @@ public class TransactionOptions {
         return max_commit_time_ms$LAYOUT;
     }
 
-    private static final long max_commit_time_ms$OFFSET = 48;
+    private static final long max_commit_time_ms$OFFSET = $LAYOUT.byteOffset(groupElement("max_commit_time_ms"));
 
     /**
      * Offset for field:

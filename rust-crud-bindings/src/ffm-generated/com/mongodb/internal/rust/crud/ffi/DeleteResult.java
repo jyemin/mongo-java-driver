@@ -48,7 +48,7 @@ public class DeleteResult {
         return deleted_count$LAYOUT;
     }
 
-    private static final long deleted_count$OFFSET = 0;
+    private static final long deleted_count$OFFSET = $LAYOUT.byteOffset(groupElement("deleted_count"));
 
     /**
      * Offset for field:

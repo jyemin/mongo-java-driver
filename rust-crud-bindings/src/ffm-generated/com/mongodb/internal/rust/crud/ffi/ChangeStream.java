@@ -48,7 +48,7 @@ public class ChangeStream {
         return _private$LAYOUT;
     }
 
-    private static final long _private$OFFSET = 0;
+    private static final long _private$OFFSET = $LAYOUT.byteOffset(groupElement("_private"));
 
     /**
      * Offset for field:
@@ -100,7 +100,7 @@ public class ChangeStream {
      * }
      */
     public static byte _private(MemorySegment struct, long index0) {
-        return (byte)_private$ELEM_HANDLE.get(struct, 0L, index0);
+        return (byte)_private$ELEM_HANDLE.get(struct, _private$OFFSET, index0);
     }
 
     /**
@@ -110,7 +110,7 @@ public class ChangeStream {
      * }
      */
     public static void _private(MemorySegment struct, long index0, byte fieldValue) {
-        _private$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        _private$ELEM_HANDLE.set(struct, _private$OFFSET, index0, fieldValue);
     }
 
     /**

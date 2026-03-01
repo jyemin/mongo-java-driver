@@ -59,7 +59,7 @@ public class UpdateOptions {
         return upsert$LAYOUT;
     }
 
-    private static final long upsert$OFFSET = 0;
+    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
 
     /**
      * Offset for field:
@@ -103,7 +103,7 @@ public class UpdateOptions {
         return bypass_document_validation$LAYOUT;
     }
 
-    private static final long bypass_document_validation$OFFSET = 1;
+    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
 
     /**
      * Offset for field:
@@ -147,7 +147,7 @@ public class UpdateOptions {
         return array_filters$LAYOUT;
     }
 
-    private static final long array_filters$OFFSET = 8;
+    private static final long array_filters$OFFSET = $LAYOUT.byteOffset(groupElement("array_filters"));
 
     /**
      * Offset for field:
@@ -191,7 +191,7 @@ public class UpdateOptions {
         return hint$LAYOUT;
     }
 
-    private static final long hint$OFFSET = 16;
+    private static final long hint$OFFSET = $LAYOUT.byteOffset(groupElement("hint"));
 
     /**
      * Offset for field:
@@ -235,7 +235,7 @@ public class UpdateOptions {
         return collation$LAYOUT;
     }
 
-    private static final long collation$OFFSET = 24;
+    private static final long collation$OFFSET = $LAYOUT.byteOffset(groupElement("collation"));
 
     /**
      * Offset for field:
@@ -279,7 +279,7 @@ public class UpdateOptions {
         return comment$LAYOUT;
     }
 
-    private static final long comment$OFFSET = 32;
+    private static final long comment$OFFSET = $LAYOUT.byteOffset(groupElement("comment"));
 
     /**
      * Offset for field:

@@ -48,7 +48,7 @@ public class ReadConcernOptions {
         return level$LAYOUT;
     }
 
-    private static final long level$OFFSET = 0;
+    private static final long level$OFFSET = $LAYOUT.byteOffset(groupElement("level"));
 
     /**
      * Offset for field:

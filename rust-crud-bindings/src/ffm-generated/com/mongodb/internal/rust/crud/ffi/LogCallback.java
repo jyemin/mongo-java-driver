@@ -17,9 +17,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * typedef void (*LogCallback)(void *, int32_t, int32_t, const char *)
  * }
  */
-public class LogCallback {
+public final class LogCallback {
 
-    LogCallback() {
+    private LogCallback() {
         // Should not be called directly
     }
 
@@ -59,9 +59,11 @@ public class LogCallback {
     /**
      * Invoke the upcall stub {@code funcPtr}, with given parameters
      */
-    public static void invoke(MemorySegment funcPtr,MemorySegment userdata, int level, int component, MemorySegment message) {
+    public static void invoke(MemorySegment funcPtr, MemorySegment userdata, int level, int component, MemorySegment message) {
         try {
              DOWN$MH.invokeExact(funcPtr, userdata, level, component, message);
+        } catch (Error | RuntimeException ex) {
+            throw ex;
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }

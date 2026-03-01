@@ -55,7 +55,7 @@ public class ReadPreferenceOptions {
         return mode$LAYOUT;
     }
 
-    private static final long mode$OFFSET = 0;
+    private static final long mode$OFFSET = $LAYOUT.byteOffset(groupElement("mode"));
 
     /**
      * Offset for field:
@@ -99,7 +99,7 @@ public class ReadPreferenceOptions {
         return tags$LAYOUT;
     }
 
-    private static final long tags$OFFSET = 8;
+    private static final long tags$OFFSET = $LAYOUT.byteOffset(groupElement("tags"));
 
     /**
      * Offset for field:
@@ -143,7 +143,7 @@ public class ReadPreferenceOptions {
         return max_staleness_seconds$LAYOUT;
     }
 
-    private static final long max_staleness_seconds$OFFSET = 16;
+    private static final long max_staleness_seconds$OFFSET = $LAYOUT.byteOffset(groupElement("max_staleness_seconds"));
 
     /**
      * Offset for field:
@@ -187,7 +187,7 @@ public class ReadPreferenceOptions {
         return hedge$LAYOUT;
     }
 
-    private static final long hedge$OFFSET = 24;
+    private static final long hedge$OFFSET = $LAYOUT.byteOffset(groupElement("hedge"));
 
     /**
      * Offset for field:

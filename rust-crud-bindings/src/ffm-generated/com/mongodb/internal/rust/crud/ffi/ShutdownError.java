@@ -48,7 +48,7 @@ public class ShutdownError {
         return _reserved$LAYOUT;
     }
 
-    private static final long _reserved$OFFSET = 0;
+    private static final long _reserved$OFFSET = $LAYOUT.byteOffset(groupElement("_reserved"));
 
     /**
      * Offset for field:
