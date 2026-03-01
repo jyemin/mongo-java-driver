@@ -52,7 +52,6 @@ import static com.mongodb.internal.connection.CommandHelper.HELLO;
 import static com.mongodb.internal.connection.CommandHelper.LEGACY_HELLO;
 
 import com.mongodb.internal.connection.InternalStreamConnection;
-import com.mongodb.internal.connection.ServerHelper;
 import com.mongodb.internal.connection.TestCommandListener;
 import com.mongodb.internal.connection.TestConnectionPoolListener;
 import com.mongodb.test.FlakyTest;

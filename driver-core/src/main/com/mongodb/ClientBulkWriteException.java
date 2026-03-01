@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.internal.operation.ClientBulkWriteOperation.Exceptions.serverAddressFromException;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
@@ -101,6 +100,16 @@ public final class ClientBulkWriteException extends MongoServerException {
         return error instanceof MongoServerException
                 ? ((MongoServerException) error).getServerAddress()
                 : serverAddress;
+    }
+
+    private static Optional<ServerAddress> serverAddressFromException(@Nullable final MongoException exception) {
+        ServerAddress serverAddress = null;
+        if (exception instanceof MongoServerException) {
+            serverAddress = ((MongoServerException) exception).getServerAddress();
+        } else if (exception instanceof MongoSocketException) {
+            serverAddress = ((MongoSocketException) exception).getServerAddress();
+        }
+        return ofNullable(serverAddress);
     }
 
     /**

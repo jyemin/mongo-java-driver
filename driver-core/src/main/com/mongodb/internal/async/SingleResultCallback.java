@@ -18,13 +18,12 @@ package com.mongodb.internal.async;
 
 import com.mongodb.assertions.Assertions;
 import com.mongodb.connection.AsyncCompletionHandler;
-import com.mongodb.internal.async.function.AsyncCallbackFunction;
 import com.mongodb.lang.Nullable;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
 
 /**
- * An interface to describe the completion of an asynchronous function, which may be represented as {@link AsyncCallbackFunction}.
+ * An interface to describe the completion of an asynchronous function.
  *
  *<p>This class is not part of the public API and may be removed or changed at any time</p>
  */
@@ -32,7 +31,7 @@ public interface SingleResultCallback<T> {
     SingleResultCallback<Void> THEN_DO_NOTHING = (r, t) -> {};
 
     /**
-     * Called when the function completes. This method must not complete abruptly, see {@link AsyncCallbackFunction} for more details.
+     * Called when the function completes. This method must not complete abruptly.
      *
      * @param result the result, which may be null.  Always null if e is not null.
      * @param t      the throwable, or null if the operation completed normally

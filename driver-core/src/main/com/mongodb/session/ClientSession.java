@@ -19,7 +19,6 @@ package com.mongodb.session;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.annotations.NotThreadSafe;
-import com.mongodb.internal.TimeoutContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -169,18 +168,4 @@ public interface ClientSession extends Closeable {
 
     @Override
     void close();
-
-    /**
-     * Gets the timeout context to use with this session:
-     *
-     * <ul>
-     *   <li>{@code MongoClientSettings#getTimeoutMS}</li>
-     *   <li>{@code ClientSessionOptions#getDefaultTimeout}</li>
-     * </ul>
-     * <p>For internal use only </p>
-     * @return the timeout to use
-     * @since 5.2
-     */
-    @Nullable
-    TimeoutContext getTimeoutContext();
 }

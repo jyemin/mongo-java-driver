@@ -18,6 +18,7 @@
 package com.mongodb.reactivestreams.client;
 
 import com.mongodb.TransactionOptions;
+import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.observability.micrometer.TransactionSpan;
 import com.mongodb.lang.Nullable;
 import org.reactivestreams.Publisher;
@@ -105,4 +106,15 @@ public interface ClientSession extends com.mongodb.session.ClientSession {
      */
     @Nullable
     TransactionSpan getTransactionSpan();
+
+    /**
+     * Get the timeout context for this session.
+     *
+     * <p>Note: For internal use only</p>
+     *
+     * @return the timeout context, or null if not set
+     * @since 5.2
+     */
+    @Nullable
+    TimeoutContext getTimeoutContext();
 }

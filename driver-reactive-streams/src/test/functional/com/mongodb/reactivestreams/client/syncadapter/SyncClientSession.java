@@ -184,8 +184,7 @@ class SyncClientSession implements ClientSession {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public TimeoutContext getTimeoutContext() {
+    private TimeoutContext getTimeoutContext() {
         return wrapped.getTimeoutContext();
     }
 

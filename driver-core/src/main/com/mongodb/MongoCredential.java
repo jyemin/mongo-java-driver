@@ -38,8 +38,7 @@ import static com.mongodb.AuthenticationMechanism.PLAIN;
 import static com.mongodb.AuthenticationMechanism.SCRAM_SHA_1;
 import static com.mongodb.AuthenticationMechanism.SCRAM_SHA_256;
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.internal.connection.OidcAuthenticator.OidcValidator.validateCreateOidcCredential;
-import static com.mongodb.internal.connection.OidcAuthenticator.OidcValidator.validateOidcCredentialConstruction;
+import static com.mongodb.internal.connection.OidcValidator.validateOidcCredentialConstruction;
 
 /**
  * Represents credentials to authenticate to a mongo server,as well as the source of the credentials and the authentication mechanism to
@@ -493,7 +492,10 @@ public final class MongoCredential {
 
         if (mechanism == MONGODB_OIDC) {
             validateOidcCredentialConstruction(source, mechanismProperties);
-            validateCreateOidcCredential(password);
+            if (password != null) {
+                throw new IllegalArgumentException("password must not be specified for "
+                        + MONGODB_OIDC);
+            }
         }
 
         if (userName == null && !Arrays.asList(MONGODB_X509, MONGODB_AWS, MONGODB_OIDC).contains(mechanism)) {

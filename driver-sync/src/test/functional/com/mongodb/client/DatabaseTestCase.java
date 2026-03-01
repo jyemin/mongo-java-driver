@@ -17,7 +17,6 @@
 package com.mongodb.client;
 
 import com.mongodb.client.test.CollectionHelper;
-import com.mongodb.internal.connection.ServerHelper;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.junit.jupiter.api.AfterEach;

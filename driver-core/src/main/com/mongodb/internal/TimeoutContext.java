@@ -15,21 +15,15 @@
  */
 package com.mongodb.internal;
 
-import com.mongodb.MongoClientException;
 import com.mongodb.MongoOperationTimeoutException;
-import com.mongodb.internal.connection.CommandMessage;
 import com.mongodb.internal.time.StartTime;
 import com.mongodb.internal.time.Timeout;
 import com.mongodb.lang.Nullable;
-import com.mongodb.session.ClientSession;
 
 import java.util.Objects;
 import java.util.function.LongConsumer;
 
 import static com.mongodb.assertions.Assertions.assertNotNull;
-import static com.mongodb.assertions.Assertions.assertNull;
-import static com.mongodb.assertions.Assertions.isTrue;
-import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static com.mongodb.internal.time.Timeout.ZeroSemantics.ZERO_DURATION_MEANS_INFINITE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -59,9 +53,6 @@ public class TimeoutContext {
     public static <T> T throwMongoTimeoutException(final String message) {
         throw new MongoOperationTimeoutException(message);
     }
-    public static <T> T throwMongoTimeoutException() {
-        throw new MongoOperationTimeoutException("The operation exceeded the timeout limit.");
-    }
 
     public static MongoOperationTimeoutException createMongoTimeoutException(final Throwable cause) {
         return createMongoTimeoutException("Operation exceeded the timeout limit: " + cause.getMessage(), cause);
@@ -74,43 +65,8 @@ public class TimeoutContext {
         return new MongoOperationTimeoutException(message, cause);
     }
 
-    public static TimeoutContext createMaintenanceTimeoutContext(final TimeoutSettings timeoutSettings) {
-        return new TimeoutContext(true, timeoutSettings, startTimeout(timeoutSettings.getTimeoutMS()));
-    }
-
-    public static TimeoutContext createTimeoutContext(final ClientSession session, final TimeoutSettings timeoutSettings) {
-        TimeoutContext sessionTimeoutContext = session.getTimeoutContext();
-
-        if (sessionTimeoutContext != null) {
-            TimeoutSettings sessionTimeoutSettings = sessionTimeoutContext.timeoutSettings;
-            if (timeoutSettings.getGenerationId() > sessionTimeoutSettings.getGenerationId()) {
-                throw new MongoClientException("Cannot change the timeoutMS during a transaction.");
-            }
-
-            // Check for any legacy operation timeouts
-            if (sessionTimeoutSettings.getTimeoutMS() == null) {
-                if (timeoutSettings.getMaxTimeMS() != 0) {
-                    sessionTimeoutSettings = sessionTimeoutSettings.withMaxTimeMS(timeoutSettings.getMaxTimeMS());
-                }
-                if (timeoutSettings.getMaxAwaitTimeMS() != 0) {
-                    sessionTimeoutSettings = sessionTimeoutSettings.withMaxAwaitTimeMS(timeoutSettings.getMaxAwaitTimeMS());
-                }
-                if (timeoutSettings.getMaxCommitTimeMS() != null) {
-                    sessionTimeoutSettings = sessionTimeoutSettings.withMaxCommitMS(timeoutSettings.getMaxCommitTimeMS());
-                }
-                return new TimeoutContext(sessionTimeoutSettings);
-            }
-            return sessionTimeoutContext;
-        }
-       return new TimeoutContext(timeoutSettings);
-    }
-
     public TimeoutContext(final TimeoutSettings timeoutSettings) {
         this(false, timeoutSettings, startTimeout(timeoutSettings.getTimeoutMS()));
-    }
-
-    private TimeoutContext(final TimeoutSettings timeoutSettings, @Nullable final Timeout timeout) {
-        this(false, timeoutSettings, timeout);
     }
 
     private TimeoutContext(final boolean isMaintenanceContext,
@@ -121,17 +77,6 @@ public class TimeoutContext {
                 timeoutSettings,
                 null,
                 timeout);
-    }
-
-    private TimeoutContext(final boolean isMaintenanceContext,
-                           final long minRoundTripTimeMS,
-                           final TimeoutSettings timeoutSettings,
-                           @Nullable final MaxTimeSupplier maxTimeSupplier) {
-        this(isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                maxTimeSupplier,
-                startTimeout(timeoutSettings.getTimeoutMS()));
     }
 
     private TimeoutContext(final boolean isMaintenanceContext,
@@ -155,36 +100,9 @@ public class TimeoutContext {
         return timeoutSettings.getTimeoutMS() != null;
     }
 
-    /**
-     * Runs the runnable if the timeout is expired.
-     * @param onExpired the runnable to run
-     */
-    public void onExpired(final Runnable onExpired) {
-        Timeout.nullAsInfinite(timeout).onExpired(onExpired);
-    }
-
     @Nullable
     public Timeout timeoutIncludingRoundTrip() {
         return timeout == null ? null : timeout.shortenBy(minRoundTripTimeMS, MILLISECONDS);
-    }
-
-    /**
-     * Returns the remaining {@code timeoutMS} if set or the {@code alternativeTimeoutMS}.
-     *
-     * zero means infinite timeout.
-     *
-     * @param alternativeTimeoutMS the alternative timeout.
-     * @return timeout to use.
-     */
-    public long timeoutOrAlternative(final long alternativeTimeoutMS) {
-        if (timeout == null) {
-            return alternativeTimeoutMS;
-        } else {
-            return timeout.call(MILLISECONDS,
-                    () -> 0L,
-                    (ms) -> ms,
-                    () -> throwMongoTimeoutException("The operation exceeded the timeout limit."));
-        }
     }
 
     public TimeoutSettings getTimeoutSettings() {
@@ -196,59 +114,14 @@ public class TimeoutContext {
         return timeout;
     }
 
-    public long getMaxAwaitTimeMS() {
-        return timeoutSettings.getMaxAwaitTimeMS();
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    public long getMaxCommitTimeMS() {
-        Long maxCommitTimeMS = timeoutSettings.getMaxCommitTimeMS();
-        return timeoutOrAlternative(maxCommitTimeMS != null ? maxCommitTimeMS : 0);
-    }
-
-    public long getReadTimeoutMS() {
-        return timeoutOrAlternative(timeoutSettings.getReadTimeoutMS());
-    }
-
-    public long getWriteTimeoutMS() {
-        return timeoutOrAlternative(0);
-    }
-
-    public int getConnectTimeoutMs() {
-        final long connectTimeoutMS = getTimeoutSettings().getConnectTimeoutMS();
-        if (isMaintenanceContext) {
-            return (int) connectTimeoutMS;
-        }
-
-        return Math.toIntExact(Timeout.nullAsInfinite(timeout).call(MILLISECONDS,
-                () -> connectTimeoutMS,
-                (ms) -> connectTimeoutMS == 0 ? ms : Math.min(ms, connectTimeoutMS),
-                () -> throwMongoTimeoutException("The operation exceeded the timeout limit.")));
-    }
-
-    /**
-     * Creates a new {@link TimeoutContext} with the same settings, but with the
-     * {@link TimeoutSettings#getMaxAwaitTimeMS()} as the maxTimeMS override which will be used
-     * in {@link #runMaxTimeMS(LongConsumer)}.
-     */
-    public TimeoutContext withMaxTimeAsMaxAwaitTimeOverride() {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                timeoutSettings::getMaxAwaitTimeMS,
-                timeout);
-    }
-
     /**
      * The override will be provided as the remaining value in
-     * {@link #runMaxTimeMS}, where 0 is ignored. This is useful for setting timeout
-     * in {@link CommandMessage} as an extra element before we send it to the server.
+     * {@link #runMaxTimeMS}, where 0 is ignored.
      *
      * <p>
      * NOTE: Suitable for static user-defined values only (i.e MaxAwaitTimeMS),
      * not for running timeouts that adjust dynamically (CSOT).
-     *
+     * <p>
      * If remaining CSOT timeout is less than this static timeout, then CSOT timeout will be used.
      *
      */
@@ -261,129 +134,6 @@ public class TimeoutContext {
                 timeout);
     }
 
-    /**
-     * Creates {@link TimeoutContext} with the default maxTimeMS behaviour in {@link #runMaxTimeMS(LongConsumer)}:
-     * - if timeoutMS is set, the remaining timeoutMS will be used as the maxTimeMS.
-     * - if timeoutMS is not set, the {@link TimeoutSettings#getMaxTimeMS()} will be used.
-     */
-    public TimeoutContext withDefaultMaxTime() {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                null,
-                timeout);
-    }
-
-    /**
-     * Disable the maxTimeMS override. This way the maxTimeMS will not
-     * be appended to the command in the {@link CommandMessage}.
-     */
-    public TimeoutContext withDisabledMaxTime() {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                () -> 0,
-                timeout);
-    }
-
-    /**
-     * The override will be provided as the remaining value in
-     * {@link #runMaxTimeMS}, where 0 is ignored.
-     */
-    public TimeoutContext withMaxTimeAsMaxCommitTime() {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                () -> getMaxCommitTimeMS(),
-                timeout);
-    }
-
-
-    /**
-     * Creates {@link TimeoutContext} with the recent min round trip time.
-     *
-     * @param minRoundTripTimeMS the min round trip time
-     * @return this
-     */
-    public TimeoutContext withMinRoundTripTime(final long minRoundTripTimeMS) {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                maxTimeSupplier,
-                timeout);
-    }
-
-    /**
-     * Resets the timeout if this timeout context is being used by pool maintenance
-     */
-    public TimeoutContext withNewlyStartedMaintenanceTimeout() {
-        if (!isMaintenanceContext) {
-            return this;
-        }
-
-        return new TimeoutContext(
-                true,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                maxTimeSupplier);
-    }
-
-    /**
-     * Returns the timeout context to use for the handshake process
-     *
-     * @return a new timeout context with the cached computed server selection timeout if available or this
-     */
-    public TimeoutContext withComputedServerSelectionTimeout() {
-        if (this.hasTimeoutMS()) {
-            Timeout serverSelectionTimeout = StartTime.now()
-                    .timeoutAfterOrInfiniteIfNegative(getTimeoutSettings().getServerSelectionTimeoutMS(), MILLISECONDS);
-            if (isMaintenanceContext) {
-                return new TimeoutContext(false, timeoutSettings, serverSelectionTimeout);
-            }
-            return new TimeoutContext(false, timeoutSettings, Timeout.earliest(serverSelectionTimeout, timeout));
-        }
-
-        return this;
-    }
-
-    public TimeoutContext withMinRoundTripTimeMS(final long minRoundTripTimeMS) {
-        isTrue("'minRoundTripTimeMS' must be a positive number", minRoundTripTimeMS >= 0);
-        return new TimeoutContext(isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                maxTimeSupplier,
-                timeout);
-    }
-
-    public TimeoutContext withNewlyStartedTimeout() {
-        return new TimeoutContext(
-                isMaintenanceContext,
-                minRoundTripTimeMS,
-                timeoutSettings,
-                maxTimeSupplier);
-    }
-
-    public TimeoutContext withAdditionalReadTimeout(final int additionalReadTimeout) {
-        // Only used outside timeoutMS usage
-        assertNull(timeout);
-
-        // Check existing read timeout is infinite
-        if (timeoutSettings.getReadTimeoutMS() == 0) {
-            return this;
-        }
-
-        long newReadTimeout = getReadTimeoutMS() + additionalReadTimeout;
-        return new TimeoutContext(timeoutSettings.withReadTimeoutMS(newReadTimeout > 0 ? newReadTimeout : Long.MAX_VALUE));
-    }
-
-    // Creates a copy of the timeout context that can be reset without resetting the original.
-    public TimeoutContext copyTimeoutContext() {
-        return new TimeoutContext(getTimeoutSettings(), getTimeout());
-    }
 
     @Override
     public String toString() {
@@ -441,14 +191,6 @@ public class TimeoutContext {
         }
 
         return StartTime.now().timeoutAfterOrInfiniteIfNegative(getTimeoutSettings().getServerSelectionTimeoutMS(), MILLISECONDS);
-    }
-
-    public Timeout startMaxWaitTimeout(final StartTime checkoutStart) {
-        if (hasTimeoutMS()) {
-            return assertNotNull(timeout);
-        }
-        final long ms = getTimeoutSettings().getMaxWaitTimeMS();
-        return checkoutStart.timeoutAfterOrInfiniteIfNegative(ms, MILLISECONDS);
     }
 
     public void runMaxTimeMS(final LongConsumer onRemaining) {

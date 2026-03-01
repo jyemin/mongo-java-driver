@@ -20,7 +20,6 @@ import com.mongodb.ClusterFixture;
 import com.mongodb.MongoNamespace;
 import com.mongodb.async.FutureResultCallback;
 import com.mongodb.client.test.CollectionHelper;
-import com.mongodb.internal.connection.ServerHelper;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;

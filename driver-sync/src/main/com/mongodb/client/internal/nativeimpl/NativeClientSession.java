@@ -219,9 +219,8 @@ public final class NativeClientSession implements ClientSession {
         return clusterTime;
     }
 
-    @Override
     @Nullable
-    public TimeoutContext getTimeoutContext() {
+    private TimeoutContext getTimeoutContext() {
         // TODO: Implement timeout context
         return null;
     }

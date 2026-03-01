@@ -53,7 +53,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.mongodb.MongoCredential.ALLOWED_HOSTS_KEY;
-import static com.mongodb.internal.connection.OidcAuthenticator.OidcValidator.validateCreateOidcCredential;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -997,7 +996,10 @@ public class ConnectionString {
                 credential = MongoCredential.createAwsCredential(userName, password);
                 break;
             case MONGODB_OIDC:
-                validateCreateOidcCredential(password);
+                if (password != null) {
+                    throw new IllegalArgumentException("password must not be specified for "
+                            + AuthenticationMechanism.MONGODB_OIDC);
+                }
                 credential = MongoCredential.createOidcCredential(userName);
                 break;
             default:

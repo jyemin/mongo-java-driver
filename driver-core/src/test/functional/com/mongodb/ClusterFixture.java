@@ -39,13 +39,10 @@ import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncOperationContextBinding;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.AsyncReadWriteBinding;
-import com.mongodb.internal.binding.AsyncSingleConnectionBinding;
 import com.mongodb.internal.binding.ClusterBinding;
 import com.mongodb.internal.binding.OperationContextBinding;
 import com.mongodb.internal.binding.ReadWriteBinding;
 import com.mongodb.internal.binding.ReferenceCounted;
-import com.mongodb.internal.binding.SimpleSessionContext;
-import com.mongodb.internal.binding.SingleConnectionBinding;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.AsynchronousSocketChannelStreamFactory;
 import com.mongodb.internal.connection.ClientMetadata;
@@ -76,9 +73,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.BsonValue;
-import org.bson.Document;
 import org.bson.codecs.BsonDocumentCodec;
-import org.bson.codecs.DocumentCodec;
 
 import javax.net.ssl.SSLException;
 import java.time.Duration;
@@ -198,23 +193,6 @@ public final class ClusterFixture {
         return serverVersion;
     }
 
-    public static final OperationContext OPERATION_CONTEXT = new OperationContext(
-            IgnorableRequestContext.INSTANCE,
-            new ReadConcernAwareNoOpSessionContext(ReadConcern.DEFAULT),
-            new TimeoutContext(TIMEOUT_SETTINGS),
-            getServerApi());
-
-    public static final InternalOperationContextFactory OPERATION_CONTEXT_FACTORY =
-            new InternalOperationContextFactory(TIMEOUT_SETTINGS, getServerApi());
-
-    public static OperationContext createOperationContext(final TimeoutSettings timeoutSettings) {
-        return new OperationContext(
-                IgnorableRequestContext.INSTANCE,
-                new ReadConcernAwareNoOpSessionContext(ReadConcern.DEFAULT),
-                new TimeoutContext(timeoutSettings),
-                getServerApi());
-    }
-
     private static ServerVersion getVersion(final BsonDocument buildInfoResult) {
         List<BsonValue> versionArray = buildInfoResult.getArray("versionArray").subList(0, 3);
 
@@ -250,19 +228,6 @@ public final class ClusterFixture {
                         .map(name -> getEnv(name, ""))
                         .filter(s -> !s.isEmpty())
                         .count() == requiredSystemProperties.size();
-    }
-
-    public static Document getServerStatus() {
-        return new CommandReadOperation<>("admin", new BsonDocument("serverStatus", new BsonInt32(1)),
-                new DocumentCodec())
-                .execute(getBinding(), OPERATION_CONTEXT);
-    }
-
-    public static boolean supportsFsync() {
-        Document serverStatus = getServerStatus();
-        Document storageEngine = (Document) serverStatus.get("storageEngine");
-
-        return storageEngine != null && !storageEngine.get("name").equals("inMemory");
     }
 
     static class ShutdownHook extends Thread {

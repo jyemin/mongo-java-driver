@@ -48,8 +48,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.mongodb.ClusterFixture.TIMEOUT;
-import static com.mongodb.internal.connection.InternalStreamConnection.getSecuritySensitiveCommands;
-import static com.mongodb.internal.connection.InternalStreamConnection.getSecuritySensitiveHelloCommands;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
@@ -65,7 +63,6 @@ public class TestCommandListener implements CommandListener {
     private final Lock lock = new ReentrantLock();
     private final Condition commandCompletedCondition = lock.newCondition();
     private final Condition commandAnyEventCondition = lock.newCondition();
-    private final boolean observeSensitiveCommands;
     private boolean ignoreNextSucceededOrFailedEvent;
     private static final CodecRegistry CODEC_REGISTRY_HACK;
 
@@ -90,7 +87,6 @@ public class TestCommandListener implements CommandListener {
      * type will be lowercase and will omit the terms "command" and "event".
      * For example: {@code "saslContinue succeeded"}.
      *
-     * @see InternalStreamConnection#setRecordEverything(boolean)
      * @param listener the test listener
      */
     public TestCommandListener(final TestListener listener) {
@@ -109,7 +105,6 @@ public class TestCommandListener implements CommandListener {
             final boolean observeSensitiveCommands, @Nullable final TestListener listener) {
         this.eventTypes = eventTypes;
         this.ignoredCommandMonitoringEvents = ignoredCommandMonitoringEvents;
-        this.observeSensitiveCommands = observeSensitiveCommands;
         this.listener = listener;
     }
 
@@ -266,14 +261,6 @@ public class TestCommandListener implements CommandListener {
         if (!eventTypes.contains("commandStartedEvent") || ignoredCommandMonitoringEvents.contains(event.getCommandName())) {
             return;
         }
-        else if (!observeSensitiveCommands) {
-            if (getSecuritySensitiveCommands().contains(event.getCommandName())) {
-                return;
-            } else if (getSecuritySensitiveHelloCommands().contains(event.getCommandName()) && event.getCommand().isEmpty()) {
-                ignoreNextSucceededOrFailedEvent = true;
-                return;
-            }
-        }
         lock.lock();
         try {
             addEvent(new CommandStartedEvent(event.getRequestContext(), event.getOperationId(), event.getRequestId(),
@@ -289,14 +276,6 @@ public class TestCommandListener implements CommandListener {
     public void commandSucceeded(final CommandSucceededEvent event) {
         if (!eventTypes.contains("commandSucceededEvent") || ignoredCommandMonitoringEvents.contains(event.getCommandName())) {
             return;
-        }
-        else if (!observeSensitiveCommands) {
-            if (getSecuritySensitiveCommands().contains(event.getCommandName())) {
-                return;
-            } else if (getSecuritySensitiveHelloCommands().contains(event.getCommandName()) && ignoreNextSucceededOrFailedEvent) {
-                ignoreNextSucceededOrFailedEvent = false;
-                return;
-            }
         }
         lock.lock();
         try {
@@ -315,14 +294,6 @@ public class TestCommandListener implements CommandListener {
     public void commandFailed(final CommandFailedEvent event) {
         if (!eventTypes.contains("commandFailedEvent") || ignoredCommandMonitoringEvents.contains(event.getCommandName())) {
             return;
-        }
-        else if (!observeSensitiveCommands) {
-            if (getSecuritySensitiveCommands().contains(event.getCommandName())) {
-                return;
-            } else if (getSecuritySensitiveHelloCommands().contains(event.getCommandName()) && ignoreNextSucceededOrFailedEvent) {
-                ignoreNextSucceededOrFailedEvent = false;
-                return;
-            }
         }
         lock.lock();
         try {

@@ -17,7 +17,6 @@
 package com.mongodb.reactivestreams.client.gridfs;
 
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.internal.MongoDatabaseImpl;
 import com.mongodb.reactivestreams.client.internal.gridfs.GridFSBucketImpl;
 
 import static com.mongodb.assertions.Assertions.notNull;
@@ -25,16 +24,12 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * A factory for GridFSBucket instances.
  *
- * <p>Requires the concrete {@link MongoDatabaseImpl} implementation of the MongoDatabase interface.</p>
- *
  * @since 1.3
  */
 public final class GridFSBuckets {
 
     /**
      * Create a new GridFS bucket with the default {@code 'fs'} bucket name
-     *
-     * <p>Requires the concrete {@link MongoDatabaseImpl} implementation of the MongoDatabase interface.</p>
      *
      * @param database the database instance to use with GridFS.
      * @return the GridFSBucket
@@ -46,8 +41,6 @@ public final class GridFSBuckets {
 
     /**
      * Create a new GridFS bucket with a custom bucket name
-     *
-     * <p>Requires the concrete {@link MongoDatabaseImpl} implementation of the MongoDatabase interface.</p>
      *
      * @param database   the database instance to use with GridFS
      * @param bucketName the custom bucket name to use

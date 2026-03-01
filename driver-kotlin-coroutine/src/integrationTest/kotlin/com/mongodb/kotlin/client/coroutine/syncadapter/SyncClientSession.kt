@@ -89,7 +89,7 @@ class SyncClientSession(internal val wrapped: ClientSession, private val origina
     override fun <T : Any> withTransaction(transactionBody: TransactionBody<T>, options: TransactionOptions): T =
         throw UnsupportedOperationException()
 
-    override fun getTimeoutContext(): TimeoutContext? = wrapped.getTimeoutContext()
+    fun getTimeoutContext(): TimeoutContext? = wrapped.getTimeoutContext()
 
     override fun getTransactionSpan(): TransactionSpan? = null
 }

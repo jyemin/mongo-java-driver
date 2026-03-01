@@ -230,7 +230,7 @@ public class ClientSession(public val wrapped: reactiveClientSession) : jClientS
      * @return the timeout to use
      * @since 5.2
      */
-    public override fun getTimeoutContext(): TimeoutContext? = wrapped.timeoutContext
+    public fun getTimeoutContext(): TimeoutContext? = wrapped.timeoutContext
 }
 
 /**

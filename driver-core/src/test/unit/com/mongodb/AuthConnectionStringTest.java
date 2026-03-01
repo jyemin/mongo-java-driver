@@ -16,7 +16,6 @@
 
 package com.mongodb;
 
-import com.mongodb.internal.connection.OidcAuthenticator;
 import com.mongodb.lang.Nullable;
 import junit.framework.TestCase;
 import org.bson.BsonArray;
@@ -31,7 +30,6 @@ import util.JsonPoweredTestHelper;
 
 import java.util.Collection;
 
-import static com.mongodb.AuthenticationMechanism.MONGODB_OIDC;
 import static com.mongodb.MongoCredential.OIDC_CALLBACK_KEY;
 import static org.junit.Assume.assumeFalse;
 
@@ -124,9 +122,6 @@ public class AuthConnectionStringTest extends TestCase {
                         fail("Unsupported callback: " + string);
                     }
                 }
-            }
-            if (MONGODB_OIDC.getMechanismName().equals(credential.getMechanism())) {
-                OidcAuthenticator.OidcValidator.validateBeforeUse(credential);
             }
         }
         return credential;
