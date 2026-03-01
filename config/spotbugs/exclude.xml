@@ -147,20 +147,6 @@
     </Match>
 
     <Match>
-        <!-- MongoDB status: "False Positive", SpotBugs rank: 17 -->
-        <Class name="com.mongodb.client.internal.CryptConnection"/>
-        <Method name="retain"/>
-        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
-    </Match>
-
-    <Match>
-        <!-- MongoDB status: "False Positive", SpotBugs rank: 17 -->
-        <Class name="com.mongodb.reactivestreams.client.internal.crypt.CryptConnection"/>
-        <Method name="retain"/>
-        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
-    </Match>
-
-    <Match>
         <!-- MongoDB status: "False Positive", SpotBugs rank: 11 -->
         <Class name="org.bson.codecs.kotlin.DataClassCodec$Companion"/>
         <Method name="getCodec"/>

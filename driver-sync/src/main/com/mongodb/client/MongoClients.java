@@ -19,15 +19,8 @@ package com.mongodb.client;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoDriverInformation;
-import com.mongodb.client.internal.Clusters;
-import com.mongodb.client.internal.MongoClientImpl;
-import com.mongodb.internal.connection.Cluster;
-import com.mongodb.internal.connection.StreamFactoryFactory;
+import com.mongodb.client.internal.nativeimpl.NativeMongoClients;
 import com.mongodb.lang.Nullable;
-
-import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.internal.connection.ServerAddressHelper.getInetAddressResolver;
-import static com.mongodb.internal.connection.StreamFactoryHelper.getSyncStreamFactoryFactory;
 
 
 /**
@@ -78,7 +71,6 @@ public final class MongoClients {
      *
      * @param connectionString the settings
      * @return the client
-     *
      * @see com.mongodb.MongoClientSettings.Builder#applyConnectionString(ConnectionString)
      */
     public static MongoClient create(final ConnectionString connectionString) {
@@ -96,7 +88,7 @@ public final class MongoClients {
      * @see MongoClients#create(ConnectionString)
      */
     public static MongoClient create(final ConnectionString connectionString,
-                                     @Nullable final MongoDriverInformation mongoDriverInformation) {
+            @Nullable final MongoDriverInformation mongoDriverInformation) {
         return create(MongoClientSettings.builder().applyConnectionString(connectionString).build(), mongoDriverInformation);
     }
 
@@ -110,23 +102,8 @@ public final class MongoClients {
      * @return the client
      */
     public static MongoClient create(final MongoClientSettings settings, @Nullable final MongoDriverInformation mongoDriverInformation) {
-        notNull("settings", settings);
-
-        MongoDriverInformation.Builder builder = mongoDriverInformation == null ? MongoDriverInformation.builder()
-                : MongoDriverInformation.builder(mongoDriverInformation);
-
-        MongoDriverInformation driverInfo = builder.driverName("sync").build();
-
-        StreamFactoryFactory syncStreamFactoryFactory = getSyncStreamFactoryFactory(
-                settings.getTransportSettings(),
-                getInetAddressResolver(settings));
-
-        Cluster cluster = Clusters.createCluster(
-                settings,
-                driverInfo,
-                syncStreamFactoryFactory);
-
-        return new MongoClientImpl(cluster, settings, driverInfo, syncStreamFactoryFactory);
+        // TODO: MongoDriverInformation
+        return NativeMongoClients.create(settings);
     }
 
     private MongoClients() {
