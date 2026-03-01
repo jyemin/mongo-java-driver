@@ -81,6 +81,21 @@ public final class RawBsonDocument extends BsonDocument {
         return new RawBsonDocumentCodec().decode(new JsonReader(json), DecoderContext.builder().build());
     }
 
+    public static BsonValue getValue(byte bsonTypeByte, byte[] value) {
+        return new RawBsonDocument(wrapInDoc(bsonTypeByte, value)).get("");}
+
+    private static byte[] wrapInDoc(byte bsonTypeByte, byte[] value) {
+        ByteBuffer buf = ByteBuffer.allocate(7 + value.length)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .putInt(7 + value.length)  // size
+                .put(bsonTypeByte)               // type
+                .put((byte) 0)                   // key ""
+                .put(value)                      // value
+                .put((byte) 0);                  // terminator
+
+        return buf.array();
+    }
+
     /**
      * Constructs a new instance with the given byte array.  Note that it does not make a copy of the array, so do not modify it after
      * passing it to this constructor.

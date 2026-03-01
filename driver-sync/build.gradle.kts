@@ -33,6 +33,7 @@ dependencies {
     api(project(path = ":bson", configuration = "default"))
     api(project(path = ":driver-core", configuration = "default"))
     compileOnly(project(path = ":mongodb-crypt", configuration = "default"))
+    implementation(project(path = ":rust-crud-bindings", configuration = "default"))
 
     testImplementation(project(path = ":bson", configuration = "testArtifacts"))
     testImplementation(project(path = ":driver-core", configuration = "testArtifacts"))

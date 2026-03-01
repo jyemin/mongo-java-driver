@@ -35,6 +35,7 @@ include(":driver-sync")
 include(":driver-legacy")
 include(":driver-reactive-streams")
 include(":mongodb-crypt")
+include(":rust-crud-bindings")
 
 include(":driver-kotlin-coroutine")
 include(":driver-kotlin-extensions")

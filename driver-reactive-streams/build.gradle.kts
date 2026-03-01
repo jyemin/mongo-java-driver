@@ -35,6 +35,7 @@ dependencies {
     api(libs.reactive.streams)
     implementation(platform(libs.project.reactor.bom))
     implementation(libs.project.reactor.core)
+    implementation(project(path = ":rust-crud-bindings", configuration = "default"))
     compileOnly(project(path = ":mongodb-crypt", configuration = "default"))
 
     optionalImplementation(platform(libs.micrometer.observation.bom))
