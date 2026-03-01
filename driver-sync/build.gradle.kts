@@ -15,6 +15,7 @@
  */
 import ProjectExtensions.configureJarManifest
 import ProjectExtensions.configureMavenPublication
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import project.DEFAULT_JAVA_VERSION
 
 plugins {
@@ -50,9 +51,20 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    // Require Java 23 for tests due to rust-crud-bindings dependency
+    val testJavaVersion: Int = findProperty("javaVersion")?.toString()?.toInt() ?: 23
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(testJavaVersion) })
+
+    // Set the native library path for the Rust FFI library
+    // Can be overridden with -PnativeLibPath=/path/to/lib
+    val nativeLibPath = findProperty("nativeLibPath")?.toString()
+    if (nativeLibPath != null) {
+        environment("DYLD_LIBRARY_PATH", nativeLibPath)
+        environment("LD_LIBRARY_PATH", nativeLibPath)
+    }
+
     // Needed for MicrometerProseTest to set env variable programmatically (calls
     // `field.setAccessible(true)`)
-    val testJavaVersion: Int = findProperty("javaVersion")?.toString()?.toInt() ?: DEFAULT_JAVA_VERSION
     if (testJavaVersion >= DEFAULT_JAVA_VERSION) {
         jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     }
