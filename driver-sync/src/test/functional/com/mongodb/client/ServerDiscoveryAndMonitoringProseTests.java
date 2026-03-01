@@ -16,7 +16,6 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.event.ConnectionPoolClearedEvent;
 import com.mongodb.event.ConnectionPoolListener;
@@ -49,10 +48,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.mongodb.ClusterFixture.configureFailPoint;
-import static com.mongodb.ClusterFixture.disableFailPoint;
-import static com.mongodb.ClusterFixture.isStandalone;
-import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.client.Fixture.configureFailPoint;
+import static com.mongodb.client.Fixture.disableFailPoint;
+import static com.mongodb.client.Fixture.isStandalone;
+import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
@@ -192,7 +191,7 @@ public class ServerDiscoveryAndMonitoringProseTests {
         String appName = "SDAMPoolManagementTest";
         MongoClientSettings clientSettings = getMongoClientSettingsBuilder()
                 .applicationName(appName)
-                .applyToClusterSettings(ClusterFixture::setDirectConnection)
+                .applyToClusterSettings(Fixture::setDirectConnection)
                 .applyToServerSettings(builder -> builder
                         .heartbeatFrequency(100, MILLISECONDS)
                         .addServerMonitorListener(serverMonitorListener))
@@ -235,7 +234,7 @@ public class ServerDiscoveryAndMonitoringProseTests {
         String appName = "SDAMMinHeartbeatFrequencyTest";
         MongoClientSettings clientSettings = getMongoClientSettingsBuilder()
                 .applicationName(appName)
-                .applyToClusterSettings(ClusterFixture::setDirectConnection)
+                .applyToClusterSettings(Fixture::setDirectConnection)
                 .applyToClusterSettings(builder -> builder
                         .serverSelectionTimeout(5000, MILLISECONDS))
                 /* We have to set the default value explicitly because `getMongoClientSettingsBuilder` sets the internal to

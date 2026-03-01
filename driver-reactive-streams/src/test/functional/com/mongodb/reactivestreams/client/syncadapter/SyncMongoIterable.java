@@ -21,11 +21,8 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.internal.MappingIterable;
 import com.mongodb.lang.Nullable;
-import com.mongodb.reactivestreams.client.internal.BatchCursorPublisher;
-import com.mongodb.reactivestreams.client.internal.ListCollectionNamesPublisherImpl;
-import org.bson.Document;
 import org.reactivestreams.Publisher;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -54,7 +51,8 @@ class SyncMongoIterable<T> implements MongoIterable<T> {
 
     @Override
     public T first() {
-        return Mono.from(furtherUnwrapWrapped().first()).contextWrite(CONTEXT).block(TIMEOUT_DURATION);
+        // TODO: is this right?
+        return Flux.from(wrapped).next().contextWrite(CONTEXT).block(TIMEOUT_DURATION);
     }
 
     @Override
@@ -85,17 +83,5 @@ class SyncMongoIterable<T> implements MongoIterable<T> {
     public MongoIterable<T> batchSize(final int batchSize) {
         this.batchSize = batchSize;
         return this;
-    }
-
-    private BatchCursorPublisher<T> furtherUnwrapWrapped() {
-        if (this.wrapped instanceof ListCollectionNamesPublisherImpl) {
-            BatchCursorPublisher<Document> wrappedDocumentPublisher = ((ListCollectionNamesPublisherImpl) this.wrapped).getWrapped();
-            // this casting obviously does not always work, but should work in tests
-            @SuppressWarnings("unchecked")
-            BatchCursorPublisher<T> wrappedTPublisher = (BatchCursorPublisher<T>) wrappedDocumentPublisher;
-            return wrappedTPublisher;
-        } else {
-            return (BatchCursorPublisher<T>) this.wrapped;
-        }
     }
 }

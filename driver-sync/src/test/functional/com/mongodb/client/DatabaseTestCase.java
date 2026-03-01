@@ -24,7 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClient;
-import static com.mongodb.client.Fixture.getPrimary;
 
 public class DatabaseTestCase {
     //For ease of use and readability, in this specific case we'll allow protected variables
@@ -46,11 +45,6 @@ public class DatabaseTestCase {
     public void tearDown() {
         if (collection != null) {
             collection.drop();
-        }
-        try {
-            ServerHelper.checkPool(getPrimary());
-        } catch (InterruptedException e) {
-            // ignore
         }
     }
 

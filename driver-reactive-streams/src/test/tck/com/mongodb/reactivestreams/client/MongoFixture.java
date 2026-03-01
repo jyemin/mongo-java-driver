@@ -59,11 +59,15 @@ public final class MongoFixture {
     }
 
     public static MongoClientSettings.Builder getMongoClientSettingsBuilder() {
-        return MongoClientSettings.builder().applyConnectionString(ClusterFixture.getConnectionString());
+        return MongoClientSettings.builder().applyConnectionString(com.mongodb.client.Fixture.getConnectionString());
     }
 
     public static String getDefaultDatabaseName() {
         return ClusterFixture.getDefaultDatabaseName();
+    }
+
+    public static boolean isDiscoverableReplicaSet() {
+        return com.mongodb.client.Fixture.isDiscoverableReplicaSet();
     }
 
     public static MongoDatabase getDefaultDatabase() {

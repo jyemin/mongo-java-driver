@@ -43,9 +43,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.mongodb.ClusterFixture.isStandalone;
-import static com.mongodb.ClusterFixture.serverVersionAtLeast;
-import static com.mongodb.ClusterFixture.serverVersionLessThan;
+import static com.mongodb.client.Fixture.isStandalone;
+import static com.mongodb.client.Fixture.serverVersionAtLeast;
+import static com.mongodb.client.Fixture.serverVersionLessThan;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static com.mongodb.fixture.EncryptionFixture.getKmsProviders;
 import static com.mongodb.testing.MongoAssertions.assertCause;

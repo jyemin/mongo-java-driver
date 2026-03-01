@@ -29,7 +29,7 @@ import spock.lang.IgnoreIf
 
 import static Fixture.getMongoClient
 import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
-import static com.mongodb.ClusterFixture.getConnectionString
+import static com.mongodb.client.Fixture.getConnectionString
 import static com.mongodb.reactivestreams.client.Fixture.isReplicaSet
 
 class SmokeTestSpecification extends FunctionalSpecification {

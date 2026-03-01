@@ -47,8 +47,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.isStandalone;
-import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.client.Fixture.isStandalone;
+import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static com.mongodb.client.unified.UnifiedClientEncryptionHelper.localKmsProviderKey;
 import static java.util.Collections.emptyMap;

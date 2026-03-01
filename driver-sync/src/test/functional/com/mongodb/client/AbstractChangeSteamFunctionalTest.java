@@ -16,7 +16,6 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -52,7 +51,7 @@ public abstract class AbstractChangeSteamFunctionalTest {
     @Test
     public void shouldDoOneServerSelectionForResumeAttempt() {
         //given
-        assumeTrue(ClusterFixture.isDiscoverableReplicaSet());
+        assumeTrue(Fixture.isDiscoverableReplicaSet());
         AtomicInteger serverSelectionCounter = new AtomicInteger();
         BsonTimestamp startTime = new BsonTimestamp((int) Instant.now().getEpochSecond(), 0);
         try (MongoClient mongoClient = createMongoClient(Fixture.getMongoClientSettingsBuilder()
@@ -99,7 +98,7 @@ public abstract class AbstractChangeSteamFunctionalTest {
 
     @AfterEach
     public void tearDown() throws InterruptedException {
-        ClusterFixture.disableFailPoint(FAIL_COMMAND_NAME);
+        Fixture.disableFailPoint(FAIL_COMMAND_NAME);
         collectionHelper.drop();
     }
 }

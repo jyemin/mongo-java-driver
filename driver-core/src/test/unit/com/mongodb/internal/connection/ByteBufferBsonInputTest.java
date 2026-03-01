@@ -17,8 +17,6 @@
 package com.mongodb.internal.connection;
 
 import com.google.common.primitives.Ints;
-import com.mongodb.internal.connection.netty.NettyByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import org.bson.BsonSerializationException;
 import org.bson.ByteBuf;
 import org.bson.ByteBufNIO;
@@ -59,14 +57,6 @@ class ByteBufferBsonInputTest {
 
     static Stream<BufferProvider> bufferProviders() {
         return Stream.of(
-                createBufferProvider(
-                        "NettyByteBuf based on PooledByteBufAllocator.DEFAULT.directBuffer",
-                        size -> new NettyByteBuf(PooledByteBufAllocator.DEFAULT.directBuffer(size))
-                ),
-                createBufferProvider(
-                        "NettyByteBuf based on PooledByteBufAllocator.DEFAULT.heapBuffer",
-                        size -> new NettyByteBuf(PooledByteBufAllocator.DEFAULT.heapBuffer(size))
-                ),
                 createBufferProvider(
                         "PowerOfTwoBufferPool",
                         new PowerOfTwoBufferPool()

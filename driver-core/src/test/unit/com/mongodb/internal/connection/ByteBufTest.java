@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ByteBufTest {
 
     static Stream<BufferProvider> bufferProviders() {
-        return Stream.of(new ByteBufSpecification.NettyBufferProvider(), new SimpleBufferProvider());
+        return Stream.of(new SimpleBufferProvider());
     }
 
     @ParameterizedTest

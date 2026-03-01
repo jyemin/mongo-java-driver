@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
+import static com.mongodb.client.Fixture.isLoadBalanced;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -46,7 +47,7 @@ public class ClusterEventPublishingTest {
 
     @Test
     public void shouldPublishExpectedEvents() throws InterruptedException {
-        assumeFalse(ClusterFixture.isLoadBalanced());
+        assumeFalse(isLoadBalanced());
 
         AllClusterEventListener clusterEventListenerOne = new AllClusterEventListener();
         AllClusterEventListener clusterEventListenerTwo = new AllClusterEventListener();

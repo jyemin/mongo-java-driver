@@ -16,7 +16,6 @@
 
 package com.mongodb.client
 
-import com.mongodb.ClusterFixture
 import com.mongodb.MongoException
 
 import javax.naming.Reference
@@ -28,7 +27,7 @@ class MongoClientFactorySpecification extends FunctionalSpecification {
     def 'should create MongoClient from environment'() {
         given:
         def environment = new Hashtable<String, String>()
-        environment.put('connectionString', ClusterFixture.getConnectionString().getConnectionString())
+        environment.put('connectionString', Fixture.getConnectionString().getConnectionString())
 
         when:
         MongoClient client = mongoClientFactory.getObjectInstance(null, null, null, environment) as MongoClient
@@ -44,7 +43,7 @@ class MongoClientFactorySpecification extends FunctionalSpecification {
         given:
         def environment = new Hashtable<String, String>()
         def reference = new Reference(null, new StringRefAddr('connectionString',
-                ClusterFixture.getConnectionString().getConnectionString()))
+                Fixture.getConnectionString().getConnectionString()))
 
         when:
         MongoClient client = mongoClientFactory.getObjectInstance(reference, null, null, environment) as MongoClient

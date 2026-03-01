@@ -38,10 +38,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.mongodb.ClusterFixture.isAtlasSearchTest;
-import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 import static com.mongodb.client.Fixture.getMongoClient;
-import static com.mongodb.client.Fixture.getPrimary;
 import static com.mongodb.client.model.Aggregates.search;
 import static com.mongodb.client.model.Aggregates.sort;
 import static com.mongodb.client.model.Sorts.ascending;
@@ -110,11 +109,6 @@ public class AggregatesSearchFunctionalTest {
     public static void afterAll() {
         if (collection != null) {
             collection.drop();
-        }
-        try {
-            ServerHelper.checkPool(getPrimary());
-        } catch (InterruptedException e) {
-            // ignore
         }
     }
 

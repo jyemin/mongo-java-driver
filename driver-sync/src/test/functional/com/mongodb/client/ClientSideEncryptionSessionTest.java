@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
-import static com.mongodb.ClusterFixture.isStandalone;
+import static com.mongodb.client.Fixture.isStandalone;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;

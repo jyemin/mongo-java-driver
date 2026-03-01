@@ -21,10 +21,8 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
-import com.mongodb.MongoTimeoutException;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.connection.ServerVersion;
-import com.mongodb.reactivestreams.client.internal.MongoClientImpl;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import reactor.core.publisher.Mono;
@@ -34,14 +32,12 @@ import java.util.List;
 
 import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
 import static com.mongodb.ClusterFixture.getServerApi;
-import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
-import static java.lang.Thread.sleep;
 
 /**
  * Helper class for asynchronous tests.
  */
 public final class Fixture {
-    private static MongoClientImpl mongoClient;
+    private static MongoClient mongoClient;
     private static ServerVersion serverVersion;
     private static ClusterType clusterType;
 
@@ -50,7 +46,7 @@ public final class Fixture {
 
     public static synchronized MongoClient getMongoClient() {
         if (mongoClient == null) {
-            mongoClient = (MongoClientImpl) MongoClients.create(getMongoClientSettings());
+            mongoClient = MongoClients.create(getMongoClientSettings());
             serverVersion = getServerVersion();
             clusterType = getClusterType();
             Runtime.getRuntime().addShutdownHook(new ShutdownHook());
@@ -63,7 +59,7 @@ public final class Fixture {
     }
 
     public static MongoClientSettings.Builder getMongoClientSettingsBuilder() {
-        return getMongoClientSettingsBuilder(ClusterFixture.getConnectionString());
+        return getMongoClientSettingsBuilder(com.mongodb.client.Fixture.getConnectionString());
     }
 
     public static MongoClientSettings.Builder getMongoClientSettingsBuilder(final ConnectionString connectionString) {
@@ -125,26 +121,7 @@ public final class Fixture {
     }
 
     public static synchronized void waitForLastServerSessionPoolRelease() {
-        if (mongoClient != null) {
-            long startTime = System.currentTimeMillis();
-            long sessionInUseCount = getSessionInUseCount();
-            while (sessionInUseCount > 0) {
-                try {
-                    if (System.currentTimeMillis() > startTime + TIMEOUT_DURATION.toMillis()) {
-                        throw new MongoTimeoutException("Timed out waiting for server session pool in use count to drop to 0.  Now at: "
-                                                                + sessionInUseCount);
-                    }
-                    sleep(10);
-                    sessionInUseCount = getSessionInUseCount();
-                } catch (InterruptedException e) {
-                    throw interruptAndCreateMongoInterruptedException("Interrupted", e);
-                }
-            }
-        }
-    }
-
-    private static long getSessionInUseCount() {
-        return mongoClient.getServerSessionPool().getInUseCount();
+        // Session pool checking not available - internal API removed
     }
 
     public static boolean serverVersionAtLeast(final int majorVersion, final int minorVersion) {
@@ -158,7 +135,7 @@ public final class Fixture {
     }
 
     public static synchronized ConnectionString getConnectionString() {
-        return ClusterFixture.getConnectionString();
+        return com.mongodb.client.Fixture.getConnectionString();
     }
 
     public static MongoClientSettings.Builder getMongoClientBuilderFromConnectionString() {

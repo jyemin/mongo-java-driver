@@ -75,18 +75,18 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.AuthenticationMechanism.MONGODB_OIDC;
 import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.getMultiMongosConnectionString;
-import static com.mongodb.ClusterFixture.isLoadBalanced;
-import static com.mongodb.ClusterFixture.isSharded;
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
+import static com.mongodb.client.Fixture.getMultiMongosConnectionString;
 import static com.mongodb.client.Fixture.getMultiMongosMongoClientSettingsBuilder;
+import static com.mongodb.client.Fixture.isLoadBalanced;
+import static com.mongodb.client.Fixture.isSharded;
 import static com.mongodb.client.unified.UnifiedClientEncryptionHelper.createKmsProvidersMap;
 import static com.mongodb.client.unified.UnifiedCrudHelper.asReadConcern;
 import static com.mongodb.client.unified.UnifiedCrudHelper.asReadPreference;
 import static com.mongodb.client.unified.UnifiedCrudHelper.asWriteConcern;
-import static com.mongodb.internal.connection.AbstractConnectionPoolTest.waitForPoolAsyncWorkManagerStart;
+import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static java.lang.String.format;
 import static java.lang.System.getenv;
 import static java.util.Arrays.asList;
@@ -610,8 +610,13 @@ public final class Entities {
         }
 
         putEntity(id, mongoClientSupplier.apply(clientSettings), clients);
+        // TODO: what to do?
         if (waitForPoolAsyncWorkManagerStart) {
-            waitForPoolAsyncWorkManagerStart();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw interruptAndCreateMongoInterruptedException(null, e);
+            }
         }
         if (waitForMinPoolSizeToPopulate) {
             waitForMinPoolSizeToPopulate(entity, id, clientSettings);

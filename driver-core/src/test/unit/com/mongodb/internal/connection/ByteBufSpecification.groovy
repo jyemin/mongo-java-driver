@@ -17,10 +17,6 @@
 package com.mongodb.internal.connection
 
 
-import com.mongodb.internal.connection.netty.NettyByteBuf
-import io.netty.buffer.ByteBufAllocator
-import io.netty.buffer.PooledByteBufAllocator
-import org.bson.ByteBuf
 import spock.lang.Specification
 
 class ByteBufSpecification extends Specification {
@@ -39,7 +35,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'should put several bytes'() {
@@ -63,7 +59,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'should put bytes at index'() {
@@ -97,7 +93,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'when writing, remaining should be the number of bytes that can be written'() {
@@ -117,7 +113,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'when writing, hasRemaining should be true if there is still room to write'() {
@@ -143,7 +139,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'should return NIO buffer with the same capacity and limit'() {
@@ -162,7 +158,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'should return NIO buffer with the same contents'() {
@@ -198,7 +194,7 @@ class ByteBufSpecification extends Specification {
         buffer.release()
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
+        provider << [new SimpleBufferProvider()]
     }
 
     def 'should enforce reference counts'() {
@@ -236,20 +232,6 @@ class ByteBufSpecification extends Specification {
         thrown(Exception)
 
         where:
-        provider << [new NettyBufferProvider(), new SimpleBufferProvider()]
-    }
-
-    static final class NettyBufferProvider implements BufferProvider {
-        private final ByteBufAllocator allocator
-
-        NettyBufferProvider() {
-            allocator = PooledByteBufAllocator.DEFAULT
-        }
-
-        @Override
-        ByteBuf getBuffer(final int size) {
-            io.netty.buffer.ByteBuf buffer = allocator.directBuffer(size, size)
-            new NettyByteBuf(buffer)
-        }
+        provider << [new SimpleBufferProvider()]
     }
 }

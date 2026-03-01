@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ClusterFixture.serverVersionAtLeast;
+import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;

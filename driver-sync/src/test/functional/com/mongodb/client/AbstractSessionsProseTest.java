@@ -49,7 +49,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
-import static com.mongodb.ClusterFixture.isStandalone;
+import static com.mongodb.client.Fixture.isStandalone;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -238,9 +238,9 @@ public abstract class AbstractSessionsProseTest {
             // wait until the client1 processes the next pair of SDAM heartbeat started + succeeded events.
             serverMonitorListener.reset();
             serverMonitorListener.waitForEvents(ServerHeartbeatStartedEvent.class, serverHeartbeatStartedEvent -> true,
-                    1, Duration.ofMillis(20 + ClusterFixture.getPrimaryRTT()));
+                    1, Duration.ofMillis(20 + 1));
             serverMonitorListener.waitForEvents(ServerHeartbeatSucceededEvent.class, serverHeartbeatSucceededEvent -> true,
-                    1, Duration.ofMillis(20 + ClusterFixture.getPrimaryRTT()));
+                    1, Duration.ofMillis(20 + 1));
 
             commandListener.reset();
             executePing(client1);
@@ -256,7 +256,7 @@ public abstract class AbstractSessionsProseTest {
 
     private static MongoClientSettings.Builder getDirectPrimaryMongoClientSettingsBuilder() {
         return getMongoClientSettingsBuilder()
-                .applyToClusterSettings(ClusterFixture::setDirectConnection);
+                .applyToClusterSettings(Fixture::setDirectConnection);
     }
 
     private static MongoClientSettings.Builder getMongocryptdMongoClientSettingsBuilder() {
