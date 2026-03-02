@@ -129,8 +129,8 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     @Override
     public <TDocument> MongoCollection<TDocument> getCollection(String collectionName, Class<TDocument> documentClass) {
-        // TODO: Create NativeMongoCollection
-        throw new UnsupportedOperationException("getCollection not yet implemented - NativeMongoCollection needed");
+        return new NativeMongoCollection<>(nativeClient, name, collectionName, documentClass, codecRegistry,
+                readPreference, writeConcern, readConcern);
     }
 
     @Override

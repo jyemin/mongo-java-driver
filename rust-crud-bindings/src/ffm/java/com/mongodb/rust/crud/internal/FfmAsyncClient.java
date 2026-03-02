@@ -165,10 +165,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         if (connectTimeoutMs != 10000) { // default is 10s
             options.add("connectTimeoutMS=" + connectTimeoutMs);
         }
-        long socketTimeoutMs = socketSettings.getReadTimeout(java.util.concurrent.TimeUnit.MILLISECONDS);
-        if (socketTimeoutMs > 0) {
-            options.add("socketTimeoutMS=" + socketTimeoutMs);
-        }
+        // Note: socketTimeoutMS is not supported by the Rust driver
 
         // Server selection timeout
         long serverSelectionTimeoutMs = clusterSettings.getServerSelectionTimeout(java.util.concurrent.TimeUnit.MILLISECONDS);
@@ -1387,7 +1384,6 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                         errorRef.set(ErrorConverter.toException(error));
                     }
                 } finally {
-                    arena.close();
                     latch.countDown();
                 }
             }, arena);
@@ -1400,6 +1396,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                 Thread.currentThread().interrupt();
             }
 
+            arena.close();
             clientArena.close();
 
             if (errorRef.get() != null) {
