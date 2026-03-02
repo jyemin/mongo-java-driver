@@ -47,10 +47,14 @@ public final class BsonMarshaller {
      */
     public static byte[] encode(BsonDocument document) {
         try (BasicOutputBuffer buffer = new BasicOutputBuffer()) {
-            try (BsonBinaryWriter writer = new BsonBinaryWriter(buffer)) {
-                CODEC.encode(writer, document, EncoderContext.builder().build());
-            }
+            encodeToBuffer(document, buffer);
             return buffer.toByteArray();
+        }
+    }
+
+    private static void encodeToBuffer(BsonDocument document, BasicOutputBuffer buffer) {
+        try (BsonBinaryWriter writer = new BsonBinaryWriter(buffer)) {
+            CODEC.encode(writer, document, EncoderContext.builder().build());
         }
     }
 
@@ -75,14 +79,17 @@ public final class BsonMarshaller {
      * Allocates and populates a Bson struct in native memory.
      */
     public static MemorySegment toBsonStruct(Arena arena, BsonDocument document) {
-        byte[] bytes = encode(document);
-        MemorySegment dataSegment = arena.allocate(bytes.length);
-        dataSegment.copyFrom(MemorySegment.ofArray(bytes));
+        try (BasicOutputBuffer buffer = new BasicOutputBuffer()) {
+            encodeToBuffer(document, buffer);
+            int size = buffer.getSize();
+            MemorySegment dataSegment = arena.allocate(size);
+            dataSegment.copyFrom(MemorySegment.ofArray(buffer.getInternalBuffer()).asSlice(0, size));
 
-        MemorySegment bsonStruct = Bson.allocate(arena);
-        Bson.data(bsonStruct, dataSegment);
-        Bson.len(bsonStruct, bytes.length);
-        return bsonStruct;
+            MemorySegment bsonStruct = Bson.allocate(arena);
+            Bson.data(bsonStruct, dataSegment);
+            Bson.len(bsonStruct, size);
+            return bsonStruct;
+        }
     }
 
     /**
