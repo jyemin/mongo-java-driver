@@ -43,7 +43,6 @@ dependencies {
     optionalImplementation(project(path = ":bson-kotlin", configuration = "default"))
     optionalImplementation(project(path = ":bson-kotlinx", configuration = "default"))
     optionalImplementation(project(path = ":mongodb-crypt", configuration = "default"))
-    optionalImplementation(libs.jnr.unixsocket)
     optionalApi(platform(libs.netty.bom))
     optionalApi(libs.bundles.netty)
 
@@ -51,9 +50,6 @@ dependencies {
     // The driver will choose: v2 or v1 or fallback to built-in functionality
     optionalImplementation(libs.bundles.aws.java.sdk.v1)
     optionalImplementation(libs.bundles.aws.java.sdk.v2)
-
-    optionalImplementation(libs.snappy.java)
-    optionalImplementation(libs.zstd.jni)
 
     optionalImplementation(platform(libs.micrometer.observation.bom))
     optionalImplementation(libs.micrometer.observation)
@@ -92,10 +88,7 @@ configureJarManifest {
                 "io.netty.*;resolution:=optional",
                 "com.amazonaws.*;resolution:=optional",
                 "software.amazon.awssdk.*;resolution:=optional",
-                "org.xerial.snappy.*;resolution:=optional",
-                "com.github.luben.zstd.*;resolution:=optional",
                 "org.slf4j.*;resolution:=optional",
-                "jnr.unixsocket.*;resolution:=optional",
                 "com.mongodb.internal.crypt.capi.*;resolution:=optional",
                 "jdk.net.*;resolution:=optional", // Used by SocketStreamHelper & depends on JDK
                 // version
