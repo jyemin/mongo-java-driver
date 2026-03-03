@@ -16,22 +16,17 @@
 
 package com.mongodb.rust.crud.internal;
 
-import com.mongodb.internal.connection.ByteBufferBsonOutput;
-import com.mongodb.internal.connection.PowerOfTwoBufferPool;
-import com.mongodb.internal.rust.crud.ffi.Bson;
-import com.mongodb.internal.rust.crud.ffi.BsonBatch;
-import com.mongodb.internal.rust.crud.ffi.BsonValue;
-import com.mongodb.lang.Nullable;
-import org.bson.BsonArray;
+// TODO: Uncomment when FFI structs are regenerated
+// import com.mongodb.internal.connection.ByteBufferBsonOutput;
+// import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import org.bson.BsonBinaryReader;
-import org.bson.BsonBinaryWriter;
+// import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
-import org.bson.ByteBuf;
-import org.bson.RawBsonDocument;
+// import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.DecoderContext;
-import org.bson.codecs.EncoderContext;
-import org.bson.io.BsonOutput;
+// import org.bson.codecs.EncoderContext;
+// import org.bson.io.BsonOutput;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -65,9 +60,57 @@ public final class BsonMarshaller {
         return decode(bytes);
     }
 
+    // ==================== FFI Struct Methods (STUBBED) ====================
+    // TODO: Implement when FFI structs are regenerated
+
     /**
      * Allocates and populates a Bson struct in native memory.
      */
+    public static MemorySegment toBsonStruct(Arena arena, BsonDocument document) {
+        throw new UnsupportedOperationException("FFI: toBsonStruct not yet implemented");
+    }
+
+    /**
+     * Allocates and populates a Bson struct from a Bson interface (e.g., filter, update).
+     */
+    public static MemorySegment toBsonStruct(Arena arena, org.bson.conversions.Bson bson) {
+        throw new UnsupportedOperationException("FFI: toBsonStruct not yet implemented");
+    }
+
+    public static MemorySegment toBsonBatch(Arena arena, List<BsonDocument> documents) {
+        throw new UnsupportedOperationException("FFI: toBsonBatch not yet implemented");
+    }
+
+    /**
+     * Reads a BsonDocument from a Bson FFI struct.
+     */
+    public static BsonDocument fromBsonStruct(MemorySegment bsonStruct) {
+        throw new UnsupportedOperationException("FFI: fromBsonStruct not yet implemented");
+    }
+
+    /**
+     * Allocates and populates a BsonValue struct for a typed BSON value.
+     */
+    public static MemorySegment toBsonValueStruct(Arena arena, org.bson.BsonValue value) {
+        throw new UnsupportedOperationException("FFI: toBsonValueStruct not yet implemented");
+    }
+
+    /**
+     * Allocates and copies into a MemorySegment representing the bytes that encode the given BSON value.
+     */
+    public static MemorySegment toBsonValue(Arena arena, org.bson.BsonValue value) {
+        throw new UnsupportedOperationException("FFI: toBsonValue not yet implemented");
+    }
+
+    /**
+     * Reads a BsonValue from a BsonValue FFI struct.
+     */
+    public static org.bson.BsonValue fromBsonValueStruct(MemorySegment bsonValueStruct) {
+        throw new UnsupportedOperationException("FFI: fromBsonValueStruct not yet implemented");
+    }
+
+    // ==================== Commented out implementations ====================
+    /*
     public static MemorySegment toBsonStruct(Arena arena, BsonDocument document) {
         try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
             encodeToBuffer(document, buffer);
@@ -132,16 +175,10 @@ public final class BsonMarshaller {
         }
     }
 
-    /**
-     * Allocates and populates a Bson struct from a Bson interface (e.g., filter, update).
-     */
     public static MemorySegment toBsonStruct(Arena arena, org.bson.conversions.Bson bson) {
         return toBsonStruct(arena, bson.toBsonDocument());
     }
 
-    /**
-     * Reads a BsonDocument from a Bson FFI struct.
-     */
     @Nullable
     public static BsonDocument fromBsonStruct(MemorySegment bsonStruct) {
         if (bsonStruct == null || bsonStruct.equals(MemorySegment.NULL)) {
@@ -156,9 +193,7 @@ public final class BsonMarshaller {
     }
 
     private static final int EXCESS_BYTES_FROM_DOCUMENT_WRAPPER = 8;
-    /**
-     * Allocates and populates a BsonValue struct for a typed BSON value.
-     */
+
     public static MemorySegment toBsonValueStruct(Arena arena, org.bson.BsonValue value) {
         try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
             MemorySegment dataSegment = toBsonValue(arena, value, bsonOutput);
@@ -171,9 +206,6 @@ public final class BsonMarshaller {
         }
     }
 
-    /**
-     * Allocates and copies into a MemorySegment representing the bytes that encode the given BSON value.
-     */
     public static MemorySegment toBsonValue(Arena arena, org.bson.BsonValue value) {
         try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
             return toBsonValue(arena, value, bsonOutput);
@@ -197,9 +229,6 @@ public final class BsonMarshaller {
         return byteBuffersToSegment(arena, valueLength, byteBuffers);
     }
 
-    /**
-     * Reads a BsonValue from a BsonValue FFI struct.
-     */
     @Nullable
     public static org.bson.BsonValue fromBsonValueStruct(MemorySegment bsonValueStruct) {
         if (bsonValueStruct == null || bsonValueStruct.equals(MemorySegment.NULL)) {
@@ -208,14 +237,15 @@ public final class BsonMarshaller {
         MemorySegment data = BsonValue.data(bsonValueStruct);
         long len = BsonValue.len(bsonValueStruct);
         byte bsonType = BsonValue.bson_type(bsonValueStruct);
-        
+
         if (data.equals(MemorySegment.NULL) || len == 0) {
             return null;
         }
-        
+
         // Read the raw value bytes and decode using RawBsonDocument.getValue
         byte[] valueBytes = data.reinterpret(len).toArray(java.lang.foreign.ValueLayout.JAVA_BYTE);
         return RawBsonDocument.getValue(bsonType, valueBytes);
     }
+    */
 }
 
