@@ -46,10 +46,14 @@ echo "  Package: $PACKAGE"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-# Create a preprocessed header that fixes the ChangeStream name conflict
-# The enum value "ChangeStream" conflicts with "struct ChangeStream"
+# Create a preprocessed header that fixes issues:
+# 1. The enum value "ChangeStream" conflicts with "struct ChangeStream"
+# 2. Session is used but not forward-declared (opaque pointer type)
 FIXED_HEADER="/tmp/mongodb_ffi_fixed.h"
-sed 's/ChangeStream = 11/ChangeStreamError_Kind = 11/g' "$HEADER_FILE" > "$FIXED_HEADER"
+sed 's/ChangeStream = 11/ChangeStreamError_Kind = 11/g' "$HEADER_FILE" | \
+    sed '1a\
+struct Session;
+' > "$FIXED_HEADER"
 
 # Run jextract - generate bindings for all types
 # Note: jextract 25 renames "struct Error" to "Error_" because "Error" clashes
