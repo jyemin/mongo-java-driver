@@ -18,10 +18,20 @@ package com.mongodb.rust.crud.internal;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import org.bson.BsonDocument;
+import org.bson.BsonInt32;
+import org.bson.Document;
+import org.bson.codecs.BsonDocumentCodec;
+import org.bson.codecs.DocumentCodec;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration tests for FfmAsyncClient.
@@ -69,6 +79,93 @@ class FfmAsyncClientTest {
             try (FfmAsyncClient client = new FfmAsyncClient(settings)) {
                 assertNotNull(client);
             }
+        }
+    }
+
+    @Test
+    void testRunCommandPing() throws Exception {
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(MONGODB_URI))
+                .build();
+
+        try (FfmAsyncClient client = new FfmAsyncClient(settings)) {
+            CompletableFuture<BsonDocument> future = new CompletableFuture<>();
+
+            client.runCommand(
+                    "admin",
+                    new BsonDocument("ping", new BsonInt32(1)),
+                    new BsonDocumentCodec(),
+                    null,
+                    (result, error) -> {
+                        if (error != null) {
+                            future.completeExceptionally(error);
+                        } else {
+                            future.complete(result);
+                        }
+                    });
+
+            BsonDocument result = future.get(10, TimeUnit.SECONDS);
+            assertNotNull(result);
+            assertTrue(result.containsKey("ok"));
+            assertEquals(1.0, result.getDouble("ok").getValue(), 0.001);
+        }
+    }
+
+    @Test
+    void testRunCommandBuildInfo() throws Exception {
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(MONGODB_URI))
+                .build();
+
+        try (FfmAsyncClient client = new FfmAsyncClient(settings)) {
+            CompletableFuture<BsonDocument> future = new CompletableFuture<>();
+
+            client.runCommand(
+                    "admin",
+                    new BsonDocument("buildInfo", new BsonInt32(1)),
+                    new BsonDocumentCodec(),
+                    null,
+                    (result, error) -> {
+                        if (error != null) {
+                            future.completeExceptionally(error);
+                        } else {
+                            future.complete(result);
+                        }
+                    });
+
+            BsonDocument result = future.get(10, TimeUnit.SECONDS);
+            assertNotNull(result);
+            assertTrue(result.containsKey("version"));
+            assertTrue(result.containsKey("ok"));
+        }
+    }
+
+    @Test
+    void testRunCommandWithDocumentCodec() throws Exception {
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(MONGODB_URI))
+                .build();
+
+        try (FfmAsyncClient client = new FfmAsyncClient(settings)) {
+            CompletableFuture<Document> future = new CompletableFuture<>();
+
+            client.runCommand(
+                    "admin",
+                    new BsonDocument("ping", new BsonInt32(1)),
+                    new DocumentCodec(),
+                    null,
+                    (result, error) -> {
+                        if (error != null) {
+                            future.completeExceptionally(error);
+                        } else {
+                            future.complete(result);
+                        }
+                    });
+
+            Document result = future.get(10, TimeUnit.SECONDS);
+            assertNotNull(result);
+            assertTrue(result.containsKey("ok"));
+            assertEquals(1.0, result.getDouble("ok"), 0.001);
         }
     }
 }

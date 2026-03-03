@@ -37,6 +37,7 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
+import com.mongodb.internal.rust.crud.ffi.RunCommandCallback;
 import com.mongodb.internal.rust.crud.ffi.TlsSettings;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncChangeStream;
@@ -280,8 +281,45 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                                 Decoder<T> decoder,
                                 @Nullable NativeAsyncClientSession session,
                                 SingleResultCallback<T> callback) {
-        // TODO: Implement using mongo_run_command
-        throw new UnsupportedOperationException("FFI: runCommand not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(databaseName);
+            MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
+            // TODO: Get read preference from command options or client settings
+            byte readPreferenceMode = 0; // Primary
+            MemorySegment sessionPtr = MemorySegment.NULL; // TODO: session support
+
+            MemorySegment callbackPtr = RunCommandCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.mapError(error));
+                            } else if (result.address() != 0) {
+                                MemorySegment data = com.mongodb.internal.rust.crud.ffi.Bson.data(result);
+                                long len = com.mongodb.internal.rust.crud.ffi.Bson.len(result);
+                                T decoded = BsonMarshaller.decode(data, len, decoder);
+                                callback.onResult(decoded, null);
+                            } else {
+                                callback.onResult(null, new MongoException("No result or error from FFI"));
+                            }
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_run_command(
+                    clientPtr,
+                    sessionPtr,
+                    dbName,
+                    commandBson,
+                    readPreferenceMode,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
     }
 
     @Override

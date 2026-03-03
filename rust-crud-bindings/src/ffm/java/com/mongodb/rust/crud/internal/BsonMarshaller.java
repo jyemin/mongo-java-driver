@@ -25,6 +25,7 @@ import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
 import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
+import org.bson.codecs.Decoder;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.io.BsonOutput;
@@ -59,6 +60,23 @@ public final class BsonMarshaller {
     public static BsonDocument decode(MemorySegment data, long len) {
         byte[] bytes = data.reinterpret(len).toArray(java.lang.foreign.ValueLayout.JAVA_BYTE);
         return decode(bytes);
+    }
+
+    /**
+     * Decodes raw bytes using the provided decoder.
+     */
+    public static <T> T decode(byte[] bytes, Decoder<T> decoder) {
+        try (BsonBinaryReader reader = new BsonBinaryReader(ByteBuffer.wrap(bytes))) {
+            return decoder.decode(reader, DecoderContext.builder().build());
+        }
+    }
+
+    /**
+     * Decodes a BSON document from a MemorySegment using the provided decoder.
+     */
+    public static <T> T decode(MemorySegment data, long len, Decoder<T> decoder) {
+        byte[] bytes = data.reinterpret(len).toArray(java.lang.foreign.ValueLayout.JAVA_BYTE);
+        return decode(bytes, decoder);
     }
 
     // ==================== FFI Struct Methods (STUBBED) ====================
