@@ -27,6 +27,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerSettings;
@@ -153,10 +154,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         ConnectionSettings.compressors(struct, MemorySegment.NULL);
 
         // direct_connection - check if single host and mode is single
-        ConnectionSettings.direct_connection(struct, false);  // TODO: derive from cluster settings
+        ConnectionSettings.direct_connection(struct,
+                settings.getClusterSettings().getMode() == ClusterConnectionMode.SINGLE);
 
         // load_balanced
-        ConnectionSettings.load_balanced(struct, false);  // TODO: derive from cluster settings
+        ConnectionSettings.load_balanced(struct, settings.getClusterSettings().getMode() == ClusterConnectionMode.LOAD_BALANCED);
+        // from cluster settings
 
         // pool sizes
         ConnectionSettings.max_pool_size(struct, pool.getMaxSize());
