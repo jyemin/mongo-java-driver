@@ -17,7 +17,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * struct TransactionError {
  *     const char *message;
  *     const char *const *labels;
- *     uintptr_t labels_len;
+ *     size_t labels_len;
  * }
  * }
  */
@@ -133,7 +133,7 @@ public class TransactionError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final OfLong labels_len$layout() {
@@ -145,7 +145,7 @@ public class TransactionError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final long labels_len$offset() {
@@ -155,7 +155,7 @@ public class TransactionError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static long labels_len(MemorySegment struct) {
@@ -165,7 +165,7 @@ public class TransactionError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static void labels_len(MemorySegment struct, long fieldValue) {

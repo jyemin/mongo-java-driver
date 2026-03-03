@@ -19,8 +19,8 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  *     const char *code_name;
  *     const char *message;
  *     const char *const *labels;
- *     uintptr_t labels_len;
- *     struct Bson server_response;
+ *     size_t labels_len;
+ *     OwnedBson server_response;
  * }
  * }
  */
@@ -228,7 +228,7 @@ public class ServerError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final OfLong labels_len$layout() {
@@ -240,7 +240,7 @@ public class ServerError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final long labels_len$offset() {
@@ -250,7 +250,7 @@ public class ServerError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static long labels_len(MemorySegment struct) {
@@ -260,7 +260,7 @@ public class ServerError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static void labels_len(MemorySegment struct, long fieldValue) {
@@ -272,7 +272,7 @@ public class ServerError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * struct Bson server_response
+     * OwnedBson server_response
      * }
      */
     public static final GroupLayout server_response$layout() {
@@ -284,7 +284,7 @@ public class ServerError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * struct Bson server_response
+     * OwnedBson server_response
      * }
      */
     public static final long server_response$offset() {
@@ -294,7 +294,7 @@ public class ServerError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * struct Bson server_response
+     * OwnedBson server_response
      * }
      */
     public static MemorySegment server_response(MemorySegment struct) {
@@ -304,7 +304,7 @@ public class ServerError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * struct Bson server_response
+     * OwnedBson server_response
      * }
      */
     public static void server_response(MemorySegment struct, MemorySegment fieldValue) {

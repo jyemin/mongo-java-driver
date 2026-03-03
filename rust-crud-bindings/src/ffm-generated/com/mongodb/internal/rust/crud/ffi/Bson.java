@@ -16,7 +16,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * {@snippet lang=c :
  * struct Bson {
  *     const uint8_t *data;
- *     uintptr_t len;
+ *     size_t len;
  * }
  * }
  */
@@ -87,7 +87,7 @@ public class Bson {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t len
+     * size_t len
      * }
      */
     public static final OfLong len$layout() {
@@ -99,7 +99,7 @@ public class Bson {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t len
+     * size_t len
      * }
      */
     public static final long len$offset() {
@@ -109,7 +109,7 @@ public class Bson {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t len
+     * size_t len
      * }
      */
     public static long len(MemorySegment struct) {
@@ -119,7 +119,7 @@ public class Bson {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t len
+     * size_t len
      * }
      */
     public static void len(MemorySegment struct, long fieldValue) {

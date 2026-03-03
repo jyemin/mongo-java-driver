@@ -16,9 +16,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * {@snippet lang=c :
  * struct InsertManyError {
  *     const struct WriteError *write_errors;
- *     uintptr_t write_errors_len;
+ *     size_t write_errors_len;
  *     const struct WriteConcernError *write_concern_error;
- *     struct Bson inserted_ids;
+ *     OwnedBson inserted_ids;
  * }
  * }
  */
@@ -91,7 +91,7 @@ public class InsertManyError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static final OfLong write_errors_len$layout() {
@@ -103,7 +103,7 @@ public class InsertManyError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static final long write_errors_len$offset() {
@@ -113,7 +113,7 @@ public class InsertManyError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static long write_errors_len(MemorySegment struct) {
@@ -123,7 +123,7 @@ public class InsertManyError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static void write_errors_len(MemorySegment struct, long fieldValue) {
@@ -179,7 +179,7 @@ public class InsertManyError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * struct Bson inserted_ids
+     * OwnedBson inserted_ids
      * }
      */
     public static final GroupLayout inserted_ids$layout() {
@@ -191,7 +191,7 @@ public class InsertManyError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * struct Bson inserted_ids
+     * OwnedBson inserted_ids
      * }
      */
     public static final long inserted_ids$offset() {
@@ -201,7 +201,7 @@ public class InsertManyError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * struct Bson inserted_ids
+     * OwnedBson inserted_ids
      * }
      */
     public static MemorySegment inserted_ids(MemorySegment struct) {
@@ -211,7 +211,7 @@ public class InsertManyError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * struct Bson inserted_ids
+     * OwnedBson inserted_ids
      * }
      */
     public static void inserted_ids(MemorySegment struct, MemorySegment fieldValue) {

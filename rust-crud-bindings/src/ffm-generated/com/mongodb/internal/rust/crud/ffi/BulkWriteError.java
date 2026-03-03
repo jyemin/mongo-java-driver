@@ -16,9 +16,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * {@snippet lang=c :
  * struct BulkWriteError {
  *     const struct WriteError *write_errors;
- *     uintptr_t write_errors_len;
+ *     size_t write_errors_len;
  *     const struct WriteConcernError *write_concern_error;
- *     const struct BulkWriteResult *partial_result;
+ *     const void *partial_result;
  * }
  * }
  */
@@ -91,7 +91,7 @@ public class BulkWriteError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static final OfLong write_errors_len$layout() {
@@ -103,7 +103,7 @@ public class BulkWriteError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static final long write_errors_len$offset() {
@@ -113,7 +113,7 @@ public class BulkWriteError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static long write_errors_len(MemorySegment struct) {
@@ -123,7 +123,7 @@ public class BulkWriteError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t write_errors_len
+     * size_t write_errors_len
      * }
      */
     public static void write_errors_len(MemorySegment struct, long fieldValue) {
@@ -179,7 +179,7 @@ public class BulkWriteError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * const struct BulkWriteResult *partial_result
+     * const void *partial_result
      * }
      */
     public static final AddressLayout partial_result$layout() {
@@ -191,7 +191,7 @@ public class BulkWriteError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * const struct BulkWriteResult *partial_result
+     * const void *partial_result
      * }
      */
     public static final long partial_result$offset() {
@@ -201,7 +201,7 @@ public class BulkWriteError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * const struct BulkWriteResult *partial_result
+     * const void *partial_result
      * }
      */
     public static MemorySegment partial_result(MemorySegment struct) {
@@ -211,7 +211,7 @@ public class BulkWriteError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * const struct BulkWriteResult *partial_result
+     * const void *partial_result
      * }
      */
     public static void partial_result(MemorySegment struct, MemorySegment fieldValue) {

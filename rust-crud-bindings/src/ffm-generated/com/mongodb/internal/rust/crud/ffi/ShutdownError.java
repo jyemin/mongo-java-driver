@@ -15,7 +15,6 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 /**
  * {@snippet lang=c :
  * struct ShutdownError {
- *     uint8_t _reserved;
  * }
  * }
  */
@@ -26,7 +25,7 @@ public class ShutdownError {
     }
 
     private static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-        MongoDbFfi.C_CHAR.withName("_reserved")
+
     ).withName("ShutdownError");
 
     /**
@@ -34,50 +33,6 @@ public class ShutdownError {
      */
     public static final GroupLayout layout() {
         return $LAYOUT;
-    }
-
-    private static final OfByte _reserved$LAYOUT = (OfByte)$LAYOUT.select(groupElement("_reserved"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * uint8_t _reserved
-     * }
-     */
-    public static final OfByte _reserved$layout() {
-        return _reserved$LAYOUT;
-    }
-
-    private static final long _reserved$OFFSET = $LAYOUT.byteOffset(groupElement("_reserved"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * uint8_t _reserved
-     * }
-     */
-    public static final long _reserved$offset() {
-        return _reserved$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * uint8_t _reserved
-     * }
-     */
-    public static byte _reserved(MemorySegment struct) {
-        return struct.get(_reserved$LAYOUT, _reserved$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * uint8_t _reserved
-     * }
-     */
-    public static void _reserved(MemorySegment struct, byte fieldValue) {
-        struct.set(_reserved$LAYOUT, _reserved$OFFSET, fieldValue);
     }
 
     /**

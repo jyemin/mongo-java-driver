@@ -18,9 +18,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  *     int32_t code;
  *     const char *code_name;
  *     const char *message;
- *     struct Bson details;
+ *     OwnedBson details;
  *     const char *const *labels;
- *     uintptr_t labels_len;
+ *     size_t labels_len;
  * }
  * }
  */
@@ -184,7 +184,7 @@ public class WriteConcernError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static final GroupLayout details$layout() {
@@ -196,7 +196,7 @@ public class WriteConcernError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static final long details$offset() {
@@ -206,7 +206,7 @@ public class WriteConcernError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static MemorySegment details(MemorySegment struct) {
@@ -216,7 +216,7 @@ public class WriteConcernError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static void details(MemorySegment struct, MemorySegment fieldValue) {
@@ -272,7 +272,7 @@ public class WriteConcernError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final OfLong labels_len$layout() {
@@ -284,7 +284,7 @@ public class WriteConcernError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static final long labels_len$offset() {
@@ -294,7 +294,7 @@ public class WriteConcernError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static long labels_len(MemorySegment struct) {
@@ -304,7 +304,7 @@ public class WriteConcernError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * uintptr_t labels_len
+     * size_t labels_len
      * }
      */
     public static void labels_len(MemorySegment struct, long fieldValue) {

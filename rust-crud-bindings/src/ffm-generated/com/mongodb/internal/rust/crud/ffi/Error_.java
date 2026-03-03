@@ -15,7 +15,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 /**
  * {@snippet lang=c :
  * struct Error {
- *     ErrorType error_type;
+ *     uint8_t error_type;
  *     union ErrorUnion error;
  * }
  * }
@@ -44,7 +44,7 @@ public class Error_ {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * ErrorType error_type
+     * uint8_t error_type
      * }
      */
     public static final OfByte error_type$layout() {
@@ -56,7 +56,7 @@ public class Error_ {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * ErrorType error_type
+     * uint8_t error_type
      * }
      */
     public static final long error_type$offset() {
@@ -66,7 +66,7 @@ public class Error_ {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * ErrorType error_type
+     * uint8_t error_type
      * }
      */
     public static byte error_type(MemorySegment struct) {
@@ -76,7 +76,7 @@ public class Error_ {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * ErrorType error_type
+     * uint8_t error_type
      * }
      */
     public static void error_type(MemorySegment struct, byte fieldValue) {

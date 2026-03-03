@@ -19,7 +19,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  *     int32_t code;
  *     const char *code_name;
  *     const char *message;
- *     struct Bson details;
+ *     OwnedBson details;
  * }
  * }
  */
@@ -225,7 +225,7 @@ public class WriteError {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static final GroupLayout details$layout() {
@@ -237,7 +237,7 @@ public class WriteError {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static final long details$offset() {
@@ -247,7 +247,7 @@ public class WriteError {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static MemorySegment details(MemorySegment struct) {
@@ -257,7 +257,7 @@ public class WriteError {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * struct Bson details
+     * OwnedBson details
      * }
      */
     public static void details(MemorySegment struct, MemorySegment fieldValue) {
