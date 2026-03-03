@@ -97,9 +97,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             populateAuthSettings(authSettings, settings);
         }
 
-        // Build TlsSettings struct (nullable)
+        // Build TlsSettings struct (nullable - only if TLS is enabled)
         MemorySegment tlsSettings = MemorySegment.NULL;
-        // TODO: Populate TLS settings when needed
+        if (settings.getSslSettings().isEnabled()) {
+            tlsSettings = TlsSettings.allocate(clientArena);
+            populateTlsSettings(tlsSettings, settings);
+        }
 
         // Allocate error pointer (pointer to pointer)
         MemorySegment errorPtrPtr = clientArena.allocate(ValueLayout.ADDRESS);
@@ -216,6 +219,23 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         } else {
             AuthSettings.source(struct, MemorySegment.NULL);
         }
+    }
+
+    private void populateTlsSettings(MemorySegment struct, MongoClientSettings settings) {
+        var ssl = settings.getSslSettings();
+
+        TlsSettings.enabled(struct, ssl.isEnabled());
+        TlsSettings.allow_invalid_hostnames(struct, ssl.isInvalidHostNameAllowed());
+
+        // allow_invalid_certificates - Java driver doesn't expose this directly,
+        // but invalidHostNameAllowed is often used together with it for testing
+        TlsSettings.allow_invalid_certificates(struct, false);
+
+        // Certificate file paths - not directly available from SslSettings
+        // These would need to be set via system properties or a custom configuration
+        TlsSettings.ca_file(struct, MemorySegment.NULL);
+        TlsSettings.cert_file(struct, MemorySegment.NULL);
+        TlsSettings.cert_key_file(struct, MemorySegment.NULL);
     }
 
     MemorySegment getClientPtr() {
