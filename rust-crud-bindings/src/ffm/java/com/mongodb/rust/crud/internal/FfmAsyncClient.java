@@ -18,8 +18,10 @@ package com.mongodb.rust.crud.internal;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCompressor;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.*;
@@ -150,8 +152,16 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             ConnectionSettings.app_name(struct, MemorySegment.NULL);
         }
 
-        // compressors - not implemented yet
-        ConnectionSettings.compressors(struct, MemorySegment.NULL);
+        // compressors - comma-separated list of compressor names
+        List<MongoCompressor> compressorList = settings.getCompressorList();
+        if (compressorList.isEmpty()) {
+            ConnectionSettings.compressors(struct, MemorySegment.NULL);
+        } else {
+            String compressors = compressorList.stream()
+                    .map(MongoCompressor::getName)
+                    .collect(Collectors.joining(","));
+            ConnectionSettings.compressors(struct, clientArena.allocateFrom(compressors));
+        }
 
         // direct_connection - check if single host and mode is single
         ConnectionSettings.direct_connection(struct,
@@ -181,12 +191,18 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             ConnectionSettings.replica_set(struct, MemorySegment.NULL);
         }
 
-        // read_preference_mode - default to primary (0)
-        ConnectionSettings.read_preference_mode(struct, (byte) 0);  // TODO: derive from settings
+        // read_preference_mode: 0=Primary, 1=PrimaryPreferred, 2=Secondary, 3=SecondaryPreferred, 4=Nearest
+        // TODO: FFI doesn't support read preference tags or maxStaleness
+        ConnectionSettings.read_preference_mode(struct, toReadPreferenceMode(settings.getReadPreference()));
 
-        // srv settings
-        ConnectionSettings.srv_service_name(struct, MemorySegment.NULL);
-        ConnectionSettings.srv_max_hosts(struct, 0);
+        ConnectionSettings.srv_service_name(struct, clientArena.allocateFrom(settings.getClusterSettings().getSrvServiceName()));
+
+        Integer srvMaxHosts = settings.getClusterSettings().getSrvMaxHosts();
+        if (srvMaxHosts != null) {
+            ConnectionSettings.srv_max_hosts(struct, settings.getClusterSettings().getSrvMaxHosts());
+        } else {
+            ConnectionSettings.srv_max_hosts(struct, 0);
+        }
     }
 
     private void populateAuthSettings(MemorySegment struct, MongoClientSettings settings) {
@@ -230,15 +246,24 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         TlsSettings.enabled(struct, ssl.isEnabled());
         TlsSettings.allow_invalid_hostnames(struct, ssl.isInvalidHostNameAllowed());
 
-        // allow_invalid_certificates - Java driver doesn't expose this directly,
-        // but invalidHostNameAllowed is often used together with it for testing
+        // TODO: allow_invalid_certificates - Java driver doesn't expose this directly
         TlsSettings.allow_invalid_certificates(struct, false);
 
-        // Certificate file paths - not directly available from SslSettings
-        // These would need to be set via system properties or a custom configuration
+        // TODO: Certificate file paths - not directly available from SslSettings (Java uses SSLContext)
         TlsSettings.ca_file(struct, MemorySegment.NULL);
         TlsSettings.cert_file(struct, MemorySegment.NULL);
         TlsSettings.cert_key_file(struct, MemorySegment.NULL);
+    }
+
+    private static byte toReadPreferenceMode(ReadPreference readPreference) {
+        return switch (readPreference.getName()) {
+            case "primary" -> (byte) 0;
+            case "primaryPreferred" -> (byte) 1;
+            case "secondary" -> (byte) 2;
+            case "secondaryPreferred" -> (byte) 3;
+            case "nearest" -> (byte) 4;
+            default -> (byte) 0; // default to primary
+        };
     }
 
     MemorySegment getClientPtr() {
