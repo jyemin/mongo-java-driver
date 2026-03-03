@@ -20,6 +20,7 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCompressor;
 import com.mongodb.MongoException;
+import com.mongodb.TransactionOptions;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -38,6 +39,7 @@ import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.RunCommandCallback;
+import com.mongodb.internal.rust.crud.ffi.SessionOptionsFFI;
 import com.mongodb.internal.rust.crud.ffi.TlsSettings;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncChangeStream;
@@ -250,7 +252,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         TlsSettings.cert_key_file(struct, MemorySegment.NULL);
     }
 
-    private static byte toReadPreferenceMode(ReadPreference readPreference) {
+    static byte toReadPreferenceMode(ReadPreference readPreference) {
         return switch (readPreference.getName()) {
             case "primary" -> (byte) 0;
             case "primaryPreferred" -> (byte) 1;
@@ -269,8 +271,58 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void startSession(ClientSessionOptions options, SingleResultCallback<NativeAsyncClientSession> callback) {
-        // TODO: Implement using mongo_session_start
-        throw new UnsupportedOperationException("FFI: startSession not yet implemented");
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment sessionOptions = toSessionOptionsFFI(arena, options);
+            MemorySegment errorPtrPtr = arena.allocate(ValueLayout.ADDRESS);
+            errorPtrPtr.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL);
+
+            MemorySegment sessionPtr = MongoDbFfi.mongo_session_start(clientPtr, sessionOptions, errorPtrPtr);
+
+            MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
+            if (errorPtr.address() != 0) {
+                callback.onResult(null, FfmErrorMapper.mapError(errorPtr));
+                return;
+            }
+
+            if (sessionPtr.address() == 0) {
+                callback.onResult(null, new MongoException("Failed to start session: null pointer returned"));
+                return;
+            }
+
+            FfmAsyncClientSession session = new FfmAsyncClientSession(clientPtr, sessionPtr, options);
+            callback.onResult(session, null);
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
+    }
+
+    @Nullable
+    private MemorySegment toSessionOptionsFFI(Arena arena, ClientSessionOptions options) {
+        MemorySegment struct = SessionOptionsFFI.allocate(arena);
+
+        // causal_consistency: -1 = not set, 0 = false, 1 = true
+        if (options.isCausallyConsistent() != null) {
+            SessionOptionsFFI.causal_consistency(struct, (byte) (options.isCausallyConsistent() ? 1 : 0));
+        } else {
+            SessionOptionsFFI.causal_consistency(struct, (byte) -1);
+        }
+
+        // snapshot: -1 = not set, 0 = false, 1 = true
+        if (options.isSnapshot() != null) {
+            SessionOptionsFFI.snapshot(struct, (byte) (options.isSnapshot() ? 1 : 0));
+        } else {
+            SessionOptionsFFI.snapshot(struct, (byte) -1);
+        }
+
+        // default_transaction_options
+        TransactionOptions defaultTxnOptions = options.getDefaultTransactionOptions();
+        if (defaultTxnOptions != null) {
+            SessionOptionsFFI.default_transaction_options(struct, FfmAsyncClientSession.toTransactionOptionsFFI(arena, defaultTxnOptions));
+        } else {
+            SessionOptionsFFI.default_transaction_options(struct, MemorySegment.NULL);
+        }
+
+        return struct;
     }
 
     // ==================== Command Operations (IMPLEMENTED) ====================
@@ -285,9 +337,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
-            // TODO: Get read preference from command options or client settings
+            // TODO: Get read preference as a parameter or from context, once supported
             byte readPreferenceMode = 0; // Primary
-            MemorySegment sessionPtr = MemorySegment.NULL; // TODO: session support
+            MemorySegment sessionPtr = session != null
+                    ? ((FfmAsyncClientSession) session).getSessionPtr()
+                    : MemorySegment.NULL;
 
             MemorySegment callbackPtr = RunCommandCallback.allocate(
                     (userdata, result, error) -> {
