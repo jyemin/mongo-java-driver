@@ -336,7 +336,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             MemorySegment ctx = createOperationContext(arena, session);
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
-            MemorySegment batch = OptionsMarshaller.toBsonBatch(arena, documents);
+            MemorySegment batch = BsonMarshaller.toBsonBatch(arena, documents);
             MemorySegment opts = OptionsMarshaller.toInsertManyOptions(arena, options);
             MemorySegment cb = CallbackBridge.createInsertManyCallback(arena, wrapCallback(callback, arena));
 
@@ -640,7 +640,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             MemorySegment ctx = createOperationContext(arena, session);
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
-            MemorySegment pipelineBatch = OptionsMarshaller.toBsonBatch(arena, pipeline);
+            MemorySegment pipelineBatch = BsonMarshaller.toBsonBatch(arena, pipeline);
             MemorySegment opts = OptionsMarshaller.toAggregateOptions(arena, options, bypassDocumentValidation);
 
             SingleResultCallback<CursorHandle> cursorCallback = (handle, error) -> {
@@ -675,7 +675,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         try {
             MemorySegment ctx = createOperationContext(arena, session);
             MemorySegment dbName = arena.allocateFrom(databaseName);
-            MemorySegment pipelineBatch = OptionsMarshaller.toBsonBatch(arena, pipeline);
+            MemorySegment pipelineBatch = BsonMarshaller.toBsonBatch(arena, pipeline);
             MemorySegment opts = OptionsMarshaller.toAggregateOptions(arena, options, bypassDocumentValidation);
 
             SingleResultCallback<CursorHandle> cursorCallback = (handle, error) -> {
@@ -1237,7 +1237,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             MemorySegment ctx = createOperationContext(arena, session);
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
-            MemorySegment pipelineBatch = OptionsMarshaller.toBsonBatch(arena, pipeline);
+            MemorySegment pipelineBatch = BsonMarshaller.toBsonBatch(arena, pipeline);
             MemorySegment opts = OptionsMarshaller.toChangeStreamOptions(arena, options);
             MemorySegment cb = CallbackBridge.createChangeStreamCallback(arena,
                 wrapChangeStreamCallback(callback, decoder, arena));
@@ -1263,7 +1263,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         try {
             MemorySegment ctx = createOperationContext(arena, session);
             MemorySegment dbName = arena.allocateFrom(databaseName);
-            MemorySegment pipelineBatch = OptionsMarshaller.toBsonBatch(arena, pipeline);
+            MemorySegment pipelineBatch = BsonMarshaller.toBsonBatch(arena, pipeline);
             MemorySegment opts = OptionsMarshaller.toChangeStreamOptions(arena, options);
             MemorySegment cb = CallbackBridge.createChangeStreamCallback(arena,
                 wrapChangeStreamCallback(callback, decoder, arena));
@@ -1287,7 +1287,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         Arena arena = Arena.ofShared();
         try {
             MemorySegment ctx = createOperationContext(arena, session);
-            MemorySegment pipelineBatch = OptionsMarshaller.toBsonBatch(arena, pipeline);
+            MemorySegment pipelineBatch = BsonMarshaller.toBsonBatch(arena, pipeline);
             MemorySegment opts = OptionsMarshaller.toChangeStreamOptions(arena, options);
             MemorySegment cb = CallbackBridge.createChangeStreamCallback(arena,
                 wrapChangeStreamCallback(callback, decoder, arena));

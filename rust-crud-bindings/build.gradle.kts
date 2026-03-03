@@ -45,6 +45,10 @@ tasks.withType<Jar> { from(sourceSets["ffm"].output) }
 dependencies {
     api(project(path = ":bson", configuration = "default"))
     api(project(path = ":driver-core", configuration = "default"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Path to the Rust driver header file
@@ -91,8 +95,18 @@ tasks.register<Exec>("generateFfmBindings") {
 // The generateFfmBindings task is for manual invocation when jextract is properly configured
 // tasks.compileJava { dependsOn("generateFfmBindings") }
 
+// Compile test source set with Java 23 and access to FFM classes
+tasks.named<JavaCompile>("compileTestJava") {
+    options.release.set(23)
+    javaCompiler.set(javaToolchains.compilerFor { languageVersion.set(JavaLanguageVersion.of(23)) })
+    classpath = sourceSets.main.get().output + sourceSets["ffm"].output + sourceSets.test.get().compileClasspath
+    dependsOn(tasks.named("compileFfmJava"))
+}
+
 tasks.test {
     useJUnitPlatform()
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(23)) })
+    classpath = sourceSets.test.get().output + sourceSets["ffm"].output + sourceSets.main.get().output + sourceSets.test.get().runtimeClasspath
 }
 

@@ -16,21 +16,27 @@
 
 package com.mongodb.rust.crud.internal;
 
+import com.mongodb.internal.connection.ByteBufferBsonOutput;
+import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.rust.crud.ffi.Bson;
+import com.mongodb.internal.rust.crud.ffi.BsonBatch;
 import com.mongodb.internal.rust.crud.ffi.BsonValue;
 import com.mongodb.lang.Nullable;
+import org.bson.BsonArray;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
+import org.bson.ByteBuf;
 import org.bson.RawBsonDocument;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
-import org.bson.io.BasicOutputBuffer;
+import org.bson.io.BsonOutput;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * Utilities for marshalling BSON data between Java and FFI.
@@ -40,22 +46,6 @@ public final class BsonMarshaller {
     private static final BsonDocumentCodec CODEC = new BsonDocumentCodec();
 
     private BsonMarshaller() {
-    }
-
-    /**
-     * Encodes a BsonDocument to raw bytes.
-     */
-    public static byte[] encode(BsonDocument document) {
-        try (BasicOutputBuffer buffer = new BasicOutputBuffer()) {
-            encodeToBuffer(document, buffer);
-            return buffer.toByteArray();
-        }
-    }
-
-    private static void encodeToBuffer(BsonDocument document, BasicOutputBuffer buffer) {
-        try (BsonBinaryWriter writer = new BsonBinaryWriter(buffer)) {
-            CODEC.encode(writer, document, EncoderContext.builder().build());
-        }
     }
 
     /**
@@ -79,16 +69,66 @@ public final class BsonMarshaller {
      * Allocates and populates a Bson struct in native memory.
      */
     public static MemorySegment toBsonStruct(Arena arena, BsonDocument document) {
-        try (BasicOutputBuffer buffer = new BasicOutputBuffer()) {
+        try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
             encodeToBuffer(document, buffer);
             int size = buffer.getSize();
-            MemorySegment dataSegment = arena.allocate(size);
-            dataSegment.copyFrom(MemorySegment.ofArray(buffer.getInternalBuffer()).asSlice(0, size));
-
+            MemorySegment dataSegment = bsonOutputToSegment(arena, size, buffer);
             MemorySegment bsonStruct = Bson.allocate(arena);
             Bson.data(bsonStruct, dataSegment);
-            Bson.len(bsonStruct, size);
+            Bson.len(bsonStruct, buffer.size());
             return bsonStruct;
+        }
+    }
+
+    public static MemorySegment toBsonBatch(Arena arena, List<BsonDocument> documents) {
+        try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            int[] offsets = encodeBufferWithOffsets(documents, bsonOutput);
+            MemorySegment bsonBatchStruct = BsonBatch.allocate(arena);
+            BsonBatch.data(bsonBatchStruct, bsonOutputToSegment(arena, bsonOutput.getSize(), bsonOutput));
+            BsonBatch.len(bsonBatchStruct, bsonOutput.size());
+            BsonBatch.offsets(bsonBatchStruct, offsetsToSegment(arena, documents, offsets));
+            BsonBatch.count(bsonBatchStruct, documents.size());
+
+            return bsonBatchStruct;
+        }
+    }
+
+    private static int[] encodeBufferWithOffsets(List<BsonDocument> documents, ByteBufferBsonOutput bsonOutput) {
+        int[] offsets = new int[documents.size()];
+        for (int i = 0; i < documents.size(); i++) {
+            offsets[i] = bsonOutput.getPosition();
+            encodeToBuffer(documents.get(i), bsonOutput);
+        }
+        return offsets;
+    }
+
+    private static MemorySegment offsetsToSegment(Arena arena, List<BsonDocument> documents, int[] offsets) {
+        MemorySegment offsetsSegment = arena.allocate((long) documents.size() * Integer.BYTES);
+        for (int i = 0; i < offsets.length; i++) {
+            offsetsSegment.setAtIndex(java.lang.foreign.ValueLayout.JAVA_INT, i, offsets[i]);
+        }
+        return offsetsSegment;
+    }
+
+    private static MemorySegment bsonOutputToSegment(Arena arena, int size, ByteBufferBsonOutput buffer) {
+        return byteBuffersToSegment(arena, size, buffer.getByteBuffers());
+    }
+
+    private static MemorySegment byteBuffersToSegment(Arena arena, int size, List<ByteBuf> buffers) {
+        MemorySegment dataSegment = arena.allocate(size);
+        int offset = 0;
+        for (var cur : buffers) {
+            ByteBuffer nio = cur.asNIO();
+            int len = nio.remaining();
+            dataSegment.asSlice(offset, len).copyFrom(MemorySegment.ofBuffer(nio));
+            offset += len;
+        }
+        return dataSegment;
+    }
+
+    private static void encodeToBuffer(BsonDocument document, BsonOutput buffer) {
+        try (BsonBinaryWriter writer = new BsonBinaryWriter(buffer)) {
+            CODEC.encode(writer, document, EncoderContext.builder().build());
         }
     }
 
@@ -115,29 +155,46 @@ public final class BsonMarshaller {
         return decode(data, len);
     }
 
+    private static final int EXCESS_BYTES_FROM_DOCUMENT_WRAPPER = 8;
     /**
      * Allocates and populates a BsonValue struct for a typed BSON value.
      */
     public static MemorySegment toBsonValueStruct(Arena arena, org.bson.BsonValue value) {
+        try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            MemorySegment dataSegment = toBsonValue(arena, value, bsonOutput);
+
+            MemorySegment bsonValueStruct = BsonValue.allocate(arena);
+            BsonValue.data(bsonValueStruct, dataSegment);
+            BsonValue.len(bsonValueStruct, bsonOutput.size() - EXCESS_BYTES_FROM_DOCUMENT_WRAPPER);
+            BsonValue.bson_type(bsonValueStruct, (byte) value.getBsonType().getValue());
+            return bsonValueStruct;
+        }
+    }
+
+    /**
+     * Allocates and copies into a MemorySegment representing the bytes that encode the given BSON value.
+     */
+    public static MemorySegment toBsonValue(Arena arena, org.bson.BsonValue value) {
+        try (ByteBufferBsonOutput bsonOutput = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            return toBsonValue(arena, value, bsonOutput);
+        }
+    }
+
+    private static MemorySegment toBsonValue(Arena arena, org.bson.BsonValue value, ByteBufferBsonOutput bsonOutput) {
         // Wrap the value in a document to encode it
         BsonDocument wrapper = new BsonDocument("v", value);
-        byte[] docBytes = encode(wrapper);
-        
+        encodeToBuffer(wrapper, bsonOutput);
+
         // The value starts at offset 7: 4 (doc size) + 1 (type) + 2 ("v\0")
         int valueOffset = 7;
-        int valueLen = docBytes.length - valueOffset - 1; // -1 for trailing null
-        
-        byte[] valueBytes = new byte[valueLen];
-        System.arraycopy(docBytes, valueOffset, valueBytes, 0, valueLen);
-        
-        MemorySegment dataSegment = arena.allocate(valueBytes.length);
-        dataSegment.copyFrom(MemorySegment.ofArray(valueBytes));
-        
-        MemorySegment bsonValueStruct = BsonValue.allocate(arena);
-        BsonValue.data(bsonValueStruct, dataSegment);
-        BsonValue.len(bsonValueStruct, valueBytes.length);
-        BsonValue.bson_type(bsonValueStruct, (byte) value.getBsonType().getValue());
-        return bsonValueStruct;
+        int valueLength = bsonOutput.size() - valueOffset - 1; // -1 for trailing null
+
+        List<ByteBuf> byteBuffers = bsonOutput.getByteBuffers();
+        // Assumes first buffer's limit is larger than 7
+        byteBuffers.getFirst().asNIO().position(valueOffset);
+        ByteBuffer lastBuffer = byteBuffers.getLast().asNIO();
+        lastBuffer.limit(lastBuffer.limit() - 1);
+        return byteBuffersToSegment(arena, valueLength, byteBuffers);
     }
 
     /**

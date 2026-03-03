@@ -56,7 +56,6 @@ import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.model.ListCollectionsOptions;
 import com.mongodb.client.model.ListDatabasesOptions;
 import com.mongodb.client.model.ListIndexesOptions;
-import com.mongodb.internal.rust.crud.ffi.BsonBatch;
 import com.mongodb.internal.rust.crud.ffi.OperationContext;
 import com.mongodb.client.model.Collation;
 import com.mongodb.lang.Nullable;
@@ -698,48 +697,6 @@ public final class OptionsMarshaller {
         com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.comment(opts, toCommentBsonValue(arena, options.getComment()));
 
         return opts;
-    }
-
-    /**
-     * Creates a BsonBatch from a list of documents.
-     */
-    public static MemorySegment toBsonBatch(Arena arena, List<BsonDocument> documents) {
-        if (documents.isEmpty()) {
-            MemorySegment batch = BsonBatch.allocate(arena);
-            BsonBatch.data(batch, MemorySegment.NULL);
-            BsonBatch.len(batch, 0);
-            BsonBatch.offsets(batch, MemorySegment.NULL);
-            BsonBatch.count(batch, 0);
-            return batch;
-        }
-
-        // Encode all documents and compute offsets
-        byte[][] encodedDocs = new byte[documents.size()][];
-        int totalLen = 0;
-        for (int i = 0; i < documents.size(); i++) {
-            encodedDocs[i] = BsonMarshaller.encode(documents.get(i));
-            totalLen += encodedDocs[i].length;
-        }
-
-        // Allocate data buffer
-        MemorySegment dataSegment = arena.allocate(totalLen);
-        MemorySegment offsetsSegment = arena.allocate((long) documents.size() * Integer.BYTES);
-
-        int offset = 0;
-        for (int i = 0; i < encodedDocs.length; i++) {
-            offsetsSegment.setAtIndex(java.lang.foreign.ValueLayout.JAVA_INT, i, offset);
-            dataSegment.asSlice(offset, encodedDocs[i].length)
-                .copyFrom(MemorySegment.ofArray(encodedDocs[i]));
-            offset += encodedDocs[i].length;
-        }
-
-        MemorySegment batch = BsonBatch.allocate(arena);
-        BsonBatch.data(batch, dataSegment);
-        BsonBatch.len(batch, totalLen);
-        BsonBatch.offsets(batch, offsetsSegment);
-        BsonBatch.count(batch, documents.size());
-
-        return batch;
     }
 
     // ==================== Additional Options Marshallers ====================
