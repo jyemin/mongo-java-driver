@@ -36,7 +36,6 @@ import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
-import com.mongodb.internal.rust.crud.ffi.Error_;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.TlsSettings;
 import com.mongodb.lang.Nullable;
@@ -118,12 +117,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         // Check for errors
         MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
         if (errorPtr.address() != 0) {
-            // Reinterpret the error pointer to read Error_ struct
-            MemorySegment error = errorPtr.reinterpret(Error_.sizeof());
-            byte errorType = Error_.error_type(error);
-            String errorMessage = extractErrorMessage(error, errorType);
-            MongoDbFfi.error_free(errorPtr);
-            throw new MongoException("Failed to create client: " + errorMessage + " (error type: " + errorType + ")");
+            throw FfmErrorMapper.toException(errorPtr);
         }
 
         if (clientPtr.equals(MemorySegment.NULL)) {
@@ -268,28 +262,6 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     MemorySegment getClientPtr() {
         return clientPtr;
-    }
-
-    /**
-     * Extracts error message from an FFI Error struct based on error type.
-     */
-    private String extractErrorMessage(MemorySegment error, byte errorType) {
-        try {
-            MemorySegment errorUnion = Error_.error(error);
-            // The union contains pointers to specific error types, each of which has a message field
-            // For simplicity, we treat the first field as a pointer to a struct with a message field
-            MemorySegment errorStructPtr = errorUnion.get(ValueLayout.ADDRESS, 0);
-            if (!errorStructPtr.equals(MemorySegment.NULL)) {
-                // All error types have 'message' as their first field (const char*)
-                MemorySegment messagePtr = errorStructPtr.reinterpret(8).get(ValueLayout.ADDRESS, 0);
-                if (!messagePtr.equals(MemorySegment.NULL)) {
-                    return messagePtr.reinterpret(1024).getString(0);
-                }
-            }
-        } catch (Exception e) {
-            return "Unable to extract error message: " + e.getMessage();
-        }
-        return "Unknown error";
     }
 
     // ==================== Session (IMPLEMENTED) ====================
