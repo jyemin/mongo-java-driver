@@ -108,5 +108,12 @@ tasks.test {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(23)) })
     classpath = sourceSets.test.get().output + sourceSets["ffm"].output + sourceSets.main.get().output + sourceSets.test.get().runtimeClasspath
+
+    // Set the native library path for the Rust FFI library
+    // Can be overridden with -PnativeLibPath=/path/to/lib
+    val nativeLibPath = findProperty("nativeLibPath")?.toString()
+        ?: rustDriverDir.resolve("target/release").absolutePath
+    environment("DYLD_LIBRARY_PATH", nativeLibPath)
+    environment("LD_LIBRARY_PATH", nativeLibPath)
 }
 

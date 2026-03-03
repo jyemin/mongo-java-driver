@@ -18,13 +18,24 @@ package com.mongodb.rust.crud.internal;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
+import com.mongodb.ServerAddress;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.connection.ClusterSettings;
+import com.mongodb.connection.ConnectionPoolSettings;
+import com.mongodb.connection.ServerSettings;
+import com.mongodb.connection.SocketSettings;
+import com.mongodb.internal.rust.crud.ffi.AuthSettings;
+import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
+import com.mongodb.internal.rust.crud.ffi.Error_;
+import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
+import com.mongodb.internal.rust.crud.ffi.TlsSettings;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncChangeStream;
 import com.mongodb.rust.crud.NativeAsyncClient;
@@ -37,8 +48,11 @@ import org.bson.conversions.Bson;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * FFM implementation of NativeAsyncClient.
@@ -72,12 +86,162 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     }
 
     private MemorySegment createClient(MongoClientSettings settings) {
-        // TODO: Implement using new FFI with ConnectionSettings, AuthSettings, TlsSettings
-        throw new UnsupportedOperationException("FFI: client creation not yet implemented");
+        // Build ConnectionSettings struct
+        MemorySegment connectionSettings = ConnectionSettings.allocate(clientArena);
+        populateConnectionSettings(connectionSettings, settings);
+
+        // Build AuthSettings struct (nullable)
+        MemorySegment authSettings = MemorySegment.NULL;
+        if (settings.getCredential() != null) {
+            authSettings = AuthSettings.allocate(clientArena);
+            populateAuthSettings(authSettings, settings);
+        }
+
+        // Build TlsSettings struct (nullable)
+        MemorySegment tlsSettings = MemorySegment.NULL;
+        // TODO: Populate TLS settings when needed
+
+        // Allocate error pointer (pointer to pointer)
+        MemorySegment errorPtrPtr = clientArena.allocate(ValueLayout.ADDRESS);
+        errorPtrPtr.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL);
+
+        // Call FFI
+        MemorySegment clientPtr = MongoDbFfi.mongo_client_new(
+                connectionSettings, authSettings, tlsSettings, errorPtrPtr);
+
+        // Check for errors
+        MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
+        if (errorPtr.address() != 0) {
+            // Reinterpret the error pointer to read Error_ struct
+            MemorySegment error = errorPtr.reinterpret(Error_.sizeof());
+            byte errorType = Error_.error_type(error);
+            String errorMessage = extractErrorMessage(error, errorType);
+            MongoDbFfi.error_free(errorPtr);
+            throw new MongoException("Failed to create client: " + errorMessage + " (error type: " + errorType + ")");
+        }
+
+        if (clientPtr.equals(MemorySegment.NULL)) {
+            throw new MongoException("Failed to create client: null pointer returned (no error details)");
+        }
+
+        return clientPtr;
+    }
+
+    private void populateConnectionSettings(MemorySegment struct, MongoClientSettings settings) {
+        ClusterSettings cluster = settings.getClusterSettings();
+        ConnectionPoolSettings pool = settings.getConnectionPoolSettings();
+        SocketSettings socket = settings.getSocketSettings();
+        ServerSettings server = settings.getServerSettings();
+
+        // hosts - comma-separated list
+        String hosts = cluster.getHosts().stream()
+                .map(ServerAddress::toString)
+                .collect(Collectors.joining(","));
+        ConnectionSettings.hosts(struct, clientArena.allocateFrom(hosts));
+
+        // app_name
+        if (settings.getApplicationName() != null) {
+            ConnectionSettings.app_name(struct, clientArena.allocateFrom(settings.getApplicationName()));
+        } else {
+            ConnectionSettings.app_name(struct, MemorySegment.NULL);
+        }
+
+        // compressors - not implemented yet
+        ConnectionSettings.compressors(struct, MemorySegment.NULL);
+
+        // direct_connection - check if single host and mode is single
+        ConnectionSettings.direct_connection(struct, false);  // TODO: derive from cluster settings
+
+        // load_balanced
+        ConnectionSettings.load_balanced(struct, false);  // TODO: derive from cluster settings
+
+        // pool sizes
+        ConnectionSettings.max_pool_size(struct, pool.getMaxSize());
+        ConnectionSettings.min_pool_size(struct, pool.getMinSize());
+        ConnectionSettings.max_idle_time_ms(struct, pool.getMaxConnectionIdleTime(TimeUnit.MILLISECONDS));
+
+        // timeouts
+        ConnectionSettings.connect_timeout_ms(struct, socket.getConnectTimeout(TimeUnit.MILLISECONDS));
+        ConnectionSettings.socket_timeout_ms(struct, socket.getReadTimeout(TimeUnit.MILLISECONDS));
+        ConnectionSettings.server_selection_timeout_ms(struct,
+                cluster.getServerSelectionTimeout(TimeUnit.MILLISECONDS));
+        ConnectionSettings.local_threshold_ms(struct, cluster.getLocalThreshold(TimeUnit.MILLISECONDS));
+        ConnectionSettings.heartbeat_frequency_ms(struct, server.getHeartbeatFrequency(TimeUnit.MILLISECONDS));
+
+        // replica_set
+        if (cluster.getRequiredReplicaSetName() != null) {
+            ConnectionSettings.replica_set(struct, clientArena.allocateFrom(cluster.getRequiredReplicaSetName()));
+        } else {
+            ConnectionSettings.replica_set(struct, MemorySegment.NULL);
+        }
+
+        // read_preference_mode - default to primary (0)
+        ConnectionSettings.read_preference_mode(struct, (byte) 0);  // TODO: derive from settings
+
+        // srv settings
+        ConnectionSettings.srv_service_name(struct, MemorySegment.NULL);
+        ConnectionSettings.srv_max_hosts(struct, 0);
+    }
+
+    private void populateAuthSettings(MemorySegment struct, MongoClientSettings settings) {
+        var credential = settings.getCredential();
+        if (credential == null) {
+            return;
+        }
+
+        // mechanism
+        if (credential.getMechanism() != null) {
+            AuthSettings.mechanism(struct, clientArena.allocateFrom(credential.getMechanism()));
+        } else {
+            AuthSettings.mechanism(struct, MemorySegment.NULL);
+        }
+
+        // username
+        if (credential.getUserName() != null) {
+            AuthSettings.username(struct, clientArena.allocateFrom(credential.getUserName()));
+        } else {
+            AuthSettings.username(struct, MemorySegment.NULL);
+        }
+
+        // password
+        if (credential.getPassword() != null) {
+            AuthSettings.password(struct, clientArena.allocateFrom(new String(credential.getPassword())));
+        } else {
+            AuthSettings.password(struct, MemorySegment.NULL);
+        }
+
+        // source (auth database)
+        if (credential.getSource() != null) {
+            AuthSettings.source(struct, clientArena.allocateFrom(credential.getSource()));
+        } else {
+            AuthSettings.source(struct, MemorySegment.NULL);
+        }
     }
 
     MemorySegment getClientPtr() {
         return clientPtr;
+    }
+
+    /**
+     * Extracts error message from an FFI Error struct based on error type.
+     */
+    private String extractErrorMessage(MemorySegment error, byte errorType) {
+        try {
+            MemorySegment errorUnion = Error_.error(error);
+            // The union contains pointers to specific error types, each of which has a message field
+            // For simplicity, we treat the first field as a pointer to a struct with a message field
+            MemorySegment errorStructPtr = errorUnion.get(ValueLayout.ADDRESS, 0);
+            if (!errorStructPtr.equals(MemorySegment.NULL)) {
+                // All error types have 'message' as their first field (const char*)
+                MemorySegment messagePtr = errorStructPtr.reinterpret(8).get(ValueLayout.ADDRESS, 0);
+                if (!messagePtr.equals(MemorySegment.NULL)) {
+                    return messagePtr.reinterpret(1024).getString(0);
+                }
+            }
+        } catch (Exception e) {
+            return "Unable to extract error message: " + e.getMessage();
+        }
+        return "Unknown error";
     }
 
     // ==================== Session (IMPLEMENTED) ====================
@@ -339,7 +503,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            // TODO: Implement using mongo_client_destroy
+            MongoDbFfi.mongo_client_destroy(clientPtr);
             clientArena.close();
         }
     }

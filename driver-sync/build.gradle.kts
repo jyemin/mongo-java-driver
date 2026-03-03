@@ -57,11 +57,11 @@ tasks.withType<Test> {
 
     // Set the native library path for the Rust FFI library
     // Can be overridden with -PnativeLibPath=/path/to/lib
+    val rustDriverDir = rootProject.file("../mongo-rust-driver")
     val nativeLibPath = findProperty("nativeLibPath")?.toString()
-    if (nativeLibPath != null) {
-        environment("DYLD_LIBRARY_PATH", nativeLibPath)
-        environment("LD_LIBRARY_PATH", nativeLibPath)
-    }
+        ?: rustDriverDir.resolve("target/release").absolutePath
+    environment("DYLD_LIBRARY_PATH", nativeLibPath)
+    environment("LD_LIBRARY_PATH", nativeLibPath)
 
     // Needed for MicrometerProseTest to set env variable programmatically (calls
     // `field.setAccessible(true)`)
