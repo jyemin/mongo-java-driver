@@ -16,10 +16,7 @@
 
 package com.mongodb.rust.crud.internal;
 
-// TODO: Uncomment when FFI structs are regenerated
-// import com.mongodb.internal.rust.crud.ffi.Bson;
-// import com.mongodb.internal.rust.crud.ffi.BsonBatch;
-// import com.mongodb.internal.rust.crud.ffi.BsonValue;
+import com.mongodb.internal.rust.crud.ffi.Bson;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonBoolean;
@@ -72,22 +69,57 @@ class BsonMarshallerTest {
         }
     }
 
-    // ==================== FFI-dependent tests (STUBBED) ====================
-    // TODO: Uncomment when FFI structs are regenerated
+    // ==================== FFI-dependent tests ====================
 
     @Test
-    void testToBsonStructThrowsUnsupportedOperationException() {
+    void testToBsonStructSimpleDocument() {
         BsonDocument original = new BsonDocument("key", new BsonString("value"));
         try (Arena arena = Arena.ofConfined()) {
-            assertThrows(UnsupportedOperationException.class, () ->
-                BsonMarshaller.toBsonStruct(arena, original));
+            MemorySegment bsonStruct = BsonMarshaller.toBsonStruct(arena, original);
+
+            MemorySegment data = Bson.data(bsonStruct);
+            long len = Bson.len(bsonStruct);
+
+            BsonDocument decoded = BsonMarshaller.decode(data, len);
+            assertEquals(original, decoded);
         }
     }
 
     @Test
-    void testFromBsonStructThrowsUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () ->
-            BsonMarshaller.fromBsonStruct(MemorySegment.NULL));
+    void testFromBsonStructNull() {
+        assertNull(BsonMarshaller.fromBsonStruct(null));
+        assertNull(BsonMarshaller.fromBsonStruct(MemorySegment.NULL));
+    }
+
+    @Test
+    void testFromBsonStructRoundTrip() {
+        BsonDocument original = new BsonDocument("key", new BsonString("value"));
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment bsonStruct = BsonMarshaller.toBsonStruct(arena, original);
+            BsonDocument decoded = BsonMarshaller.fromBsonStruct(bsonStruct);
+            assertEquals(original, decoded);
+        }
+    }
+
+    @Test
+    void testToBsonStructComplexDocument() {
+        BsonDocument original = new BsonDocument()
+                .append("string", new BsonString("hello"))
+                .append("int32", new BsonInt32(42))
+                .append("int64", new BsonInt64(Long.MAX_VALUE))
+                .append("double", new BsonDouble(3.14159))
+                .append("boolean", BsonBoolean.TRUE)
+                .append("objectId", new BsonObjectId(new ObjectId()))
+                .append("dateTime", new BsonDateTime(System.currentTimeMillis()))
+                .append("binary", new BsonBinary(new byte[]{1, 2, 3, 4, 5}))
+                .append("array", new BsonArray(List.of(new BsonInt32(1), new BsonInt32(2))))
+                .append("nested", new BsonDocument("inner", new BsonString("nested value")));
+
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment bsonStruct = BsonMarshaller.toBsonStruct(arena, original);
+            BsonDocument decoded = BsonMarshaller.fromBsonStruct(bsonStruct);
+            assertEquals(original, decoded);
+        }
     }
 
     @Test
