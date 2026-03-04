@@ -392,12 +392,60 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         throw new UnsupportedOperationException("FFI: runCursorCommand not yet implemented");
     }
 
-    // ==================== CRUD Operations (NOT IMPLEMENTED) ====================
+    // ==================== CRUD Operations ====================
 
     @Override
     public void insertOne(MongoNamespace namespace, BsonDocument document, InsertOneOptions options,
                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertOneResult> callback) {
-        throw new UnsupportedOperationException("FFI: insertOne not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment documentBson = BsonMarshaller.toBsonStruct(arena, document);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+
+            // bypass_document_validation: -1 = not set, 0 = false, 1 = true
+            byte bypassDocValidation = options.getBypassDocumentValidation() == null
+                    ? (byte) -1
+                    : (byte) (options.getBypassDocumentValidation() ? 1 : 0);
+
+            // comment (nullable)
+            MemorySegment comment = options.getComment() != null
+                    ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
+                    : MemorySegment.NULL;
+
+            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.InsertOneCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.toException(error));
+                            } else if (result.address() != 0) {
+                                MemorySegment insertedIdSegment = com.mongodb.internal.rust.crud.ffi.InsertOneResult.inserted_id(result);
+                                org.bson.BsonValue insertedId = BsonMarshaller.fromBsonValueStruct(insertedIdSegment);
+                                callback.onResult(InsertOneResult.acknowledged(insertedId), null);
+                            } else {
+                                callback.onResult(null, new MongoException("No result or error from FFI"));
+                            }
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_insert_one(
+                    clientPtr,
+                    operationContext,
+                    dbName,
+                    collName,
+                    documentBson,
+                    bypassDocValidation,
+                    comment,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
     }
 
     @Override

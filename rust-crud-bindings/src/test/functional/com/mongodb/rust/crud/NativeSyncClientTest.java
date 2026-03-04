@@ -18,16 +18,21 @@ package com.mongodb.rust.crud;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import com.mongodb.TransactionOptions;
+import com.mongodb.client.model.InsertOneOptions;
+import com.mongodb.client.result.InsertOneResult;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
+import org.bson.BsonObjectId;
 import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.DocumentCodec;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -36,12 +41,12 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Integration tests for NativeSyncClient.
- *
  * These tests require a running MongoDB instance.
  */
 class NativeSyncClientTest {
@@ -180,26 +185,23 @@ class NativeSyncClientTest {
         MongoClientSettings settings = Fixture.getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_txn_collection");
             NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
 
             session.startTransaction(TransactionOptions.builder().build());
             assertTrue(session.hasActiveTransaction());
 
-            BsonDocument insertCmd = new BsonDocument()
-                    .append("insert", new BsonString("test_txn_collection"))
-                    .append("documents", new org.bson.BsonArray(Collections.singletonList(
-                            new BsonDocument("_id", new BsonInt32(1)).append("value", new BsonString("test"))
-                    )));
-
-            BsonDocument insertResult = client.runCommand(
-                    "test",
-                    insertCmd,
-                    new BsonDocumentCodec(),
+            BsonDocument doc = new BsonDocument("_id", new BsonInt32(1)).append("value", new BsonString("test"));
+            InsertOneResult insertResult = client.insertOne(
+                    namespace,
+                    doc,
+                    new InsertOneOptions(),
                     NativeOperationContext.builder().build(),
                     session);
 
             assertNotNull(insertResult);
-            assertEquals(1, insertResult.getInt32("n").getValue());
+            assertTrue(insertResult.wasAcknowledged());
+            assertEquals(new BsonInt32(1), insertResult.getInsertedId());
 
             session.abortTransaction();
             assertFalse(session.hasActiveTransaction());
@@ -234,6 +236,72 @@ class NativeSyncClientTest {
             assertNotNull(result);
             assertTrue(result.containsKey("ok"));
             assertEquals(1.0, result.getDouble("ok").getValue(), 0.001);
+        }
+    }
+
+    @Test
+    void testInsertOneWithGeneratedId() {
+        MongoClientSettings settings = Fixture.getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_insert_one");
+
+            // Drop collection first via runCommand
+            client.runCommand(
+                    namespace.getDatabaseName(),
+                    new BsonDocument("drop", new BsonString(namespace.getCollectionName())),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Insert document without _id - server will generate one
+            BsonDocument doc = new BsonDocument("name", new BsonString("test"));
+            InsertOneResult result = client.insertOne(
+                    namespace,
+                    doc,
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            assertNotNull(result);
+            assertTrue(result.wasAcknowledged());
+            assertNotNull(result.getInsertedId());
+            // Server generates ObjectId for _id
+            assertInstanceOf(BsonObjectId.class, result.getInsertedId());
+        }
+    }
+
+    @Test
+    void testInsertOneWithProvidedId() {
+        MongoClientSettings settings = Fixture.getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_insert_one");
+
+            // Drop collection first
+            client.runCommand(
+                    namespace.getDatabaseName(),
+                    new BsonDocument("drop", new BsonString(namespace.getCollectionName())),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Insert document with explicit _id
+            ObjectId providedId = new ObjectId();
+            BsonDocument doc = new BsonDocument()
+                    .append("_id", new BsonObjectId(providedId))
+                    .append("name", new BsonString("test with id"));
+
+            InsertOneResult result = client.insertOne(
+                    namespace,
+                    doc,
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            assertNotNull(result);
+            assertTrue(result.wasAcknowledged());
+            assertEquals(new BsonObjectId(providedId), result.getInsertedId());
         }
     }
 }

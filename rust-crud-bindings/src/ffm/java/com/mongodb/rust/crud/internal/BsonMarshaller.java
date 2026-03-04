@@ -20,9 +20,11 @@ import com.mongodb.internal.connection.ByteBufferBsonOutput;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.rust.crud.ffi.Bson;
 import com.mongodb.lang.Nullable;
+import org.bson.BsonArray;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
 import org.bson.codecs.Decoder;
@@ -80,8 +82,6 @@ public final class BsonMarshaller {
     }
 
     // ==================== FFI Struct Methods (STUBBED) ====================
-    // TODO: Implement when FFI structs are regenerated
-
     /**
      * Allocates and populates a Bson struct in native memory.
      */
@@ -98,26 +98,15 @@ public final class BsonMarshaller {
     }
 
     /**
-     * Allocates and populates a Bson struct from a Bson interface (e.g., filter, update).
-     */
-    public static MemorySegment toBsonStruct(Arena arena, org.bson.conversions.Bson bson) {
-        return toBsonStruct(arena, bson.toBsonDocument());
-    }
-
-    /**
      * Allocates and populates a Bson struct from a BsonArray.
      * Wraps the array in a document with empty key "" since BSON requires a document at the root.
      * The FFI layer unwraps by getting the first field's value.
      */
-    public static MemorySegment toBsonArrayStruct(Arena arena, org.bson.BsonArray array) {
+    public static MemorySegment toBsonArrayStruct(Arena arena, BsonArray array) {
         // BSON requires a document at the root, so wrap the array
         // Use empty key to match Rust FFI test convention
         BsonDocument wrapper = new BsonDocument("", array);
         return toBsonStruct(arena, wrapper);
-    }
-
-    public static MemorySegment toBsonBatch(Arena arena, List<BsonDocument> documents) {
-        throw new UnsupportedOperationException("FFI: toBsonBatch not yet implemented");
     }
 
     /**
@@ -138,23 +127,99 @@ public final class BsonMarshaller {
 
     /**
      * Allocates and populates a BsonValue struct for a typed BSON value.
+     * The value is wrapped in a document {"": value} and the value bytes are extracted.
      */
-    public static MemorySegment toBsonValueStruct(Arena arena, org.bson.BsonValue value) {
-        throw new UnsupportedOperationException("FFI: toBsonValueStruct not yet implemented");
-    }
+    public static MemorySegment toBsonValueStruct(Arena arena, BsonValue value) {
+        // Wrap in document to serialize
+        BsonDocument wrapper = new BsonDocument("", value);
+        try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            encodeToBuffer(wrapper, buffer);
 
-    /**
-     * Allocates and copies into a MemorySegment representing the bytes that encode the given BSON value.
-     */
-    public static MemorySegment toBsonValue(Arena arena, org.bson.BsonValue value) {
-        throw new UnsupportedOperationException("FFI: toBsonValue not yet implemented");
+            // Document structure: [4-byte len][type byte][key "\0"][value bytes][null terminator]
+            // For key "", the key is just a single null byte
+            // So: bytes[0..4] = length, bytes[4] = type, bytes[5] = '\0' (empty key), bytes[6..len-1] = value
+            List<ByteBuf> byteBuffers = buffer.getByteBuffers();
+            int totalSize = buffer.getSize();
+            int valueLen = totalSize - 6 - 1; // Skip header (6 bytes) and trailing null (1 byte)
+
+            ByteBuf firstBuf = byteBuffers.getFirst();
+            ByteBuf lastBuf = byteBuffers.getLast();
+
+            // Skip first 6 bytes (position the first buffer past the header)
+            ByteBuffer firstNio = firstBuf.asNIO();
+            firstNio.position(firstNio.position() + 6);
+
+            // Exclude last byte (limit the last buffer to exclude trailing null)
+            ByteBuffer lastNio = lastBuf.asNIO();
+            lastNio.limit(lastNio.limit() - 1);
+
+            // Get type byte at absolute position 4 from first buffer
+            byte bsonType = firstNio.get(4);
+
+            // Copy value bytes to segment
+            MemorySegment dataSegment = arena.allocate(valueLen);
+            int offset = 0;
+            for (ByteBuf buf : byteBuffers) {
+                ByteBuffer nio = buf.asNIO();
+                int len = nio.remaining();
+                if (len > 0) {
+                    dataSegment.asSlice(offset, len).copyFrom(MemorySegment.ofBuffer(nio));
+                    offset += len;
+                }
+            }
+
+            MemorySegment bsonValueStruct = com.mongodb.internal.rust.crud.ffi.BsonValue.allocate(arena);
+            com.mongodb.internal.rust.crud.ffi.BsonValue.data(bsonValueStruct, dataSegment);
+            com.mongodb.internal.rust.crud.ffi.BsonValue.len(bsonValueStruct, valueLen);
+            com.mongodb.internal.rust.crud.ffi.BsonValue.bson_type(bsonValueStruct, bsonType);
+            return bsonValueStruct;
+        }
     }
 
     /**
      * Reads a BsonValue from a BsonValue FFI struct.
+     * The struct contains raw value bytes plus a type byte. We reconstruct the value
+     * by wrapping it back in a document and decoding.
      */
     public static org.bson.BsonValue fromBsonValueStruct(MemorySegment bsonValueStruct) {
-        throw new UnsupportedOperationException("FFI: fromBsonValueStruct not yet implemented");
+        if (bsonValueStruct == null || bsonValueStruct.equals(MemorySegment.NULL)) {
+            return null;
+        }
+
+        MemorySegment dataPtr = com.mongodb.internal.rust.crud.ffi.BsonValue.data(bsonValueStruct);
+        long len = com.mongodb.internal.rust.crud.ffi.BsonValue.len(bsonValueStruct);
+        byte bsonType = com.mongodb.internal.rust.crud.ffi.BsonValue.bson_type(bsonValueStruct);
+
+        if (dataPtr.equals(MemorySegment.NULL) || len == 0) {
+            return null;
+        }
+
+        // Reconstruct a BSON document: [4-byte len][type][key "\0"][value][null]
+        // Total length = 4 (length) + 1 (type) + 1 (empty key null) + len (value) + 1 (doc null)
+        int docLen = 4 + 1 + 1 + (int) len + 1;
+        byte[] docBytes = new byte[docLen];
+
+        // Little-endian document length
+        docBytes[0] = (byte) (docLen & 0xFF);
+        docBytes[1] = (byte) ((docLen >> 8) & 0xFF);
+        docBytes[2] = (byte) ((docLen >> 16) & 0xFF);
+        docBytes[3] = (byte) ((docLen >> 24) & 0xFF);
+
+        // Type byte
+        docBytes[4] = bsonType;
+
+        // Empty key (just null terminator)
+        docBytes[5] = 0;
+
+        // Copy value bytes
+        dataPtr.reinterpret(len).asByteBuffer().get(docBytes, 6, (int) len);
+
+        // Document null terminator
+        docBytes[docLen - 1] = 0;
+
+        // Decode and extract the value
+        BsonDocument doc = decode(docBytes);
+        return doc.get("");
     }
 
     // ==================== Private Helpers ====================

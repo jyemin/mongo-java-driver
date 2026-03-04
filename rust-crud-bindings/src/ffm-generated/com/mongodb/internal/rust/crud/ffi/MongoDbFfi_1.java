@@ -12,7 +12,7 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-class MongoDbFfi_1 extends MongoDbFfi$shared {
+public class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     MongoDbFfi_1() {
         // Should not be called directly
@@ -15263,6 +15263,73 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_insert_one {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_CHAR,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_insert_one");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_insert_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *document, int8_t bypass_document_validation, const struct BsonValue *comment, InsertOneCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_insert_one$descriptor() {
+        return mongo_insert_one.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_insert_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *document, int8_t bypass_document_validation, const struct BsonValue *comment, InsertOneCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_insert_one$handle() {
+        return mongo_insert_one.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_insert_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *document, int8_t bypass_document_validation, const struct BsonValue *comment, InsertOneCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_insert_one$address() {
+        return mongo_insert_one.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_insert_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *document, int8_t bypass_document_validation, const struct BsonValue *comment, InsertOneCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_insert_one(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment document, byte bypass_document_validation, MemorySegment comment, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_insert_one.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_insert_one", client, ctx, db_name, coll_name, document, bypass_document_validation, comment, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, document, bypass_document_validation, comment, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_read_concern_create {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             MongoDbFfi.C_POINTER,
@@ -16867,15 +16934,6 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_VERSION_12_3() {
         return MAC_OS_VERSION_12_3;
-    }
-    private static final int MAC_OS_VERSION_12_4 = (int)120400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_4 120400
-     * }
-     */
-    public static int MAC_OS_VERSION_12_4() {
-        return MAC_OS_VERSION_12_4;
     }
 }
 

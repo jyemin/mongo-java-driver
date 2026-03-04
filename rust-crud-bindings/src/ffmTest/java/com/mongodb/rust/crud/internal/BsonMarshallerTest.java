@@ -125,36 +125,43 @@ class BsonMarshallerTest {
     }
 
     @Test
-    void testToBsonBatchThrowsUnsupportedOperationException() {
-        List<BsonDocument> documents = List.of(new BsonDocument("key", new BsonString("value")));
-        try (Arena arena = Arena.ofConfined()) {
-            assertThrows(UnsupportedOperationException.class, () ->
-                BsonMarshaller.toBsonBatch(arena, documents));
-        }
-    }
-
-    @Test
-    void testToBsonValueStructThrowsUnsupportedOperationException() {
-        org.bson.BsonString value = new BsonString("hello world");
-        try (Arena arena = Arena.ofConfined()) {
-            assertThrows(UnsupportedOperationException.class, () ->
-                BsonMarshaller.toBsonValueStruct(arena, value));
-        }
-    }
-
-    @Test
-    void testToBsonValueThrowsUnsupportedOperationException() {
+    void testToBsonValueStructString() {
         BsonString value = new BsonString("hello world");
         try (Arena arena = Arena.ofConfined()) {
-            assertThrows(UnsupportedOperationException.class, () ->
-                BsonMarshaller.toBsonValue(arena, value));
+            MemorySegment struct = BsonMarshaller.toBsonValueStruct(arena, value);
+            assertNotNull(struct);
+            // Verify round-trip
+            org.bson.BsonValue decoded = BsonMarshaller.fromBsonValueStruct(struct);
+            assertEquals(value, decoded);
         }
     }
 
     @Test
-    void testFromBsonValueStructThrowsUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () ->
-            BsonMarshaller.fromBsonValueStruct(MemorySegment.NULL));
+    void testToBsonValueStructObjectId() {
+        org.bson.BsonObjectId value = new org.bson.BsonObjectId(new org.bson.types.ObjectId());
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment struct = BsonMarshaller.toBsonValueStruct(arena, value);
+            assertNotNull(struct);
+            org.bson.BsonValue decoded = BsonMarshaller.fromBsonValueStruct(struct);
+            assertEquals(value, decoded);
+        }
+    }
+
+    @Test
+    void testToBsonValueStructInt32() {
+        org.bson.BsonInt32 value = new org.bson.BsonInt32(42);
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment struct = BsonMarshaller.toBsonValueStruct(arena, value);
+            assertNotNull(struct);
+            org.bson.BsonValue decoded = BsonMarshaller.fromBsonValueStruct(struct);
+            assertEquals(value, decoded);
+        }
+    }
+
+    @Test
+    void testFromBsonValueStructNull() {
+        org.bson.BsonValue result = BsonMarshaller.fromBsonValueStruct(MemorySegment.NULL);
+        assertNull(result);
     }
 
     // Helper to encode a document to bytes for test setup
