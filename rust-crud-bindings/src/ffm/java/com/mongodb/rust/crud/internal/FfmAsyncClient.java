@@ -20,10 +20,12 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCompressor;
 import com.mongodb.MongoException;
+import com.mongodb.ReadConcern;
 import com.mongodb.TransactionOptions;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
@@ -47,6 +49,7 @@ import com.mongodb.rust.crud.NativeAsyncChangeStream;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
 import org.bson.codecs.Decoder;
@@ -56,6 +59,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -85,6 +89,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     private final MemorySegment clientPtr;
     private final Arena clientArena;
     private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    // Cache FFI handles to avoid repeated allocations and leaks
+    private final ConcurrentHashMap<ReadPreference, MemorySegment> readPreferenceCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<WriteConcern, MemorySegment> writeConcernCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ReadConcern, MemorySegment> readConcernCache = new ConcurrentHashMap<>();
 
     public FfmAsyncClient(MongoClientSettings settings) {
         this.clientArena = Arena.ofShared();
@@ -190,7 +199,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         }
 
         // read_preference_mode: 0=Primary, 1=PrimaryPreferred, 2=Secondary, 3=SecondaryPreferred, 4=Nearest
-        // TODO: FFI doesn't support read preference tags or maxStaleness
+        // Note: Client-level settings only use mode; tags/maxStaleness are set per-operation via OperationContext
         ConnectionSettings.read_preference_mode(struct, toReadPreferenceMode(settings.getReadPreference()));
 
         ConnectionSettings.srv_service_name(struct, clientArena.allocateFrom(settings.getClusterSettings().getSrvServiceName()));
@@ -281,7 +290,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
             MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
             if (errorPtr.address() != 0) {
-                callback.onResult(null, FfmErrorMapper.mapError(errorPtr));
+                callback.onResult(null, FfmErrorMapper.toException(errorPtr));
                 return;
             }
 
@@ -332,29 +341,20 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     public <T> void runCommand(String databaseName,
                                 BsonDocument command,
                                 Decoder<T> decoder,
+                                NativeOperationContext context,
                                 @Nullable NativeAsyncClientSession session,
                                 SingleResultCallback<T> callback) {
         Arena arena = Arena.ofShared();
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
-
-            // Build OperationContext
-            MemorySegment operationContext = OperationContext.allocate(arena);
-            MemorySegment sessionPtr = session != null
-                    ? ((FfmAsyncClientSession) session).getSessionPtr()
-                    : MemorySegment.NULL;
-            OperationContext.session(operationContext, sessionPtr);
-            OperationContext.read_preference(operationContext, MemorySegment.NULL); // TODO: support read preference
-            OperationContext.write_concern(operationContext, MemorySegment.NULL);   // TODO: support write concern
-            OperationContext.read_concern(operationContext, MemorySegment.NULL);    // TODO: support read concern
-            OperationContext.timeout_ms(operationContext, -1L);                     // TODO: support timeout
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
 
             MemorySegment callbackPtr = RunCommandCallback.allocate(
                     (userdata, result, error) -> {
                         try {
                             if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.mapError(error));
+                                callback.onResult(null, FfmErrorMapper.toException(error));
                             } else if (result.address() != 0) {
                                 MemorySegment data = com.mongodb.internal.rust.crud.ffi.Bson.data(result);
                                 long len = com.mongodb.internal.rust.crud.ffi.Bson.len(result);
@@ -386,6 +386,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     public <T> void runCursorCommand(String databaseName,
                                       BsonDocument command,
                                       Decoder<T> decoder,
+                                      NativeOperationContext context,
                                       @Nullable NativeAsyncClientSession session,
                                       SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: runCursorCommand not yet implemented");
@@ -395,73 +396,73 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void insertOne(MongoNamespace namespace, BsonDocument document, InsertOneOptions options,
-                          @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertOneResult> callback) {
+                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertOneResult> callback) {
         throw new UnsupportedOperationException("FFI: insertOne not yet implemented");
     }
 
     @Override
     public void insertMany(MongoNamespace namespace, List<BsonDocument> documents, InsertManyOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertManyResult> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertManyResult> callback) {
         throw new UnsupportedOperationException("FFI: insertMany not yet implemented");
     }
 
     @Override
     public void updateOne(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                          @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
         throw new UnsupportedOperationException("FFI: updateOne not yet implemented");
     }
 
     @Override
     public void updateMany(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
         throw new UnsupportedOperationException("FFI: updateMany not yet implemented");
     }
 
     @Override
     public void replaceOne(MongoNamespace namespace, Bson filter, BsonDocument replacement, ReplaceOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
         throw new UnsupportedOperationException("FFI: replaceOne not yet implemented");
     }
 
     @Override
     public void deleteOne(MongoNamespace namespace, Bson filter, DeleteOptions options,
-                          @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
+                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
         throw new UnsupportedOperationException("FFI: deleteOne not yet implemented");
     }
 
     @Override
     public void deleteMany(MongoNamespace namespace, Bson filter, DeleteOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
         throw new UnsupportedOperationException("FFI: deleteMany not yet implemented");
     }
 
     @Override
     public <T> void findOne(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                            @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
+                            NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
         throw new UnsupportedOperationException("FFI: findOne not yet implemented");
     }
 
     @Override
     public <T> void find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                         @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                         NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: find not yet implemented");
     }
 
     @Override
     public <T> void findOneAndUpdate(MongoNamespace namespace, Bson filter, Bson update, FindOneAndUpdateOptions options,
-                                      Decoder<T> decoder, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
+                                      Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
         throw new UnsupportedOperationException("FFI: findOneAndUpdate not yet implemented");
     }
 
     @Override
     public <T> void findOneAndReplace(MongoNamespace namespace, Bson filter, BsonDocument replacement, FindOneAndReplaceOptions options,
-                                       Decoder<T> decoder, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
+                                       Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
         throw new UnsupportedOperationException("FFI: findOneAndReplace not yet implemented");
     }
 
     @Override
     public <T> void findOneAndDelete(MongoNamespace namespace, Bson filter, FindOneAndDeleteOptions options,
-                                      Decoder<T> decoder, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
+                                      Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
         throw new UnsupportedOperationException("FFI: findOneAndDelete not yet implemented");
     }
 
@@ -470,14 +471,14 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public <T> void aggregate(MongoNamespace namespace, List<BsonDocument> pipeline, AggregateOptions options,
                               @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
-                              @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                              NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: aggregate not yet implemented");
     }
 
     @Override
     public <T> void aggregateDatabase(String databaseName, List<BsonDocument> pipeline, AggregateOptions options,
                                        @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
-                                       @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                                       NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: aggregateDatabase not yet implemented");
     }
 
@@ -485,19 +486,19 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void countDocuments(MongoNamespace namespace, Bson filter, CountOptions options,
-                                @Nullable NativeAsyncClientSession session, SingleResultCallback<Long> callback) {
+                                NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Long> callback) {
         throw new UnsupportedOperationException("FFI: countDocuments not yet implemented");
     }
 
     @Override
     public void estimatedDocumentCount(MongoNamespace namespace, EstimatedDocumentCountOptions options,
-                                        SingleResultCallback<Long> callback) {
+                                        NativeOperationContext context, SingleResultCallback<Long> callback) {
         throw new UnsupportedOperationException("FFI: estimatedDocumentCount not yet implemented");
     }
 
     @Override
     public <T> void distinct(MongoNamespace namespace, String fieldName, Bson filter, DistinctOptions options,
-                              Decoder<T> decoder, @Nullable NativeAsyncClientSession session,
+                              Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: distinct not yet implemented");
     }
@@ -506,31 +507,31 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void createIndex(MongoNamespace namespace, Bson keys, CreateIndexOptions options,
-                             @Nullable NativeAsyncClientSession session, SingleResultCallback<String> callback) {
+                             NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<String> callback) {
         throw new UnsupportedOperationException("FFI: createIndex not yet implemented");
     }
 
     @Override
     public void createIndexes(MongoNamespace namespace, List<IndexModel> indexes, CreateIndexOptions options,
-                               @Nullable NativeAsyncClientSession session, SingleResultCallback<List<String>> callback) {
+                               NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<List<String>> callback) {
         throw new UnsupportedOperationException("FFI: createIndexes not yet implemented");
     }
 
     @Override
     public void dropIndex(MongoNamespace namespace, String indexName, DropIndexOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: dropIndex not yet implemented");
     }
 
     @Override
     public void dropIndex(MongoNamespace namespace, Bson keys, DropIndexOptions options,
-                           @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: dropIndex not yet implemented");
     }
 
     @Override
     public <T> void listIndexes(MongoNamespace namespace, ListIndexesOptions options, Decoder<T> decoder,
-                                 @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                                 NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: listIndexes not yet implemented");
     }
 
@@ -538,49 +539,49 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void createCollection(String databaseName, String collectionName, CreateCollectionOptions options,
-                                  @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+                                  NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: createCollection not yet implemented");
     }
 
     @Override
     public void dropCollection(MongoNamespace namespace, DropCollectionOptions options,
-                                @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+                                NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: dropCollection not yet implemented");
     }
 
     @Override
     public void renameCollection(MongoNamespace namespace, MongoNamespace newNamespace, RenameCollectionOptions options,
-                                  @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+                                  NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: renameCollection not yet implemented");
     }
 
     @Override
     public <T> void listCollections(String databaseName, ListCollectionsOptions options, Decoder<T> decoder,
-                                     @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                                     NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: listCollections not yet implemented");
     }
 
     @Override
     public void listCollectionNames(String databaseName, ListCollectionsOptions options,
-                                     @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<String>> callback) {
+                                     NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<String>> callback) {
         throw new UnsupportedOperationException("FFI: listCollectionNames not yet implemented");
     }
 
     // ==================== Database Admin Operations ====================
 
     @Override
-    public void dropDatabase(String databaseName, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
+    public void dropDatabase(String databaseName, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
         throw new UnsupportedOperationException("FFI: dropDatabase not yet implemented");
     }
 
     @Override
     public <T> void listDatabases(ListDatabasesOptions options, Decoder<T> decoder,
-                                   @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
+                                   NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
         throw new UnsupportedOperationException("FFI: listDatabases not yet implemented");
     }
 
     @Override
-    public void listDatabaseNames(ListDatabasesOptions options, @Nullable NativeAsyncClientSession session,
+    public void listDatabaseNames(ListDatabasesOptions options, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                                    SingleResultCallback<NativeAsyncCursor<String>> callback) {
         throw new UnsupportedOperationException("FFI: listDatabaseNames not yet implemented");
     }
@@ -589,21 +590,21 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public <T> void watchCollection(MongoNamespace namespace, List<BsonDocument> pipeline, ChangeStreamOptions options,
-                                     Decoder<T> decoder, @Nullable NativeAsyncClientSession session,
+                                     Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                                      SingleResultCallback<NativeAsyncChangeStream<T>> callback) {
         throw new UnsupportedOperationException("FFI: watchCollection not yet implemented");
     }
 
     @Override
     public <T> void watchDatabase(String databaseName, List<BsonDocument> pipeline, ChangeStreamOptions options,
-                                   Decoder<T> decoder, @Nullable NativeAsyncClientSession session,
+                                   Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                                    SingleResultCallback<NativeAsyncChangeStream<T>> callback) {
         throw new UnsupportedOperationException("FFI: watchDatabase not yet implemented");
     }
 
     @Override
     public <T> void watchClient(List<BsonDocument> pipeline, ChangeStreamOptions options, Decoder<T> decoder,
-                                 @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncChangeStream<T>> callback) {
+                                 NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncChangeStream<T>> callback) {
         throw new UnsupportedOperationException("FFI: watchClient not yet implemented");
     }
 
@@ -611,7 +612,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void bulkWrite(MongoNamespace namespace, List<? extends WriteModel<BsonDocument>> requests,
-                           BulkWriteOptions options, @Nullable NativeAsyncClientSession session,
+                           BulkWriteOptions options, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                            SingleResultCallback<BulkWriteResult> callback) {
         throw new UnsupportedOperationException("FFI: bulkWrite not yet implemented");
     }
@@ -621,8 +622,64 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+            // Destroy cached FFI handles
+            readPreferenceCache.values().forEach(FfmReadPreference::destroy);
+            readPreferenceCache.clear();
+            writeConcernCache.values().forEach(FfmWriteConcern::destroy);
+            writeConcernCache.clear();
+            readConcernCache.values().forEach(FfmReadConcern::destroy);
+            readConcernCache.clear();
+
             MongoDbFfi.mongo_client_destroy(clientPtr);
             clientArena.close();
         }
+    }
+
+    // ==================== Helpers ====================
+
+    /**
+     * Builds an FFI OperationContext from the Java NativeOperationContext and session.
+     *
+     * @param arena the arena to allocate in
+     * @param context the operation context containing read/write concerns, read preference, and timeout
+     * @param session the client session, or null
+     * @return the allocated OperationContext memory segment
+     */
+    private MemorySegment buildOperationContext(Arena arena, NativeOperationContext context,
+                                                 @Nullable NativeAsyncClientSession session) {
+        MemorySegment operationContext = OperationContext.allocate(arena);
+        MemorySegment sessionPtr = session != null
+                ? ((FfmAsyncClientSession) session).getSessionPtr()
+                : MemorySegment.NULL;
+        OperationContext.session(operationContext, sessionPtr);
+        OperationContext.read_preference(operationContext, getOrCreateReadPreference(context.getReadPreference()));
+        OperationContext.write_concern(operationContext, getOrCreateWriteConcern(context.getWriteConcern()));
+        OperationContext.read_concern(operationContext, getOrCreateReadConcern(context.getReadConcern()));
+        OperationContext.timeout_ms(operationContext, context.getTimeoutMs() != null ? context.getTimeoutMs() : -1L);
+        return operationContext;
+    }
+
+    private MemorySegment getOrCreateReadPreference(@Nullable ReadPreference readPreference) {
+        if (readPreference == null) {
+            return MemorySegment.NULL;
+        }
+        return readPreferenceCache.computeIfAbsent(readPreference,
+                rp -> FfmReadPreference.create(clientArena, rp));
+    }
+
+    private MemorySegment getOrCreateWriteConcern(@Nullable WriteConcern writeConcern) {
+        if (writeConcern == null) {
+            return MemorySegment.NULL;
+        }
+        return writeConcernCache.computeIfAbsent(writeConcern,
+                wc -> FfmWriteConcern.create(clientArena, wc));
+    }
+
+    private MemorySegment getOrCreateReadConcern(@Nullable ReadConcern readConcern) {
+        if (readConcern == null) {
+            return MemorySegment.NULL;
+        }
+        return readConcernCache.computeIfAbsent(readConcern,
+                rc -> FfmReadConcern.create(clientArena, rc));
     }
 }

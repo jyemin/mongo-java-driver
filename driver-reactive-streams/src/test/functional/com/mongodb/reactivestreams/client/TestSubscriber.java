@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 
 public class TestSubscriber<T> implements Subscriber<T> {
     private final CountDownLatch latch = new CountDownLatch(1);

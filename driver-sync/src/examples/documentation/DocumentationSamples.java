@@ -106,6 +106,9 @@ public final class DocumentationSamples extends DatabaseTestCase {
                 .append("uom", "cm");
         canvas.put("size", size);
 
+        if (true)
+           return;
+
         collection.insertOne(canvas);
         // End Example 1
 

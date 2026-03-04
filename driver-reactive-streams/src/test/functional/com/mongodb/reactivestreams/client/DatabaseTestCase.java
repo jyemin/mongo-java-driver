@@ -20,7 +20,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.reactivestreams.client.Fixture.drop;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClient;
 

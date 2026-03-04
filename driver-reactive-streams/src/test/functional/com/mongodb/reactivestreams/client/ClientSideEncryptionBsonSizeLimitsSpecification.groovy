@@ -30,9 +30,9 @@ import org.bson.BsonString
 import org.bson.codecs.BsonDocumentCodec
 import reactor.core.publisher.Mono
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
 import static com.mongodb.reactivestreams.client.Fixture.drop
-import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabaseName
+import static com.mongodb.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString
 import static java.util.Collections.singletonMap
 import static org.junit.Assume.assumeTrue

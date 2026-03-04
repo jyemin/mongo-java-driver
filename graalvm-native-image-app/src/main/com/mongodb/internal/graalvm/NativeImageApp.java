@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-import static com.mongodb.ClusterFixture.getConnectionStringSystemPropertyOrDefault;
+import static com.mongodb.client.Fixture.getConnectionStringSystemPropertyOrDefault;
 
 final class NativeImageApp {
     private static final Logger LOGGER = LoggerFactory.getLogger(NativeImageApp.class);

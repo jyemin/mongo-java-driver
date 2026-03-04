@@ -17,13 +17,19 @@
 package com.mongodb.rust.crud.internal;
 
 import com.mongodb.ReadPreference;
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
 import com.mongodb.TaggableReadPreference;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.ReadPreferenceOptions;
 import com.mongodb.lang.Nullable;
+import org.bson.BsonArray;
+import org.bson.BsonDocument;
+import org.bson.BsonString;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,20 +63,27 @@ final class FfmReadPreference {
 
         MemorySegment options = ReadPreferenceOptions.allocate(arena);
 
-        // Tags: BSON array, currently not supported
-        // TODO: Support read preference tags
-        ReadPreferenceOptions.tags(options, MemorySegment.NULL);
-
-        // Max staleness in seconds, -1 = not set
-        // Only TaggableReadPreference has max staleness (not primary)
+        // Only TaggableReadPreference has tags and max staleness (not primary)
         if (readPreference instanceof TaggableReadPreference) {
-            Long maxStalenessMs = ((TaggableReadPreference) readPreference).getMaxStaleness(TimeUnit.MILLISECONDS);
+            TaggableReadPreference taggable = (TaggableReadPreference) readPreference;
+
+            // Tags: BSON array of documents
+            List<TagSet> tagSetList = taggable.getTagSetList();
+            if (tagSetList.isEmpty()) {
+                ReadPreferenceOptions.tags(options, MemorySegment.NULL);
+            } else {
+                ReadPreferenceOptions.tags(options, tagSetListToBson(arena, tagSetList));
+            }
+
+            // Max staleness in seconds, -1 = not set
+            Long maxStalenessMs = taggable.getMaxStaleness(TimeUnit.MILLISECONDS);
             if (maxStalenessMs == null) {
                 ReadPreferenceOptions.max_staleness_seconds(options, -1L);
             } else {
                 ReadPreferenceOptions.max_staleness_seconds(options, maxStalenessMs / 1000);
             }
         } else {
+            ReadPreferenceOptions.tags(options, MemorySegment.NULL);
             ReadPreferenceOptions.max_staleness_seconds(options, -1L);
         }
 
@@ -79,6 +92,22 @@ final class FfmReadPreference {
         ReadPreferenceOptions.hedge(options, MemorySegment.NULL);
 
         return MongoDbFfi.mongo_read_preference_create(mode, options);
+    }
+
+    /**
+     * Converts a list of TagSets to a BSON array memory segment.
+     * Format: [{tag1: value1, tag2: value2}, {tag3: value3}]
+     */
+    private static MemorySegment tagSetListToBson(Arena arena, List<TagSet> tagSetList) {
+        BsonArray array = new BsonArray();
+        for (TagSet tagSet : tagSetList) {
+            BsonDocument doc = new BsonDocument();
+            for (Tag tag : tagSet) {
+                doc.put(tag.getName(), new BsonString(tag.getValue()));
+            }
+            array.add(doc);
+        }
+        return BsonMarshaller.toBsonArrayStruct(arena, array);
     }
 
     /**

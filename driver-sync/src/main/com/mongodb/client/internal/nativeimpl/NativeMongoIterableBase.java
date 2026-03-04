@@ -19,6 +19,7 @@ import com.mongodb.Function;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import org.bson.codecs.Codec;
@@ -38,15 +39,18 @@ public abstract class NativeMongoIterableBase<TResult> implements MongoIterable<
     private final NativeSyncClient nativeClient;
     @Nullable
     private final NativeSyncClientSession nativeSession;
+    private final NativeOperationContext operationContext;
     private final Class<TResult> resultClass;
     private final CodecRegistry codecRegistry;
 
     protected NativeMongoIterableBase(NativeSyncClient nativeClient,
                                       @Nullable NativeSyncClientSession nativeSession,
+                                      NativeOperationContext operationContext,
                                       Class<TResult> resultClass,
                                       CodecRegistry codecRegistry) {
         this.nativeClient = notNull("nativeClient", nativeClient);
         this.nativeSession = nativeSession;
+        this.operationContext = notNull("operationContext", operationContext);
         this.resultClass = notNull("resultClass", resultClass);
         this.codecRegistry = notNull("codecRegistry", codecRegistry);
     }
@@ -58,6 +62,10 @@ public abstract class NativeMongoIterableBase<TResult> implements MongoIterable<
     @Nullable
     protected NativeSyncClientSession getNativeSession() {
         return nativeSession;
+    }
+
+    protected NativeOperationContext getOperationContext() {
+        return operationContext;
     }
 
     protected Class<TResult> getResultClass() {

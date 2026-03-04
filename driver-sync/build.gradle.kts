@@ -38,6 +38,7 @@ dependencies {
 
     testImplementation(project(path = ":bson", configuration = "testArtifacts"))
     testImplementation(project(path = ":driver-core", configuration = "testArtifacts"))
+    testImplementation(project(path = ":rust-crud-bindings", configuration = "testArtifacts"))
 
     optionalImplementation(platform(libs.micrometer.observation.bom))
     optionalImplementation(libs.micrometer.observation)

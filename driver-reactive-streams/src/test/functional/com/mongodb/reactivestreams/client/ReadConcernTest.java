@@ -28,9 +28,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.client.CommandMonitoringTestHelper.assertEventsEquality;
-import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString;
 import static java.util.Collections.singletonList;
 

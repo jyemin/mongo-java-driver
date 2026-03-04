@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ClusterFixture.TIMEOUT;
+import static com.mongodb.client.Fixture.TIMEOUT;
 import static com.mongodb.client.Fixture.isDiscoverableReplicaSet;
 import static com.mongodb.client.Fixture.isSharded;
 import static org.junit.jupiter.api.Assertions.assertEquals;

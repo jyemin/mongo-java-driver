@@ -40,8 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.getEnv;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

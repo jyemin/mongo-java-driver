@@ -20,6 +20,7 @@ import com.mongodb.reactivestreams.client.ListCollectionNamesPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import com.mongodb.client.model.ListCollectionsOptions;
 import org.bson.BsonString;
@@ -38,8 +39,8 @@ final class NativeListCollectionNamesPublisher extends NativeCursorPublisher<Str
     private final ListCollectionsOptions options = new ListCollectionsOptions();
 
     NativeListCollectionNamesPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                                       String databaseName, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+                                       NativeOperationContext operationContext, String databaseName, CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
         this.databaseName = databaseName;
     }
 
@@ -48,7 +49,7 @@ final class NativeListCollectionNamesPublisher extends NativeCursorPublisher<Str
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().listCollectionNames(databaseName, options, getSession(), callback);
+        getNativeClient().listCollectionNames(databaseName, options, getOperationContext(), getSession(), callback);
     }
 
     @Override public ListCollectionNamesPublisher maxTime(long maxTime, TimeUnit timeUnit) { options.maxTime(maxTime, timeUnit); return this; }

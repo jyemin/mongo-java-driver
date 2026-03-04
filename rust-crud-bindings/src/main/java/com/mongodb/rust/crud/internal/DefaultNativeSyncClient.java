@@ -49,6 +49,7 @@ import com.mongodb.rust.crud.NativeAsyncChangeStream;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncChangeStream;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
@@ -95,15 +96,15 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public InsertOneResult insertOne(MongoNamespace namespace, BsonDocument document, InsertOneOptions options,
-                                     @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.insertOne(namespace, document, options, toAsync(session), callback),
+                                     NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.insertOne(namespace, document, options, context, toAsync(session), callback),
                 "insertOne");
     }
 
     @Override
     public InsertManyResult insertMany(MongoNamespace namespace, List<BsonDocument> documents, InsertManyOptions options,
-                                       @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.insertMany(namespace, documents, options, toAsync(session), callback),
+                                       NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.insertMany(namespace, documents, options, context, toAsync(session), callback),
                 "insertMany");
     }
 
@@ -111,22 +112,22 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public UpdateResult updateOne(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                                  @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.updateOne(namespace, filter, update, options, toAsync(session), callback),
+                                  NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.updateOne(namespace, filter, update, options, context, toAsync(session), callback),
                 "updateOne");
     }
 
     @Override
     public UpdateResult updateMany(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                                   @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.updateMany(namespace, filter, update, options, toAsync(session), callback),
+                                   NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.updateMany(namespace, filter, update, options, context, toAsync(session), callback),
                 "updateMany");
     }
 
     @Override
     public UpdateResult replaceOne(MongoNamespace namespace, Bson filter, BsonDocument replacement, ReplaceOptions options,
-                                   @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.replaceOne(namespace, filter, replacement, options, toAsync(session), callback),
+                                   NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.replaceOne(namespace, filter, replacement, options, context, toAsync(session), callback),
                 "replaceOne");
     }
 
@@ -134,15 +135,15 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public DeleteResult deleteOne(MongoNamespace namespace, Bson filter, DeleteOptions options,
-                                  @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.deleteOne(namespace, filter, options, toAsync(session), callback),
+                                  NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.deleteOne(namespace, filter, options, context, toAsync(session), callback),
                 "deleteOne");
     }
 
     @Override
     public DeleteResult deleteMany(MongoNamespace namespace, Bson filter, DeleteOptions options,
-                                   @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.deleteMany(namespace, filter, options, toAsync(session), callback),
+                                   NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.deleteMany(namespace, filter, options, context, toAsync(session), callback),
                 "deleteMany");
     }
 
@@ -151,16 +152,16 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     @Override
     @Nullable
     public <T> T findOne(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                         @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.findOne(namespace, filter, options, decoder, toAsync(session), callback),
+                         NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.findOne(namespace, filter, options, decoder, context, toAsync(session), callback),
                 "findOne");
     }
 
     @Override
     public <T> NativeSyncCursor<T> find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                                        @Nullable NativeSyncClientSession session) {
+                                        NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.find(namespace, filter, options, decoder, toAsync(session), callback), "find");
+                callback -> asyncClient.find(namespace, filter, options, decoder, context, toAsync(session), callback), "find");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
@@ -169,24 +170,24 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     @Override
     @Nullable
     public <T> T findOneAndUpdate(MongoNamespace namespace, Bson filter, Bson update, FindOneAndUpdateOptions options,
-                                  Decoder<T> decoder, @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.findOneAndUpdate(namespace, filter, update, options, decoder, toAsync(session), callback),
+                                  Decoder<T> decoder, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.findOneAndUpdate(namespace, filter, update, options, decoder, context, toAsync(session), callback),
                 "findOneAndUpdate");
     }
 
     @Override
     @Nullable
     public <T> T findOneAndReplace(MongoNamespace namespace, Bson filter, BsonDocument replacement,
-                                   FindOneAndReplaceOptions options, Decoder<T> decoder, @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.findOneAndReplace(namespace, filter, replacement, options, decoder, toAsync(session), callback),
+                                   FindOneAndReplaceOptions options, Decoder<T> decoder, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.findOneAndReplace(namespace, filter, replacement, options, decoder, context, toAsync(session), callback),
                 "findOneAndReplace");
     }
 
     @Override
     @Nullable
     public <T> T findOneAndDelete(MongoNamespace namespace, Bson filter, FindOneAndDeleteOptions options,
-                                  Decoder<T> decoder, @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.findOneAndDelete(namespace, filter, options, decoder, toAsync(session), callback),
+                                  Decoder<T> decoder, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.findOneAndDelete(namespace, filter, options, decoder, context, toAsync(session), callback),
                 "findOneAndDelete");
     }
 
@@ -195,9 +196,9 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     @Override
     public <T> NativeSyncCursor<T> aggregate(MongoNamespace namespace, List<BsonDocument> pipeline, AggregateOptions options,
                                              @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
-                                             @Nullable NativeSyncClientSession session) {
+                                             NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.aggregate(namespace, pipeline, options, bypassDocumentValidation, decoder, toAsync(session), callback),
+                callback -> asyncClient.aggregate(namespace, pipeline, options, bypassDocumentValidation, decoder, context, toAsync(session), callback),
                 "aggregate");
         return new DefaultNativeSyncCursor<>(cursor);
     }
@@ -205,9 +206,9 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     @Override
     public <T> NativeSyncCursor<T> aggregateDatabase(String databaseName, List<BsonDocument> pipeline, AggregateOptions options,
                                                      @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
-                                                     @Nullable NativeSyncClientSession session) {
+                                                     NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.aggregateDatabase(databaseName, pipeline, options, bypassDocumentValidation, decoder, toAsync(session), callback),
+                callback -> asyncClient.aggregateDatabase(databaseName, pipeline, options, bypassDocumentValidation, decoder, context, toAsync(session), callback),
                 "aggregateDatabase");
         return new DefaultNativeSyncCursor<>(cursor);
     }
@@ -216,22 +217,22 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public long countDocuments(MongoNamespace namespace, Bson filter, CountOptions options,
-                               @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.countDocuments(namespace, filter, options, toAsync(session), callback),
+                               NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.countDocuments(namespace, filter, options, context, toAsync(session), callback),
                 "countDocuments");
     }
 
     @Override
-    public long estimatedDocumentCount(MongoNamespace namespace, EstimatedDocumentCountOptions options) {
-        return blockForResult(callback -> asyncClient.estimatedDocumentCount(namespace, options, callback),
+    public long estimatedDocumentCount(MongoNamespace namespace, EstimatedDocumentCountOptions options, NativeOperationContext context) {
+        return blockForResult(callback -> asyncClient.estimatedDocumentCount(namespace, options, context, callback),
                 "estimatedDocumentCount");
     }
 
     @Override
     public <T> NativeSyncCursor<T> distinct(MongoNamespace namespace, String fieldName, Bson filter, DistinctOptions options,
-                                            Decoder<T> decoder, @Nullable NativeSyncClientSession session) {
+                                            Decoder<T> decoder, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.distinct(namespace, fieldName, filter, options, decoder, toAsync(session), callback), "distinct");
+                callback -> asyncClient.distinct(namespace, fieldName, filter, options, decoder, context, toAsync(session), callback), "distinct");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
@@ -239,37 +240,37 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public String createIndex(MongoNamespace namespace, Bson keys, CreateIndexOptions options,
-                              @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.createIndex(namespace, keys, options, toAsync(session), callback),
+                              NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.createIndex(namespace, keys, options, context, toAsync(session), callback),
                 "createIndex");
     }
 
     @Override
     public List<String> createIndexes(MongoNamespace namespace, List<IndexModel> indexes, CreateIndexOptions options,
-                                      @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.createIndexes(namespace, indexes, options, toAsync(session), callback),
+                                      NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.createIndexes(namespace, indexes, options, context, toAsync(session), callback),
                 "createIndexes");
     }
 
     @Override
     public void dropIndex(MongoNamespace namespace, String indexName, DropIndexOptions options,
-                          @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.dropIndex(namespace, indexName, options, toAsync(session), callback),
+                          NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.dropIndex(namespace, indexName, options, context, toAsync(session), callback),
                 "dropIndex");
     }
 
     @Override
     public void dropIndex(MongoNamespace namespace, Bson keys, DropIndexOptions options,
-                          @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.dropIndex(namespace, keys, options, toAsync(session), callback),
+                          NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.dropIndex(namespace, keys, options, context, toAsync(session), callback),
                 "dropIndex");
     }
 
     @Override
     public <T> NativeSyncCursor<T> listIndexes(MongoNamespace namespace, ListIndexesOptions options, Decoder<T> decoder,
-                                               @Nullable NativeSyncClientSession session) {
+                                               NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.listIndexes(namespace, options, decoder, toAsync(session), callback), "listIndexes");
+                callback -> asyncClient.listIndexes(namespace, options, decoder, context, toAsync(session), callback), "listIndexes");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
@@ -277,60 +278,60 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public void createCollection(String databaseName, String collectionName, CreateCollectionOptions options,
-                                 @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.createCollection(databaseName, collectionName, options, toAsync(session), callback),
+                                 NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.createCollection(databaseName, collectionName, options, context, toAsync(session), callback),
                 "createCollection");
     }
 
     @Override
     public void dropCollection(MongoNamespace namespace, DropCollectionOptions options,
-                               @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.dropCollection(namespace, options, toAsync(session), callback),
+                               NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.dropCollection(namespace, options, context, toAsync(session), callback),
                 "dropCollection");
     }
 
     @Override
     public void renameCollection(MongoNamespace namespace, MongoNamespace newNamespace, RenameCollectionOptions options,
-                                 @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.renameCollection(namespace, newNamespace, options, toAsync(session), callback),
+                                 NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.renameCollection(namespace, newNamespace, options, context, toAsync(session), callback),
                 "renameCollection");
     }
 
     @Override
     public <T> NativeSyncCursor<T> listCollections(String databaseName, ListCollectionsOptions options, Decoder<T> decoder,
-                                                   @Nullable NativeSyncClientSession session) {
+                                                   NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.listCollections(databaseName, options, decoder, toAsync(session), callback), "listCollections");
+                callback -> asyncClient.listCollections(databaseName, options, decoder, context, toAsync(session), callback), "listCollections");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
     @Override
     public NativeSyncCursor<String> listCollectionNames(String databaseName, ListCollectionsOptions options,
-                                                  @Nullable NativeSyncClientSession session) {
+                                                  NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<String> cursor = blockForResult(
-                callback -> asyncClient.listCollectionNames(databaseName, options, toAsync(session), callback), "listCollectionNames");
+                callback -> asyncClient.listCollectionNames(databaseName, options, context, toAsync(session), callback), "listCollectionNames");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
     // ==================== Database Admin Operations ====================
 
     @Override
-    public void dropDatabase(String databaseName, @Nullable NativeSyncClientSession session) {
-        blockForVoid(callback -> asyncClient.dropDatabase(databaseName, toAsync(session), callback), "dropDatabase");
+    public void dropDatabase(String databaseName, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        blockForVoid(callback -> asyncClient.dropDatabase(databaseName, context, toAsync(session), callback), "dropDatabase");
     }
 
     @Override
     public <T> NativeSyncCursor<T> listDatabases(ListDatabasesOptions options, Decoder<T> decoder,
-                                                  @Nullable NativeSyncClientSession session) {
+                                                  NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.listDatabases(options, decoder, toAsync(session), callback), "listDatabases");
+                callback -> asyncClient.listDatabases(options, decoder, context, toAsync(session), callback), "listDatabases");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
     @Override
-    public NativeSyncCursor<String> listDatabaseNames(ListDatabasesOptions options, @Nullable NativeSyncClientSession session) {
+    public NativeSyncCursor<String> listDatabaseNames(ListDatabasesOptions options, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<String> cursor = blockForResult(
-                callback -> asyncClient.listDatabaseNames(options, toAsync(session), callback), "listDatabaseNames");
+                callback -> asyncClient.listDatabaseNames(options, context, toAsync(session), callback), "listDatabaseNames");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
@@ -338,15 +339,15 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public <T> T runCommand(String databaseName, BsonDocument command, Decoder<T> decoder,
-                            @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.runCommand(databaseName, command, decoder, toAsync(session), callback), "runCommand");
+                            NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.runCommand(databaseName, command, decoder, context, toAsync(session), callback), "runCommand");
     }
 
     @Override
     public <T> NativeSyncCursor<T> runCursorCommand(String databaseName, BsonDocument command, Decoder<T> decoder,
-                                                     @Nullable NativeSyncClientSession session) {
+                                                     NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(
-                callback -> asyncClient.runCursorCommand(databaseName, command, decoder, toAsync(session), callback), "runCursorCommand");
+                callback -> asyncClient.runCursorCommand(databaseName, command, decoder, context, toAsync(session), callback), "runCursorCommand");
         return new DefaultNativeSyncCursor<>(cursor);
     }
 
@@ -355,26 +356,26 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     @Override
     public <T> NativeSyncChangeStream<T> watchCollection(MongoNamespace namespace, List<BsonDocument> pipeline,
                                                           ChangeStreamOptions options, Decoder<T> decoder,
-                                                          @Nullable NativeSyncClientSession session) {
+                                                          NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncChangeStream<T> stream = blockForResult(
-                callback -> asyncClient.watchCollection(namespace, pipeline, options, decoder, toAsync(session), callback), "watchCollection");
+                callback -> asyncClient.watchCollection(namespace, pipeline, options, decoder, context, toAsync(session), callback), "watchCollection");
         return new DefaultNativeSyncChangeStream<>(stream);
     }
 
     @Override
     public <T> NativeSyncChangeStream<T> watchDatabase(String databaseName, List<BsonDocument> pipeline,
                                                         ChangeStreamOptions options, Decoder<T> decoder,
-                                                        @Nullable NativeSyncClientSession session) {
+                                                        NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncChangeStream<T> stream = blockForResult(
-                callback -> asyncClient.watchDatabase(databaseName, pipeline, options, decoder, toAsync(session), callback), "watchDatabase");
+                callback -> asyncClient.watchDatabase(databaseName, pipeline, options, decoder, context, toAsync(session), callback), "watchDatabase");
         return new DefaultNativeSyncChangeStream<>(stream);
     }
 
     @Override
     public <T> NativeSyncChangeStream<T> watchClient(List<BsonDocument> pipeline, ChangeStreamOptions options,
-                                                      Decoder<T> decoder, @Nullable NativeSyncClientSession session) {
+                                                      Decoder<T> decoder, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncChangeStream<T> stream = blockForResult(
-                callback -> asyncClient.watchClient(pipeline, options, decoder, toAsync(session), callback), "watchClient");
+                callback -> asyncClient.watchClient(pipeline, options, decoder, context, toAsync(session), callback), "watchClient");
         return new DefaultNativeSyncChangeStream<>(stream);
     }
 
@@ -382,8 +383,8 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
 
     @Override
     public BulkWriteResult bulkWrite(MongoNamespace namespace, List<? extends WriteModel<BsonDocument>> requests,
-                                     BulkWriteOptions options, @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.bulkWrite(namespace, requests, options, toAsync(session), callback),
+                                     BulkWriteOptions options, NativeOperationContext context, @Nullable NativeSyncClientSession session) {
+        return blockForResult(callback -> asyncClient.bulkWrite(namespace, requests, options, context, toAsync(session), callback),
                 "bulkWrite");
     }
 

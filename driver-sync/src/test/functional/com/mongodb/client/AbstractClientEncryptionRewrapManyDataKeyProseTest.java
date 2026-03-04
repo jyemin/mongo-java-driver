@@ -42,8 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.getEnv;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;

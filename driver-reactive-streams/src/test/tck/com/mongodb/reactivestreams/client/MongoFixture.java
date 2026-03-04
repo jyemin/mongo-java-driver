@@ -16,12 +16,12 @@
 
 package com.mongodb.reactivestreams.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoTimeoutException;
+import com.mongodb.client.Fixture;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -63,7 +63,7 @@ public final class MongoFixture {
     }
 
     public static String getDefaultDatabaseName() {
-        return ClusterFixture.getDefaultDatabaseName();
+        return Fixture.getDefaultDatabaseName();
     }
 
     public static boolean isDiscoverableReplicaSet() {

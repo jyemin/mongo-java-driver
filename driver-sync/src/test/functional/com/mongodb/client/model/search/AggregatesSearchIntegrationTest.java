@@ -50,7 +50,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.isAtlasSearchTest;
+import static com.mongodb.client.Fixture.isAtlasSearchTest;
 import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.model.Aggregates.limit;
 import static com.mongodb.client.model.Aggregates.project;

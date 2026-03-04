@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.getConnectionStringSystemPropertyOrDefault;
+import static com.mongodb.client.Fixture.getConnectionStringSystemPropertyOrDefault;
 
 public final class ConnectivityTestHelper {
     public static final Document LEGACY_HELLO_COMMAND = new Document("ismaster", 1);

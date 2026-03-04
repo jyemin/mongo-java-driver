@@ -42,10 +42,10 @@ import java.nio.channels.WritableByteChannel
 import java.security.SecureRandom
 import java.time.Duration
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
 import static com.mongodb.client.model.Filters.eq
 import static com.mongodb.client.model.Updates.unset
-import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabaseName
+import static com.mongodb.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClient
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString
 import static com.mongodb.reactivestreams.client.MongoClients.getDefaultCodecRegistry

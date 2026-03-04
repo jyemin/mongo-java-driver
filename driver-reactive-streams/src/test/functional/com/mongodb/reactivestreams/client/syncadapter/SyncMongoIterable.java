@@ -27,7 +27,7 @@ import reactor.core.publisher.Flux;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.CONTEXT;
 
 class SyncMongoIterable<T> implements MongoIterable<T> {

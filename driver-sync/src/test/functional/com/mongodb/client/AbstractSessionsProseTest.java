@@ -16,7 +16,6 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoClientException;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
@@ -48,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.isStandalone;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static java.util.Arrays.asList;

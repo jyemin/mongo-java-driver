@@ -46,9 +46,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
-import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.getEnv;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientSettings;
 import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;

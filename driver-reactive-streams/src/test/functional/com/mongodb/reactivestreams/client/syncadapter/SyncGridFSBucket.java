@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.CONTEXT;
 import static java.util.Objects.requireNonNull;
 

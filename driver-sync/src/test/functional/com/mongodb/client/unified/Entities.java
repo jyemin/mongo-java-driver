@@ -74,7 +74,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.mongodb.AuthenticationMechanism.MONGODB_OIDC;
-import static com.mongodb.ClusterFixture.getEnv;
+import static com.mongodb.client.Fixture.getEnv;
 import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;

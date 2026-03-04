@@ -20,6 +20,7 @@ import com.mongodb.reactivestreams.client.ListDatabasesPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import com.mongodb.client.model.ListDatabasesOptions;
 import org.bson.BsonString;
@@ -38,8 +39,8 @@ final class NativeListDatabasesPublisher<TResult> extends NativeCursorPublisher<
     private final ListDatabasesOptions options = new ListDatabasesOptions();
 
     NativeListDatabasesPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                                 Class<TResult> resultClass, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+                                 NativeOperationContext operationContext, Class<TResult> resultClass, CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
         this.resultClass = resultClass;
     }
 
@@ -48,7 +49,7 @@ final class NativeListDatabasesPublisher<TResult> extends NativeCursorPublisher<
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().listDatabases(options, getCodecRegistry().get(resultClass), getSession(), callback);
+        getNativeClient().listDatabases(options, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
     }
 
     @Override public ListDatabasesPublisher<TResult> maxTime(long maxTime, TimeUnit timeUnit) { options.maxTime(maxTime, timeUnit); return this; }

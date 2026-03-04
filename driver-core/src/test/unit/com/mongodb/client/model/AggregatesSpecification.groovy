@@ -30,7 +30,6 @@ import spock.lang.Specification
 
 import static BucketGranularity.R5
 import static MongoTimeUnit.DAY
-import static com.mongodb.ClusterFixture.serverVersionLessThan
 import static com.mongodb.client.model.Accumulators.accumulator
 import static com.mongodb.client.model.Accumulators.addToSet
 import static com.mongodb.client.model.Accumulators.avg

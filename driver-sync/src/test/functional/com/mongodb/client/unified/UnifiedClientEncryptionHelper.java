@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.mongodb.ClusterFixture.getEnv;
+import static com.mongodb.client.Fixture.getEnv;
 import static java.lang.Math.toIntExact;
 
 public final class UnifiedClientEncryptionHelper {

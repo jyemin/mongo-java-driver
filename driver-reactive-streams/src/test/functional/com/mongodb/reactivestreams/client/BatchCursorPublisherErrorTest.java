@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.reactivestreams.client.Fixture.drop;
 import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabase;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClient;

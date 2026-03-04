@@ -25,6 +25,7 @@ import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
@@ -47,8 +48,9 @@ final class NativeFindPublisher<TResult> extends NativeCursorPublisher<TResult> 
     private BsonDocument filter = new BsonDocument();
 
     NativeFindPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                        MongoNamespace namespace, Class<TResult> resultClass, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+                        NativeOperationContext operationContext, MongoNamespace namespace, Class<TResult> resultClass,
+                        CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
         this.namespace = namespace;
         this.resultClass = resultClass;
     }
@@ -58,7 +60,7 @@ final class NativeFindPublisher<TResult> extends NativeCursorPublisher<TResult> 
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().find(namespace, filter, options, getCodecRegistry().get(resultClass), getSession(), callback);
+        getNativeClient().find(namespace, filter, options, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
     }
 
     @Override public FindPublisher<TResult> filter(@Nullable Bson filter) {

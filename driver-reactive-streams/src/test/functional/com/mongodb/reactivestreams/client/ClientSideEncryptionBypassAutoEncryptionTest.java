@@ -56,9 +56,9 @@ public class ClientSideEncryptionBypassAutoEncryptionTest {
         }};
 
 
-        MongoNamespace keyVaultNamespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "testKeyVault");
+        MongoNamespace keyVaultNamespace = new MongoNamespace(com.mongodb.client.Fixture.getDefaultDatabaseName(), "testKeyVault");
 
-        Fixture.dropDatabase(Fixture.getDefaultDatabaseName());
+        Fixture.dropDatabase(com.mongodb.client.Fixture.getDefaultDatabaseName());
 
         ClientEncryptionSettings clientEncryptionSettings = ClientEncryptionSettings.builder()
                 .keyVaultMongoClientSettings(Fixture.getMongoClientSettings())
@@ -94,7 +94,7 @@ public class ClientSideEncryptionBypassAutoEncryptionTest {
                 .subscribe(binarySubscriber);
         BsonBinary encryptedFieldValue = binarySubscriber.get().get(0);
 
-        MongoCollection<Document> collection = clientEncrypted.getDatabase(Fixture.getDefaultDatabaseName()).getCollection("test");
+        MongoCollection<Document> collection = clientEncrypted.getDatabase(com.mongodb.client.Fixture.getDefaultDatabaseName()).getCollection("test");
 
         ObservableSubscriber<InsertOneResult> insertSubscriber = new OperationSubscriber<>();
         collection.insertOne(new Document("encryptedField", encryptedFieldValue)).subscribe(insertSubscriber);
@@ -109,7 +109,7 @@ public class ClientSideEncryptionBypassAutoEncryptionTest {
     @After
     public void after() throws Throwable {
         if (clientEncrypted != null) {
-            Fixture.dropDatabase(Fixture.getDefaultDatabaseName());
+            Fixture.dropDatabase(com.mongodb.client.Fixture.getDefaultDatabaseName());
             clientEncrypted.close();
         }
         if (clientEncryption != null) {

@@ -26,6 +26,7 @@ import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
@@ -49,6 +50,7 @@ final class NativeChangeStreamPublisher<TResult> implements ChangeStreamPublishe
 
     private final NativeAsyncClient nativeClient;
     @Nullable private final NativeAsyncClientSession session;
+    private final NativeOperationContext operationContext;
     private final List<BsonDocument> pipeline;
     private final Class<TResult> resultClass;
     private final CodecRegistry codecRegistry;
@@ -58,10 +60,12 @@ final class NativeChangeStreamPublisher<TResult> implements ChangeStreamPublishe
     private final ChangeStreamOptions options = new ChangeStreamOptions();
 
     NativeChangeStreamPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                                List<? extends Bson> pipeline, Class<TResult> resultClass, CodecRegistry codecRegistry,
-                                WatchLevel watchLevel, @Nullable String databaseName, @Nullable String collectionName) {
+                                NativeOperationContext operationContext, List<? extends Bson> pipeline, Class<TResult> resultClass,
+                                CodecRegistry codecRegistry, WatchLevel watchLevel, @Nullable String databaseName,
+                                @Nullable String collectionName) {
         this.nativeClient = nativeClient;
         this.session = session;
+        this.operationContext = operationContext;
         this.resultClass = resultClass;
         this.codecRegistry = codecRegistry;
         this.watchLevel = watchLevel;
@@ -81,18 +85,18 @@ final class NativeChangeStreamPublisher<TResult> implements ChangeStreamPublishe
                     case COLLECTION:
                         MongoNamespace ns = new MongoNamespace(databaseName, collectionName);
                         nativeClient.watchCollection(ns, pipeline, options,
-                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), session,
+                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), operationContext, session,
                                 (SingleResultCallback) callback);
                         break;
                     case DATABASE:
                         nativeClient.watchDatabase(databaseName, pipeline, options,
-                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), session,
+                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), operationContext, session,
                                 (SingleResultCallback) callback);
                         break;
                     case CLIENT:
                     default:
                         nativeClient.watchClient(pipeline, options,
-                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), session,
+                                ChangeStreamDocument.createCodec(resultClass, codecRegistry), operationContext, session,
                                 (SingleResultCallback) callback);
                         break;
                 }

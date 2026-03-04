@@ -25,7 +25,7 @@ import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
-import static com.mongodb.ClusterFixture.TIMEOUT
+import static com.mongodb.client.Fixture.TIMEOUT
 
 class OperationFunctionalSpecification extends Specification {
 
@@ -47,7 +47,7 @@ class OperationFunctionalSpecification extends Specification {
     }
 
     String getDatabaseName() {
-        ClusterFixture.getDefaultDatabaseName()
+        Fixture.getDefaultDatabaseName()
     }
 
     String getCollectionName() {

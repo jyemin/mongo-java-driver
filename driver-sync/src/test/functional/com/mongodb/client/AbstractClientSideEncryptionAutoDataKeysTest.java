@@ -46,7 +46,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.getEnv;
+import static com.mongodb.client.Fixture.getEnv;
 import static com.mongodb.client.Fixture.isStandalone;
 import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getMongoClientSettings;

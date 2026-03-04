@@ -17,10 +17,14 @@
 package com.mongodb.rust.crud.internal;
 
 import com.mongodb.ReadPreference;
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
+import com.mongodb.TaggableReadPreference;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,6 +89,67 @@ class FfmReadPreferenceTest {
         try (Arena arena = Arena.ofConfined()) {
             ReadPreference rp = ReadPreference.secondary()
                     .withMaxStalenessMS(120000L, TimeUnit.MILLISECONDS);
+            MemorySegment result = FfmReadPreference.create(arena, rp);
+            assertNotEquals(MemorySegment.NULL, result);
+            FfmReadPreference.destroy(result);
+        }
+    }
+
+    @Test
+    void testCreateWithSingleTagSet() {
+        try (Arena arena = Arena.ofConfined()) {
+            TagSet tagSet = new TagSet(Arrays.asList(
+                    new Tag("dc", "east"),
+                    new Tag("rack", "r1")
+            ));
+            ReadPreference rp = ReadPreference.secondary(tagSet);
+
+            // Verify tags are actually in the read preference
+            assertTrue(rp instanceof TaggableReadPreference);
+            TaggableReadPreference trp = (TaggableReadPreference) rp;
+            assertEquals(1, trp.getTagSetList().size());
+            assertTrue(trp.getTagSetList().get(0).iterator().hasNext()); // has tags
+
+            MemorySegment result = FfmReadPreference.create(arena, rp);
+            assertNotEquals(MemorySegment.NULL, result);
+            FfmReadPreference.destroy(result);
+        }
+    }
+
+    @Test
+    void testCreateWithMultipleTagSets() {
+        try (Arena arena = Arena.ofConfined()) {
+            TagSet tagSet1 = new TagSet(Arrays.asList(
+                    new Tag("dc", "east"),
+                    new Tag("rack", "r1")
+            ));
+            TagSet tagSet2 = new TagSet(Arrays.asList(
+                    new Tag("dc", "west")
+            ));
+            ReadPreference rp = ReadPreference.nearest(Arrays.asList(tagSet1, tagSet2));
+            MemorySegment result = FfmReadPreference.create(arena, rp);
+            assertNotEquals(MemorySegment.NULL, result);
+            FfmReadPreference.destroy(result);
+        }
+    }
+
+    @Test
+    void testCreateWithEmptyTagSet() {
+        try (Arena arena = Arena.ofConfined()) {
+            // Empty tag set - should work without tags
+            ReadPreference rp = ReadPreference.secondaryPreferred(new TagSet());
+            MemorySegment result = FfmReadPreference.create(arena, rp);
+            assertNotEquals(MemorySegment.NULL, result);
+            FfmReadPreference.destroy(result);
+        }
+    }
+
+    @Test
+    void testCreateWithTagsAndMaxStaleness() {
+        try (Arena arena = Arena.ofConfined()) {
+            TagSet tagSet = new TagSet(new Tag("region", "us-east-1"));
+            ReadPreference rp = ReadPreference.secondary(tagSet)
+                    .withMaxStalenessMS(90000L, TimeUnit.MILLISECONDS);
             MemorySegment result = FfmReadPreference.create(arena, rp);
             assertNotEquals(MemorySegment.NULL, result);
             FfmReadPreference.destroy(result);

@@ -52,7 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
+import static com.mongodb.client.Fixture.isClientSideEncryptionTest;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static com.mongodb.fixture.EncryptionFixture.KmsProviderType.LOCAL;

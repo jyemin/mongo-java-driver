@@ -22,7 +22,7 @@ import org.bson.BsonInt32;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.mongodb.ClusterFixture.getOcspShouldSucceed;
+import static com.mongodb.client.Fixture.getOcspShouldSucceed;
 import static java.security.Security.getProperty;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;

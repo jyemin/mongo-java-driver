@@ -27,7 +27,7 @@ import spock.lang.Ignore
 
 import java.util.concurrent.TimeUnit
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
 
 class MongoClientListenerRegistrationSpecification extends FunctionalSpecification {
 

@@ -18,6 +18,7 @@ package com.mongodb.client.internal.nativeimpl;
 import com.mongodb.client.ListCollectionNamesIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import com.mongodb.rust.crud.NativeSyncCursor;
@@ -44,8 +45,9 @@ public final class NativeListCollectionNamesIterable
 
     public NativeListCollectionNamesIterable(NativeSyncClient nativeClient,
                                              @Nullable NativeSyncClientSession nativeSession,
+                                             NativeOperationContext operationContext,
                                              String databaseName) {
-        super(nativeClient, nativeSession, String.class, null);  // No codec registry needed for String
+        super(nativeClient, nativeSession, operationContext, String.class, null);  // No codec registry needed for String
         this.databaseName = notNull("databaseName", databaseName);
     }
 
@@ -88,7 +90,7 @@ public final class NativeListCollectionNamesIterable
     @Override
     public MongoCursor<String> cursor() {
         NativeSyncCursor<String> nativeCursor = getNativeClient().listCollectionNames(
-                databaseName, options, getNativeSession());
+                databaseName, options, getOperationContext(), getNativeSession());
         return new NativeMongoCursor<>(nativeCursor);
     }
 }

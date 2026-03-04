@@ -29,8 +29,8 @@ import reactor.core.publisher.Mono
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
-import static com.mongodb.ClusterFixture.getServerApi
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.getServerApi
 import static com.mongodb.client.Fixture.getConnectionString
 import static com.mongodb.client.Fixture.getCredential
 import static com.mongodb.client.Fixture.getSslSettings

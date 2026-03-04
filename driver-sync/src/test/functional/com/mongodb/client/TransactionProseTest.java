@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.getConnectionString;
 import static com.mongodb.client.Fixture.getMultiMongosConnectionString;
 import static com.mongodb.client.Fixture.isSharded;

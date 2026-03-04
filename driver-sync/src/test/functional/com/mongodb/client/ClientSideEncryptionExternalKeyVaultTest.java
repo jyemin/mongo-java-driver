@@ -45,7 +45,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
+import static com.mongodb.client.Fixture.isClientSideEncryptionTest;
 import static com.mongodb.client.Fixture.getMongoClient;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static org.junit.Assert.assertEquals;

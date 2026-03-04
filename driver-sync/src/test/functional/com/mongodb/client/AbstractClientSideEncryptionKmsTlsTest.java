@@ -43,8 +43,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.getEnv;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;

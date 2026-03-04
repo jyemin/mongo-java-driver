@@ -29,7 +29,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import reactor.core.publisher.Mono;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.CONTEXT;
 import static com.mongodb.reactivestreams.client.syncadapter.SyncMongoClient.getSleepAfterSessionClose;

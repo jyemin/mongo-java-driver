@@ -72,11 +72,13 @@ public interface NativeSyncClient extends Closeable {
     InsertOneResult insertOne(MongoNamespace namespace,
                               BsonDocument document,
                               InsertOneOptions options,
+                              NativeOperationContext context,
                               @Nullable NativeSyncClientSession session);
 
     InsertManyResult insertMany(MongoNamespace namespace,
                                 List<BsonDocument> documents,
                                 InsertManyOptions options,
+                                NativeOperationContext context,
                                 @Nullable NativeSyncClientSession session);
 
     // ==================== Update Operations ====================
@@ -85,18 +87,21 @@ public interface NativeSyncClient extends Closeable {
                            Bson filter,
                            Bson update,
                            UpdateOptions options,
+                           NativeOperationContext context,
                            @Nullable NativeSyncClientSession session);
 
     UpdateResult updateMany(MongoNamespace namespace,
                             Bson filter,
                             Bson update,
                             UpdateOptions options,
+                            NativeOperationContext context,
                             @Nullable NativeSyncClientSession session);
 
     UpdateResult replaceOne(MongoNamespace namespace,
                             Bson filter,
                             BsonDocument replacement,
                             ReplaceOptions options,
+                            NativeOperationContext context,
                             @Nullable NativeSyncClientSession session);
 
     // ==================== Delete Operations ====================
@@ -104,11 +109,13 @@ public interface NativeSyncClient extends Closeable {
     DeleteResult deleteOne(MongoNamespace namespace,
                            Bson filter,
                            DeleteOptions options,
+                           NativeOperationContext context,
                            @Nullable NativeSyncClientSession session);
 
     DeleteResult deleteMany(MongoNamespace namespace,
                             Bson filter,
                             DeleteOptions options,
+                            NativeOperationContext context,
                             @Nullable NativeSyncClientSession session);
 
     // ==================== Find Operations ====================
@@ -118,12 +125,14 @@ public interface NativeSyncClient extends Closeable {
                   Bson filter,
                   FindOptions options,
                   Decoder<T> decoder,
+                  NativeOperationContext context,
                   @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> find(MongoNamespace namespace,
                                  Bson filter,
                                  FindOptions options,
                                  Decoder<T> decoder,
+                                 NativeOperationContext context,
                                  @Nullable NativeSyncClientSession session);
 
     // ==================== Find and Modify Operations ====================
@@ -134,6 +143,7 @@ public interface NativeSyncClient extends Closeable {
                            Bson update,
                            FindOneAndUpdateOptions options,
                            Decoder<T> decoder,
+                           NativeOperationContext context,
                            @Nullable NativeSyncClientSession session);
 
     @Nullable
@@ -142,6 +152,7 @@ public interface NativeSyncClient extends Closeable {
                             BsonDocument replacement,
                             FindOneAndReplaceOptions options,
                             Decoder<T> decoder,
+                            NativeOperationContext context,
                             @Nullable NativeSyncClientSession session);
 
     @Nullable
@@ -149,6 +160,7 @@ public interface NativeSyncClient extends Closeable {
                            Bson filter,
                            FindOneAndDeleteOptions options,
                            Decoder<T> decoder,
+                           NativeOperationContext context,
                            @Nullable NativeSyncClientSession session);
 
     // ==================== Aggregate Operations ====================
@@ -158,6 +170,7 @@ public interface NativeSyncClient extends Closeable {
                                       AggregateOptions options,
                                       @Nullable Boolean bypassDocumentValidation,
                                       Decoder<T> decoder,
+                                      NativeOperationContext context,
                                       @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> aggregateDatabase(String databaseName,
@@ -165,6 +178,7 @@ public interface NativeSyncClient extends Closeable {
                                               AggregateOptions options,
                                               @Nullable Boolean bypassDocumentValidation,
                                               Decoder<T> decoder,
+                                              NativeOperationContext context,
                                               @Nullable NativeSyncClientSession session);
 
     // ==================== Count Operations ====================
@@ -172,16 +186,19 @@ public interface NativeSyncClient extends Closeable {
     long countDocuments(MongoNamespace namespace,
                         Bson filter,
                         CountOptions options,
+                        NativeOperationContext context,
                         @Nullable NativeSyncClientSession session);
 
     long estimatedDocumentCount(MongoNamespace namespace,
-                                EstimatedDocumentCountOptions options);
+                                EstimatedDocumentCountOptions options,
+                                NativeOperationContext context);
 
     <T> NativeSyncCursor<T> distinct(MongoNamespace namespace,
                                      String fieldName,
                                      Bson filter,
                                      DistinctOptions options,
                                      Decoder<T> decoder,
+                                     NativeOperationContext context,
                                      @Nullable NativeSyncClientSession session);
 
     // ==================== Index Operations ====================
@@ -189,26 +206,31 @@ public interface NativeSyncClient extends Closeable {
     String createIndex(MongoNamespace namespace,
                        Bson keys,
                        CreateIndexOptions options,
+                       NativeOperationContext context,
                        @Nullable NativeSyncClientSession session);
 
     List<String> createIndexes(MongoNamespace namespace,
                                List<IndexModel> indexes,
                                CreateIndexOptions options,
+                               NativeOperationContext context,
                                @Nullable NativeSyncClientSession session);
 
     void dropIndex(MongoNamespace namespace,
                    String indexName,
                    DropIndexOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeSyncClientSession session);
 
     void dropIndex(MongoNamespace namespace,
                    Bson keys,
                    DropIndexOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> listIndexes(MongoNamespace namespace,
                                         ListIndexesOptions options,
                                         Decoder<T> decoder,
+                                        NativeOperationContext context,
                                         @Nullable NativeSyncClientSession session);
 
     // ==================== Collection Admin Operations ====================
@@ -216,36 +238,44 @@ public interface NativeSyncClient extends Closeable {
     void createCollection(String databaseName,
                           String collectionName,
                           CreateCollectionOptions options,
+                          NativeOperationContext context,
                           @Nullable NativeSyncClientSession session);
 
     void dropCollection(MongoNamespace namespace,
                         DropCollectionOptions options,
+                        NativeOperationContext context,
                         @Nullable NativeSyncClientSession session);
 
     void renameCollection(MongoNamespace namespace,
                           MongoNamespace newNamespace,
                           RenameCollectionOptions options,
+                          NativeOperationContext context,
                           @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> listCollections(String databaseName,
                                             ListCollectionsOptions options,
                                             Decoder<T> decoder,
+                                            NativeOperationContext context,
                                             @Nullable NativeSyncClientSession session);
 
     NativeSyncCursor<String> listCollectionNames(String databaseName,
                                                  ListCollectionsOptions options,
+                                                 NativeOperationContext context,
                                                  @Nullable NativeSyncClientSession session);
 
     // ==================== Database Admin Operations ====================
 
     void dropDatabase(String databaseName,
+                      NativeOperationContext context,
                       @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> listDatabases(ListDatabasesOptions options,
                                           Decoder<T> decoder,
+                                          NativeOperationContext context,
                                           @Nullable NativeSyncClientSession session);
 
     NativeSyncCursor<String> listDatabaseNames(ListDatabasesOptions options,
+                                               NativeOperationContext context,
                                                @Nullable NativeSyncClientSession session);
 
     // ==================== Command Operations ====================
@@ -253,11 +283,13 @@ public interface NativeSyncClient extends Closeable {
     <T> T runCommand(String databaseName,
                      BsonDocument command,
                      Decoder<T> decoder,
+                     NativeOperationContext context,
                      @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncCursor<T> runCursorCommand(String databaseName,
                                              BsonDocument command,
                                              Decoder<T> decoder,
+                                             NativeOperationContext context,
                                              @Nullable NativeSyncClientSession session);
 
     // ==================== Change Stream Operations ====================
@@ -266,17 +298,20 @@ public interface NativeSyncClient extends Closeable {
                                                    List<BsonDocument> pipeline,
                                                    ChangeStreamOptions options,
                                                    Decoder<T> decoder,
+                                                   NativeOperationContext context,
                                                    @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncChangeStream<T> watchDatabase(String databaseName,
                                                  List<BsonDocument> pipeline,
                                                  ChangeStreamOptions options,
                                                  Decoder<T> decoder,
+                                                 NativeOperationContext context,
                                                  @Nullable NativeSyncClientSession session);
 
     <T> NativeSyncChangeStream<T> watchClient(List<BsonDocument> pipeline,
                                                ChangeStreamOptions options,
                                                Decoder<T> decoder,
+                                               NativeOperationContext context,
                                                @Nullable NativeSyncClientSession session);
 
     // ==================== Bulk Write Operations ====================
@@ -284,6 +319,7 @@ public interface NativeSyncClient extends Closeable {
     BulkWriteResult bulkWrite(MongoNamespace namespace,
                               List<? extends WriteModel<BsonDocument>> requests,
                               BulkWriteOptions options,
+                              NativeOperationContext context,
                               @Nullable NativeSyncClientSession session);
 
     // ==================== Lifecycle ====================

@@ -21,6 +21,7 @@ import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import com.mongodb.client.model.ListIndexesOptions;
 import org.bson.BsonString;
@@ -39,8 +40,9 @@ final class NativeListIndexesPublisher<TResult> extends NativeCursorPublisher<TR
     private final ListIndexesOptions options = new ListIndexesOptions();
 
     NativeListIndexesPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                               MongoNamespace namespace, Class<TResult> resultClass, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+                               NativeOperationContext operationContext, MongoNamespace namespace, Class<TResult> resultClass,
+                               CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
         this.namespace = namespace;
         this.resultClass = resultClass;
     }
@@ -50,7 +52,7 @@ final class NativeListIndexesPublisher<TResult> extends NativeCursorPublisher<TR
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().listIndexes(namespace, options, getCodecRegistry().get(resultClass), getSession(), callback);
+        getNativeClient().listIndexes(namespace, options, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
     }
 
     @Override public ListIndexesPublisher<TResult> maxTime(long maxTime, TimeUnit timeUnit) { options.maxTime(maxTime, timeUnit); return this; }

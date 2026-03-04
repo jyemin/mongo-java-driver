@@ -83,9 +83,12 @@ final class FfmErrorMapper {
 
     /**
      * Maps an FFI error to a Java driver exception without freeing.
-     * Exposed for testing with mock error structs.
+     * <p>
+     * <b>WARNING:</b> This method does NOT free the native error memory. It is package-private
+     * only for unit testing with mock error structs that are allocated in Java arenas.
+     * Production code must use {@link #toException} which properly frees the native error.
      *
-     * @param errorPtr pointer to the FFI Error struct
+     * @param errorPtr pointer to the FFI Error struct (will NOT be freed)
      * @return the appropriate MongoException subclass
      */
     static MongoException mapError(MemorySegment errorPtr) {

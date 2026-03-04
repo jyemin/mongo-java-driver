@@ -26,7 +26,7 @@ import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.getEnv;
+import static com.mongodb.client.Fixture.getEnv;
 
 /**
  * Helper class for the CSFLE/QE tests.

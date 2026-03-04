@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.getEnv;
+import static com.mongodb.client.Fixture.getEnv;
 import static com.mongodb.assertions.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

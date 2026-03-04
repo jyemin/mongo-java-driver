@@ -16,7 +16,7 @@
 
 package org.mongodb.scala.syncadapter
 
-import com.mongodb.ClusterFixture.TIMEOUT_DURATION
+import com.mongodb.client.Fixture.TIMEOUT_DURATION
 import com.mongodb.client.model.{ CreateCollectionOptions, CreateEncryptedCollectionParams }
 import com.mongodb.client.model.vault.{
   DataKeyOptions,

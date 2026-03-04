@@ -23,10 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.reactivestreams.client.Fixture.drop;
 import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabase;
-import static com.mongodb.reactivestreams.client.Fixture.isReplicaSet;
+import static com.mongodb.client.Fixture.isDiscoverableReplicaSet;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -36,7 +36,7 @@ public class ChangeStreamsCancellationTest {
 
     @BeforeEach
     public void setup() {
-        assumeTrue(isReplicaSet());
+        assumeTrue(isDiscoverableReplicaSet());
         collection = getDefaultDatabase().getCollection("changeStreamsCancellationTest");
     }
 

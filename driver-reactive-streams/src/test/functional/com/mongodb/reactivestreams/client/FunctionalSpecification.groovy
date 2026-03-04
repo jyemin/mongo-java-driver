@@ -22,7 +22,7 @@ import spock.lang.Specification
 
 import static Fixture.dropDatabase
 import static Fixture.initializeCollection
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName
+import static com.mongodb.client.Fixture.getDefaultDatabaseName
 import static com.mongodb.reactivestreams.client.Fixture.drop
 import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabase
 import static com.mongodb.reactivestreams.client.Fixture.waitForLastServerSessionPoolRelease

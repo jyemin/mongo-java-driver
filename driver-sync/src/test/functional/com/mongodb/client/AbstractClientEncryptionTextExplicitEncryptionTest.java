@@ -40,9 +40,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
-import static com.mongodb.ClusterFixture.getMongoCryptVersion;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getMongoCryptVersion;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.client.Fixture.isStandalone;
 import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.Fixture.getDefaultDatabase;

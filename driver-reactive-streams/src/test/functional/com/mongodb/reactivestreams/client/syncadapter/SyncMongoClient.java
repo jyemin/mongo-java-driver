@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.mongodb.ClusterFixture.sleep;
+import static com.mongodb.client.Fixture.sleep;
 import static java.lang.String.format;
 
 public class SyncMongoClient implements MongoClient {

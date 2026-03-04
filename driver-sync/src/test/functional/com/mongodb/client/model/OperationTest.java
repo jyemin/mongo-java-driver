@@ -16,8 +16,8 @@
 
 package com.mongodb.client.model;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.Fixture;
 import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
@@ -70,7 +70,7 @@ public abstract class OperationTest {
     }
 
     protected String getDatabaseName() {
-        return ClusterFixture.getDefaultDatabaseName();
+        return Fixture.getDefaultDatabaseName();
     }
 
     protected String getCollectionName() {

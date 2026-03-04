@@ -24,7 +24,7 @@ import org.bson.Document
 import reactor.core.publisher.Mono
 
 import static Fixture.getMongoClientBuilderFromConnectionString
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
 
 @SuppressWarnings('deprecation')
 class NettySettingsSmokeTestSpecification extends FunctionalSpecification {

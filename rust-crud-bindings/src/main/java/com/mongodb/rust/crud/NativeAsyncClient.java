@@ -75,12 +75,14 @@ public interface NativeAsyncClient extends Closeable {
     void insertOne(MongoNamespace namespace,
                    BsonDocument document,
                    InsertOneOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<InsertOneResult> callback);
 
     void insertMany(MongoNamespace namespace,
                     List<BsonDocument> documents,
                     InsertManyOptions options,
+                    NativeOperationContext context,
                     @Nullable NativeAsyncClientSession session,
                     SingleResultCallback<InsertManyResult> callback);
 
@@ -90,6 +92,7 @@ public interface NativeAsyncClient extends Closeable {
                    Bson filter,
                    Bson update,
                    UpdateOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<UpdateResult> callback);
 
@@ -97,6 +100,7 @@ public interface NativeAsyncClient extends Closeable {
                     Bson filter,
                     Bson update,
                     UpdateOptions options,
+                    NativeOperationContext context,
                     @Nullable NativeAsyncClientSession session,
                     SingleResultCallback<UpdateResult> callback);
 
@@ -104,6 +108,7 @@ public interface NativeAsyncClient extends Closeable {
                     Bson filter,
                     BsonDocument replacement,
                     ReplaceOptions options,
+                    NativeOperationContext context,
                     @Nullable NativeAsyncClientSession session,
                     SingleResultCallback<UpdateResult> callback);
 
@@ -112,12 +117,14 @@ public interface NativeAsyncClient extends Closeable {
     void deleteOne(MongoNamespace namespace,
                    Bson filter,
                    DeleteOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<DeleteResult> callback);
 
     void deleteMany(MongoNamespace namespace,
                     Bson filter,
                     DeleteOptions options,
+                    NativeOperationContext context,
                     @Nullable NativeAsyncClientSession session,
                     SingleResultCallback<DeleteResult> callback);
 
@@ -127,6 +134,7 @@ public interface NativeAsyncClient extends Closeable {
                      Bson filter,
                      FindOptions options,
                      Decoder<T> decoder,
+                     NativeOperationContext context,
                      @Nullable NativeAsyncClientSession session,
                      SingleResultCallback<T> callback);
 
@@ -134,6 +142,7 @@ public interface NativeAsyncClient extends Closeable {
                   Bson filter,
                   FindOptions options,
                   Decoder<T> decoder,
+                  NativeOperationContext context,
                   @Nullable NativeAsyncClientSession session,
                   SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -144,6 +153,7 @@ public interface NativeAsyncClient extends Closeable {
                               Bson update,
                               FindOneAndUpdateOptions options,
                               Decoder<T> decoder,
+                              NativeOperationContext context,
                               @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<T> callback);
 
@@ -152,6 +162,7 @@ public interface NativeAsyncClient extends Closeable {
                                BsonDocument replacement,
                                FindOneAndReplaceOptions options,
                                Decoder<T> decoder,
+                               NativeOperationContext context,
                                @Nullable NativeAsyncClientSession session,
                                SingleResultCallback<T> callback);
 
@@ -159,6 +170,7 @@ public interface NativeAsyncClient extends Closeable {
                               Bson filter,
                               FindOneAndDeleteOptions options,
                               Decoder<T> decoder,
+                              NativeOperationContext context,
                               @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<T> callback);
 
@@ -169,6 +181,7 @@ public interface NativeAsyncClient extends Closeable {
                        AggregateOptions options,
                        @Nullable Boolean bypassDocumentValidation,
                        Decoder<T> decoder,
+                       NativeOperationContext context,
                        @Nullable NativeAsyncClientSession session,
                        SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -177,6 +190,7 @@ public interface NativeAsyncClient extends Closeable {
                                AggregateOptions options,
                                @Nullable Boolean bypassDocumentValidation,
                                Decoder<T> decoder,
+                               NativeOperationContext context,
                                @Nullable NativeAsyncClientSession session,
                                SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -185,11 +199,13 @@ public interface NativeAsyncClient extends Closeable {
     void countDocuments(MongoNamespace namespace,
                         Bson filter,
                         CountOptions options,
+                        NativeOperationContext context,
                         @Nullable NativeAsyncClientSession session,
                         SingleResultCallback<Long> callback);
 
     void estimatedDocumentCount(MongoNamespace namespace,
                                 EstimatedDocumentCountOptions options,
+                                NativeOperationContext context,
                                 SingleResultCallback<Long> callback);
 
     <T> void distinct(MongoNamespace namespace,
@@ -197,6 +213,7 @@ public interface NativeAsyncClient extends Closeable {
                       Bson filter,
                       DistinctOptions options,
                       Decoder<T> decoder,
+                      NativeOperationContext context,
                       @Nullable NativeAsyncClientSession session,
                       SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -205,30 +222,35 @@ public interface NativeAsyncClient extends Closeable {
     void createIndex(MongoNamespace namespace,
                      Bson keys,
                      CreateIndexOptions options,
+                     NativeOperationContext context,
                      @Nullable NativeAsyncClientSession session,
                      SingleResultCallback<String> callback);
 
     void createIndexes(MongoNamespace namespace,
                        List<IndexModel> indexes,
                        CreateIndexOptions options,
+                       NativeOperationContext context,
                        @Nullable NativeAsyncClientSession session,
                        SingleResultCallback<List<String>> callback);
 
     void dropIndex(MongoNamespace namespace,
                    String indexName,
                    DropIndexOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<Void> callback);
 
     void dropIndex(MongoNamespace namespace,
                    Bson keys,
                    DropIndexOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<Void> callback);
 
     <T> void listIndexes(MongoNamespace namespace,
                          ListIndexesOptions options,
                          Decoder<T> decoder,
+                         NativeOperationContext context,
                          @Nullable NativeAsyncClientSession session,
                          SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -237,43 +259,51 @@ public interface NativeAsyncClient extends Closeable {
     void createCollection(String databaseName,
                           String collectionName,
                           CreateCollectionOptions options,
+                          NativeOperationContext context,
                           @Nullable NativeAsyncClientSession session,
                           SingleResultCallback<Void> callback);
 
     void dropCollection(MongoNamespace namespace,
                         DropCollectionOptions options,
+                        NativeOperationContext context,
                         @Nullable NativeAsyncClientSession session,
                         SingleResultCallback<Void> callback);
 
     void renameCollection(MongoNamespace namespace,
                           MongoNamespace newNamespace,
                           RenameCollectionOptions options,
+                          NativeOperationContext context,
                           @Nullable NativeAsyncClientSession session,
                           SingleResultCallback<Void> callback);
 
     <T> void listCollections(String databaseName,
                              ListCollectionsOptions options,
                              Decoder<T> decoder,
+                             NativeOperationContext context,
                              @Nullable NativeAsyncClientSession session,
                              SingleResultCallback<NativeAsyncCursor<T>> callback);
 
     void listCollectionNames(String databaseName,
                              ListCollectionsOptions options,
+                             NativeOperationContext context,
                              @Nullable NativeAsyncClientSession session,
                              SingleResultCallback<NativeAsyncCursor<String>> callback);
 
     // ==================== Database Admin Operations ====================
 
     void dropDatabase(String databaseName,
+                      NativeOperationContext context,
                       @Nullable NativeAsyncClientSession session,
                       SingleResultCallback<Void> callback);
 
     <T> void listDatabases(ListDatabasesOptions options,
                            Decoder<T> decoder,
+                           NativeOperationContext context,
                            @Nullable NativeAsyncClientSession session,
                            SingleResultCallback<NativeAsyncCursor<T>> callback);
 
     void listDatabaseNames(ListDatabasesOptions options,
+                           NativeOperationContext context,
                            @Nullable NativeAsyncClientSession session,
                            SingleResultCallback<NativeAsyncCursor<String>> callback);
 
@@ -282,12 +312,14 @@ public interface NativeAsyncClient extends Closeable {
     <T> void runCommand(String databaseName,
                         BsonDocument command,
                         Decoder<T> decoder,
+                        NativeOperationContext context,
                         @Nullable NativeAsyncClientSession session,
                         SingleResultCallback<T> callback);
 
     <T> void runCursorCommand(String databaseName,
                               BsonDocument command,
                               Decoder<T> decoder,
+                              NativeOperationContext context,
                               @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<NativeAsyncCursor<T>> callback);
 
@@ -297,6 +329,7 @@ public interface NativeAsyncClient extends Closeable {
                               List<BsonDocument> pipeline,
                               ChangeStreamOptions options,
                               Decoder<T> decoder,
+                              NativeOperationContext context,
                               @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<NativeAsyncChangeStream<T>> callback);
 
@@ -304,12 +337,14 @@ public interface NativeAsyncClient extends Closeable {
                             List<BsonDocument> pipeline,
                             ChangeStreamOptions options,
                             Decoder<T> decoder,
+                            NativeOperationContext context,
                             @Nullable NativeAsyncClientSession session,
                             SingleResultCallback<NativeAsyncChangeStream<T>> callback);
 
     <T> void watchClient(List<BsonDocument> pipeline,
                           ChangeStreamOptions options,
                           Decoder<T> decoder,
+                          NativeOperationContext context,
                           @Nullable NativeAsyncClientSession session,
                           SingleResultCallback<NativeAsyncChangeStream<T>> callback);
 
@@ -318,6 +353,7 @@ public interface NativeAsyncClient extends Closeable {
     void bulkWrite(MongoNamespace namespace,
                    List<? extends WriteModel<BsonDocument>> requests,
                    BulkWriteOptions options,
+                   NativeOperationContext context,
                    @Nullable NativeAsyncClientSession session,
                    SingleResultCallback<BulkWriteResult> callback);
 

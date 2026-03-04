@@ -36,6 +36,7 @@ dependencies {
 
     // Encryption testing
     integrationTestImplementation(project(path = ":mongodb-crypt", configuration = "default"))
+    integrationTestImplementation(project(path = ":driver-sync", configuration = "testArtifacts"))
 
     // Tracing
     testImplementation(platform(libs.micrometer.tracing.integration.test.bom))

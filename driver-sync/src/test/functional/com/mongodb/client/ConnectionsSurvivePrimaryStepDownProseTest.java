@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static com.mongodb.ClusterFixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.client.Fixture.isDiscoverableReplicaSet;
 import static com.mongodb.client.Fixture.getMongoClientSettings;
 import static java.util.Arrays.asList;

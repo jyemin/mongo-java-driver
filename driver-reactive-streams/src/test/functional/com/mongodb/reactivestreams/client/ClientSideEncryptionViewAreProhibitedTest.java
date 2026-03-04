@@ -31,8 +31,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
-import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.isClientSideEncryptionTest;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClient;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString;
 import static junit.framework.TestCase.assertTrue;

@@ -25,6 +25,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.FullDocumentBeforeChange;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncChangeStream;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
@@ -69,13 +70,14 @@ public final class NativeChangeStreamIterable<TResult>
 
     public NativeChangeStreamIterable(NativeSyncClient nativeClient,
                                       @Nullable NativeSyncClientSession nativeSession,
+                                      NativeOperationContext operationContext,
                                       List<? extends Bson> pipeline,
                                       Class<TResult> resultClass,
                                       CodecRegistry codecRegistry,
                                       WatchLevel watchLevel,
                                       @Nullable String databaseName,
                                       @Nullable String collectionName) {
-        super(nativeClient, nativeSession, 
+        super(nativeClient, nativeSession, operationContext,
                 (Class<ChangeStreamDocument<TResult>>) (Class<?>) ChangeStreamDocument.class, codecRegistry);
         this.nativeClient = notNull("nativeClient", nativeClient);
         this.nativeSession = nativeSession;
@@ -183,13 +185,13 @@ public final class NativeChangeStreamIterable<TResult>
             Codec<ChangeStreamDocument<TResult>> codec) {
         switch (watchLevel) {
             case CLIENT:
-                return nativeClient.watchClient(pipeline, options, codec, nativeSession);
+                return nativeClient.watchClient(pipeline, options, codec, getOperationContext(), nativeSession);
             case DATABASE:
-                return nativeClient.watchDatabase(databaseName, pipeline, options, codec, nativeSession);
+                return nativeClient.watchDatabase(databaseName, pipeline, options, codec, getOperationContext(), nativeSession);
             case COLLECTION:
                 return nativeClient.watchCollection(
                         new com.mongodb.MongoNamespace(databaseName, collectionName),
-                        pipeline, options, codec, nativeSession);
+                        pipeline, options, codec, getOperationContext(), nativeSession);
             default:
                 throw new IllegalStateException("Unknown watch level: " + watchLevel);
         }

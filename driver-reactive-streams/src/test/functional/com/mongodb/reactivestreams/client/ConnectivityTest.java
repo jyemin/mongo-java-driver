@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
 import static com.mongodb.client.ConnectivityTestHelper.LEGACY_HELLO_COMMAND;
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientSettingsBuilder;
 

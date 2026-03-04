@@ -40,7 +40,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.mongodb.ClusterFixture.TIMEOUT;
+import static com.mongodb.client.Fixture.TIMEOUT;
 import static com.mongodb.internal.thread.InterruptionUtil.interruptAndCreateMongoInterruptedException;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.CONTEXT;
 import static com.mongodb.reactivestreams.client.syncadapter.SyncMongoClient.getSleepAfterCursorClose;

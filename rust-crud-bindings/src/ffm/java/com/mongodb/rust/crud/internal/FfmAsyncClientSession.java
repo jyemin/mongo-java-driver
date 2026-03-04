@@ -85,7 +85,7 @@ public final class FfmAsyncClientSession implements NativeAsyncClientSession {
                     (userdata, error) -> {
                         try {
                             if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.mapError(error));
+                                callback.onResult(null, FfmErrorMapper.toException(error));
                             } else {
                                 hasActiveTransaction = true;
                                 transactionOptions = options;
@@ -112,7 +112,7 @@ public final class FfmAsyncClientSession implements NativeAsyncClientSession {
                     (userdata, error) -> {
                         try {
                             if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.mapError(error));
+                                callback.onResult(null, FfmErrorMapper.toException(error));
                             } else {
                                 hasActiveTransaction = false;
                                 transactionOptions = null;
@@ -139,7 +139,7 @@ public final class FfmAsyncClientSession implements NativeAsyncClientSession {
                     (userdata, error) -> {
                         try {
                             if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.mapError(error));
+                                callback.onResult(null, FfmErrorMapper.toException(error));
                             } else {
                                 hasActiveTransaction = false;
                                 transactionOptions = null;

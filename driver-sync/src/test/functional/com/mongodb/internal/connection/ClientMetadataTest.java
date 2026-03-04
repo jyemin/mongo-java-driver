@@ -16,9 +16,9 @@
 
 package com.mongodb.internal.connection;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.MongoDriverInformation;
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.Fixture;
 import com.mongodb.client.test.CollectionHelper;
 import com.mongodb.internal.build.MongoDriverVersion;
 import com.mongodb.lang.Nullable;
@@ -396,7 +396,7 @@ public class ClientMetadataTest {
     private void performHello() {
         CollectionHelper<Document> collectionHelper = new CollectionHelper<>(
                 new DocumentCodec(),
-                new MongoNamespace(ClusterFixture.getDefaultDatabaseName(), "test"));
+                new MongoNamespace(Fixture.getDefaultDatabaseName(), "test"));
         collectionHelper.hello();
     }
 

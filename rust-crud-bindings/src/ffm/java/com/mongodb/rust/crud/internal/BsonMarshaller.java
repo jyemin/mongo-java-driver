@@ -104,6 +104,18 @@ public final class BsonMarshaller {
         return toBsonStruct(arena, bson.toBsonDocument());
     }
 
+    /**
+     * Allocates and populates a Bson struct from a BsonArray.
+     * Wraps the array in a document with empty key "" since BSON requires a document at the root.
+     * The FFI layer unwraps by getting the first field's value.
+     */
+    public static MemorySegment toBsonArrayStruct(Arena arena, org.bson.BsonArray array) {
+        // BSON requires a document at the root, so wrap the array
+        // Use empty key to match Rust FFI test convention
+        BsonDocument wrapper = new BsonDocument("", array);
+        return toBsonStruct(arena, wrapper);
+    }
+
     public static MemorySegment toBsonBatch(Arena arena, List<BsonDocument> documents) {
         throw new UnsupportedOperationException("FFI: toBsonBatch not yet implemented");
     }

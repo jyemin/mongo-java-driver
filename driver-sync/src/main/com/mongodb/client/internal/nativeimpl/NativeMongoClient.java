@@ -33,6 +33,7 @@ import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.connection.ClusterDescription;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClients;
 import org.bson.Document;
@@ -218,13 +219,17 @@ public final class NativeMongoClient implements MongoClient {
 
     @Override
     public <TResult> ListDatabasesIterable<TResult> listDatabases(Class<TResult> resultClass) {
-        return new NativeListDatabasesIterable<>(nativeClient, null, resultClass, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabasesIterable<>(nativeClient, null, opCtx, resultClass, codecRegistry);
     }
 
     @Override
     public <TResult> ListDatabasesIterable<TResult> listDatabases(ClientSession clientSession, Class<TResult> resultClass) {
         NativeClientSession nativeSession = getNativeSession(clientSession);
-        return new NativeListDatabasesIterable<>(nativeClient, nativeSession.getNativeSession(), resultClass, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabasesIterable<>(nativeClient, nativeSession.getNativeSession(), opCtx, resultClass, codecRegistry);
     }
 
     @Override
@@ -244,7 +249,9 @@ public final class NativeMongoClient implements MongoClient {
 
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamIterable<>(nativeClient, null, pipeline, resultClass, codecRegistry,
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeChangeStreamIterable<>(nativeClient, null, opCtx, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.CLIENT, null, null);
     }
 
@@ -266,7 +273,9 @@ public final class NativeMongoClient implements MongoClient {
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass) {
         NativeClientSession nativeSession = getNativeSession(clientSession);
-        return new NativeChangeStreamIterable<>(nativeClient, nativeSession.getNativeSession(), pipeline, resultClass, codecRegistry,
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeChangeStreamIterable<>(nativeClient, nativeSession.getNativeSession(), opCtx, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.CLIENT, null, null);
     }
 

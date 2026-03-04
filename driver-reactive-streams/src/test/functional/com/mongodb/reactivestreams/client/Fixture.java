@@ -16,30 +16,25 @@
 
 package com.mongodb.reactivestreams.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
-import com.mongodb.connection.ClusterType;
-import com.mongodb.connection.ServerVersion;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION;
-import static com.mongodb.ClusterFixture.getServerApi;
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getServerApi;
 
 /**
- * Helper class for asynchronous tests.
+ * Helper class for reactive streams tests.
+ * <p>
+ * For shared test utilities (connection string, timeout, encryption checks, etc.),
+ * use {@link com.mongodb.client.Fixture} directly.
  */
 public final class Fixture {
     private static MongoClient mongoClient;
-    private static ServerVersion serverVersion;
-    private static ClusterType clusterType;
 
     private Fixture() {
     }
@@ -47,8 +42,6 @@ public final class Fixture {
     public static synchronized MongoClient getMongoClient() {
         if (mongoClient == null) {
             mongoClient = MongoClients.create(getMongoClientSettings());
-            serverVersion = getServerVersion();
-            clusterType = getClusterType();
             Runtime.getRuntime().addShutdownHook(new ShutdownHook());
         }
         return mongoClient;
@@ -70,8 +63,13 @@ public final class Fixture {
         return builder.applyConnectionString(connectionString);
     }
 
-    public static String getDefaultDatabaseName() {
-        return ClusterFixture.getDefaultDatabaseName();
+    public static MongoClientSettings.Builder getMongoClientBuilderFromConnectionString() {
+        MongoClientSettings.Builder builder = MongoClientSettings.builder()
+                .applyConnectionString(com.mongodb.client.Fixture.getConnectionString());
+        if (getServerApi() != null) {
+            builder.serverApi(getServerApi());
+        }
+        return builder;
     }
 
     public static MongoDatabase getDefaultDatabase() {
@@ -110,7 +108,7 @@ public final class Fixture {
     public static void drop(final MongoNamespace namespace) {
         try {
             Mono.from(getMongoClient().getDatabase(namespace.getDatabaseName())
-                              .runCommand(new Document("drop", namespace.getCollectionName()))).block(TIMEOUT_DURATION);
+                    .runCommand(new Document("drop", namespace.getCollectionName()))).block(TIMEOUT_DURATION);
         } catch (MongoCommandException e) {
             if (!e.getErrorMessage().contains("ns not found")) {
                 throw e;
@@ -122,52 +120,6 @@ public final class Fixture {
 
     public static synchronized void waitForLastServerSessionPoolRelease() {
         // Session pool checking not available - internal API removed
-    }
-
-    public static boolean serverVersionAtLeast(final int majorVersion, final int minorVersion) {
-        getMongoClient();
-        return serverVersion.compareTo(new ServerVersion(Arrays.asList(majorVersion, minorVersion, 0))) >= 0;
-    }
-
-    public static boolean isReplicaSet() {
-        getMongoClient();
-        return clusterType == ClusterType.REPLICA_SET;
-    }
-
-    public static synchronized ConnectionString getConnectionString() {
-        return com.mongodb.client.Fixture.getConnectionString();
-    }
-
-    public static MongoClientSettings.Builder getMongoClientBuilderFromConnectionString() {
-        MongoClientSettings.Builder builder = MongoClientSettings.builder()
-                .applyConnectionString(getConnectionString());
-        if (getServerApi() != null) {
-            builder.serverApi(getServerApi());
-        }
-        return builder;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ServerVersion getServerVersion() {
-        Document response = runAdminCommand(new Document("buildInfo", 1));
-        List<Integer> versionArray = (List<Integer>) response.get("versionArray");
-        return new ServerVersion(versionArray.subList(0, 3));
-    }
-
-    private static ClusterType getClusterType() {
-        Document response = runAdminCommand(new Document("ismaster", 1));
-        if (response.containsKey("setName")) {
-            return ClusterType.REPLICA_SET;
-        } else if ("isdbgrid".equals(response.getString("msg"))) {
-            return ClusterType.SHARDED;
-        } else {
-            return ClusterType.STANDALONE;
-        }
-    }
-
-    private static Document runAdminCommand(final Bson command) {
-        return Mono.from(getMongoClient().getDatabase("admin")
-                .runCommand(command)).block(TIMEOUT_DURATION);
     }
 
     static class ShutdownHook extends Thread {

@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static com.mongodb.ClusterFixture.isAtlasSearchTest;
+import static com.mongodb.client.Fixture.isAtlasSearchTest;
 import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 import static com.mongodb.client.Fixture.getMongoClient;

@@ -41,8 +41,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BsonMarshallerTest {
 
@@ -541,5 +543,28 @@ class BsonMarshallerTest {
         }
     }
     */
+
+    @Test
+    void testToBsonArrayStructWrapsInDocument() {
+        try (Arena arena = Arena.ofConfined()) {
+            // Create a simple array: [{"dc": "east"}]
+            BsonArray array = new BsonArray();
+            array.add(new BsonDocument("dc", new BsonString("east")));
+
+            MemorySegment struct = BsonMarshaller.toBsonArrayStruct(arena, array);
+
+            // Read back as document - should be {"": [{"dc": "east"}]}
+            BsonDocument decoded = BsonMarshaller.fromBsonStruct(struct);
+
+            // Verify it's wrapped with empty key ""
+            assertEquals(1, decoded.size());
+            assertTrue(decoded.containsKey(""));
+            assertTrue(decoded.get("").isArray());
+            BsonArray decodedArray = decoded.getArray("");
+            assertEquals(1, decodedArray.size());
+            assertTrue(decodedArray.get(0).isDocument());
+            assertEquals("east", decodedArray.get(0).asDocument().getString("dc").getValue());
+        }
+    }
 }
 

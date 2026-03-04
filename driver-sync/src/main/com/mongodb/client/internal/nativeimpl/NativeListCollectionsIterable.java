@@ -19,6 +19,7 @@ import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import com.mongodb.rust.crud.NativeSyncCursor;
@@ -44,10 +45,11 @@ public final class NativeListCollectionsIterable<TResult>
 
     public NativeListCollectionsIterable(NativeSyncClient nativeClient,
                                          @Nullable NativeSyncClientSession nativeSession,
+                                         NativeOperationContext operationContext,
                                          String databaseName,
                                          Class<TResult> resultClass,
                                          CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
         this.databaseName = databaseName;
     }
 
@@ -90,7 +92,7 @@ public final class NativeListCollectionsIterable<TResult>
     @Override
     public MongoCursor<TResult> cursor() {
         NativeSyncCursor<TResult> nativeCursor = getNativeClient().listCollections(
-                databaseName, options, getCodec(), getNativeSession());
+                databaseName, options, getCodec(), getOperationContext(), getNativeSession());
         return new NativeMongoCursor<>(nativeCursor);
     }
 }

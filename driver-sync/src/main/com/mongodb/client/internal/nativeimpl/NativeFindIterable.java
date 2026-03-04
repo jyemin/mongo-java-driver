@@ -24,6 +24,7 @@ import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.FindOptions;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import com.mongodb.rust.crud.NativeSyncCursor;
@@ -54,10 +55,11 @@ public final class NativeFindIterable<TResult>
 
     public NativeFindIterable(NativeSyncClient nativeClient,
                               @Nullable NativeSyncClientSession nativeSession,
+                              NativeOperationContext operationContext,
                               MongoNamespace namespace,
                               Class<TResult> resultClass,
                               CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
         this.namespace = notNull("namespace", namespace);
         this.filter = new BsonDocument();
     }
@@ -226,7 +228,7 @@ public final class NativeFindIterable<TResult>
     public MongoCursor<TResult> cursor() {
         BsonDocument filterDoc = BsonDocumentWrapper.asBsonDocument(filter, getCodecRegistry());
         NativeSyncCursor<TResult> nativeCursor = getNativeClient().find(
-                namespace, filterDoc, options, getCodec(), getNativeSession());
+                namespace, filterDoc, options, getCodec(), getOperationContext(), getNativeSession());
         return new NativeMongoCursor<>(nativeCursor);
     }
 }

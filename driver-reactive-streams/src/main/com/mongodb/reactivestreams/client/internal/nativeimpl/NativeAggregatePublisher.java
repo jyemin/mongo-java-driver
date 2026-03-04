@@ -24,6 +24,7 @@ import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
@@ -50,9 +51,9 @@ final class NativeAggregatePublisher<TResult> extends NativeCursorPublisher<TRes
     @Nullable private Boolean bypassDocumentValidation;
 
     NativeAggregatePublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                             String databaseName, @Nullable String collectionName,
+                             NativeOperationContext operationContext, String databaseName, @Nullable String collectionName,
                              List<? extends Bson> pipeline, Class<TResult> resultClass, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+        super(nativeClient, session, operationContext, codecRegistry);
         this.databaseName = databaseName;
         this.collectionName = collectionName;
         this.resultClass = resultClass;
@@ -69,9 +70,9 @@ final class NativeAggregatePublisher<TResult> extends NativeCursorPublisher<TRes
         }
         if (collectionName != null) {
             MongoNamespace ns = new MongoNamespace(databaseName, collectionName);
-            getNativeClient().aggregate(ns, pipeline, options, bypassDocumentValidation, getCodecRegistry().get(resultClass), getSession(), callback);
+            getNativeClient().aggregate(ns, pipeline, options, bypassDocumentValidation, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
         } else {
-            getNativeClient().aggregateDatabase(databaseName, pipeline, options, bypassDocumentValidation, getCodecRegistry().get(resultClass), getSession(), callback);
+            getNativeClient().aggregateDatabase(databaseName, pipeline, options, bypassDocumentValidation, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
         }
     }
 

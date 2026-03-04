@@ -33,6 +33,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClients;
+import com.mongodb.rust.crud.NativeOperationContext;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -157,7 +158,9 @@ public final class NativeMongoClient implements MongoClient {
 
     @Override
     public Publisher<String> listDatabaseNames(ClientSession clientSession) {
-        return new NativeListDatabaseNamesPublisher(nativeClient, getNativeSession(clientSession), codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(getReadPreference()).writeConcern(getWriteConcern()).readConcern(getReadConcern()).build();
+        return new NativeListDatabaseNamesPublisher(nativeClient, getNativeSession(clientSession), opCtx, codecRegistry);
     }
 
     @Override
@@ -181,7 +184,9 @@ public final class NativeMongoClient implements MongoClient {
     }
 
     private <TResult> ListDatabasesPublisher<TResult> listDatabasesInternal(@Nullable ClientSession clientSession, Class<TResult> resultClass) {
-        return new NativeListDatabasesPublisher<>(nativeClient, getNativeSession(clientSession), resultClass, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(getReadPreference()).writeConcern(getWriteConcern()).readConcern(getReadConcern()).build();
+        return new NativeListDatabasesPublisher<>(nativeClient, getNativeSession(clientSession), opCtx, resultClass, codecRegistry);
     }
 
     // ==================== Watch Operations ====================
@@ -229,7 +234,9 @@ public final class NativeMongoClient implements MongoClient {
     private <TResult> ChangeStreamPublisher<TResult> watchInternal(@Nullable ClientSession clientSession,
                                                                     List<? extends Bson> pipeline,
                                                                     Class<TResult> resultClass) {
-        return new NativeChangeStreamPublisher<>(nativeClient, getNativeSession(clientSession), pipeline, resultClass, codecRegistry,
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(getReadPreference()).writeConcern(getWriteConcern()).readConcern(getReadConcern()).build();
+        return new NativeChangeStreamPublisher<>(nativeClient, getNativeSession(clientSession), opCtx, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamPublisher.WatchLevel.CLIENT, null, null);
     }
 

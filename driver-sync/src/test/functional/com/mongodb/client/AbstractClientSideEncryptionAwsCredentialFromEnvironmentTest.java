@@ -42,8 +42,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.getEnv;
-import static com.mongodb.ClusterFixture.isClientSideEncryptionTest;
+import static com.mongodb.client.Fixture.getEnv;
+import static com.mongodb.client.Fixture.isClientSideEncryptionTest;
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;

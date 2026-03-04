@@ -34,6 +34,7 @@ import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import org.bson.BsonDocument;
@@ -61,9 +62,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     private final MongoNamespace namespace;
     private final Class<TDocument> documentClass;
     private final CodecRegistry codecRegistry;
-    private final ReadPreference readPreference;
-    private final WriteConcern writeConcern;
-    private final ReadConcern readConcern;
+    private final NativeOperationContext operationContext;
 
     public NativeMongoCollection(NativeSyncClient nativeClient,
                                  String databaseName,
@@ -77,9 +76,11 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
         this.namespace = new MongoNamespace(notNull("databaseName", databaseName), notNull("collectionName", collectionName));
         this.documentClass = notNull("documentClass", documentClass);
         this.codecRegistry = notNull("codecRegistry", codecRegistry);
-        this.readPreference = notNull("readPreference", readPreference);
-        this.writeConcern = notNull("writeConcern", writeConcern);
-        this.readConcern = notNull("readConcern", readConcern);
+        this.operationContext = NativeOperationContext.builder()
+                .readPreference(notNull("readPreference", readPreference))
+                .writeConcern(notNull("writeConcern", writeConcern))
+                .readConcern(notNull("readConcern", readConcern))
+                .build();
     }
 
     // ==================== Basic Getters ====================
@@ -101,17 +102,17 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public ReadPreference getReadPreference() {
-        return readPreference;
+        return operationContext.getReadPreference();
     }
 
     @Override
     public WriteConcern getWriteConcern() {
-        return writeConcern;
+        return operationContext.getWriteConcern();
     }
 
     @Override
     public ReadConcern getReadConcern() {
-        return readConcern;
+        return operationContext.getReadConcern();
     }
 
     // ==================== With* Methods ====================
@@ -119,31 +120,31 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     @Override
     public <NewTDocument> MongoCollection<NewTDocument> withDocumentClass(Class<NewTDocument> clazz) {
         return new NativeMongoCollection<>(nativeClient, namespace.getDatabaseName(), namespace.getCollectionName(),
-                clazz, codecRegistry, readPreference, writeConcern, readConcern);
+                clazz, codecRegistry, getReadPreference(), getWriteConcern(), getReadConcern());
     }
 
     @Override
     public MongoCollection<TDocument> withCodecRegistry(CodecRegistry codecRegistry) {
         return new NativeMongoCollection<>(nativeClient, namespace.getDatabaseName(), namespace.getCollectionName(),
-                documentClass, codecRegistry, readPreference, writeConcern, readConcern);
+                documentClass, codecRegistry, getReadPreference(), getWriteConcern(), getReadConcern());
     }
 
     @Override
     public MongoCollection<TDocument> withReadPreference(ReadPreference readPreference) {
         return new NativeMongoCollection<>(nativeClient, namespace.getDatabaseName(), namespace.getCollectionName(),
-                documentClass, codecRegistry, readPreference, writeConcern, readConcern);
+                documentClass, codecRegistry, readPreference, getWriteConcern(), getReadConcern());
     }
 
     @Override
     public MongoCollection<TDocument> withWriteConcern(WriteConcern writeConcern) {
         return new NativeMongoCollection<>(nativeClient, namespace.getDatabaseName(), namespace.getCollectionName(),
-                documentClass, codecRegistry, readPreference, writeConcern, readConcern);
+                documentClass, codecRegistry, getReadPreference(), writeConcern, getReadConcern());
     }
 
     @Override
     public MongoCollection<TDocument> withReadConcern(ReadConcern readConcern) {
         return new NativeMongoCollection<>(nativeClient, namespace.getDatabaseName(), namespace.getCollectionName(),
-                documentClass, codecRegistry, readPreference, writeConcern, readConcern);
+                documentClass, codecRegistry, getReadPreference(), getWriteConcern(), readConcern);
     }
 
     @Override
@@ -160,7 +161,6 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     // ==================== Helper Methods ====================
-
 
     private BsonDocument toBsonDocument(Bson bson) {
         return BsonDocumentWrapper.asBsonDocument(bson, codecRegistry);
@@ -203,7 +203,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private long countDocumentsInternal(@Nullable ClientSession clientSession, Bson filter, CountOptions options) {
-        return nativeClient.countDocuments(namespace, toBsonDocument(filter), options, getNativeSession(clientSession));
+        return nativeClient.countDocuments(namespace, toBsonDocument(filter), options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -213,7 +213,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public long estimatedDocumentCount(EstimatedDocumentCountOptions options) {
-        return nativeClient.estimatedDocumentCount(namespace, options);
+        return nativeClient.estimatedDocumentCount(namespace, options, operationContext);
     }
 
     // ==================== Find Operations ====================
@@ -260,7 +260,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     private <TResult> FindIterable<TResult> findInternal(@Nullable ClientSession clientSession, Bson filter, Class<TResult> resultClass) {
         NativeFindIterable<TResult> iterable = new NativeFindIterable<>(nativeClient, getNativeSession(clientSession),
-                namespace, resultClass, codecRegistry);
+                operationContext, namespace, resultClass, codecRegistry);
         iterable.filter(filter);
         return iterable;
     }
@@ -290,7 +290,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     private <TResult> AggregateIterable<TResult> aggregateInternal(@Nullable ClientSession clientSession,
                                                                     List<? extends Bson> pipeline,
                                                                     Class<TResult> resultClass) {
-        return new NativeAggregateIterable<>(nativeClient, getNativeSession(clientSession), namespace, pipeline, resultClass, codecRegistry);
+        return new NativeAggregateIterable<>(nativeClient, getNativeSession(clientSession), operationContext, namespace, pipeline, resultClass, codecRegistry);
     }
 
     // ==================== Watch Operations ====================
@@ -312,7 +312,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamIterable<>(nativeClient, null, pipeline, resultClass, codecRegistry,
+        return new NativeChangeStreamIterable<>(nativeClient, null, operationContext, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.COLLECTION, namespace.getDatabaseName(), namespace.getCollectionName());
     }
 
@@ -333,7 +333,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamIterable<>(nativeClient, getNativeSession(clientSession), pipeline, resultClass, codecRegistry,
+        return new NativeChangeStreamIterable<>(nativeClient, getNativeSession(clientSession), operationContext, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.COLLECTION, namespace.getDatabaseName(), namespace.getCollectionName());
     }
 
@@ -362,7 +362,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     private <TResult> DistinctIterable<TResult> distinctInternal(@Nullable ClientSession clientSession, String fieldName,
                                                                   Bson filter, Class<TResult> resultClass) {
         NativeDistinctIterable<TResult> iterable = new NativeDistinctIterable<>(nativeClient, getNativeSession(clientSession),
-                namespace, fieldName, resultClass, codecRegistry);
+                operationContext, namespace, fieldName, resultClass, codecRegistry);
         iterable.filter(filter);
         return iterable;
     }
@@ -390,7 +390,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private InsertOneResult insertOneInternal(@Nullable ClientSession clientSession, TDocument document, InsertOneOptions options) {
-        return nativeClient.insertOne(namespace, documentToBson(document), options, getNativeSession(clientSession));
+        return nativeClient.insertOne(namespace, documentToBson(document), options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -418,7 +418,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
         for (TDocument doc : documents) {
             bsonDocs.add(documentToBson(doc));
         }
-        return nativeClient.insertMany(namespace, bsonDocs, options, getNativeSession(clientSession));
+        return nativeClient.insertMany(namespace, bsonDocs, options, operationContext, getNativeSession(clientSession));
     }
 
     // ==================== Delete Operations ====================
@@ -444,7 +444,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private DeleteResult deleteOneInternal(@Nullable ClientSession clientSession, Bson filter, DeleteOptions options) {
-        return nativeClient.deleteOne(namespace, toBsonDocument(filter), options, getNativeSession(clientSession));
+        return nativeClient.deleteOne(namespace, toBsonDocument(filter), options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -468,7 +468,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private DeleteResult deleteManyInternal(@Nullable ClientSession clientSession, Bson filter, DeleteOptions options) {
-        return nativeClient.deleteMany(namespace, toBsonDocument(filter), options, getNativeSession(clientSession));
+        return nativeClient.deleteMany(namespace, toBsonDocument(filter), options, operationContext, getNativeSession(clientSession));
     }
 
     // ==================== Update Operations ====================
@@ -514,7 +514,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private UpdateResult updateOneInternal(@Nullable ClientSession clientSession, Bson filter, Bson update, UpdateOptions options) {
-        return nativeClient.updateOne(namespace, toBsonDocument(filter), toBsonDocument(update), options, getNativeSession(clientSession));
+        return nativeClient.updateOne(namespace, toBsonDocument(filter), toBsonDocument(update), options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -558,7 +558,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private UpdateResult updateManyInternal(@Nullable ClientSession clientSession, Bson filter, Bson update, UpdateOptions options) {
-        return nativeClient.updateMany(namespace, toBsonDocument(filter), toBsonDocument(update), options, getNativeSession(clientSession));
+        return nativeClient.updateMany(namespace, toBsonDocument(filter), toBsonDocument(update), options, operationContext, getNativeSession(clientSession));
     }
 
     private BsonDocument pipelineToBson(List<? extends Bson> pipeline) {
@@ -592,7 +592,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private UpdateResult replaceOneInternal(@Nullable ClientSession clientSession, Bson filter, TDocument replacement, ReplaceOptions options) {
-        return nativeClient.replaceOne(namespace, toBsonDocument(filter), documentToBson(replacement), options, getNativeSession(clientSession));
+        return nativeClient.replaceOne(namespace, toBsonDocument(filter), documentToBson(replacement), options, operationContext, getNativeSession(clientSession));
     }
 
     // ==================== FindOneAnd* Operations ====================
@@ -623,7 +623,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Nullable
     private TDocument findOneAndDeleteInternal(@Nullable ClientSession clientSession, Bson filter, FindOneAndDeleteOptions options) {
-        return nativeClient.findOneAndDelete(namespace, toBsonDocument(filter), options, getCodec(), getNativeSession(clientSession));
+        return nativeClient.findOneAndDelete(namespace, toBsonDocument(filter), options, getCodec(), operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -652,7 +652,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Nullable
     private TDocument findOneAndReplaceInternal(@Nullable ClientSession clientSession, Bson filter, TDocument replacement, FindOneAndReplaceOptions options) {
-        return nativeClient.findOneAndReplace(namespace, toBsonDocument(filter), documentToBson(replacement), options, getCodec(), getNativeSession(clientSession));
+        return nativeClient.findOneAndReplace(namespace, toBsonDocument(filter), documentToBson(replacement), options, getCodec(), operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -705,7 +705,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Nullable
     private TDocument findOneAndUpdateInternal(@Nullable ClientSession clientSession, Bson filter, Bson update, FindOneAndUpdateOptions options) {
-        return nativeClient.findOneAndUpdate(namespace, toBsonDocument(filter), toBsonDocument(update), options, getCodec(), getNativeSession(clientSession));
+        return nativeClient.findOneAndUpdate(namespace, toBsonDocument(filter), toBsonDocument(update), options, getCodec(), operationContext, getNativeSession(clientSession));
     }
 
     // ==================== BulkWrite Operations ====================
@@ -739,7 +739,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
         for (WriteModel<? extends TDocument> request : requests) {
             bsonRequests.add(convertWriteModel(request));
         }
-        return nativeClient.bulkWrite(namespace, bsonRequests, options, getNativeSession(clientSession));
+        return nativeClient.bulkWrite(namespace, bsonRequests, options, operationContext, getNativeSession(clientSession));
     }
 
     @SuppressWarnings("unchecked")
@@ -792,7 +792,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private void dropInternal(@Nullable ClientSession clientSession, DropCollectionOptions options) {
-        nativeClient.dropCollection(namespace, options, getNativeSession(clientSession));
+        nativeClient.dropCollection(namespace, options, operationContext, getNativeSession(clientSession));
     }
 
 
@@ -822,7 +822,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     private String createIndexInternal(@Nullable ClientSession clientSession, Bson keys, IndexOptions indexOptions) {
         CreateIndexOptions options = new CreateIndexOptions();
         // TODO: Copy timeout settings from IndexOptions to CreateIndexOptions if needed
-        return nativeClient.createIndex(namespace, toBsonDocument(keys), options, getNativeSession(clientSession));
+        return nativeClient.createIndex(namespace, toBsonDocument(keys), options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -846,7 +846,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private List<String> createIndexesInternal(@Nullable ClientSession clientSession, List<IndexModel> indexes, CreateIndexOptions createIndexOptions) {
-        return nativeClient.createIndexes(namespace, indexes, createIndexOptions, getNativeSession(clientSession));
+        return nativeClient.createIndexes(namespace, indexes, createIndexOptions, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -870,7 +870,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private <TResult> ListIndexesIterable<TResult> listIndexesInternal(@Nullable ClientSession clientSession, Class<TResult> resultClass) {
-        return new NativeListIndexesIterable<>(nativeClient, getNativeSession(clientSession), namespace, resultClass, codecRegistry);
+        return new NativeListIndexesIterable<>(nativeClient, getNativeSession(clientSession), operationContext, namespace, resultClass, codecRegistry);
     }
 
     @Override
@@ -890,7 +890,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public void dropIndex(Bson keys, DropIndexOptions dropIndexOptions) {
-        nativeClient.dropIndex(namespace, toBsonDocument(keys), dropIndexOptions, getNativeSession(null));
+        nativeClient.dropIndex(namespace, toBsonDocument(keys), dropIndexOptions, operationContext, getNativeSession(null));
     }
 
     @Override
@@ -910,11 +910,11 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public void dropIndex(ClientSession clientSession, Bson keys, DropIndexOptions dropIndexOptions) {
-        nativeClient.dropIndex(namespace, toBsonDocument(keys), dropIndexOptions, getNativeSession(clientSession));
+        nativeClient.dropIndex(namespace, toBsonDocument(keys), dropIndexOptions, operationContext, getNativeSession(clientSession));
     }
 
     private void dropIndexInternal(@Nullable ClientSession clientSession, String indexName, DropIndexOptions dropIndexOptions) {
-        nativeClient.dropIndex(namespace, indexName, dropIndexOptions, getNativeSession(clientSession));
+        nativeClient.dropIndex(namespace, indexName, dropIndexOptions, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -938,7 +938,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private void dropIndexesInternal(@Nullable ClientSession clientSession, DropIndexOptions dropIndexOptions) {
-        nativeClient.dropIndex(namespace, "*", dropIndexOptions, getNativeSession(clientSession));
+        nativeClient.dropIndex(namespace, "*", dropIndexOptions, operationContext, getNativeSession(clientSession));
     }
 
     private Codec<TDocument> getCodec() {
@@ -979,7 +979,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private void renameCollectionInternal(@Nullable ClientSession clientSession, MongoNamespace newCollectionNamespace, RenameCollectionOptions options) {
-        nativeClient.renameCollection(namespace, newCollectionNamespace, options, getNativeSession(clientSession));
+        nativeClient.renameCollection(namespace, newCollectionNamespace, options, operationContext, getNativeSession(clientSession));
     }
 
     // ==================== Search Index Operations (Unsupported) ====================
@@ -1016,7 +1016,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
 
     @Override
     public <TResult> ListSearchIndexesIterable<TResult> listSearchIndexes(Class<TResult> resultClass) {
-        return new NativeListSearchIndexesIterable<>(nativeClient, null, namespace, resultClass, codecRegistry);
+        return new NativeListSearchIndexesIterable<>(nativeClient, null, operationContext, namespace, resultClass, codecRegistry);
     }
 
     // ==================== MapReduce Operations (Deprecated) ====================

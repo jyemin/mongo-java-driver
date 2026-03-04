@@ -19,6 +19,7 @@ import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import com.mongodb.client.model.ListDatabasesOptions;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -32,8 +33,9 @@ final class NativeListDatabaseNamesPublisher extends NativeCursorPublisher<Strin
 
     private final ListDatabasesOptions options = new ListDatabasesOptions();
 
-    NativeListDatabaseNamesPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+    NativeListDatabaseNamesPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
+                                      NativeOperationContext operationContext, CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
     }
 
     @Override
@@ -42,7 +44,7 @@ final class NativeListDatabaseNamesPublisher extends NativeCursorPublisher<Strin
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().listDatabaseNames(options, getSession(), callback);
+        getNativeClient().listDatabaseNames(options, getOperationContext(), getSession(), callback);
     }
 
     public NativeListDatabaseNamesPublisher authorizedDatabasesOnly(boolean authorizedDatabasesOnly) {

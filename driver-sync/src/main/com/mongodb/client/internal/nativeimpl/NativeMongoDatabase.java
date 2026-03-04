@@ -28,6 +28,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.CreateViewOptions;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import org.bson.BsonDocument;
@@ -51,18 +52,18 @@ public final class NativeMongoDatabase implements MongoDatabase {
     private final NativeSyncClient nativeClient;
     private final String name;
     private final CodecRegistry codecRegistry;
-    private final ReadPreference readPreference;
-    private final WriteConcern writeConcern;
-    private final ReadConcern readConcern;
+    private final NativeOperationContext operationContext;
 
     public NativeMongoDatabase(NativeSyncClient nativeClient, String name, CodecRegistry codecRegistry,
                                ReadPreference readPreference, WriteConcern writeConcern, ReadConcern readConcern) {
         this.nativeClient = nativeClient;
         this.name = name;
         this.codecRegistry = codecRegistry;
-        this.readPreference = readPreference;
-        this.writeConcern = writeConcern;
-        this.readConcern = readConcern;
+        this.operationContext = NativeOperationContext.builder()
+                .readPreference(readPreference)
+                .writeConcern(writeConcern)
+                .readConcern(readConcern)
+                .build();
     }
 
     @Override
@@ -77,17 +78,17 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     @Override
     public ReadPreference getReadPreference() {
-        return readPreference;
+        return operationContext.getReadPreference();
     }
 
     @Override
     public WriteConcern getWriteConcern() {
-        return writeConcern;
+        return operationContext.getWriteConcern();
     }
 
     @Override
     public ReadConcern getReadConcern() {
-        return readConcern;
+        return operationContext.getReadConcern();
     }
 
     @Override
@@ -98,22 +99,22 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     @Override
     public MongoDatabase withCodecRegistry(CodecRegistry codecRegistry) {
-        return new NativeMongoDatabase(nativeClient, name, codecRegistry, readPreference, writeConcern, readConcern);
+        return new NativeMongoDatabase(nativeClient, name, codecRegistry, getReadPreference(), getWriteConcern(), getReadConcern());
     }
 
     @Override
     public MongoDatabase withReadPreference(ReadPreference readPreference) {
-        return new NativeMongoDatabase(nativeClient, name, codecRegistry, readPreference, writeConcern, readConcern);
+        return new NativeMongoDatabase(nativeClient, name, codecRegistry, readPreference, getWriteConcern(), getReadConcern());
     }
 
     @Override
     public MongoDatabase withWriteConcern(WriteConcern writeConcern) {
-        return new NativeMongoDatabase(nativeClient, name, codecRegistry, readPreference, writeConcern, readConcern);
+        return new NativeMongoDatabase(nativeClient, name, codecRegistry, getReadPreference(), writeConcern, getReadConcern());
     }
 
     @Override
     public MongoDatabase withReadConcern(ReadConcern readConcern) {
-        return new NativeMongoDatabase(nativeClient, name, codecRegistry, readPreference, writeConcern, readConcern);
+        return new NativeMongoDatabase(nativeClient, name, codecRegistry, getReadPreference(), getWriteConcern(), readConcern);
     }
 
     @Override
@@ -130,7 +131,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
     @Override
     public <TDocument> MongoCollection<TDocument> getCollection(String collectionName, Class<TDocument> documentClass) {
         return new NativeMongoCollection<>(nativeClient, name, collectionName, documentClass, codecRegistry,
-                readPreference, writeConcern, readConcern);
+                getReadPreference(), getWriteConcern(), getReadConcern());
     }
 
     @Override
@@ -179,7 +180,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
         BsonDocument commandDoc = BsonDocumentWrapper.asBsonDocument(command, codecRegistry);
         Codec<TResult> codec = codecRegistry.get(resultClass);
         NativeSyncClientSession nativeSession = getNativeSession(clientSession);
-        return nativeClient.runCommand(name, commandDoc, codec, nativeSession);
+        return nativeClient.runCommand(name, commandDoc, codec, operationContext, nativeSession);
     }
 
     @Nullable
@@ -204,7 +205,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
     }
 
     private void dropInternal(@Nullable ClientSession clientSession) {
-        nativeClient.dropDatabase(name, getNativeSession(clientSession));
+        nativeClient.dropDatabase(name, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -218,7 +219,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
     }
 
     private ListCollectionNamesIterable listCollectionNamesInternal(@Nullable ClientSession clientSession) {
-        return new NativeListCollectionNamesIterable(nativeClient, getNativeSession(clientSession), name);
+        return new NativeListCollectionNamesIterable(nativeClient, getNativeSession(clientSession), operationContext, name);
     }
 
     @Override
@@ -243,7 +244,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     private <TResult> ListCollectionsIterable<TResult> listCollectionsInternal(@Nullable ClientSession clientSession,
                                                                                 Class<TResult> resultClass) {
-        return new NativeListCollectionsIterable<>(nativeClient, getNativeSession(clientSession), name, resultClass, codecRegistry);
+        return new NativeListCollectionsIterable<>(nativeClient, getNativeSession(clientSession), operationContext, name, resultClass, codecRegistry);
     }
 
     @Override
@@ -267,7 +268,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
     }
 
     private void createCollectionInternal(@Nullable ClientSession clientSession, String collectionName, CreateCollectionOptions options) {
-        nativeClient.createCollection(name, collectionName, options, getNativeSession(clientSession));
+        nativeClient.createCollection(name, collectionName, options, operationContext, getNativeSession(clientSession));
     }
 
     @Override
@@ -307,7 +308,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamIterable<>(nativeClient, null, pipeline, resultClass, codecRegistry,
+        return new NativeChangeStreamIterable<>(nativeClient, null, operationContext, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.DATABASE, name, null);
     }
 
@@ -328,7 +329,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
 
     @Override
     public <TResult> ChangeStreamIterable<TResult> watch(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamIterable<>(nativeClient, getNativeSession(clientSession), pipeline, resultClass, codecRegistry,
+        return new NativeChangeStreamIterable<>(nativeClient, getNativeSession(clientSession), operationContext, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamIterable.WatchLevel.DATABASE, name, null);
     }
 
@@ -355,7 +356,7 @@ public final class NativeMongoDatabase implements MongoDatabase {
     private <TResult> AggregateIterable<TResult> aggregateInternal(@Nullable ClientSession clientSession,
                                                                     List<? extends Bson> pipeline,
                                                                     Class<TResult> resultClass) {
-        return new NativeAggregateIterable<>(nativeClient, getNativeSession(clientSession), name, pipeline, resultClass, codecRegistry);
+        return new NativeAggregateIterable<>(nativeClient, getNativeSession(clientSession), operationContext, name, pipeline, resultClass, codecRegistry);
     }
 }
 

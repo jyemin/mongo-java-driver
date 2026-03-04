@@ -37,8 +37,8 @@ import spock.lang.IgnoreIf
 import java.util.concurrent.TimeUnit
 
 import static Fixture.getMongoClient
-import static com.mongodb.ClusterFixture.TIMEOUT_DURATION
-import static com.mongodb.ClusterFixture.isDiscoverableReplicaSet
+import static com.mongodb.client.Fixture.TIMEOUT_DURATION
+import static com.mongodb.client.Fixture.isDiscoverableReplicaSet
 import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabase
 import static com.mongodb.reactivestreams.client.Fixture.getMongoClientBuilderFromConnectionString
 

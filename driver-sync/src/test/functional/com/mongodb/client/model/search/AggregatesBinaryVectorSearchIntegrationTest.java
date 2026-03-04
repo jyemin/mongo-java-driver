@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static com.mongodb.ClusterFixture.isAtlasSearchTest;
+import static com.mongodb.client.Fixture.isAtlasSearchTest;
 import static com.mongodb.client.Fixture.serverVersionAtLeast;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;

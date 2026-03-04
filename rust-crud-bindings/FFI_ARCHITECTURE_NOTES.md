@@ -280,4 +280,3 @@ All missing features, numbered for reference.
 - `ErrorConverter` - Converts FFI errors to Java exceptions
 - `OptionsMarshaller` - Converts Java options to FFI structs
 - `ResultConverter` - Converts FFI results to Java objects
-

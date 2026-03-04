@@ -22,6 +22,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.client.model.Collation;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import org.bson.BsonValue;
@@ -43,10 +44,11 @@ public final class NativeListSearchIndexesIterable<TResult>
 
     public NativeListSearchIndexesIterable(NativeSyncClient nativeClient,
                                            @Nullable NativeSyncClientSession nativeSession,
+                                           NativeOperationContext operationContext,
                                            MongoNamespace namespace,
                                            Class<TResult> resultClass,
                                            CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
     }
 
     @Override

@@ -16,7 +16,6 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.event.ClusterClosedEvent;
 import com.mongodb.event.ClusterDescriptionChangedEvent;

@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-plugins { id("project.java") }
+plugins {
+    id("project.java")
+    id("conventions.test-artifacts")
+}
 
 // Main source set uses Java 17 (default) for interfaces and non-FFM code
 // FFM source set uses Java 23 for FFM-specific implementations
@@ -25,6 +27,13 @@ sourceSets {
         java {
             srcDir("src/ffm/java")
             srcDir("src/ffm-generated")
+        }
+    }
+    // Test source set includes functional tests (Java 17 compatible)
+    test {
+        java {
+            srcDir("src/test/java")
+            srcDir("src/test/functional")
         }
     }
 }
@@ -64,56 +73,101 @@ tasks.register<Exec>("generateFfmBindings") {
     val packageName = "com.mongodb.internal.rust.crud.ffi"
 
     // Find jextract - check common locations
-    val jextractPath = providers.gradleProperty("jextract.path")
-        .orElse(providers.environmentVariable("JEXTRACT_HOME").map { "$it/bin/jextract" })
-        .orElse("jextract")
-        .get()
+    val jextractPath =
+        providers
+            .gradleProperty("jextract.path")
+            .orElse(providers.environmentVariable("JEXTRACT_HOME").map { "$it/bin/jextract" })
+            .orElse("jextract")
+            .get()
 
     doFirst {
         if (!headerFile.exists()) {
             throw GradleException(
                 "Header file not found: $headerFile\n" +
-                "Run cbindgen in the Rust driver first:\n" +
-                "  cd $rustDriverDir\n" +
-                "  ./generate-ffi-header.sh"
-            )
+                    "Run cbindgen in the Rust driver first:\n" +
+                    "  cd $rustDriverDir\n" +
+                    "  ./generate-ffi-header.sh")
         }
         // Clean output directory
         outputDir.deleteRecursively()
         outputDir.mkdirs()
     }
 
-    commandLine(
-        jextractPath,
-        "-t", packageName,
-        "--output", outputDir.absolutePath,
-        headerFile.absolutePath
-    )
+    commandLine(jextractPath, "-t", packageName, "--output", outputDir.absolutePath, headerFile.absolutePath)
 }
 
 // Note: Run ./generate-ffm-bindings.sh manually to regenerate bindings from the header file
 // The generateFfmBindings task is for manual invocation when jextract is properly configured
 // tasks.compileJava { dependsOn("generateFfmBindings") }
 
-// Compile test source set with Java 23 and access to FFM classes
-tasks.named<JavaCompile>("compileTestJava") {
+// Test source set is compiled with Java 17 (no FFM dependencies)
+// This allows other modules with Java 17 tests to depend on test artifacts
+
+// FFM test source set - compiled with Java 23 for FFM-specific unit tests
+sourceSets { create("ffmTest") { java { srcDir("src/ffmTest/java") } } }
+
+// Compile FFM test source set with Java 23
+tasks.named<JavaCompile>("compileFfmTestJava") {
     options.release.set(23)
     javaCompiler.set(javaToolchains.compilerFor { languageVersion.set(JavaLanguageVersion.of(23)) })
-    classpath = sourceSets.main.get().output + sourceSets["ffm"].output + sourceSets.test.get().compileClasspath
-    dependsOn(tasks.named("compileFfmJava"))
+    classpath =
+        sourceSets.main.get().output +
+            sourceSets["ffm"].output +
+            sourceSets.test.get().output +
+            sourceSets["ffmTest"].compileClasspath
+    dependsOn(tasks.named("compileFfmJava"), tasks.named("compileTestJava"))
 }
 
+// Main test task runs tests from regular test source set (Java 17)
+// but runs on Java 23 JVM for FFM runtime
 tasks.test {
     useJUnitPlatform()
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(23)) })
-    classpath = sourceSets.test.get().output + sourceSets["ffm"].output + sourceSets.main.get().output + sourceSets.test.get().runtimeClasspath
+    classpath =
+        sourceSets.test.get().output +
+            sourceSets["ffm"].output +
+            sourceSets.main.get().output +
+            sourceSets.test.get().runtimeClasspath
 
     // Set the native library path for the Rust FFI library
     // Can be overridden with -PnativeLibPath=/path/to/lib
-    val nativeLibPath = findProperty("nativeLibPath")?.toString()
-        ?: rustDriverDir.resolve("target/release").absolutePath
+    val nativeLibPath =
+        findProperty("nativeLibPath")?.toString() ?: rustDriverDir.resolve("target/release").absolutePath
     environment("DYLD_LIBRARY_PATH", nativeLibPath)
     environment("LD_LIBRARY_PATH", nativeLibPath)
 }
 
+// FFM test task for FFM-specific unit tests
+val ffmTest by
+    tasks.registering(Test::class) {
+        description = "Runs FFM-specific tests"
+        group = "verification"
+        useJUnitPlatform()
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
+        javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(23)) })
+        testClassesDirs = sourceSets["ffmTest"].output.classesDirs
+        classpath =
+            sourceSets["ffmTest"].output +
+                sourceSets["ffm"].output +
+                sourceSets.main.get().output +
+                sourceSets.test.get().output +
+                sourceSets["ffmTest"].runtimeClasspath
+
+        val nativeLibPath =
+            findProperty("nativeLibPath")?.toString() ?: rustDriverDir.resolve("target/release").absolutePath
+        environment("DYLD_LIBRARY_PATH", nativeLibPath)
+        environment("LD_LIBRARY_PATH", nativeLibPath)
+    }
+
+// Include ffmTest in the check task
+tasks.check { dependsOn(ffmTest) }
+
+// FFM test dependencies
+dependencies {
+    "ffmTestImplementation"(project(path = ":bson", configuration = "default"))
+    "ffmTestImplementation"(project(path = ":driver-core", configuration = "default"))
+    "ffmTestImplementation"("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    "ffmTestRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    "ffmTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
+}

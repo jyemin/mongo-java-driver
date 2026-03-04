@@ -26,8 +26,8 @@ import org.bson.BsonValue;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.mongodb.ClusterFixture.getMongoCryptVersion;
-import static com.mongodb.ClusterFixture.hasEncryptionTestsEnabled;
+import static com.mongodb.client.Fixture.getMongoCryptVersion;
+import static com.mongodb.client.Fixture.hasEncryptionTestsEnabled;
 import static com.mongodb.client.Fixture.getServerParameters;
 import static com.mongodb.JsonTestServerVersionChecker.getMaxServerVersionForField;
 import static com.mongodb.JsonTestServerVersionChecker.getMinServerVersion;

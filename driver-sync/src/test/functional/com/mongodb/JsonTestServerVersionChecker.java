@@ -23,7 +23,7 @@ import org.bson.BsonValue;
 
 import java.util.List;
 
-import static com.mongodb.ClusterFixture.getVersionList;
+import static com.mongodb.client.Fixture.getVersionList;
 import static com.mongodb.client.Fixture.getServerVersion;
 import static com.mongodb.client.Fixture.isAuthenticated;
 import static com.mongodb.client.Fixture.isDiscoverableReplicaSet;

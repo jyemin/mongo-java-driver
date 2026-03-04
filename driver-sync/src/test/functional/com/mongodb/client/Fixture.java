@@ -16,7 +16,6 @@
 
 package com.mongodb.client;
 
-import com.mongodb.ClusterFixture;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
@@ -30,32 +29,23 @@ import com.mongodb.connection.ServerVersion;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
-import org.bson.BsonInt32;
-import org.bson.BsonValue;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static com.mongodb.ClusterFixture.DEFAULT_URI;
-import static com.mongodb.ClusterFixture.MONGODB_URI_SYSTEM_PROPERTY_NAME;
-import static com.mongodb.ClusterFixture.getConnectionStringFromSystemProperty;
-import static com.mongodb.ClusterFixture.getServerApi;
 import static com.mongodb.connection.ClusterConnectionMode.LOAD_BALANCED;
 import static com.mongodb.connection.ClusterConnectionMode.MULTIPLE;
 import static com.mongodb.connection.ClusterType.REPLICA_SET;
 import static com.mongodb.connection.ClusterType.SHARDED;
 import static com.mongodb.connection.ClusterType.STANDALONE;
 import static com.mongodb.internal.connection.ClusterDescriptionHelper.getPrimaries;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /**
  * Helper class for the acceptance tests.
+ * Delegates to {@link com.mongodb.rust.crud.Fixture} for connection string discovery and settings.
  */
 public final class Fixture {
-    private static final long MIN_HEARTBEAT_FREQUENCY_MS = 50L;
-
     private static MongoClient mongoClient;
     private static MongoDatabase defaultDatabase;
 
@@ -91,34 +81,23 @@ public final class Fixture {
     }
 
     public static String getDefaultDatabaseName() {
-        return ClusterFixture.getDefaultDatabaseName();
+        return com.mongodb.rust.crud.Fixture.getDefaultDatabaseName();
     }
 
     public static MongoClientSettings getMongoClientSettings() {
-        return getMongoClientSettingsBuilder().build();
+        return com.mongodb.rust.crud.Fixture.getMongoClientSettings();
     }
 
     public static MongoClientSettings.Builder getMongoClientSettingsBuilder() {
-        return getMongoClientSettings(getConnectionString());
+        return com.mongodb.rust.crud.Fixture.getMongoClientSettingsBuilder();
     }
 
     public static MongoClientSettings.Builder getMultiMongosMongoClientSettingsBuilder() {
-        return getMongoClientSettings(requireNonNull(getMultiMongosConnectionString()));
+        return com.mongodb.rust.crud.Fixture.getMongoClientSettings(requireNonNull(getMultiMongosConnectionString()));
     }
 
     public static MongoClientSettings.Builder getMongoClientSettings(final ConnectionString connectionString) {
-        MongoClientSettings.Builder builder = MongoClientSettings.builder()
-                .applyConnectionString(connectionString)
-                .applyToSocketSettings(socketSettingsBuilder -> {
-                    socketSettingsBuilder.readTimeout(5, TimeUnit.MINUTES);
-                })
-                .applyToServerSettings(serverSettingsBuilder -> {
-                    serverSettingsBuilder.minHeartbeatFrequency(MIN_HEARTBEAT_FREQUENCY_MS, TimeUnit.MILLISECONDS);
-                });
-        if (getServerApi() != null) {
-            builder.serverApi(getServerApi());
-        }
-        return builder;
+        return com.mongodb.rust.crud.Fixture.getMongoClientSettings(connectionString);
     }
 
     /**
@@ -137,8 +116,7 @@ public final class Fixture {
 
     @Nullable
     public static ConnectionString getMultiMongosConnectionString() {
-        return ClusterFixture.getConnectionStringFromSystemProperty(
-                ClusterFixture.MONGODB_MULTI_MONGOS_URI_SYSTEM_PROPERTY_NAME);
+        return com.mongodb.rust.crud.Fixture.getMultiMongosConnectionString();
     }
 
     // Cluster type helpers
@@ -173,28 +151,16 @@ public final class Fixture {
 
     // Server version helpers
 
-    private static ServerVersion serverVersion;
-
     public static ServerVersion getServerVersion() {
-        if (serverVersion == null) {
-            BsonDocument buildInfo = getMongoClient()
-                    .getDatabase("admin")
-                    .runCommand(new BsonDocument("buildInfo", new org.bson.BsonInt32(1)), BsonDocument.class);
-            List<BsonValue> versionArray = buildInfo.getArray("versionArray").subList(0, 3);
-            serverVersion = new ServerVersion(asList(
-                    versionArray.get(0).asInt32().getValue(),
-                    versionArray.get(1).asInt32().getValue(),
-                    versionArray.get(2).asInt32().getValue()));
-        }
-        return serverVersion;
+        return com.mongodb.rust.crud.Fixture.getServerVersion();
     }
 
     public static boolean serverVersionAtLeast(final int majorVersion, final int minorVersion) {
-        return getServerVersion().compareTo(new ServerVersion(asList(majorVersion, minorVersion, 0))) >= 0;
+        return com.mongodb.rust.crud.Fixture.serverVersionAtLeast(majorVersion, minorVersion);
     }
 
     public static boolean serverVersionLessThan(final int majorVersion, final int minorVersion) {
-        return getServerVersion().compareTo(new ServerVersion(asList(majorVersion, minorVersion, 0))) < 0;
+        return com.mongodb.rust.crud.Fixture.serverVersionLessThan(majorVersion, minorVersion);
     }
 
     // Failpoint helpers
@@ -240,35 +206,12 @@ public final class Fixture {
         return serverParameters;
     }
 
-    private static ConnectionString connectionString;
-
-    public static synchronized ConnectionString getConnectionString() {
-        if (connectionString != null) {
-            return connectionString;
-        }
-
-        ConnectionString mongoURIProperty = getConnectionStringFromSystemProperty(MONGODB_URI_SYSTEM_PROPERTY_NAME);
-        if (mongoURIProperty != null) {
-            connectionString = mongoURIProperty;
-            return connectionString;
-        }
-
-        // Figure out what the connection string should be by running hello command
-        try (MongoClient client = MongoClients.create(DEFAULT_URI)) {
-            BsonDocument helloResult = client.getDatabase("admin")
-                    .runCommand(new BsonDocument("isMaster", new BsonInt32(1)), BsonDocument.class);
-            if (helloResult.containsKey("setName")) {
-                connectionString = new ConnectionString(DEFAULT_URI + "/?replicaSet="
-                        + helloResult.getString("setName").getValue());
-            } else {
-                connectionString = new ConnectionString(DEFAULT_URI);
-            }
-        }
-        return connectionString;
+    public static ConnectionString getConnectionString() {
+        return com.mongodb.rust.crud.Fixture.getConnectionString();
     }
 
     public static SslSettings getSslSettings() {
-        return getSslSettings(getConnectionString());
+        return com.mongodb.rust.crud.Fixture.getSslSettings();
     }
 
     public static SslSettings getSslSettings(final ConnectionString connectionString) {
@@ -286,5 +229,65 @@ public final class Fixture {
 
     public static boolean isAuthenticated() {
         return getConnectionString().getCredential() != null;
+    }
+
+    // Environment and encryption test helpers - delegated
+
+    @Nullable
+    public static String getEnv(final String name) {
+        return com.mongodb.rust.crud.Fixture.getEnv(name);
+    }
+
+    public static String getEnv(final String name, final String defaultValue) {
+        return com.mongodb.rust.crud.Fixture.getEnv(name, defaultValue);
+    }
+
+    public static boolean hasEncryptionTestsEnabled() {
+        return com.mongodb.rust.crud.Fixture.hasEncryptionTestsEnabled();
+    }
+
+    public static boolean isClientSideEncryptionTest() {
+        return com.mongodb.rust.crud.Fixture.isClientSideEncryptionTest();
+    }
+
+    public static java.util.Optional<String> cryptSharedLibPathSysPropValue() {
+        return com.mongodb.rust.crud.Fixture.cryptSharedLibPathSysPropValue();
+    }
+
+    public static boolean isAtlasSearchTest() {
+        return com.mongodb.rust.crud.Fixture.isAtlasSearchTest();
+    }
+
+    public static boolean getOcspShouldSucceed() {
+        return com.mongodb.rust.crud.Fixture.getOcspShouldSucceed();
+    }
+
+    public static ServerVersion getMongoCryptVersion() {
+        return com.mongodb.rust.crud.Fixture.getMongoCryptVersion();
+    }
+
+    public static java.util.List<Integer> getVersionList(final String versionString) {
+        return com.mongodb.rust.crud.Fixture.getVersionList(versionString);
+    }
+
+    public static final long TIMEOUT = com.mongodb.rust.crud.Fixture.TIMEOUT;
+    public static final java.time.Duration TIMEOUT_DURATION = com.mongodb.rust.crud.Fixture.TIMEOUT_DURATION;
+
+    public static String getConnectionStringSystemPropertyOrDefault() {
+        return com.mongodb.rust.crud.Fixture.getConnectionStringSystemPropertyOrDefault();
+    }
+
+    @Nullable
+    public static com.mongodb.ServerApi getServerApi() {
+        return com.mongodb.rust.crud.Fixture.getServerApi();
+    }
+
+    public static void sleep(final long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 }

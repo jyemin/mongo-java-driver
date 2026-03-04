@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.Fixture.getMongoClientSettingsBuilder;
-import static com.mongodb.reactivestreams.client.Fixture.getDefaultDatabaseName;
+import static com.mongodb.client.Fixture.getDefaultDatabaseName;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.CONTEXT_PROVIDER;
 import static com.mongodb.reactivestreams.client.syncadapter.ContextHelper.assertContextPassedThrough;
 import static java.lang.String.format;

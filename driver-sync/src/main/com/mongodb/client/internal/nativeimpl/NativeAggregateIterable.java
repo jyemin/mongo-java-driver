@@ -23,6 +23,7 @@ import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.client.model.AggregateOptions;
 import com.mongodb.client.model.Collation;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import com.mongodb.rust.crud.NativeSyncCursor;
@@ -62,11 +63,12 @@ public final class NativeAggregateIterable<TResult>
      */
     public NativeAggregateIterable(NativeSyncClient nativeClient,
                                    @Nullable NativeSyncClientSession nativeSession,
+                                   NativeOperationContext operationContext,
                                    MongoNamespace namespace,
                                    List<? extends Bson> pipeline,
                                    Class<TResult> resultClass,
                                    CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
         this.namespace = notNull("namespace", namespace);
         this.databaseName = namespace.getDatabaseName();
         this.pipeline = toBsonDocumentList(pipeline, codecRegistry);
@@ -77,11 +79,12 @@ public final class NativeAggregateIterable<TResult>
      */
     public NativeAggregateIterable(NativeSyncClient nativeClient,
                                    @Nullable NativeSyncClientSession nativeSession,
+                                   NativeOperationContext operationContext,
                                    String databaseName,
                                    List<? extends Bson> pipeline,
                                    Class<TResult> resultClass,
                                    CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
         this.namespace = null;  // database-level aggregation
         this.databaseName = notNull("databaseName", databaseName);
         this.pipeline = toBsonDocumentList(pipeline, codecRegistry);
@@ -205,11 +208,11 @@ public final class NativeAggregateIterable<TResult>
         if (namespace != null) {
             // Collection-level aggregation
             nativeCursor = getNativeClient().aggregate(namespace, pipeline, options,
-                    bypassDocumentValidation, getCodec(), getNativeSession());
+                    bypassDocumentValidation, getCodec(), getOperationContext(), getNativeSession());
         } else {
             // Database-level aggregation
             nativeCursor = getNativeClient().aggregateDatabase(databaseName, pipeline, options,
-                    bypassDocumentValidation, getCodec(), getNativeSession());
+                    bypassDocumentValidation, getCodec(), getOperationContext(), getNativeSession());
         }
         return new NativeMongoCursor<>(nativeCursor);
     }

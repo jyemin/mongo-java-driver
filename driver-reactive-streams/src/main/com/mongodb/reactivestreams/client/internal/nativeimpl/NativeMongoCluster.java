@@ -30,6 +30,7 @@ import com.mongodb.reactivestreams.client.ListDatabasesPublisher;
 import com.mongodb.reactivestreams.client.MongoCluster;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.rust.crud.NativeAsyncClient;
+import com.mongodb.rust.crud.NativeOperationContext;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -132,12 +133,16 @@ final class NativeMongoCluster implements MongoCluster {
 
     @Override
     public Publisher<String> listDatabaseNames() {
-        return new NativeListDatabaseNamesPublisher(nativeClient, null, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabaseNamesPublisher(nativeClient, null, opCtx, codecRegistry);
     }
 
     @Override
     public Publisher<String> listDatabaseNames(ClientSession clientSession) {
-        return new NativeListDatabaseNamesPublisher(nativeClient, getNativeSession(clientSession), codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabaseNamesPublisher(nativeClient, getNativeSession(clientSession), opCtx, codecRegistry);
     }
 
     @Override
@@ -147,7 +152,9 @@ final class NativeMongoCluster implements MongoCluster {
 
     @Override
     public <TResult> ListDatabasesPublisher<TResult> listDatabases(Class<TResult> resultClass) {
-        return new NativeListDatabasesPublisher<>(nativeClient, null, resultClass, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabasesPublisher<>(nativeClient, null, opCtx, resultClass, codecRegistry);
     }
 
     @Override
@@ -157,7 +164,9 @@ final class NativeMongoCluster implements MongoCluster {
 
     @Override
     public <TResult> ListDatabasesPublisher<TResult> listDatabases(ClientSession clientSession, Class<TResult> resultClass) {
-        return new NativeListDatabasesPublisher<>(nativeClient, getNativeSession(clientSession), resultClass, codecRegistry);
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeListDatabasesPublisher<>(nativeClient, getNativeSession(clientSession), opCtx, resultClass, codecRegistry);
     }
 
     // ==================== Watch Operations ====================
@@ -179,7 +188,9 @@ final class NativeMongoCluster implements MongoCluster {
 
     @Override
     public <TResult> ChangeStreamPublisher<TResult> watch(List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamPublisher<>(nativeClient, null, pipeline, resultClass, codecRegistry,
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeChangeStreamPublisher<>(nativeClient, null, opCtx, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamPublisher.WatchLevel.CLIENT, null, null);
     }
 
@@ -200,7 +211,9 @@ final class NativeMongoCluster implements MongoCluster {
 
     @Override
     public <TResult> ChangeStreamPublisher<TResult> watch(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass) {
-        return new NativeChangeStreamPublisher<>(nativeClient, getNativeSession(clientSession), pipeline, resultClass, codecRegistry,
+        NativeOperationContext opCtx = NativeOperationContext.builder()
+                .readPreference(readPreference).writeConcern(writeConcern).readConcern(readConcern).build();
+        return new NativeChangeStreamPublisher<>(nativeClient, getNativeSession(clientSession), opCtx, pipeline, resultClass, codecRegistry,
                 NativeChangeStreamPublisher.WatchLevel.CLIENT, null, null);
     }
 

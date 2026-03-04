@@ -19,6 +19,7 @@ import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.reactivestreams.Publisher;
@@ -38,12 +39,15 @@ abstract class NativeCursorPublisher<TResult> implements Publisher<TResult> {
 
     private final NativeAsyncClient nativeClient;
     @Nullable private final NativeAsyncClientSession session;
+    private final NativeOperationContext operationContext;
     private final CodecRegistry codecRegistry;
     private Integer batchSize;
 
-    NativeCursorPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session, CodecRegistry codecRegistry) {
+    NativeCursorPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
+                          NativeOperationContext operationContext, CodecRegistry codecRegistry) {
         this.nativeClient = nativeClient;
         this.session = session;
+        this.operationContext = operationContext;
         this.codecRegistry = codecRegistry;
     }
 
@@ -54,6 +58,10 @@ abstract class NativeCursorPublisher<TResult> implements Publisher<TResult> {
     @Nullable
     protected NativeAsyncClientSession getSession() {
         return session;
+    }
+
+    protected NativeOperationContext getOperationContext() {
+        return operationContext;
     }
 
     protected CodecRegistry getCodecRegistry() {

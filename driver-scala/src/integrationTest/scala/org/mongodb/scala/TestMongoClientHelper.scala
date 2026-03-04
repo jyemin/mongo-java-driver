@@ -17,7 +17,7 @@
 
 package org.mongodb.scala
 
-import com.mongodb.ClusterFixture.getServerApi
+import com.mongodb.client.Fixture.getServerApi
 import org.mongodb.scala.syncadapter.WAIT_DURATION
 
 import scala.concurrent.Await

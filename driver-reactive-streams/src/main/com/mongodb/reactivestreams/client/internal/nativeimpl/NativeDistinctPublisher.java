@@ -23,6 +23,7 @@ import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.rust.crud.NativeAsyncClient;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
@@ -45,8 +46,9 @@ final class NativeDistinctPublisher<TResult> extends NativeCursorPublisher<TResu
     private BsonDocument filter = new BsonDocument();
 
     NativeDistinctPublisher(NativeAsyncClient nativeClient, @Nullable NativeAsyncClientSession session,
-                            MongoNamespace namespace, String fieldName, Class<TResult> resultClass, CodecRegistry codecRegistry) {
-        super(nativeClient, session, codecRegistry);
+                            NativeOperationContext operationContext, MongoNamespace namespace, String fieldName,
+                            Class<TResult> resultClass, CodecRegistry codecRegistry) {
+        super(nativeClient, session, operationContext, codecRegistry);
         this.namespace = namespace;
         this.fieldName = fieldName;
         this.resultClass = resultClass;
@@ -57,7 +59,7 @@ final class NativeDistinctPublisher<TResult> extends NativeCursorPublisher<TResu
         if (getBatchSize() != null) {
             options.batchSize(getBatchSize());
         }
-        getNativeClient().distinct(namespace, fieldName, filter, options, getCodecRegistry().get(resultClass), getSession(), callback);
+        getNativeClient().distinct(namespace, fieldName, filter, options, getCodecRegistry().get(resultClass), getOperationContext(), getSession(), callback);
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.lang.Nullable;
+import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
 import com.mongodb.rust.crud.NativeSyncClientSession;
 import com.mongodb.rust.crud.NativeSyncCursor;
@@ -46,10 +47,11 @@ public final class NativeListIndexesIterable<TResult>
 
     public NativeListIndexesIterable(NativeSyncClient nativeClient,
                                      @Nullable NativeSyncClientSession nativeSession,
+                                     NativeOperationContext operationContext,
                                      MongoNamespace namespace,
                                      Class<TResult> resultClass,
                                      CodecRegistry codecRegistry) {
-        super(nativeClient, nativeSession, resultClass, codecRegistry);
+        super(nativeClient, nativeSession, operationContext, resultClass, codecRegistry);
         this.namespace = notNull("namespace", namespace);
     }
 
@@ -86,7 +88,7 @@ public final class NativeListIndexesIterable<TResult>
     @Override
     public MongoCursor<TResult> cursor() {
         NativeSyncCursor<TResult> nativeCursor = getNativeClient().listIndexes(
-                namespace, options, getCodec(), getNativeSession());
+                namespace, options, getCodec(), getOperationContext(), getNativeSession());
         return new NativeMongoCursor<>(nativeCursor);
     }
 }
