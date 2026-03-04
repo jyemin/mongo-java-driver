@@ -38,8 +38,9 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
+import com.mongodb.internal.rust.crud.ffi.OperationContext;
 import com.mongodb.internal.rust.crud.ffi.RunCommandCallback;
-import com.mongodb.internal.rust.crud.ffi.SessionOptionsFFI;
+import com.mongodb.internal.rust.crud.ffi.SessionOptions;
 import com.mongodb.internal.rust.crud.ffi.TlsSettings;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncChangeStream;
@@ -298,28 +299,28 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Nullable
     private MemorySegment toSessionOptionsFFI(Arena arena, ClientSessionOptions options) {
-        MemorySegment struct = SessionOptionsFFI.allocate(arena);
+        MemorySegment struct = SessionOptions.allocate(arena);
 
         // causal_consistency: -1 = not set, 0 = false, 1 = true
         if (options.isCausallyConsistent() != null) {
-            SessionOptionsFFI.causal_consistency(struct, (byte) (options.isCausallyConsistent() ? 1 : 0));
+            SessionOptions.causal_consistency(struct, (byte) (options.isCausallyConsistent() ? 1 : 0));
         } else {
-            SessionOptionsFFI.causal_consistency(struct, (byte) -1);
+            SessionOptions.causal_consistency(struct, (byte) -1);
         }
 
         // snapshot: -1 = not set, 0 = false, 1 = true
         if (options.isSnapshot() != null) {
-            SessionOptionsFFI.snapshot(struct, (byte) (options.isSnapshot() ? 1 : 0));
+            SessionOptions.snapshot(struct, (byte) (options.isSnapshot() ? 1 : 0));
         } else {
-            SessionOptionsFFI.snapshot(struct, (byte) -1);
+            SessionOptions.snapshot(struct, (byte) -1);
         }
 
         // default_transaction_options
-        TransactionOptions defaultTxnOptions = options.getDefaultTransactionOptions();
+        com.mongodb.TransactionOptions defaultTxnOptions = options.getDefaultTransactionOptions();
         if (defaultTxnOptions != null) {
-            SessionOptionsFFI.default_transaction_options(struct, FfmAsyncClientSession.toTransactionOptionsFFI(arena, defaultTxnOptions));
+            SessionOptions.default_transaction_options(struct, FfmAsyncClientSession.toTransactionOptionsFFI(arena, defaultTxnOptions));
         } else {
-            SessionOptionsFFI.default_transaction_options(struct, MemorySegment.NULL);
+            SessionOptions.default_transaction_options(struct, MemorySegment.NULL);
         }
 
         return struct;
@@ -337,11 +338,17 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
-            // TODO: Get read preference as a parameter or from context, once supported
-            byte readPreferenceMode = 0; // Primary
+
+            // Build OperationContext
+            MemorySegment operationContext = OperationContext.allocate(arena);
             MemorySegment sessionPtr = session != null
                     ? ((FfmAsyncClientSession) session).getSessionPtr()
                     : MemorySegment.NULL;
+            OperationContext.session(operationContext, sessionPtr);
+            OperationContext.read_preference(operationContext, MemorySegment.NULL); // TODO: support read preference
+            OperationContext.write_concern(operationContext, MemorySegment.NULL);   // TODO: support write concern
+            OperationContext.read_concern(operationContext, MemorySegment.NULL);    // TODO: support read concern
+            OperationContext.timeout_ms(operationContext, -1L);                     // TODO: support timeout
 
             MemorySegment callbackPtr = RunCommandCallback.allocate(
                     (userdata, result, error) -> {
@@ -364,10 +371,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
             MongoDbFfi.mongo_run_command(
                     clientPtr,
-                    sessionPtr,
+                    operationContext,
                     dbName,
                     commandBson,
-                    readPreferenceMode,
                     callbackPtr,
                     MemorySegment.NULL);
         } catch (Exception e) {

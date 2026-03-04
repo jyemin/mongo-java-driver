@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - jextract installed (https://jdk.java.net/jextract/)
-#   - cbindgen has been run to generate mongodb_ffi.h in mongo-rust-driver
+#   - cbindgen has been run to generate libmongodb.h in mongo-rust-driver
 #
 # Usage:
 #   ./generate-ffm-bindings.sh [jextract-path]
@@ -16,7 +16,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUST_DRIVER_DIR="${SCRIPT_DIR}/../../mongo-rust-driver"
-HEADER_FILE="${RUST_DRIVER_DIR}/include/mongodb_ffi.h"
+HEADER_FILE="${RUST_DRIVER_DIR}/include/libmongodb.h"
 OUTPUT_DIR="${SCRIPT_DIR}/src/ffm-generated"
 PACKAGE="com.mongodb.internal.rust.crud.ffi"
 
@@ -31,9 +31,9 @@ fi
 
 if [ ! -f "$HEADER_FILE" ]; then
     echo "Error: Header file not found: $HEADER_FILE"
-    echo "Run 'cbindgen' in the Rust driver first:"
+    echo "Run 'generate-ffi-header.sh' in the Rust driver first:"
     echo "  cd $RUST_DRIVER_DIR"
-    echo "  cbindgen --config cbindgen.toml --crate mongodb --output include/mongodb_ffi.h"
+    echo "  ./generate-ffi-header.sh"
     exit 1
 fi
 
@@ -60,7 +60,7 @@ struct Session;
 # with java.lang.Error. Our code uses Error_ to match.
 "$JEXTRACT" \
     --header-class-name MongoDbFfi \
-    -l mongodb_ffi \
+    -l mongodb \
     -t "$PACKAGE" \
     --output "$OUTPUT_DIR" \
     "$FIXED_HEADER"

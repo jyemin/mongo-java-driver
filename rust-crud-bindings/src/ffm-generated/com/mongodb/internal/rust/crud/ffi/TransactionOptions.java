@@ -14,7 +14,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * struct TransactionOptionsFFI {
+ * struct TransactionOptions {
  *     const char *read_concern_level;
  *     int32_t write_concern_w;
  *     const char *write_concern_w_tag;
@@ -25,9 +25,9 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  * }
  * }
  */
-public class TransactionOptionsFFI {
+public class TransactionOptions {
 
-    TransactionOptionsFFI() {
+    TransactionOptions() {
         // Should not be called directly
     }
 
@@ -42,7 +42,7 @@ public class TransactionOptionsFFI {
         MongoDbFfi.C_CHAR.withName("read_preference_mode"),
         MemoryLayout.paddingLayout(7),
         MongoDbFfi.C_LONG_LONG.withName("max_commit_time_ms")
-    ).withName("TransactionOptionsFFI");
+    ).withName("TransactionOptions");
 
     /**
      * The layout of this struct

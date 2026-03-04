@@ -14,16 +14,16 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * struct SessionOptionsFFI {
+ * struct SessionOptions {
  *     int8_t causal_consistency;
  *     int8_t snapshot;
- *     const struct TransactionOptionsFFI *default_transaction_options;
+ *     const struct TransactionOptions *default_transaction_options;
  * }
  * }
  */
-public class SessionOptionsFFI {
+public class SessionOptions {
 
-    SessionOptionsFFI() {
+    SessionOptions() {
         // Should not be called directly
     }
 
@@ -32,7 +32,7 @@ public class SessionOptionsFFI {
         MongoDbFfi.C_CHAR.withName("snapshot"),
         MemoryLayout.paddingLayout(6),
         MongoDbFfi.C_POINTER.withName("default_transaction_options")
-    ).withName("SessionOptionsFFI");
+    ).withName("SessionOptions");
 
     /**
      * The layout of this struct
@@ -134,7 +134,7 @@ public class SessionOptionsFFI {
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * const struct TransactionOptionsFFI *default_transaction_options
+     * const struct TransactionOptions *default_transaction_options
      * }
      */
     public static final AddressLayout default_transaction_options$layout() {
@@ -146,7 +146,7 @@ public class SessionOptionsFFI {
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * const struct TransactionOptionsFFI *default_transaction_options
+     * const struct TransactionOptions *default_transaction_options
      * }
      */
     public static final long default_transaction_options$offset() {
@@ -156,7 +156,7 @@ public class SessionOptionsFFI {
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * const struct TransactionOptionsFFI *default_transaction_options
+     * const struct TransactionOptions *default_transaction_options
      * }
      */
     public static MemorySegment default_transaction_options(MemorySegment struct) {
@@ -166,7 +166,7 @@ public class SessionOptionsFFI {
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * const struct TransactionOptionsFFI *default_transaction_options
+     * const struct TransactionOptions *default_transaction_options
      * }
      */
     public static void default_transaction_options(MemorySegment struct, MemorySegment fieldValue) {

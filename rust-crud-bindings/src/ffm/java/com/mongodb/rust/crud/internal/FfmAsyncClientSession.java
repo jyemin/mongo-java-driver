@@ -21,7 +21,6 @@ import com.mongodb.MongoException;
 import com.mongodb.TransactionOptions;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.TransactionCallback;
-import com.mongodb.internal.rust.crud.ffi.TransactionOptionsFFI;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.SingleResultCallback;
@@ -179,55 +178,55 @@ public final class FfmAsyncClientSession implements NativeAsyncClientSession {
         if (options == null) {
             return MemorySegment.NULL;
         }
-        MemorySegment struct = TransactionOptionsFFI.allocate(arena);
+        MemorySegment struct = com.mongodb.internal.rust.crud.ffi.TransactionOptions.allocate(arena);
 
         // read_concern_level
         if (options.getReadConcern() != null && options.getReadConcern().getLevel() != null) {
-            TransactionOptionsFFI.read_concern_level(struct, arena.allocateFrom(options.getReadConcern().getLevel().getValue()));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.read_concern_level(struct, arena.allocateFrom(options.getReadConcern().getLevel().getValue()));
         } else {
-            TransactionOptionsFFI.read_concern_level(struct, MemorySegment.NULL);
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.read_concern_level(struct, MemorySegment.NULL);
         }
 
         // write_concern - simplified, just w value
         if (options.getWriteConcern() != null && options.getWriteConcern().getWObject() instanceof Integer) {
-            TransactionOptionsFFI.write_concern_w(struct, (Integer) options.getWriteConcern().getWObject());
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w(struct, (Integer) options.getWriteConcern().getWObject());
         } else {
-            TransactionOptionsFFI.write_concern_w(struct, -1); // not set
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w(struct, -1); // not set
         }
 
         // write_concern_w_tag
         if (options.getWriteConcern() != null && options.getWriteConcern().getWString() != null) {
-            TransactionOptionsFFI.write_concern_w_tag(struct, arena.allocateFrom(options.getWriteConcern().getWString()));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w_tag(struct, arena.allocateFrom(options.getWriteConcern().getWString()));
         } else {
-            TransactionOptionsFFI.write_concern_w_tag(struct, MemorySegment.NULL);
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w_tag(struct, MemorySegment.NULL);
         }
 
         // write_concern_j
         if (options.getWriteConcern() != null && options.getWriteConcern().getJournal() != null) {
-            TransactionOptionsFFI.write_concern_j(struct, (byte) (options.getWriteConcern().getJournal() ? 1 : 0));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_j(struct, (byte) (options.getWriteConcern().getJournal() ? 1 : 0));
         } else {
-            TransactionOptionsFFI.write_concern_j(struct, (byte) -1); // not set
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_j(struct, (byte) -1); // not set
         }
 
         // write_concern_w_timeout_ms
         if (options.getWriteConcern() != null && options.getWriteConcern().getWTimeout(java.util.concurrent.TimeUnit.MILLISECONDS) != null) {
-            TransactionOptionsFFI.write_concern_w_timeout_ms(struct, options.getWriteConcern().getWTimeout(java.util.concurrent.TimeUnit.MILLISECONDS));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w_timeout_ms(struct, options.getWriteConcern().getWTimeout(java.util.concurrent.TimeUnit.MILLISECONDS));
         } else {
-            TransactionOptionsFFI.write_concern_w_timeout_ms(struct, -1L); // not set
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.write_concern_w_timeout_ms(struct, -1L); // not set
         }
 
         // read_preference_mode
         if (options.getReadPreference() != null) {
-            TransactionOptionsFFI.read_preference_mode(struct, FfmAsyncClient.toReadPreferenceMode(options.getReadPreference()));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.read_preference_mode(struct, FfmAsyncClient.toReadPreferenceMode(options.getReadPreference()));
         } else {
-            TransactionOptionsFFI.read_preference_mode(struct, (byte) 0); // Primary
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.read_preference_mode(struct, (byte) 0); // Primary
         }
 
         // max_commit_time_ms
         if (options.getMaxCommitTime(java.util.concurrent.TimeUnit.MILLISECONDS) != null) {
-            TransactionOptionsFFI.max_commit_time_ms(struct, options.getMaxCommitTime(java.util.concurrent.TimeUnit.MILLISECONDS));
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.max_commit_time_ms(struct, options.getMaxCommitTime(java.util.concurrent.TimeUnit.MILLISECONDS));
         } else {
-            TransactionOptionsFFI.max_commit_time_ms(struct, -1L); // not set
+            com.mongodb.internal.rust.crud.ffi.TransactionOptions.max_commit_time_ms(struct, -1L); // not set
         }
 
         return struct;

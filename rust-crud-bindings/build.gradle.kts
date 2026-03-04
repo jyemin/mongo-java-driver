@@ -53,7 +53,7 @@ dependencies {
 
 // Path to the Rust driver header file
 val rustDriverDir = rootProject.file("../mongo-rust-driver")
-val headerFile = rustDriverDir.resolve("include/mongodb_ffi.h")
+val headerFile = rustDriverDir.resolve("include/libmongodb.h")
 
 // Task to generate FFM bindings using jextract
 tasks.register<Exec>("generateFfmBindings") {
@@ -75,7 +75,7 @@ tasks.register<Exec>("generateFfmBindings") {
                 "Header file not found: $headerFile\n" +
                 "Run cbindgen in the Rust driver first:\n" +
                 "  cd $rustDriverDir\n" +
-                "  cbindgen --config cbindgen.toml --crate mongodb --output include/mongodb_ffi.h"
+                "  ./generate-ffi-header.sh"
             )
         }
         // Clean output directory

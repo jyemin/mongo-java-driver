@@ -17,6 +17,240 @@ public class MongoDbFfi extends MongoDbFfi_1 {
     MongoDbFfi() {
         // Should not be called directly
     }
+    private static final int MAC_OS_VERSION_12_5 = (int)120500L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_5 120500
+     * }
+     */
+    public static int MAC_OS_VERSION_12_5() {
+        return MAC_OS_VERSION_12_5;
+    }
+    private static final int MAC_OS_VERSION_12_6 = (int)120600L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_6 120600
+     * }
+     */
+    public static int MAC_OS_VERSION_12_6() {
+        return MAC_OS_VERSION_12_6;
+    }
+    private static final int MAC_OS_VERSION_12_7 = (int)120700L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_7 120700
+     * }
+     */
+    public static int MAC_OS_VERSION_12_7() {
+        return MAC_OS_VERSION_12_7;
+    }
+    private static final int MAC_OS_VERSION_13_0 = (int)130000L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_0 130000
+     * }
+     */
+    public static int MAC_OS_VERSION_13_0() {
+        return MAC_OS_VERSION_13_0;
+    }
+    private static final int MAC_OS_VERSION_13_1 = (int)130100L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_1 130100
+     * }
+     */
+    public static int MAC_OS_VERSION_13_1() {
+        return MAC_OS_VERSION_13_1;
+    }
+    private static final int MAC_OS_VERSION_13_2 = (int)130200L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_2 130200
+     * }
+     */
+    public static int MAC_OS_VERSION_13_2() {
+        return MAC_OS_VERSION_13_2;
+    }
+    private static final int MAC_OS_VERSION_13_3 = (int)130300L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_3 130300
+     * }
+     */
+    public static int MAC_OS_VERSION_13_3() {
+        return MAC_OS_VERSION_13_3;
+    }
+    private static final int MAC_OS_VERSION_13_4 = (int)130400L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_4 130400
+     * }
+     */
+    public static int MAC_OS_VERSION_13_4() {
+        return MAC_OS_VERSION_13_4;
+    }
+    private static final int MAC_OS_VERSION_13_5 = (int)130500L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_5 130500
+     * }
+     */
+    public static int MAC_OS_VERSION_13_5() {
+        return MAC_OS_VERSION_13_5;
+    }
+    private static final int MAC_OS_VERSION_13_6 = (int)130600L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_6 130600
+     * }
+     */
+    public static int MAC_OS_VERSION_13_6() {
+        return MAC_OS_VERSION_13_6;
+    }
+    private static final int MAC_OS_VERSION_13_7 = (int)130700L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_13_7 130700
+     * }
+     */
+    public static int MAC_OS_VERSION_13_7() {
+        return MAC_OS_VERSION_13_7;
+    }
+    private static final int MAC_OS_VERSION_14_0 = (int)140000L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_0 140000
+     * }
+     */
+    public static int MAC_OS_VERSION_14_0() {
+        return MAC_OS_VERSION_14_0;
+    }
+    private static final int MAC_OS_VERSION_14_1 = (int)140100L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_1 140100
+     * }
+     */
+    public static int MAC_OS_VERSION_14_1() {
+        return MAC_OS_VERSION_14_1;
+    }
+    private static final int MAC_OS_VERSION_14_2 = (int)140200L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_2 140200
+     * }
+     */
+    public static int MAC_OS_VERSION_14_2() {
+        return MAC_OS_VERSION_14_2;
+    }
+    private static final int MAC_OS_VERSION_14_3 = (int)140300L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_3 140300
+     * }
+     */
+    public static int MAC_OS_VERSION_14_3() {
+        return MAC_OS_VERSION_14_3;
+    }
+    private static final int MAC_OS_VERSION_14_4 = (int)140400L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_4 140400
+     * }
+     */
+    public static int MAC_OS_VERSION_14_4() {
+        return MAC_OS_VERSION_14_4;
+    }
+    private static final int MAC_OS_VERSION_14_5 = (int)140500L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_5 140500
+     * }
+     */
+    public static int MAC_OS_VERSION_14_5() {
+        return MAC_OS_VERSION_14_5;
+    }
+    private static final int MAC_OS_VERSION_14_6 = (int)140600L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_6 140600
+     * }
+     */
+    public static int MAC_OS_VERSION_14_6() {
+        return MAC_OS_VERSION_14_6;
+    }
+    private static final int MAC_OS_VERSION_14_7 = (int)140700L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_14_7 140700
+     * }
+     */
+    public static int MAC_OS_VERSION_14_7() {
+        return MAC_OS_VERSION_14_7;
+    }
+    private static final int MAC_OS_VERSION_15_0 = (int)150000L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_0 150000
+     * }
+     */
+    public static int MAC_OS_VERSION_15_0() {
+        return MAC_OS_VERSION_15_0;
+    }
+    private static final int MAC_OS_VERSION_15_1 = (int)150100L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_1 150100
+     * }
+     */
+    public static int MAC_OS_VERSION_15_1() {
+        return MAC_OS_VERSION_15_1;
+    }
+    private static final int MAC_OS_VERSION_15_2 = (int)150200L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_2 150200
+     * }
+     */
+    public static int MAC_OS_VERSION_15_2() {
+        return MAC_OS_VERSION_15_2;
+    }
+    private static final int MAC_OS_VERSION_15_3 = (int)150300L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_3 150300
+     * }
+     */
+    public static int MAC_OS_VERSION_15_3() {
+        return MAC_OS_VERSION_15_3;
+    }
+    private static final int MAC_OS_VERSION_15_4 = (int)150400L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_4 150400
+     * }
+     */
+    public static int MAC_OS_VERSION_15_4() {
+        return MAC_OS_VERSION_15_4;
+    }
+    private static final int MAC_OS_VERSION_15_5 = (int)150500L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_5 150500
+     * }
+     */
+    public static int MAC_OS_VERSION_15_5() {
+        return MAC_OS_VERSION_15_5;
+    }
+    private static final int MAC_OS_VERSION_15_6 = (int)150600L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_15_6 150600
+     * }
+     */
+    public static int MAC_OS_VERSION_15_6() {
+        return MAC_OS_VERSION_15_6;
+    }
     private static final int MAC_OS_VERSION_16_0 = (int)160000L;
     /**
      * {@snippet lang=c :

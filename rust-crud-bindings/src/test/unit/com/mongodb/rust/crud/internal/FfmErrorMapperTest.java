@@ -23,7 +23,6 @@ import com.mongodb.MongoSecurityException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.internal.rust.crud.ffi.AuthError;
-import com.mongodb.internal.rust.crud.ffi.ErrorUnion;
 import com.mongodb.internal.rust.crud.ffi.Error_;
 import com.mongodb.internal.rust.crud.ffi.IncompatibleServerError;
 import com.mongodb.internal.rust.crud.ffi.InvalidArgumentError;

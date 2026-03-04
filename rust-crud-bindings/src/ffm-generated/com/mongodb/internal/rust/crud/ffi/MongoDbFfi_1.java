@@ -20,7 +20,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
 
-    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("mongodb_ffi"), LIBRARY_ARENA)
+    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("mongodb"), LIBRARY_ARENA)
             .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
@@ -14907,6 +14907,180 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     public static void suboptarg(MemorySegment varValue) {
         suboptarg$constants.SEGMENT.set(suboptarg$constants.LAYOUT, 0L, varValue);
     }
+    private static final int Server = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Server = 0
+     * }
+     */
+    public static int Server() {
+        return Server;
+    }
+    private static final int InsertMany = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.InsertMany = 1
+     * }
+     */
+    public static int InsertMany() {
+        return InsertMany;
+    }
+    private static final int BulkWrite = (int)2L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.BulkWrite = 2
+     * }
+     */
+    public static int BulkWrite() {
+        return BulkWrite;
+    }
+    private static final int Io = (int)3L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Io = 3
+     * }
+     */
+    public static int Io() {
+        return Io;
+    }
+    private static final int ServerSelection = (int)4L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.ServerSelection = 4
+     * }
+     */
+    public static int ServerSelection() {
+        return ServerSelection;
+    }
+    private static final int Timeout = (int)5L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Timeout = 5
+     * }
+     */
+    public static int Timeout() {
+        return Timeout;
+    }
+    private static final int Auth = (int)6L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Auth = 6
+     * }
+     */
+    public static int Auth() {
+        return Auth;
+    }
+    private static final int InvalidArgument = (int)7L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.InvalidArgument = 7
+     * }
+     */
+    public static int InvalidArgument() {
+        return InvalidArgument;
+    }
+    private static final int Transaction = (int)8L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Transaction = 8
+     * }
+     */
+    public static int Transaction() {
+        return Transaction;
+    }
+    private static final int IncompatibleServer = (int)9L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.IncompatibleServer = 9
+     * }
+     */
+    public static int IncompatibleServer() {
+        return IncompatibleServer;
+    }
+    private static final int InvalidResponse = (int)10L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.InvalidResponse = 10
+     * }
+     */
+    public static int InvalidResponse() {
+        return InvalidResponse;
+    }
+    private static final int ChangeStreamError_Kind = (int)11L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.ChangeStreamError_Kind = 11
+     * }
+     */
+    public static int ChangeStreamError_Kind() {
+        return ChangeStreamError_Kind;
+    }
+    private static final int Shutdown = (int)12L;
+    /**
+     * {@snippet lang=c :
+     * enum ErrorType.Shutdown = 12
+     * }
+     */
+    public static int Shutdown() {
+        return Shutdown;
+    }
+    /**
+     * {@snippet lang=c :
+     * typedef uint8_t ErrorType
+     * }
+     */
+    public static final OfByte ErrorType = MongoDbFfi.C_CHAR;
+    private static final int Primary = (int)0L;
+    /**
+     * {@snippet lang=c :
+     * enum ReadPreferenceType.Primary = 0
+     * }
+     */
+    public static int Primary() {
+        return Primary;
+    }
+    private static final int PrimaryPreferred = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum ReadPreferenceType.PrimaryPreferred = 1
+     * }
+     */
+    public static int PrimaryPreferred() {
+        return PrimaryPreferred;
+    }
+    private static final int Secondary = (int)2L;
+    /**
+     * {@snippet lang=c :
+     * enum ReadPreferenceType.Secondary = 2
+     * }
+     */
+    public static int Secondary() {
+        return Secondary;
+    }
+    private static final int SecondaryPreferred = (int)3L;
+    /**
+     * {@snippet lang=c :
+     * enum ReadPreferenceType.SecondaryPreferred = 3
+     * }
+     */
+    public static int SecondaryPreferred() {
+        return SecondaryPreferred;
+    }
+    private static final int Nearest = (int)4L;
+    /**
+     * {@snippet lang=c :
+     * enum ReadPreferenceType.Nearest = 4
+     * }
+     */
+    public static int Nearest() {
+        return Nearest;
+    }
+    /**
+     * {@snippet lang=c :
+     * typedef uint8_t ReadPreferenceType
+     * }
+     */
+    public static final OfByte ReadPreferenceType = MongoDbFfi.C_CHAR;
 
     private static class error_free {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
@@ -15089,13 +15263,251 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_read_concern_create {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_concern_create");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * struct ReadConcern *mongo_read_concern_create(const struct ReadConcernOptions *options)
+     * }
+     */
+    public static FunctionDescriptor mongo_read_concern_create$descriptor() {
+        return mongo_read_concern_create.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * struct ReadConcern *mongo_read_concern_create(const struct ReadConcernOptions *options)
+     * }
+     */
+    public static MethodHandle mongo_read_concern_create$handle() {
+        return mongo_read_concern_create.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * struct ReadConcern *mongo_read_concern_create(const struct ReadConcernOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_read_concern_create$address() {
+        return mongo_read_concern_create.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * struct ReadConcern *mongo_read_concern_create(const struct ReadConcernOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_read_concern_create(MemorySegment options) {
+        var mh$ = mongo_read_concern_create.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_read_concern_create", options);
+            }
+            return (MemorySegment)mh$.invokeExact(options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_read_concern_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_concern_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_read_concern_destroy(struct ReadConcern *handle)
+     * }
+     */
+    public static FunctionDescriptor mongo_read_concern_destroy$descriptor() {
+        return mongo_read_concern_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_read_concern_destroy(struct ReadConcern *handle)
+     * }
+     */
+    public static MethodHandle mongo_read_concern_destroy$handle() {
+        return mongo_read_concern_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_read_concern_destroy(struct ReadConcern *handle)
+     * }
+     */
+    public static MemorySegment mongo_read_concern_destroy$address() {
+        return mongo_read_concern_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_read_concern_destroy(struct ReadConcern *handle)
+     * }
+     */
+    public static void mongo_read_concern_destroy(MemorySegment handle) {
+        var mh$ = mongo_read_concern_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_read_concern_destroy", handle);
+            }
+            mh$.invokeExact(handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_read_preference_create {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_CHAR,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_preference_create");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * struct ReadPreference *mongo_read_preference_create(uint8_t mode, const struct ReadPreferenceOptions *options)
+     * }
+     */
+    public static FunctionDescriptor mongo_read_preference_create$descriptor() {
+        return mongo_read_preference_create.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * struct ReadPreference *mongo_read_preference_create(uint8_t mode, const struct ReadPreferenceOptions *options)
+     * }
+     */
+    public static MethodHandle mongo_read_preference_create$handle() {
+        return mongo_read_preference_create.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * struct ReadPreference *mongo_read_preference_create(uint8_t mode, const struct ReadPreferenceOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_read_preference_create$address() {
+        return mongo_read_preference_create.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * struct ReadPreference *mongo_read_preference_create(uint8_t mode, const struct ReadPreferenceOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_read_preference_create(byte mode, MemorySegment options) {
+        var mh$ = mongo_read_preference_create.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_read_preference_create", mode, options);
+            }
+            return (MemorySegment)mh$.invokeExact(mode, options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_read_preference_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_read_preference_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_read_preference_destroy(struct ReadPreference *handle)
+     * }
+     */
+    public static FunctionDescriptor mongo_read_preference_destroy$descriptor() {
+        return mongo_read_preference_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_read_preference_destroy(struct ReadPreference *handle)
+     * }
+     */
+    public static MethodHandle mongo_read_preference_destroy$handle() {
+        return mongo_read_preference_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_read_preference_destroy(struct ReadPreference *handle)
+     * }
+     */
+    public static MemorySegment mongo_read_preference_destroy$address() {
+        return mongo_read_preference_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_read_preference_destroy(struct ReadPreference *handle)
+     * }
+     */
+    public static void mongo_read_preference_destroy(MemorySegment handle) {
+        var mh$ = mongo_read_preference_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_read_preference_destroy", handle);
+            }
+            mh$.invokeExact(handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_run_command {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
-            MongoDbFfi.C_CHAR,
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER
         );
@@ -15108,7 +15520,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_run_command(struct MongoClient *client, struct Session *session, const char *db_name, const struct Bson *command, uint8_t read_preference_mode, RunCommandCallback callback, void *userdata)
+     * void mongo_run_command(struct MongoClient *client, struct OperationContext *context, const char *db_name, const struct Bson *command, RunCommandCallback callback, void *userdata)
      * }
      */
     public static FunctionDescriptor mongo_run_command$descriptor() {
@@ -15118,7 +15530,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_run_command(struct MongoClient *client, struct Session *session, const char *db_name, const struct Bson *command, uint8_t read_preference_mode, RunCommandCallback callback, void *userdata)
+     * void mongo_run_command(struct MongoClient *client, struct OperationContext *context, const char *db_name, const struct Bson *command, RunCommandCallback callback, void *userdata)
      * }
      */
     public static MethodHandle mongo_run_command$handle() {
@@ -15128,7 +15540,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_run_command(struct MongoClient *client, struct Session *session, const char *db_name, const struct Bson *command, uint8_t read_preference_mode, RunCommandCallback callback, void *userdata)
+     * void mongo_run_command(struct MongoClient *client, struct OperationContext *context, const char *db_name, const struct Bson *command, RunCommandCallback callback, void *userdata)
      * }
      */
     public static MemorySegment mongo_run_command$address() {
@@ -15137,16 +15549,16 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_run_command(struct MongoClient *client, struct Session *session, const char *db_name, const struct Bson *command, uint8_t read_preference_mode, RunCommandCallback callback, void *userdata)
+     * void mongo_run_command(struct MongoClient *client, struct OperationContext *context, const char *db_name, const struct Bson *command, RunCommandCallback callback, void *userdata)
      * }
      */
-    public static void mongo_run_command(MemorySegment client, MemorySegment session, MemorySegment db_name, MemorySegment command, byte read_preference_mode, MemorySegment callback, MemorySegment userdata) {
+    public static void mongo_run_command(MemorySegment client, MemorySegment context, MemorySegment db_name, MemorySegment command, MemorySegment callback, MemorySegment userdata) {
         var mh$ = mongo_run_command.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("mongo_run_command", client, session, db_name, command, read_preference_mode, callback, userdata);
+                traceDowncall("mongo_run_command", client, context, db_name, command, callback, userdata);
             }
-            mh$.invokeExact(client, session, db_name, command, read_preference_mode, callback, userdata);
+            mh$.invokeExact(client, context, db_name, command, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15170,7 +15582,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_session_abort_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_abort_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static FunctionDescriptor mongo_session_abort_transaction$descriptor() {
@@ -15180,7 +15592,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_session_abort_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_abort_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static MethodHandle mongo_session_abort_transaction$handle() {
@@ -15190,7 +15602,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_session_abort_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_abort_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static MemorySegment mongo_session_abort_transaction$address() {
@@ -15199,7 +15611,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_session_abort_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_abort_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static void mongo_session_abort_transaction(MemorySegment client, MemorySegment session, MemorySegment callback, MemorySegment userdata) {
@@ -15232,7 +15644,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_session_commit_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_commit_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static FunctionDescriptor mongo_session_commit_transaction$descriptor() {
@@ -15242,7 +15654,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_session_commit_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_commit_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static MethodHandle mongo_session_commit_transaction$handle() {
@@ -15252,7 +15664,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_session_commit_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_commit_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static MemorySegment mongo_session_commit_transaction$address() {
@@ -15261,7 +15673,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_session_commit_transaction(struct MongoClient *client, struct Session *session, TransactionCallback callback, void *userdata)
+     * void mongo_session_commit_transaction(struct MongoClient *client, struct ClientSession *session, TransactionCallback callback, void *userdata)
      * }
      */
     public static void mongo_session_commit_transaction(MemorySegment client, MemorySegment session, MemorySegment callback, MemorySegment userdata) {
@@ -15291,7 +15703,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_session_end(struct Session *session)
+     * void mongo_session_end(struct ClientSession *session)
      * }
      */
     public static FunctionDescriptor mongo_session_end$descriptor() {
@@ -15301,7 +15713,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_session_end(struct Session *session)
+     * void mongo_session_end(struct ClientSession *session)
      * }
      */
     public static MethodHandle mongo_session_end$handle() {
@@ -15311,7 +15723,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_session_end(struct Session *session)
+     * void mongo_session_end(struct ClientSession *session)
      * }
      */
     public static MemorySegment mongo_session_end$address() {
@@ -15320,7 +15732,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_session_end(struct Session *session)
+     * void mongo_session_end(struct ClientSession *session)
      * }
      */
     public static void mongo_session_end(MemorySegment session) {
@@ -15353,7 +15765,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * struct Session *mongo_session_start(struct MongoClient *client, const struct SessionOptionsFFI *options, struct Error **error_out)
+     * struct ClientSession *mongo_session_start(struct MongoClient *client, const struct SessionOptions *options, struct Error **error_out)
      * }
      */
     public static FunctionDescriptor mongo_session_start$descriptor() {
@@ -15363,7 +15775,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * struct Session *mongo_session_start(struct MongoClient *client, const struct SessionOptionsFFI *options, struct Error **error_out)
+     * struct ClientSession *mongo_session_start(struct MongoClient *client, const struct SessionOptions *options, struct Error **error_out)
      * }
      */
     public static MethodHandle mongo_session_start$handle() {
@@ -15373,7 +15785,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * struct Session *mongo_session_start(struct MongoClient *client, const struct SessionOptionsFFI *options, struct Error **error_out)
+     * struct ClientSession *mongo_session_start(struct MongoClient *client, const struct SessionOptions *options, struct Error **error_out)
      * }
      */
     public static MemorySegment mongo_session_start$address() {
@@ -15382,7 +15794,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * struct Session *mongo_session_start(struct MongoClient *client, const struct SessionOptionsFFI *options, struct Error **error_out)
+     * struct ClientSession *mongo_session_start(struct MongoClient *client, const struct SessionOptions *options, struct Error **error_out)
      * }
      */
     public static MemorySegment mongo_session_start(MemorySegment client, MemorySegment options, MemorySegment error_out) {
@@ -15416,7 +15828,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_session_start_transaction(struct MongoClient *client, struct Session *session, const struct TransactionOptionsFFI *options, TransactionCallback callback, void *userdata)
+     * void mongo_session_start_transaction(struct MongoClient *client, struct ClientSession *session, const struct TransactionOptions *options, TransactionCallback callback, void *userdata)
      * }
      */
     public static FunctionDescriptor mongo_session_start_transaction$descriptor() {
@@ -15426,7 +15838,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_session_start_transaction(struct MongoClient *client, struct Session *session, const struct TransactionOptionsFFI *options, TransactionCallback callback, void *userdata)
+     * void mongo_session_start_transaction(struct MongoClient *client, struct ClientSession *session, const struct TransactionOptions *options, TransactionCallback callback, void *userdata)
      * }
      */
     public static MethodHandle mongo_session_start_transaction$handle() {
@@ -15436,7 +15848,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_session_start_transaction(struct MongoClient *client, struct Session *session, const struct TransactionOptionsFFI *options, TransactionCallback callback, void *userdata)
+     * void mongo_session_start_transaction(struct MongoClient *client, struct ClientSession *session, const struct TransactionOptions *options, TransactionCallback callback, void *userdata)
      * }
      */
     public static MemorySegment mongo_session_start_transaction$address() {
@@ -15445,7 +15857,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_session_start_transaction(struct MongoClient *client, struct Session *session, const struct TransactionOptionsFFI *options, TransactionCallback callback, void *userdata)
+     * void mongo_session_start_transaction(struct MongoClient *client, struct ClientSession *session, const struct TransactionOptions *options, TransactionCallback callback, void *userdata)
      * }
      */
     public static void mongo_session_start_transaction(MemorySegment client, MemorySegment session, MemorySegment options, MemorySegment callback, MemorySegment userdata) {
@@ -15455,6 +15867,125 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
                 traceDowncall("mongo_session_start_transaction", client, session, options, callback, userdata);
             }
             mh$.invokeExact(client, session, options, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_write_concern_create {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_write_concern_create");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * struct WriteConcern *mongo_write_concern_create(const struct WriteConcernOptions *options)
+     * }
+     */
+    public static FunctionDescriptor mongo_write_concern_create$descriptor() {
+        return mongo_write_concern_create.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * struct WriteConcern *mongo_write_concern_create(const struct WriteConcernOptions *options)
+     * }
+     */
+    public static MethodHandle mongo_write_concern_create$handle() {
+        return mongo_write_concern_create.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * struct WriteConcern *mongo_write_concern_create(const struct WriteConcernOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_write_concern_create$address() {
+        return mongo_write_concern_create.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * struct WriteConcern *mongo_write_concern_create(const struct WriteConcernOptions *options)
+     * }
+     */
+    public static MemorySegment mongo_write_concern_create(MemorySegment options) {
+        var mh$ = mongo_write_concern_create.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_write_concern_create", options);
+            }
+            return (MemorySegment)mh$.invokeExact(options);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_write_concern_destroy {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_write_concern_destroy");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_write_concern_destroy(struct WriteConcern *handle)
+     * }
+     */
+    public static FunctionDescriptor mongo_write_concern_destroy$descriptor() {
+        return mongo_write_concern_destroy.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_write_concern_destroy(struct WriteConcern *handle)
+     * }
+     */
+    public static MethodHandle mongo_write_concern_destroy$handle() {
+        return mongo_write_concern_destroy.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_write_concern_destroy(struct WriteConcern *handle)
+     * }
+     */
+    public static MemorySegment mongo_write_concern_destroy$address() {
+        return mongo_write_concern_destroy.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_write_concern_destroy(struct WriteConcern *handle)
+     * }
+     */
+    public static void mongo_write_concern_destroy(MemorySegment handle) {
+        var mh$ = mongo_write_concern_destroy.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_write_concern_destroy", handle);
+            }
+            mh$.invokeExact(handle);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -16345,240 +16876,6 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_VERSION_12_4() {
         return MAC_OS_VERSION_12_4;
-    }
-    private static final int MAC_OS_VERSION_12_5 = (int)120500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_5 120500
-     * }
-     */
-    public static int MAC_OS_VERSION_12_5() {
-        return MAC_OS_VERSION_12_5;
-    }
-    private static final int MAC_OS_VERSION_12_6 = (int)120600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_6 120600
-     * }
-     */
-    public static int MAC_OS_VERSION_12_6() {
-        return MAC_OS_VERSION_12_6;
-    }
-    private static final int MAC_OS_VERSION_12_7 = (int)120700L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_7 120700
-     * }
-     */
-    public static int MAC_OS_VERSION_12_7() {
-        return MAC_OS_VERSION_12_7;
-    }
-    private static final int MAC_OS_VERSION_13_0 = (int)130000L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_0 130000
-     * }
-     */
-    public static int MAC_OS_VERSION_13_0() {
-        return MAC_OS_VERSION_13_0;
-    }
-    private static final int MAC_OS_VERSION_13_1 = (int)130100L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_1 130100
-     * }
-     */
-    public static int MAC_OS_VERSION_13_1() {
-        return MAC_OS_VERSION_13_1;
-    }
-    private static final int MAC_OS_VERSION_13_2 = (int)130200L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_2 130200
-     * }
-     */
-    public static int MAC_OS_VERSION_13_2() {
-        return MAC_OS_VERSION_13_2;
-    }
-    private static final int MAC_OS_VERSION_13_3 = (int)130300L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_3 130300
-     * }
-     */
-    public static int MAC_OS_VERSION_13_3() {
-        return MAC_OS_VERSION_13_3;
-    }
-    private static final int MAC_OS_VERSION_13_4 = (int)130400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_4 130400
-     * }
-     */
-    public static int MAC_OS_VERSION_13_4() {
-        return MAC_OS_VERSION_13_4;
-    }
-    private static final int MAC_OS_VERSION_13_5 = (int)130500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_5 130500
-     * }
-     */
-    public static int MAC_OS_VERSION_13_5() {
-        return MAC_OS_VERSION_13_5;
-    }
-    private static final int MAC_OS_VERSION_13_6 = (int)130600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_6 130600
-     * }
-     */
-    public static int MAC_OS_VERSION_13_6() {
-        return MAC_OS_VERSION_13_6;
-    }
-    private static final int MAC_OS_VERSION_13_7 = (int)130700L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_13_7 130700
-     * }
-     */
-    public static int MAC_OS_VERSION_13_7() {
-        return MAC_OS_VERSION_13_7;
-    }
-    private static final int MAC_OS_VERSION_14_0 = (int)140000L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_0 140000
-     * }
-     */
-    public static int MAC_OS_VERSION_14_0() {
-        return MAC_OS_VERSION_14_0;
-    }
-    private static final int MAC_OS_VERSION_14_1 = (int)140100L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_1 140100
-     * }
-     */
-    public static int MAC_OS_VERSION_14_1() {
-        return MAC_OS_VERSION_14_1;
-    }
-    private static final int MAC_OS_VERSION_14_2 = (int)140200L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_2 140200
-     * }
-     */
-    public static int MAC_OS_VERSION_14_2() {
-        return MAC_OS_VERSION_14_2;
-    }
-    private static final int MAC_OS_VERSION_14_3 = (int)140300L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_3 140300
-     * }
-     */
-    public static int MAC_OS_VERSION_14_3() {
-        return MAC_OS_VERSION_14_3;
-    }
-    private static final int MAC_OS_VERSION_14_4 = (int)140400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_4 140400
-     * }
-     */
-    public static int MAC_OS_VERSION_14_4() {
-        return MAC_OS_VERSION_14_4;
-    }
-    private static final int MAC_OS_VERSION_14_5 = (int)140500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_5 140500
-     * }
-     */
-    public static int MAC_OS_VERSION_14_5() {
-        return MAC_OS_VERSION_14_5;
-    }
-    private static final int MAC_OS_VERSION_14_6 = (int)140600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_6 140600
-     * }
-     */
-    public static int MAC_OS_VERSION_14_6() {
-        return MAC_OS_VERSION_14_6;
-    }
-    private static final int MAC_OS_VERSION_14_7 = (int)140700L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_14_7 140700
-     * }
-     */
-    public static int MAC_OS_VERSION_14_7() {
-        return MAC_OS_VERSION_14_7;
-    }
-    private static final int MAC_OS_VERSION_15_0 = (int)150000L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_0 150000
-     * }
-     */
-    public static int MAC_OS_VERSION_15_0() {
-        return MAC_OS_VERSION_15_0;
-    }
-    private static final int MAC_OS_VERSION_15_1 = (int)150100L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_1 150100
-     * }
-     */
-    public static int MAC_OS_VERSION_15_1() {
-        return MAC_OS_VERSION_15_1;
-    }
-    private static final int MAC_OS_VERSION_15_2 = (int)150200L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_2 150200
-     * }
-     */
-    public static int MAC_OS_VERSION_15_2() {
-        return MAC_OS_VERSION_15_2;
-    }
-    private static final int MAC_OS_VERSION_15_3 = (int)150300L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_3 150300
-     * }
-     */
-    public static int MAC_OS_VERSION_15_3() {
-        return MAC_OS_VERSION_15_3;
-    }
-    private static final int MAC_OS_VERSION_15_4 = (int)150400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_4 150400
-     * }
-     */
-    public static int MAC_OS_VERSION_15_4() {
-        return MAC_OS_VERSION_15_4;
-    }
-    private static final int MAC_OS_VERSION_15_5 = (int)150500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_5 150500
-     * }
-     */
-    public static int MAC_OS_VERSION_15_5() {
-        return MAC_OS_VERSION_15_5;
-    }
-    private static final int MAC_OS_VERSION_15_6 = (int)150600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_15_6 150600
-     * }
-     */
-    public static int MAC_OS_VERSION_15_6() {
-        return MAC_OS_VERSION_15_6;
     }
 }
 
