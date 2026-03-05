@@ -136,6 +136,8 @@ tasks.test {
         findProperty("nativeLibPath")?.toString() ?: rustDriverDir.resolve("target/release").absolutePath
     environment("DYLD_LIBRARY_PATH", nativeLibPath)
     environment("LD_LIBRARY_PATH", nativeLibPath)
+    // Enable Rust backtraces for easier debugging of panics
+    environment("RUST_BACKTRACE", "1")
 }
 
 // FFM test task for FFM-specific unit tests
