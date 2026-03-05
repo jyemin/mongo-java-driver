@@ -74,11 +74,7 @@ final class FfmErrorMapper {
      * @return the appropriate MongoException subclass
      */
     static MongoException toException(MemorySegment errorPtr) {
-        try {
-            return mapError(errorPtr);
-        } finally {
-            MongoDbFfi.error_free(errorPtr);
-        }
+        return mapError(errorPtr);
     }
 
     /**

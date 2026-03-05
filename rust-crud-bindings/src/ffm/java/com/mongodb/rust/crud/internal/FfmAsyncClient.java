@@ -130,7 +130,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         // Check for errors
         MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
         if (errorPtr.address() != 0) {
-            throw FfmErrorMapper.toException(errorPtr);
+            MongoException exception = FfmErrorMapper.toException(errorPtr);
+            MongoDbFfi.error_free(errorPtr);
+            throw exception;
         }
 
         if (clientPtr.equals(MemorySegment.NULL)) {
