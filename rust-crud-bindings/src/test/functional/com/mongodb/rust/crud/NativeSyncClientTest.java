@@ -38,12 +38,14 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static com.mongodb.rust.crud.Fixture.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Integration tests for NativeSyncClient.
@@ -53,7 +55,7 @@ class NativeSyncClientTest {
 
     @Test
     void testCreateAndCloseClient() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
         NativeSyncClient client = assertDoesNotThrow(() -> NativeSyncClients.create(settings));
         assertNotNull(client);
         assertDoesNotThrow(client::close);
@@ -61,7 +63,7 @@ class NativeSyncClientTest {
 
     @Test
     void testCreateClientWithAppName() {
-        MongoClientSettings settings = Fixture.getMongoClientSettingsBuilder()
+        MongoClientSettings settings = getMongoClientSettingsBuilder()
                 .applicationName("rust-crud-test")
                 .build();
 
@@ -72,7 +74,7 @@ class NativeSyncClientTest {
 
     @Test
     void testCreateClientMultipleTimes() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         for (int i = 0; i < 3; i++) {
             try (NativeSyncClient client = NativeSyncClients.create(settings)) {
@@ -83,7 +85,7 @@ class NativeSyncClientTest {
 
     @Test
     void testRunCommandPing() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             BsonDocument result = client.runCommand(
@@ -101,7 +103,7 @@ class NativeSyncClientTest {
 
     @Test
     void testRunCommandBuildInfo() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             BsonDocument result = client.runCommand(
@@ -119,7 +121,7 @@ class NativeSyncClientTest {
 
     @Test
     void testRunCommandWithDocumentCodec() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             Document result = client.runCommand(
@@ -137,7 +139,7 @@ class NativeSyncClientTest {
 
     @Test
     void testStartSession() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
@@ -149,7 +151,7 @@ class NativeSyncClientTest {
 
     @Test
     void testSessionWithCausalConsistency() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             NativeSyncClientSession session = client.startSession(
@@ -162,7 +164,7 @@ class NativeSyncClientTest {
 
     @Test
     void testRunCommandWithSession() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
@@ -182,37 +184,40 @@ class NativeSyncClientTest {
 
     @Test
     void testTransaction() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        assumeTrue(!isStandalone());
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
-            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_txn_collection");
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_txn_collection");
             NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
 
-            session.startTransaction(TransactionOptions.builder().build());
-            assertTrue(session.hasActiveTransaction());
+            try {
+                session.startTransaction(TransactionOptions.builder().build());
+                assertTrue(session.hasActiveTransaction());
 
-            BsonDocument doc = new BsonDocument("_id", new BsonInt32(1)).append("value", new BsonString("test"));
-            InsertOneResult insertResult = client.insertOne(
-                    namespace,
-                    doc,
-                    new InsertOneOptions(),
-                    NativeOperationContext.builder().build(),
-                    session);
+                BsonDocument doc = new BsonDocument("_id", new BsonInt32(1)).append("value", new BsonString("test"));
+                InsertOneResult insertResult = client.insertOne(
+                        namespace,
+                        doc,
+                        new InsertOneOptions(),
+                        NativeOperationContext.builder().build(),
+                        session);
 
-            assertNotNull(insertResult);
-            assertTrue(insertResult.wasAcknowledged());
-            assertEquals(new BsonInt32(1), insertResult.getInsertedId());
+                assertNotNull(insertResult);
+                assertTrue(insertResult.wasAcknowledged());
+                assertEquals(new BsonInt32(1), insertResult.getInsertedId());
 
-            session.abortTransaction();
-            assertFalse(session.hasActiveTransaction());
-
-            session.close();
+                session.abortTransaction();
+                assertFalse(session.hasActiveTransaction());
+            } finally {
+                session.close();
+            }
         }
     }
 
     @Test
     void testRunCommandWithReadPreferenceTags() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
             TagSet tagSet = new TagSet(Arrays.asList(
@@ -241,10 +246,10 @@ class NativeSyncClientTest {
 
     @Test
     void testInsertOneWithGeneratedId() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
-            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_insert_one");
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_insert_one");
 
             // Drop collection first via runCommand
             client.runCommand(
@@ -273,10 +278,10 @@ class NativeSyncClientTest {
 
     @Test
     void testInsertOneWithProvidedId() {
-        MongoClientSettings settings = Fixture.getMongoClientSettings();
+        MongoClientSettings settings = getMongoClientSettings();
 
         try (NativeSyncClient client = NativeSyncClients.create(settings)) {
-            MongoNamespace namespace = new MongoNamespace(Fixture.getDefaultDatabaseName(), "test_insert_one");
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_insert_one");
 
             // Drop collection first
             client.runCommand(
