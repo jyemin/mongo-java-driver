@@ -573,5 +573,176 @@ class BsonMarshallerTest {
             assertEquals("east", decodedArray.get(0).asDocument().getString("dc").getValue());
         }
     }
+
+    @Test
+    void testFromBsonArrayStructEmpty() {
+        try (Arena arena = Arena.ofConfined()) {
+            // Create an empty BsonArray FFI struct
+            MemorySegment bsonArrayStruct = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct, MemorySegment.NULL);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct, 0);
+
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertTrue(results.isEmpty());
+        }
+    }
+
+    @Test
+    void testFromBsonArrayStructSingleDocument() {
+        try (Arena arena = Arena.ofConfined()) {
+            BsonDocument doc = new BsonDocument("key", new BsonString("value"));
+            byte[] docBytes = encodeDocument(doc);
+
+            // Allocate the document bytes
+            MemorySegment docSegment = arena.allocate(docBytes.length);
+            docSegment.copyFrom(MemorySegment.ofArray(docBytes));
+
+            // Create array of pointers (just one pointer)
+            MemorySegment pointerArray = arena.allocate(ValueLayout.ADDRESS);
+            pointerArray.set(ValueLayout.ADDRESS, 0, docSegment);
+
+            // Create the BsonArray struct
+            MemorySegment bsonArrayStruct = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct, pointerArray);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct, 1);
+
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertEquals(1, results.size());
+            assertEquals(doc, results.get(0));
+        }
+    }
+
+    @Test
+    void testFromBsonArrayStructMultipleDocuments() {
+        try (Arena arena = Arena.ofConfined()) {
+            BsonDocument doc1 = new BsonDocument("name", new BsonString("Alice"));
+            BsonDocument doc2 = new BsonDocument("name", new BsonString("Bob"))
+                    .append("age", new BsonInt32(30));
+            BsonDocument doc3 = new BsonDocument("nested", new BsonDocument("inner", new BsonInt64(12345L)));
+
+            byte[] bytes1 = encodeDocument(doc1);
+            byte[] bytes2 = encodeDocument(doc2);
+            byte[] bytes3 = encodeDocument(doc3);
+
+            // Allocate document bytes
+            MemorySegment seg1 = arena.allocate(bytes1.length);
+            seg1.copyFrom(MemorySegment.ofArray(bytes1));
+            MemorySegment seg2 = arena.allocate(bytes2.length);
+            seg2.copyFrom(MemorySegment.ofArray(bytes2));
+            MemorySegment seg3 = arena.allocate(bytes3.length);
+            seg3.copyFrom(MemorySegment.ofArray(bytes3));
+
+            // Create array of 3 pointers
+            MemorySegment pointerArray = arena.allocate(ValueLayout.ADDRESS, 3);
+            pointerArray.setAtIndex(ValueLayout.ADDRESS, 0, seg1);
+            pointerArray.setAtIndex(ValueLayout.ADDRESS, 1, seg2);
+            pointerArray.setAtIndex(ValueLayout.ADDRESS, 2, seg3);
+
+            // Create the BsonArray struct
+            MemorySegment bsonArrayStruct = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct, pointerArray);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct, 3);
+
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertEquals(3, results.size());
+            assertEquals(doc1, results.get(0));
+            assertEquals(doc2, results.get(1));
+            assertEquals(doc3, results.get(2));
+        }
+    }
+
+    @Test
+    void testFromBsonArrayStructWithNullData() {
+        try (Arena arena = Arena.ofConfined()) {
+            // len > 0 but data is NULL - should return empty list
+            MemorySegment bsonArrayStruct = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct, MemorySegment.NULL);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct, 5);
+
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertTrue(results.isEmpty());
+        }
+    }
+
+    // ==================== toDocumentBsonArrayStruct tests ====================
+
+    @Test
+    void testToDocumentBsonArrayStructEmpty() {
+        try (Arena arena = Arena.ofConfined()) {
+            List<BsonDocument> documents = List.of();
+
+            MemorySegment bsonArrayStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+
+            long len = com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct);
+            assertEquals(0, len);
+
+            MemorySegment data = com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct);
+            assertEquals(MemorySegment.NULL, data);
+        }
+    }
+
+    @Test
+    void testToDocumentBsonArrayStructSingleDocument() {
+        try (Arena arena = Arena.ofConfined()) {
+            BsonDocument doc = new BsonDocument("key", new BsonString("value"));
+            List<BsonDocument> documents = List.of(doc);
+
+            MemorySegment bsonArrayStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+
+            // Verify length
+            long len = com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct);
+            assertEquals(1, len);
+
+            // Round-trip: read back with fromBsonArrayStruct
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertEquals(1, results.size());
+            assertEquals(doc, results.get(0));
+        }
+    }
+
+    @Test
+    void testToDocumentBsonArrayStructMultipleDocuments() {
+        try (Arena arena = Arena.ofConfined()) {
+            BsonDocument doc1 = new BsonDocument("_id", new BsonInt32(1)).append("name", new BsonString("Alice"));
+            BsonDocument doc2 = new BsonDocument("_id", new BsonInt32(2)).append("name", new BsonString("Bob"));
+            BsonDocument doc3 = new BsonDocument("_id", new BsonInt32(3)).append("name", new BsonString("Charlie"));
+            List<BsonDocument> documents = List.of(doc1, doc2, doc3);
+
+            MemorySegment bsonArrayStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+
+            // Verify length
+            long len = com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct);
+            assertEquals(3, len);
+
+            // Round-trip: read back with fromBsonArrayStruct
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertEquals(3, results.size());
+            assertEquals(doc1, results.get(0));
+            assertEquals(doc2, results.get(1));
+            assertEquals(doc3, results.get(2));
+        }
+    }
+
+    @Test
+    void testToDocumentBsonArrayStructComplexDocuments() {
+        try (Arena arena = Arena.ofConfined()) {
+            BsonDocument doc1 = new BsonDocument()
+                    .append("string", new BsonString("hello"))
+                    .append("int32", new BsonInt32(42))
+                    .append("nested", new BsonDocument("inner", new BsonInt64(999L)));
+            BsonDocument doc2 = new BsonDocument()
+                    .append("array", new BsonArray(List.of(new BsonInt32(1), new BsonInt32(2))))
+                    .append("objectId", new BsonObjectId(new ObjectId()));
+            List<BsonDocument> documents = List.of(doc1, doc2);
+
+            MemorySegment bsonArrayStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+
+            // Round-trip
+            List<BsonDocument> results = BsonMarshaller.fromBsonArrayStruct(bsonArrayStruct, CODEC);
+            assertEquals(2, results.size());
+            assertEquals(doc1, results.get(0));
+            assertEquals(doc2, results.get(1));
+        }
+    }
 }
 

@@ -34,7 +34,10 @@ import org.bson.io.BsonOutput;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -75,10 +78,13 @@ public final class BsonMarshaller {
 
     /**
      * Decodes a BSON document from a MemorySegment using the provided decoder.
+     * Uses a direct ByteBuffer to avoid copying the bytes.
      */
     public static <T> T decode(MemorySegment data, long len, Decoder<T> decoder) {
-        byte[] bytes = data.reinterpret(len).toArray(java.lang.foreign.ValueLayout.JAVA_BYTE);
-        return decode(bytes, decoder);
+        ByteBuffer byteBuffer = data.reinterpret(len).asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
+        try (BsonBinaryReader reader = new BsonBinaryReader(byteBuffer)) {
+            return decoder.decode(reader, DecoderContext.builder().build());
+        }
     }
 
     // ==================== FFI Struct Methods (STUBBED) ====================
@@ -123,6 +129,102 @@ public final class BsonMarshaller {
             return null;
         }
         return decode(data, len);
+    }
+
+    /**
+     * Decodes documents from a BsonArray FFI struct using the provided decoder.
+     *
+     * <p>The BsonArray struct contains:
+     * <ul>
+     *   <li>{@code data} - pointer to an array of pointers to raw BSON documents</li>
+     *   <li>{@code len} - number of documents</li>
+     * </ul>
+     *
+     * @param bsonArrayStruct the BsonArray FFI struct (embedded in parent struct, not a pointer)
+     * @param decoder the decoder to use for each document
+     * @param <T> the target type
+     * @return list of decoded documents
+     */
+    public static <T> List<T> fromBsonArrayStruct(MemorySegment bsonArrayStruct, Decoder<T> decoder) {
+        long len = com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArrayStruct);
+        if (len == 0) {
+            return List.of();
+        }
+
+        MemorySegment dataPtr = com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArrayStruct);
+        if (dataPtr.equals(MemorySegment.NULL)) {
+            return List.of();
+        }
+
+        // data is a pointer to an array of pointers (uint8_t**)
+        // Reinterpret to access the array of pointers
+        MemorySegment pointerArray = dataPtr.reinterpret(len * ValueLayout.ADDRESS.byteSize());
+
+        List<T> results = new ArrayList<>((int) len);
+
+        for (int i = 0; i < len; i++) {
+            // Read the pointer at index i
+            MemorySegment docPtr = pointerArray.getAtIndex(ValueLayout.ADDRESS, i);
+
+            // Read the BSON document size (first 4 bytes, little-endian int32)
+            int docSize = docPtr.reinterpret(4).get(ValueLayout.JAVA_INT_UNALIGNED, 0);
+
+            // Decode directly from native memory (no copy)
+            results.add(decode(docPtr, docSize, decoder));
+        }
+
+        return results;
+    }
+
+    /**
+     * Creates a BsonArray struct from a list of BsonDocuments.
+     *
+     * <p>The BsonArray struct contains:
+     * <ul>
+     *   <li>{@code data} - pointer to an array of pointers to raw BSON documents</li>
+     *   <li>{@code len} - number of documents</li>
+     * </ul>
+     *
+     * <p>This method is optimized to use a single native memory allocation for all document bytes,
+     * with the pointer array pointing into offsets within that allocation.
+     *
+     * @param arena the arena for memory allocation
+     * @param documents the documents to convert
+     * @return the BsonArray struct
+     */
+    public static MemorySegment toDocumentBsonArrayStruct(Arena arena, List<BsonDocument> documents) {
+        MemorySegment bsonArray = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+
+        if (documents.isEmpty()) {
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArray, MemorySegment.NULL);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArray, 0);
+            return bsonArray;
+        }
+
+        // Encode all documents to a single buffer, tracking each document's start position
+        int[] docOffsets = new int[documents.size()];
+        try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            for (int i = 0; i < documents.size(); i++) {
+                docOffsets[i] = buffer.getPosition();
+                encodeToBuffer(documents.get(i), buffer);
+            }
+
+            // Allocate single native segment for all document bytes
+            int totalSize = buffer.getSize();
+            MemorySegment dataSegment = byteBuffersToSegment(arena, totalSize, buffer.getByteBuffers());
+
+            // Allocate pointer array and point into the data segment
+            MemorySegment pointerArray = arena.allocate(ValueLayout.ADDRESS, documents.size());
+            for (int i = 0; i < documents.size(); i++) {
+                MemorySegment docPtr = dataSegment.asSlice(docOffsets[i]);
+                pointerArray.setAtIndex(ValueLayout.ADDRESS, i, docPtr);
+            }
+
+            com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArray, pointerArray);
+            com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArray, documents.size());
+        }
+
+        return bsonArray;
     }
 
     /**

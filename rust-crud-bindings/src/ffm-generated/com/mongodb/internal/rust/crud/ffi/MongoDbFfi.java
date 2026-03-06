@@ -17,6 +17,42 @@ public class MongoDbFfi extends MongoDbFfi_1 {
     MongoDbFfi() {
         // Should not be called directly
     }
+    private static final int MAC_OS_VERSION_12_0 = (int)120000L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_0 120000
+     * }
+     */
+    public static int MAC_OS_VERSION_12_0() {
+        return MAC_OS_VERSION_12_0;
+    }
+    private static final int MAC_OS_VERSION_12_1 = (int)120100L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_1 120100
+     * }
+     */
+    public static int MAC_OS_VERSION_12_1() {
+        return MAC_OS_VERSION_12_1;
+    }
+    private static final int MAC_OS_VERSION_12_2 = (int)120200L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_2 120200
+     * }
+     */
+    public static int MAC_OS_VERSION_12_2() {
+        return MAC_OS_VERSION_12_2;
+    }
+    private static final int MAC_OS_VERSION_12_3 = (int)120300L;
+    /**
+     * {@snippet lang=c :
+     * #define MAC_OS_VERSION_12_3 120300
+     * }
+     */
+    public static int MAC_OS_VERSION_12_3() {
+        return MAC_OS_VERSION_12_3;
+    }
     private static final int MAC_OS_VERSION_12_4 = (int)120400L;
     /**
      * {@snippet lang=c :

@@ -12,7 +12,7 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-public class MongoDbFfi_1 extends MongoDbFfi$shared {
+class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     MongoDbFfi_1() {
         // Should not be called directly
@@ -15263,6 +15263,262 @@ public class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_cursor_close {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_cursor_close");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_cursor_close(struct Cursor *cursor)
+     * }
+     */
+    public static FunctionDescriptor mongo_cursor_close$descriptor() {
+        return mongo_cursor_close.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_cursor_close(struct Cursor *cursor)
+     * }
+     */
+    public static MethodHandle mongo_cursor_close$handle() {
+        return mongo_cursor_close.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_cursor_close(struct Cursor *cursor)
+     * }
+     */
+    public static MemorySegment mongo_cursor_close$address() {
+        return mongo_cursor_close.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_cursor_close(struct Cursor *cursor)
+     * }
+     */
+    public static void mongo_cursor_close(MemorySegment cursor) {
+        var mh$ = mongo_cursor_close.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_cursor_close", cursor);
+            }
+            mh$.invokeExact(cursor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_cursor_get_more {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_cursor_get_more");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_cursor_get_more(struct MongoClient *client, struct Cursor *cursor, struct ClientSession *session, void *userdata, GetMoreResultCallback callback)
+     * }
+     */
+    public static FunctionDescriptor mongo_cursor_get_more$descriptor() {
+        return mongo_cursor_get_more.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_cursor_get_more(struct MongoClient *client, struct Cursor *cursor, struct ClientSession *session, void *userdata, GetMoreResultCallback callback)
+     * }
+     */
+    public static MethodHandle mongo_cursor_get_more$handle() {
+        return mongo_cursor_get_more.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_cursor_get_more(struct MongoClient *client, struct Cursor *cursor, struct ClientSession *session, void *userdata, GetMoreResultCallback callback)
+     * }
+     */
+    public static MemorySegment mongo_cursor_get_more$address() {
+        return mongo_cursor_get_more.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_cursor_get_more(struct MongoClient *client, struct Cursor *cursor, struct ClientSession *session, void *userdata, GetMoreResultCallback callback)
+     * }
+     */
+    public static void mongo_cursor_get_more(MemorySegment client, MemorySegment cursor, MemorySegment session, MemorySegment userdata, MemorySegment callback) {
+        var mh$ = mongo_cursor_get_more.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_cursor_get_more", client, cursor, session, userdata, callback);
+            }
+            mh$.invokeExact(client, cursor, session, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_find {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_find(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOptions *opts, FindCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_find$descriptor() {
+        return mongo_find.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_find(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOptions *opts, FindCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_find$handle() {
+        return mongo_find.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_find(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOptions *opts, FindCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_find$address() {
+        return mongo_find.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_find(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOptions *opts, FindCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_find(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_find.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_find", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_insert_many {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_CHAR,
+            MongoDbFfi.C_BOOL,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_insert_many");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_insert_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray documents, int8_t bypass_document_validation, bool ordered, const struct BsonValue *comment, InsertManyCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_insert_many$descriptor() {
+        return mongo_insert_many.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_insert_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray documents, int8_t bypass_document_validation, bool ordered, const struct BsonValue *comment, InsertManyCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_insert_many$handle() {
+        return mongo_insert_many.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_insert_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray documents, int8_t bypass_document_validation, bool ordered, const struct BsonValue *comment, InsertManyCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_insert_many$address() {
+        return mongo_insert_many.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_insert_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray documents, int8_t bypass_document_validation, bool ordered, const struct BsonValue *comment, InsertManyCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_insert_many(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment documents, byte bypass_document_validation, boolean ordered, MemorySegment comment, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_insert_many.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_insert_many", client, ctx, db_name, coll_name, documents, bypass_document_validation, ordered, comment, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, documents, bypass_document_validation, ordered, comment, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_insert_one {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER,
@@ -16898,42 +17154,6 @@ public class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_VERSION_11_6() {
         return MAC_OS_VERSION_11_6;
-    }
-    private static final int MAC_OS_VERSION_12_0 = (int)120000L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_0 120000
-     * }
-     */
-    public static int MAC_OS_VERSION_12_0() {
-        return MAC_OS_VERSION_12_0;
-    }
-    private static final int MAC_OS_VERSION_12_1 = (int)120100L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_1 120100
-     * }
-     */
-    public static int MAC_OS_VERSION_12_1() {
-        return MAC_OS_VERSION_12_1;
-    }
-    private static final int MAC_OS_VERSION_12_2 = (int)120200L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_2 120200
-     * }
-     */
-    public static int MAC_OS_VERSION_12_2() {
-        return MAC_OS_VERSION_12_2;
-    }
-    private static final int MAC_OS_VERSION_12_3 = (int)120300L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_12_3 120300
-     * }
-     */
-    public static int MAC_OS_VERSION_12_3() {
-        return MAC_OS_VERSION_12_3;
     }
 }
 

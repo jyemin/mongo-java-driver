@@ -52,13 +52,16 @@ import com.mongodb.rust.crud.NativeAsyncCursor;
 import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.SingleResultCallback;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.codecs.Decoder;
 import org.bson.conversions.Bson;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -453,7 +456,83 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void insertMany(MongoNamespace namespace, List<BsonDocument> documents, InsertManyOptions options,
                            NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertManyResult> callback) {
-        throw new UnsupportedOperationException("FFI: insertMany not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment documentsArray = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+
+            // bypass_document_validation: -1 = not set, 0 = false, 1 = true
+            byte bypassDocValidation = options.getBypassDocumentValidation() == null
+                    ? (byte) -1
+                    : (byte) (options.getBypassDocumentValidation() ? 1 : 0);
+
+            // ordered (default true)
+            boolean ordered = options.isOrdered();
+
+            // comment (nullable)
+            MemorySegment comment = options.getComment() != null
+                    ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
+                    : MemorySegment.NULL;
+
+            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.InsertManyCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.toException(error));
+                            } else if (result.address() != 0) {
+                                InsertManyResult insertResult = parseInsertManyResult(result);
+                                callback.onResult(insertResult, null);
+                            } else {
+                                callback.onResult(null, new MongoException("No result or error from FFI"));
+                            }
+                        } catch (Throwable t) {
+                            callback.onResult(null, t);
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_insert_many(
+                    clientPtr,
+                    operationContext,
+                    dbName,
+                    collName,
+                    documentsArray,
+                    bypassDocValidation,
+                    ordered,
+                    comment,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
+    }
+
+    private InsertManyResult parseInsertManyResult(MemorySegment result) {
+        MemorySegment insertedIdsPtr = com.mongodb.internal.rust.crud.ffi.InsertManyResult.inserted_ids(result);
+        long insertedIdsLen = com.mongodb.internal.rust.crud.ffi.InsertManyResult.inserted_ids_len(result);
+
+        Map<Integer, BsonValue> insertedIds = new HashMap<>();
+
+        if (insertedIdsPtr.address() != 0 && insertedIdsLen > 0) {
+            // Reinterpret to access array of InsertedId structs
+            long structSize = com.mongodb.internal.rust.crud.ffi.InsertedId.sizeof();
+            MemorySegment insertedIdsArray = insertedIdsPtr.reinterpret(structSize * insertedIdsLen);
+
+            for (int i = 0; i < insertedIdsLen; i++) {
+                MemorySegment insertedId = com.mongodb.internal.rust.crud.ffi.InsertedId.asSlice(insertedIdsArray, i);
+                long index = com.mongodb.internal.rust.crud.ffi.InsertedId.index(insertedId);
+                MemorySegment idValue = com.mongodb.internal.rust.crud.ffi.InsertedId.id(insertedId);
+                BsonValue bsonId = BsonMarshaller.fromBsonValueStruct(idValue);
+                insertedIds.put((int) index, bsonId);
+            }
+        }
+
+        return InsertManyResult.acknowledged(insertedIds);
     }
 
     @Override
@@ -495,7 +574,135 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public <T> void find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        throw new UnsupportedOperationException("FFI: find not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment findOptions = buildFindOptions(arena, options);
+
+            MemorySegment sessionPtr = session != null
+                    ? ((FfmAsyncClientSession) session).getSessionPtr()
+                    : MemorySegment.NULL;
+
+            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.FindCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.toException(error));
+                            } else if (result.address() != 0) {
+                                FfmAsyncCursor<T> cursor =
+                                        FfmAsyncCursor.fromCursorResult(clientPtr, result, sessionPtr, decoder);
+                                callback.onResult(cursor, null);
+                            } else {
+                                callback.onResult(null, new MongoException("No result or error from FFI"));
+                            }
+                        } catch (Throwable t) {
+                            callback.onResult(null, t);
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_find(
+                    clientPtr,
+                    operationContext,
+                    dbName,
+                    collName,
+                    filterBson,
+                    findOptions,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
+    }
+
+    private MemorySegment buildFindOptions(Arena arena, FindOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.FindOptions.allocate(arena);
+
+        // Tri-state booleans: -1 = not set, 0 = false, 1 = true
+        com.mongodb.internal.rust.crud.ffi.FindOptions.allow_disk_use(opts,
+                options.getAllowDiskUse() == null ? (byte) -1 : (byte) (options.getAllowDiskUse() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.allow_partial_results(opts,
+                (byte) (options.isPartial() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, options.getBatchSize());
+
+        // Comment (nullable Bson)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts,
+                options.getComment() != null
+                        ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
+                        : MemorySegment.NULL);
+
+        // Cursor type: 0 = NonTailable, 1 = Tailable, 2 = TailableAwait
+        byte cursorType = 0;
+        if (options.getCursorType() != null) {
+            switch (options.getCursorType()) {
+                case NonTailable: cursorType = 0; break;
+                case Tailable: cursorType = 1; break;
+                case TailableAwait: cursorType = 2; break;
+            }
+        }
+        com.mongodb.internal.rust.crud.ffi.FindOptions.cursor_type(opts, cursorType);
+
+        // Hint (either string name or Bson keys)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_name(opts,
+                options.getHintString() != null ? arena.allocateFrom(options.getHintString()) : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_keys(opts,
+                options.getHint() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getHint().toBsonDocument())
+                        : MemorySegment.NULL);
+
+        // Numeric options
+        // limit: 0 = not set, positive = limit (Rust expects 0 for not set, Java uses -1)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, options.getLimit() < 0 ? 0 : options.getLimit());
+        // skip: -1 = not set (matches Rust convention)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, options.getSkip());
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, options.getMaxAwaitTimeMS());
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, options.getMaxTimeMS());
+
+        // Bson options (nullable)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max(opts,
+                options.getMax() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getMax().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.min(opts,
+                options.getMin() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getMin().toBsonDocument())
+                        : MemorySegment.NULL);
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.no_cursor_timeout(opts,
+                (byte) (options.isNoCursorTimeout() ? 1 : 0));
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.projection(opts,
+                options.getProjection() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getProjection().toBsonDocument())
+                        : MemorySegment.NULL);
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.return_key(opts,
+                (byte) (options.isReturnKey() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.show_record_id(opts,
+                (byte) (options.isShowRecordId() ? 1 : 0));
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.sort(opts,
+                options.getSort() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getSort().toBsonDocument())
+                        : MemorySegment.NULL);
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.collation(opts,
+                options.getCollation() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getCollation().asDocument())
+                        : MemorySegment.NULL);
+
+        com.mongodb.internal.rust.crud.ffi.FindOptions.let_vars(opts,
+                options.getLet() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getLet().toBsonDocument())
+                        : MemorySegment.NULL);
+
+        return opts;
     }
 
     @Override
