@@ -15385,6 +15385,133 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_drop_collection {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_drop_collection");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_drop_collection(struct MongoClient *client, struct OperationContext *context, const char *db_name, const char *coll_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_drop_collection$descriptor() {
+        return mongo_drop_collection.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_drop_collection(struct MongoClient *client, struct OperationContext *context, const char *db_name, const char *coll_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_drop_collection$handle() {
+        return mongo_drop_collection.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_drop_collection(struct MongoClient *client, struct OperationContext *context, const char *db_name, const char *coll_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_drop_collection$address() {
+        return mongo_drop_collection.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_drop_collection(struct MongoClient *client, struct OperationContext *context, const char *db_name, const char *coll_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_drop_collection(MemorySegment client, MemorySegment context, MemorySegment db_name, MemorySegment coll_name, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_drop_collection.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_drop_collection", client, context, db_name, coll_name, callback, userdata);
+            }
+            mh$.invokeExact(client, context, db_name, coll_name, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_drop_database {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_drop_database");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_drop_database(struct MongoClient *client, struct OperationContext *context, const char *db_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_drop_database$descriptor() {
+        return mongo_drop_database.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_drop_database(struct MongoClient *client, struct OperationContext *context, const char *db_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_drop_database$handle() {
+        return mongo_drop_database.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_drop_database(struct MongoClient *client, struct OperationContext *context, const char *db_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_drop_database$address() {
+        return mongo_drop_database.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_drop_database(struct MongoClient *client, struct OperationContext *context, const char *db_name, DropCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_drop_database(MemorySegment client, MemorySegment context, MemorySegment db_name, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_drop_database.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_drop_database", client, context, db_name, callback, userdata);
+            }
+            mh$.invokeExact(client, context, db_name, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_find {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER,
@@ -17136,24 +17263,6 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_VERSION_11_4() {
         return MAC_OS_VERSION_11_4;
-    }
-    private static final int MAC_OS_VERSION_11_5 = (int)110500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_5 110500
-     * }
-     */
-    public static int MAC_OS_VERSION_11_5() {
-        return MAC_OS_VERSION_11_5;
-    }
-    private static final int MAC_OS_VERSION_11_6 = (int)110600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_6 110600
-     * }
-     */
-    public static int MAC_OS_VERSION_11_6() {
-        return MAC_OS_VERSION_11_6;
     }
 }
 

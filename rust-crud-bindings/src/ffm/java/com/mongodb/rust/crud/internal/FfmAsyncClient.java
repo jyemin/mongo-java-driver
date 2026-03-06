@@ -803,7 +803,37 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void dropCollection(MongoNamespace namespace, DropCollectionOptions options,
                                 NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
-        throw new UnsupportedOperationException("FFI: dropCollection not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+
+            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.toException(error));
+                            } else {
+                                callback.onResult(null, null);
+                            }
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_drop_collection(
+                    clientPtr,
+                    operationContext,
+                    dbName,
+                    collName,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
     }
 
     @Override
@@ -828,7 +858,35 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void dropDatabase(String databaseName, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
-        throw new UnsupportedOperationException("FFI: dropDatabase not yet implemented");
+        Arena arena = Arena.ofShared();
+        try {
+            MemorySegment dbName = arena.allocateFrom(databaseName);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+
+            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
+                    (userdata, result, error) -> {
+                        try {
+                            if (error.address() != 0) {
+                                callback.onResult(null, FfmErrorMapper.toException(error));
+                            } else {
+                                callback.onResult(null, null);
+                            }
+                        } finally {
+                            arena.close();
+                        }
+                    },
+                    arena);
+
+            MongoDbFfi.mongo_drop_database(
+                    clientPtr,
+                    operationContext,
+                    dbName,
+                    callbackPtr,
+                    MemorySegment.NULL);
+        } catch (Exception e) {
+            arena.close();
+            callback.onResult(null, e);
+        }
     }
 
     @Override
