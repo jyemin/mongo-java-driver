@@ -69,7 +69,11 @@ public final class FfmAsyncCursor<T> implements NativeAsyncCursor<T> {
             MemorySegment sessionPtr,
             Decoder<T> decoder) {
 
-        MemorySegment cursorPtr = CursorResult.cursor(cursorResult);
+        // Extract the cursor pointer address and create a new MemorySegment with global scope.
+        // The cursorResult parameter is associated with the callback's arena scope, and any
+        // MemorySegment extracted from it would inherit that scope. We need to detach it
+        // so the cursor can be used after the callback's arena is closed.
+        MemorySegment cursorPtr = MemorySegment.ofAddress(CursorResult.cursor(cursorResult).address());
         boolean isExhausted = CursorResult.exhausted(cursorResult);
         MemorySegment firstBatchStruct = CursorResult.first_batch(cursorResult);
 
