@@ -88,28 +88,30 @@ public class BenchmarkSuite {
         runBenchmark(new InsertManyBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
                 DOCUMENT_CLASS));
 
-        runBenchmark(new CollectionBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new CollectionBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
+        // TODO: Enable when bulkWrite is implemented
+        // runBenchmark(new CollectionBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+        //         DOCUMENT_CLASS));
+        // runBenchmark(new CollectionBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
+        //         DOCUMENT_CLASS));
 
-        runBenchmark(new ClientBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new ClientBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
+        // runBenchmark(new ClientBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+        //         DOCUMENT_CLASS));
+        // runBenchmark(new ClientBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
+        //         DOCUMENT_CLASS));
 
-        runBenchmark(new MixedCollectionBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new MixedClientBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
+        // runBenchmark(new MixedCollectionBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
+        //         DOCUMENT_CLASS));
+        // runBenchmark(new MixedClientBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
+        //         DOCUMENT_CLASS));
 
-        runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
-        runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
+        // TODO: Enable when GridFS is implemented
+        // runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
+        // runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
 
-        runBenchmark(new MultiFileImportBenchmark());
-        runBenchmark(new MultiFileExportBenchmark());
-        runBenchmark(new GridFSMultiFileUploadBenchmark());
-        runBenchmark(new GridFSMultiFileDownloadBenchmark());
+        // runBenchmark(new MultiFileImportBenchmark());
+        // runBenchmark(new MultiFileExportBenchmark());
+        // runBenchmark(new GridFSMultiFileUploadBenchmark());
+        // runBenchmark(new GridFSMultiFileDownloadBenchmark());
     }
 
     private static void runMongoCryptBenchMarks() throws InterruptedException {

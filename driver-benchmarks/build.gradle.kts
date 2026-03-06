@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 plugins {
     id("application")
     id("java-library")
@@ -22,9 +24,6 @@ plugins {
 
 application {
     mainClass = "com.mongodb.benchmark.benchmarks.BenchmarkSuite"
-    applicationDefaultJvmArgs = listOf(
-        "-Dorg.mongodb.benchmarks.data=${System.getProperty("org.mongodb.benchmarks.data")}",
-        "-Dorg.mongodb.benchmarks.output=${System.getProperty("org.mongodb.benchmarks.output")}")
 }
 
 sourceSets {
@@ -47,6 +46,23 @@ dependencies {
 
 }
 
+// Configure all JavaExec tasks for native driver (Java 23 + native library path)
+tasks.withType<JavaExec>().configureEach {
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(23) })
+
+    val rustDriverDir = rootProject.file("../mongo-rust-driver")
+    val nativeLibPath = findProperty("nativeLibPath")?.toString()
+        ?: rustDriverDir.resolve("target/release").absolutePath
+    environment("DYLD_LIBRARY_PATH", nativeLibPath)
+    environment("LD_LIBRARY_PATH", nativeLibPath)
+
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+
+    // Pass through benchmark properties
+    systemProperty("org.mongodb.benchmarks.data", System.getProperty("org.mongodb.benchmarks.data") ?: "")
+    systemProperty("org.mongodb.benchmarks.output", System.getProperty("org.mongodb.benchmarks.output") ?: "")
+}
+
 tasks.register<JavaExec>("jmh") {
     group = "benchmark"
     description = "Run JMH benchmarks."
@@ -59,7 +75,6 @@ tasks.register<JavaExec>("runNetty") {
     description = "Run the Netty main class."
     mainClass.set("com.mongodb.benchmark.benchmarks.netty.BenchmarkNettyProviderSuite")
     classpath = sourceSets["main"].runtimeClasspath
-    jvmArgs = application.applicationDefaultJvmArgs.toList()
 }
 
 tasks.withType<Javadoc>().configureEach {
