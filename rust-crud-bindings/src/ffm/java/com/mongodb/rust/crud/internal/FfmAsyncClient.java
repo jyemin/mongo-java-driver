@@ -98,9 +98,33 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     private final ConcurrentHashMap<WriteConcern, MemorySegment> writeConcernCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ReadConcern, MemorySegment> readConcernCache = new ConcurrentHashMap<>();
 
+    // Shared callback stubs - allocated once per client, reused across all operations
+    private final MemorySegment findCallbackStub;
+    private final MemorySegment runCommandCallbackStub;
+    private final MemorySegment insertOneCallbackStub;
+    private final MemorySegment insertManyCallbackStub;
+    private final MemorySegment dropCallbackStub;
+
     public FfmAsyncClient(MongoClientSettings settings) {
         this.clientArena = Arena.ofShared();
         this.clientPtr = createClient(settings);
+
+        // Initialize shared callback stubs - all use the same dispatch pattern
+        this.findCallbackStub = com.mongodb.internal.rust.crud.ffi.FindCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.runCommandCallbackStub = RunCommandCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.insertOneCallbackStub = com.mongodb.internal.rust.crud.ffi.InsertOneCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.insertManyCallbackStub = com.mongodb.internal.rust.crud.ffi.InsertManyCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.dropCallbackStub = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
     }
 
     private MemorySegment createClient(MongoClientSettings settings) {
@@ -349,40 +373,30 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                                 NativeOperationContext context,
                                 @Nullable NativeAsyncClientSession session,
                                 SingleResultCallback<T> callback) {
-        Arena arena = Arena.ofShared();
+        Arena arena = Arena.ofAuto();
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
             MemorySegment operationContext = buildOperationContext(arena, context, session);
 
-            MemorySegment callbackPtr = RunCommandCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else if (result.address() != 0) {
-                                MemorySegment data = com.mongodb.internal.rust.crud.ffi.Bson.data(result);
-                                long len = com.mongodb.internal.rust.crud.ffi.Bson.len(result);
-                                T decoded = BsonMarshaller.decode(data, len, decoder);
-                                callback.onResult(decoded, null);
-                            } else {
-                                callback.onResult(null, new MongoException("No result or error from FFI"));
-                            }
-                        } finally {
-                            arena.close();
-                        }
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> {
+                        MemorySegment data = com.mongodb.internal.rust.crud.ffi.Bson.data(result);
+                        long len = com.mongodb.internal.rust.crud.ffi.Bson.len(result);
+                        return BsonMarshaller.decode(data, len, decoder);
                     },
-                    arena);
+                    arena
+            ));
 
             MongoDbFfi.mongo_run_command(
                     clientPtr,
                     operationContext,
                     dbName,
                     commandBson,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    runCommandCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
@@ -402,7 +416,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void insertOne(MongoNamespace namespace, BsonDocument document, InsertOneOptions options,
                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertOneResult> callback) {
-        Arena arena = Arena.ofShared();
+        Arena arena = Arena.ofAuto();
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
@@ -419,23 +433,15 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
                     : MemorySegment.NULL;
 
-            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.InsertOneCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else if (result.address() != 0) {
-                                MemorySegment insertedIdSegment = com.mongodb.internal.rust.crud.ffi.InsertOneResult.inserted_id(result);
-                                org.bson.BsonValue insertedId = BsonMarshaller.fromBsonValueStruct(insertedIdSegment);
-                                callback.onResult(InsertOneResult.acknowledged(insertedId), null);
-                            } else {
-                                callback.onResult(null, new MongoException("No result or error from FFI"));
-                            }
-                        } finally {
-                            arena.close();
-                        }
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> {
+                        MemorySegment insertedIdSegment = com.mongodb.internal.rust.crud.ffi.InsertOneResult.inserted_id(result);
+                        org.bson.BsonValue insertedId = BsonMarshaller.fromBsonValueStruct(insertedIdSegment);
+                        return InsertOneResult.acknowledged(insertedId);
                     },
-                    arena);
+                    arena
+            ));
 
             MongoDbFfi.mongo_insert_one(
                     clientPtr,
@@ -445,10 +451,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     documentBson,
                     bypassDocValidation,
                     comment,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    insertOneCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
@@ -456,7 +461,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void insertMany(MongoNamespace namespace, List<BsonDocument> documents, InsertManyOptions options,
                            NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertManyResult> callback) {
-        Arena arena = Arena.ofShared();
+        Arena arena = Arena.ofAuto();
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
@@ -476,24 +481,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
                     : MemorySegment.NULL;
 
-            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.InsertManyCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else if (result.address() != 0) {
-                                InsertManyResult insertResult = parseInsertManyResult(result);
-                                callback.onResult(insertResult, null);
-                            } else {
-                                callback.onResult(null, new MongoException("No result or error from FFI"));
-                            }
-                        } catch (Throwable t) {
-                            callback.onResult(null, t);
-                        } finally {
-                            arena.close();
-                        }
-                    },
-                    arena);
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    this::parseInsertManyResult,
+                    arena
+            ));
 
             MongoDbFfi.mongo_insert_many(
                     clientPtr,
@@ -504,10 +496,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     bypassDocValidation,
                     ordered,
                     comment,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    insertManyCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
@@ -571,40 +562,54 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         throw new UnsupportedOperationException("FFI: findOne not yet implemented");
     }
 
+    // Timing instrumentation - remove after profiling
+    private static long arenaTime, marshalTime, registryTime, ffiDispatchTime, findCount;
+
+    public static void printTimings() {
+        if (findCount == 0) return;
+        System.out.printf("Find timings (avg over %d calls):%n", findCount);
+        System.out.printf("  BEFORE FFI CALL:%n");
+        System.out.printf("    Arena create:    %.4f ms%n", arenaTime / 1_000_000.0 / findCount);
+        System.out.printf("    Marshal:         %.4f ms%n", marshalTime / 1_000_000.0 / findCount);
+        System.out.printf("    Registry:        %.4f ms%n", registryTime / 1_000_000.0 / findCount);
+        System.out.printf("    FFI dispatch:    %.4f ms%n", ffiDispatchTime / 1_000_000.0 / findCount);
+        double total = (arenaTime + marshalTime + registryTime + ffiDispatchTime) / 1_000_000.0 / findCount;
+        System.out.printf("  TOTAL INSTRUMENTED: %.4f ms%n", total);
+    }
+
     @Override
     public <T> void find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        Arena arena = Arena.ofShared();
+        long t0 = System.nanoTime();
+        Arena arena = Arena.ofAuto();  // GC-managed, no explicit close needed
+        long t1 = System.nanoTime();
+        arenaTime += (t1 - t0);
+
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
             MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
             MemorySegment operationContext = buildOperationContext(arena, context, session);
             MemorySegment findOptions = buildFindOptions(arena, options);
+            long t2 = System.nanoTime();
+            marshalTime += (t2 - t1);
 
             MemorySegment sessionPtr = session != null
                     ? ((FfmAsyncClientSession) session).getSessionPtr()
                     : MemorySegment.NULL;
 
-            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.FindCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else if (result.address() != 0) {
-                                FfmAsyncCursor<T> cursor =
-                                        FfmAsyncCursor.fromCursorResult(clientPtr, result, sessionPtr, decoder);
-                                callback.onResult(cursor, null);
-                            } else {
-                                callback.onResult(null, new MongoException("No result or error from FFI"));
-                            }
-                        } catch (Throwable t) {
-                            callback.onResult(null, t);
-                        } finally {
-                            arena.close();
-                        }
-                    },
-                    arena);
+            // Capture context for the result decoder
+            final MemorySegment capturedClientPtr = clientPtr;
+
+            // Register pending operation with result decoder
+            PendingOperation<NativeAsyncCursor<T>> pendingOp = new PendingOperation<>(
+                    callback,
+                    (result) -> FfmAsyncCursor.fromCursorResult(capturedClientPtr, result, sessionPtr, decoder),
+                    arena
+            );
+            long opId = CallbackRegistry.register(pendingOp);
+            long t3 = System.nanoTime();
+            registryTime += (t3 - t2);
 
             MongoDbFfi.mongo_find(
                     clientPtr,
@@ -613,10 +618,13 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     collName,
                     filterBson,
                     findOptions,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    findCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
+            long t4 = System.nanoTime();
+            ffiDispatchTime += (t4 - t3);
+            pendingOp.setFfiDispatchEndTime(t4);  // Record when FFI returned
+            findCount++;
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
@@ -803,35 +811,26 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void dropCollection(MongoNamespace namespace, DropCollectionOptions options,
                                 NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
-        Arena arena = Arena.ofShared();
+        Arena arena = Arena.ofAuto();
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
             MemorySegment operationContext = buildOperationContext(arena, context, session);
 
-            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else {
-                                callback.onResult(null, null);
-                            }
-                        } finally {
-                            arena.close();
-                        }
-                    },
-                    arena);
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> null,  // Void result
+                    arena
+            ));
 
             MongoDbFfi.mongo_drop_collection(
                     clientPtr,
                     operationContext,
                     dbName,
                     collName,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    dropCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
@@ -858,33 +857,24 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     @Override
     public void dropDatabase(String databaseName, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Void> callback) {
-        Arena arena = Arena.ofShared();
+        Arena arena = Arena.ofAuto();
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment operationContext = buildOperationContext(arena, context, session);
 
-            MemorySegment callbackPtr = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
-                    (userdata, result, error) -> {
-                        try {
-                            if (error.address() != 0) {
-                                callback.onResult(null, FfmErrorMapper.toException(error));
-                            } else {
-                                callback.onResult(null, null);
-                            }
-                        } finally {
-                            arena.close();
-                        }
-                    },
-                    arena);
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> null,  // Void result
+                    arena
+            ));
 
             MongoDbFfi.mongo_drop_database(
                     clientPtr,
                     operationContext,
                     dbName,
-                    callbackPtr,
-                    MemorySegment.NULL);
+                    dropCallbackStub,
+                    CallbackRegistry.toUserdata(opId));
         } catch (Exception e) {
-            arena.close();
             callback.onResult(null, e);
         }
     }
