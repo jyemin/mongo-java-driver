@@ -231,4 +231,25 @@ public final class NativeFindIterable<TResult>
                 namespace, filterDoc, options, getCodec(), getOperationContext(), getNativeSession());
         return new NativeMongoCursor<>(nativeCursor);
     }
+
+    @Nullable
+    @Override
+    public TResult first() {
+        // Use limit(-1) to tell MongoDB to return only one document and auto-close the cursor.
+        // This avoids fetching a full 4MB batch when the caller only needs the first doc.
+        long origLimit = options.getLimit();
+        try {
+            options.limit(-1);
+            BsonDocument filterDoc = BsonDocumentWrapper.asBsonDocument(filter, getCodecRegistry());
+            try (NativeSyncCursor<TResult> nativeCursor = getNativeClient().find(
+                    namespace, filterDoc, options, getCodec(), getOperationContext(), getNativeSession())) {
+                if (nativeCursor.hasNext()) {
+                    return nativeCursor.next();
+                }
+                return null;
+            }
+        } finally {
+            options.limit(origLimit);
+        }
+    }
 }

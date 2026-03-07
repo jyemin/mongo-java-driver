@@ -96,5 +96,22 @@ final class NativeFindPublisher<TResult> extends NativeCursorPublisher<TResult> 
     @Override public <E> Publisher<E> explain(Class<E> explainResultClass, @Nullable ExplainVerbosity verbosity) {
         throw new UnsupportedOperationException("explain not yet implemented");
     }
+
+    @Override
+    public Publisher<TResult> first() {
+        // Use limit(-1) to tell MongoDB to return only one document and auto-close the cursor.
+        // This avoids fetching a full 4MB batch when the caller only needs the first doc.
+        // The native client consumes options synchronously during subscribe(), so we can
+        // restore immediately after.
+        return subscriber -> {
+            long origLimit = options.getLimit();
+            options.limit(-1);
+            try {
+                super.first().subscribe(subscriber);
+            } finally {
+                options.limit(origLimit);
+            }
+        };
+    }
 }
 
