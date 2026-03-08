@@ -676,7 +676,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                 (byte) (options.isPartial() ? 1 : 0));
         // batchSize: Java defaults to 0 when not set, but FFI uses -1 for "not set"
         int batchSize = options.getBatchSize();
-        com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, batchSize == 0 ? -1 : batchSize);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, batchSize);
 
         // Comment (nullable Bson)
         com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts,
@@ -703,15 +703,13 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                         ? BsonMarshaller.toBsonStruct(arena, options.getHint().toBsonDocument())
                         : MemorySegment.NULL);
 
-        // Numeric options: limit uses 0 for "not set", others use -1
-        com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, options.getLimit());
-        // skip, maxAwaitTimeMs, maxTimeMs: Java defaults to 0, FFI uses -1 for "not set"
+        long limit = options.getLimit();
+        com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, limit);
         long skip = options.getSkip();
-        com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, skip == 0 ? -1 : skip);
-        long maxAwaitTimeMs = options.getMaxAwaitTimeMS();
-        com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, maxAwaitTimeMs == 0 ? -1 : maxAwaitTimeMs);
-        long maxTimeMs = options.getMaxTimeMS();
-        com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, maxTimeMs == 0 ? -1 : maxTimeMs);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, skip);
+        // maxAwaitTimeMs, maxTimeMs: pass through (0 = no timeout)
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, options.getMaxAwaitTimeMS());
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, options.getMaxTimeMS());
 
         // Bson options (nullable)
         com.mongodb.internal.rust.crud.ffi.FindOptions.max(opts,
@@ -968,9 +966,6 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            // Print cursor stats for debugging
-            FfmAsyncCursor.printCursorStats();
-
             // Print timing instrumentation (only if enabled)
             if (TIMING_ENABLED) {
                 printRunCommandTimings();

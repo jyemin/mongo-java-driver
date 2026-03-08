@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 public final class FindOptions {
     private Bson projection;
     private Bson sort;
-    private long limit = -1;
-    private long skip = -1;
+    private long limit;
+    private long skip;
     private int batchSize = -1;
     private Bson hint;
     private String hintString;
