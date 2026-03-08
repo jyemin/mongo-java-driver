@@ -99,17 +99,20 @@ final class NativeFindPublisher<TResult> extends NativeCursorPublisher<TResult> 
 
     @Override
     public Publisher<TResult> first() {
-        // Use limit(-1) to tell MongoDB to return only one document and auto-close the cursor.
-        // This avoids fetching a full 4MB batch when the caller only needs the first doc.
+        // Use limit(-1) and batchSize(0) to match standard driver behavior.
+        // limit(-1) tells MongoDB to return 1 document and automatically close the cursor.
         // The native client consumes options synchronously during subscribe(), so we can
         // restore immediately after.
         return subscriber -> {
             long origLimit = options.getLimit();
+            int origBatchSize = options.getBatchSize();
             options.limit(-1);
+            options.batchSize(0);
             try {
                 super.first().subscribe(subscriber);
             } finally {
                 options.limit(origLimit);
+                options.batchSize(origBatchSize);
             }
         };
     }

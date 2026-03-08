@@ -235,11 +235,13 @@ public final class NativeFindIterable<TResult>
     @Nullable
     @Override
     public TResult first() {
-        // Use limit(-1) to tell MongoDB to return only one document and auto-close the cursor.
-        // This avoids fetching a full 4MB batch when the caller only needs the first doc.
+        // Use limit(-1) and batchSize(0) to match standard driver behavior.
+        // limit(-1) tells MongoDB to return 1 document and automatically close the cursor.
         long origLimit = options.getLimit();
+        int origBatchSize = options.getBatchSize();
         try {
             options.limit(-1);
+            options.batchSize(0);
             BsonDocument filterDoc = BsonDocumentWrapper.asBsonDocument(filter, getCodecRegistry());
             try (NativeSyncCursor<TResult> nativeCursor = getNativeClient().find(
                     namespace, filterDoc, options, getCodec(), getOperationContext(), getNativeSession())) {
@@ -250,6 +252,7 @@ public final class NativeFindIterable<TResult>
             }
         } finally {
             options.limit(origLimit);
+            options.batchSize(origBatchSize);
         }
     }
 }
