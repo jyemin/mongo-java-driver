@@ -366,6 +366,24 @@ public final class FfmAsyncClient implements NativeAsyncClient {
 
     // ==================== Command Operations (IMPLEMENTED) ====================
 
+    // Set to true to enable timing instrumentation (adds overhead)
+    static final boolean TIMING_ENABLED = false;
+
+    // RunCommand timing instrumentation
+    private static long rcArenaTime, rcMarshalTime, rcRegistryTime, rcFfiDispatchTime, rcCount;
+
+    public static void printRunCommandTimings() {
+        if (!TIMING_ENABLED || rcCount == 0) return;
+        System.out.printf("RunCommand timings (avg over %d calls):%n", rcCount);
+        System.out.printf("  BEFORE FFI CALL:%n");
+        System.out.printf("    Arena create:    %.4f ms%n", rcArenaTime / 1_000_000.0 / rcCount);
+        System.out.printf("    Marshal:         %.4f ms%n", rcMarshalTime / 1_000_000.0 / rcCount);
+        System.out.printf("    Registry:        %.4f ms%n", rcRegistryTime / 1_000_000.0 / rcCount);
+        System.out.printf("    FFI dispatch:    %.4f ms%n", rcFfiDispatchTime / 1_000_000.0 / rcCount);
+        double total = (rcArenaTime + rcMarshalTime + rcRegistryTime + rcFfiDispatchTime) / 1_000_000.0 / rcCount;
+        System.out.printf("  TOTAL INSTRUMENTED: %.4f ms%n", total);
+    }
+
     @Override
     public <T> void runCommand(String databaseName,
                                 BsonDocument command,
@@ -373,11 +391,17 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                                 NativeOperationContext context,
                                 @Nullable NativeAsyncClientSession session,
                                 SingleResultCallback<T> callback) {
+        long t0 = TIMING_ENABLED ? System.nanoTime() : 0;
         Arena arena = Arena.ofAuto();
+        long t1 = TIMING_ENABLED ? System.nanoTime() : 0;
+        if (TIMING_ENABLED) rcArenaTime += (t1 - t0);
+
         try {
             MemorySegment dbName = arena.allocateFrom(databaseName);
             MemorySegment commandBson = BsonMarshaller.toBsonStruct(arena, command);
             MemorySegment operationContext = buildOperationContext(arena, context, session);
+            long t2 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) rcMarshalTime += (t2 - t1);
 
             long opId = CallbackRegistry.register(new PendingOperation<>(
                     callback,
@@ -388,6 +412,8 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     },
                     arena
             ));
+            long t3 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) rcRegistryTime += (t3 - t2);
 
             MongoDbFfi.mongo_run_command(
                     clientPtr,
@@ -396,6 +422,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     commandBson,
                     runCommandCallbackStub,
                     CallbackRegistry.toUserdata(opId));
+            if (TIMING_ENABLED) {
+                long t4 = System.nanoTime();
+                rcFfiDispatchTime += (t4 - t3);
+                rcCount++;
+            }
         } catch (Exception e) {
             callback.onResult(null, e);
         }
@@ -562,37 +593,41 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         throw new UnsupportedOperationException("FFI: findOne not yet implemented");
     }
 
-    // Timing instrumentation - remove after profiling
-    private static long arenaTime, marshalTime, registryTime, ffiDispatchTime, findCount;
+    // Timing instrumentation for find
+    private static long arenaTime, marshalTime, findOptionsTime, registryTime, ffiDispatchTime, findCount;
 
     public static void printTimings() {
-        if (findCount == 0) return;
+        if (!TIMING_ENABLED || findCount == 0) return;
         System.out.printf("Find timings (avg over %d calls):%n", findCount);
         System.out.printf("  BEFORE FFI CALL:%n");
         System.out.printf("    Arena create:    %.4f ms%n", arenaTime / 1_000_000.0 / findCount);
-        System.out.printf("    Marshal:         %.4f ms%n", marshalTime / 1_000_000.0 / findCount);
+        System.out.printf("    Marshal (other): %.4f ms%n", marshalTime / 1_000_000.0 / findCount);
+        System.out.printf("    FindOptions:     %.4f ms%n", findOptionsTime / 1_000_000.0 / findCount);
         System.out.printf("    Registry:        %.4f ms%n", registryTime / 1_000_000.0 / findCount);
         System.out.printf("    FFI dispatch:    %.4f ms%n", ffiDispatchTime / 1_000_000.0 / findCount);
-        double total = (arenaTime + marshalTime + registryTime + ffiDispatchTime) / 1_000_000.0 / findCount;
+        double total = (arenaTime + marshalTime + findOptionsTime + registryTime + ffiDispatchTime) / 1_000_000.0 / findCount;
         System.out.printf("  TOTAL INSTRUMENTED: %.4f ms%n", total);
     }
 
     @Override
     public <T> void find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        long t0 = System.nanoTime();
+        long t0 = TIMING_ENABLED ? System.nanoTime() : 0;
         Arena arena = Arena.ofAuto();  // GC-managed, no explicit close needed
-        long t1 = System.nanoTime();
-        arenaTime += (t1 - t0);
+        long t1 = TIMING_ENABLED ? System.nanoTime() : 0;
+        if (TIMING_ENABLED) arenaTime += (t1 - t0);
 
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
             MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
             MemorySegment operationContext = buildOperationContext(arena, context, session);
+            long tOpts0 = TIMING_ENABLED ? System.nanoTime() : 0;
             MemorySegment findOptions = buildFindOptions(arena, options);
-            long t2 = System.nanoTime();
-            marshalTime += (t2 - t1);
+            long tOpts1 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) findOptionsTime += (tOpts1 - tOpts0);
+            long t2 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) marshalTime += (t2 - t1) - (tOpts1 - tOpts0);
 
             MemorySegment sessionPtr = session != null
                     ? ((FfmAsyncClientSession) session).getSessionPtr()
@@ -608,8 +643,8 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     arena
             );
             long opId = CallbackRegistry.register(pendingOp);
-            long t3 = System.nanoTime();
-            registryTime += (t3 - t2);
+            long t3 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) registryTime += (t3 - t2);
 
             MongoDbFfi.mongo_find(
                     clientPtr,
@@ -620,10 +655,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     findOptions,
                     findCallbackStub,
                     CallbackRegistry.toUserdata(opId));
-            long t4 = System.nanoTime();
-            ffiDispatchTime += (t4 - t3);
-            pendingOp.setFfiDispatchEndTime(t4);  // Record when FFI returned
-            findCount++;
+            if (TIMING_ENABLED) {
+                long t4 = System.nanoTime();
+                ffiDispatchTime += (t4 - t3);
+                pendingOp.setFfiDispatchEndTime(t4);
+                findCount++;
+            }
         } catch (Exception e) {
             callback.onResult(null, e);
         }
@@ -931,6 +968,17 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+            // Print cursor stats for debugging
+            FfmAsyncCursor.printCursorStats();
+
+            // Print timing instrumentation (only if enabled)
+            if (TIMING_ENABLED) {
+                printRunCommandTimings();
+                printTimings();
+                PendingOperation.printTimings();
+                CallbackRegistry.printTimings();
+            }
+
             // Destroy cached FFI handles
             readPreferenceCache.values().forEach(FfmReadPreference::destroy);
             readPreferenceCache.clear();

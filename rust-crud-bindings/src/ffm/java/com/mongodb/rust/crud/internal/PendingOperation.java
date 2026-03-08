@@ -32,7 +32,7 @@ public final class PendingOperation<T> {
     private static long rustTime, decodeTime, onResultTime, completeCount;
 
     public static void printTimings() {
-        if (completeCount == 0) return;
+        if (!FfmAsyncClient.TIMING_ENABLED || completeCount == 0) return;
         System.out.printf("PendingOperation.complete() timings (avg over %d calls):%n", completeCount);
         if (rustTime > 0) {
             System.out.printf("    Rust/MongoDB:    %.4f ms%n", rustTime / 1_000_000.0 / completeCount);
@@ -45,7 +45,7 @@ public final class PendingOperation<T> {
     private final SingleResultCallback<T> callback;
     private final Function<MemorySegment, T> resultDecoder;
     private final Arena arena;
-    private long ffiDispatchEndTime;  // Set after FFI call returns
+    private long ffiDispatchEndTime;  // Set after FFI call returns (only used if TIMING_ENABLED)
 
     /**
      * Creates a new pending operation.
@@ -78,9 +78,9 @@ public final class PendingOperation<T> {
      * @param error the error from native code (NULL address if success)
      */
     void complete(MemorySegment result, MemorySegment error) {
-        long t0 = System.nanoTime();
-        if (ffiDispatchEndTime != 0) {
-            rustTime += (t0 - ffiDispatchEndTime);  // Time between FFI return and callback entry
+        long t0 = FfmAsyncClient.TIMING_ENABLED ? System.nanoTime() : 0;
+        if (FfmAsyncClient.TIMING_ENABLED && ffiDispatchEndTime != 0) {
+            rustTime += (t0 - ffiDispatchEndTime);
         }
         T decodedResult = null;
         Throwable exception = null;
@@ -94,16 +94,16 @@ public final class PendingOperation<T> {
         } catch (Throwable t) {
             exception = t;
         }
-        long t1 = System.nanoTime();
-        decodeTime += (t1 - t0);
+        long t1 = FfmAsyncClient.TIMING_ENABLED ? System.nanoTime() : 0;
+        if (FfmAsyncClient.TIMING_ENABLED) decodeTime += (t1 - t0);
 
         callback.onResult(decodedResult, exception);
-        long t2 = System.nanoTime();
-        onResultTime += (t2 - t1);
 
-        // Arena.ofAuto() - no explicit close, GC manages it
-        // arenaCloseTime not measured since no close() call
-        completeCount++;
+        if (FfmAsyncClient.TIMING_ENABLED) {
+            long t2 = System.nanoTime();
+            onResultTime += (t2 - t1);
+            completeCount++;
+        }
     }
 }
 

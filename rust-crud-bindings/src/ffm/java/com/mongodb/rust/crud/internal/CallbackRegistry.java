@@ -32,11 +32,11 @@ public final class CallbackRegistry {
     private static final AtomicLong nextOperationId = new AtomicLong();
     private static final ConcurrentHashMap<Long, PendingOperation<?>> pendingOperations = new ConcurrentHashMap<>();
 
-    // Timing instrumentation
+    // Timing instrumentation (controlled by FfmAsyncClient.TIMING_ENABLED)
     private static long removeTime, dispatchCount;
 
     public static void printTimings() {
-        if (dispatchCount == 0) return;
+        if (!FfmAsyncClient.TIMING_ENABLED || dispatchCount == 0) return;
         System.out.printf("CallbackRegistry.dispatch() timings (avg over %d calls):%n", dispatchCount);
         System.out.printf("    Map remove:      %.4f ms%n", removeTime / 1_000_000.0 / dispatchCount);
     }
@@ -77,11 +77,13 @@ public final class CallbackRegistry {
      * @param error the error from native code (may be NULL)
      */
     public static void dispatch(MemorySegment userdata, MemorySegment result, MemorySegment error) {
-        long t0 = System.nanoTime();
+        long t0 = FfmAsyncClient.TIMING_ENABLED ? System.nanoTime() : 0;
         long operationId = userdata.address();
         PendingOperation<?> operation = pendingOperations.remove(operationId);
-        removeTime += (System.nanoTime() - t0);
-        dispatchCount++;
+        if (FfmAsyncClient.TIMING_ENABLED) {
+            removeTime += (System.nanoTime() - t0);
+            dispatchCount++;
+        }
 
         if (operation != null) {
             operation.complete(result, error);
