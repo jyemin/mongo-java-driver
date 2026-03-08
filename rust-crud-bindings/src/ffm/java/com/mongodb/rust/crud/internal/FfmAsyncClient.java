@@ -637,7 +637,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                 options.getAllowDiskUse() == null ? (byte) -1 : (byte) (options.getAllowDiskUse() ? 1 : 0));
         com.mongodb.internal.rust.crud.ffi.FindOptions.allow_partial_results(opts,
                 (byte) (options.isPartial() ? 1 : 0));
-        com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, options.getBatchSize());
+        // batchSize: Java defaults to 0 when not set, but FFI uses -1 for "not set"
+        int batchSize = options.getBatchSize();
+        com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, batchSize == 0 ? -1 : batchSize);
 
         // Comment (nullable Bson)
         com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts,
@@ -664,13 +666,15 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                         ? BsonMarshaller.toBsonStruct(arena, options.getHint().toBsonDocument())
                         : MemorySegment.NULL);
 
-        // Numeric options
-        // limit: 0 = not set, positive = limit (Rust expects 0 for not set, Java uses -1)
-        com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, options.getLimit() < 0 ? 0 : options.getLimit());
-        // skip: -1 = not set (matches Rust convention)
-        com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, options.getSkip());
-        com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, options.getMaxAwaitTimeMS());
-        com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, options.getMaxTimeMS());
+        // Numeric options: limit uses 0 for "not set", others use -1
+        com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, options.getLimit());
+        // skip, maxAwaitTimeMs, maxTimeMs: Java defaults to 0, FFI uses -1 for "not set"
+        long skip = options.getSkip();
+        com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, skip == 0 ? -1 : skip);
+        long maxAwaitTimeMs = options.getMaxAwaitTimeMS();
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, maxAwaitTimeMs == 0 ? -1 : maxAwaitTimeMs);
+        long maxTimeMs = options.getMaxTimeMS();
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, maxTimeMs == 0 ? -1 : maxTimeMs);
 
         // Bson options (nullable)
         com.mongodb.internal.rust.crud.ffi.FindOptions.max(opts,
