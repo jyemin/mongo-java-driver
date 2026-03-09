@@ -34,6 +34,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
@@ -117,6 +118,14 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
         return BsonDocumentWrapper.asBsonDocument(document, codecRegistry);
     }
 
+    private TDocument generateIdIfAbsent(TDocument document) {
+        Codec<TDocument> codec = codecRegistry.get(documentClass);
+        if (codec instanceof CollectibleCodec) {
+            return ((CollectibleCodec<TDocument>) codec).generateIdIfAbsentFromDocument(document);
+        }
+        return document;
+    }
+
     @Nullable
     private NativeAsyncClientSession getNativeSession(@Nullable ClientSession clientSession) {
         if (clientSession == null) return null;
@@ -179,20 +188,22 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     // ==================== Insert Operations ====================
     @Override public Publisher<InsertOneResult> insertOne(TDocument document) { return insertOne(document, new InsertOneOptions()); }
     @Override public Publisher<InsertOneResult> insertOne(TDocument document, InsertOneOptions options) {
-        return Publishers.toMono(cb -> nativeClient.insertOne(namespace, documentToBson(document), options, operationContext, null, cb));
+        TDocument docWithId = generateIdIfAbsent(document);
+        return Publishers.toMono(cb -> nativeClient.insertOne(namespace, documentToBson(docWithId), options, operationContext, null, cb));
     }
     @Override public Publisher<InsertOneResult> insertOne(ClientSession cs, TDocument document) { return insertOne(cs, document, new InsertOneOptions()); }
     @Override public Publisher<InsertOneResult> insertOne(ClientSession cs, TDocument document, InsertOneOptions options) {
-        return Publishers.toMono(cb -> nativeClient.insertOne(namespace, documentToBson(document), options, operationContext, getNativeSession(cs), cb));
+        TDocument docWithId = generateIdIfAbsent(document);
+        return Publishers.toMono(cb -> nativeClient.insertOne(namespace, documentToBson(docWithId), options, operationContext, getNativeSession(cs), cb));
     }
     @Override public Publisher<InsertManyResult> insertMany(List<? extends TDocument> documents) { return insertMany(documents, new InsertManyOptions()); }
     @Override public Publisher<InsertManyResult> insertMany(List<? extends TDocument> documents, InsertManyOptions options) {
-        List<BsonDocument> bsonDocs = documents.stream().map(this::documentToBson).collect(java.util.stream.Collectors.toList());
+        List<BsonDocument> bsonDocs = documents.stream().map(d -> documentToBson(generateIdIfAbsent(d))).collect(java.util.stream.Collectors.toList());
         return Publishers.toMono(cb -> nativeClient.insertMany(namespace, bsonDocs, options, operationContext, null, cb));
     }
     @Override public Publisher<InsertManyResult> insertMany(ClientSession cs, List<? extends TDocument> documents) { return insertMany(cs, documents, new InsertManyOptions()); }
     @Override public Publisher<InsertManyResult> insertMany(ClientSession cs, List<? extends TDocument> documents, InsertManyOptions options) {
-        List<BsonDocument> bsonDocs = documents.stream().map(this::documentToBson).collect(java.util.stream.Collectors.toList());
+        List<BsonDocument> bsonDocs = documents.stream().map(d -> documentToBson(generateIdIfAbsent(d))).collect(java.util.stream.Collectors.toList());
         return Publishers.toMono(cb -> nativeClient.insertMany(namespace, bsonDocs, options, operationContext, getNativeSession(cs), cb));
     }
 

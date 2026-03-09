@@ -41,6 +41,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonDocumentWrapper;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
@@ -390,7 +391,18 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     }
 
     private InsertOneResult insertOneInternal(@Nullable ClientSession clientSession, TDocument document, InsertOneOptions options) {
-        return nativeClient.insertOne(namespace, documentToBson(document), options, operationContext, getNativeSession(clientSession));
+        // Generate _id if absent, before encoding - this allows the Rust driver to skip copying
+        // the document bytes when prepending _id (since _id will already be present)
+        TDocument docWithId = generateIdIfAbsent(document);
+        return nativeClient.insertOne(namespace, documentToBson(docWithId), options, operationContext, getNativeSession(clientSession));
+    }
+
+    private TDocument generateIdIfAbsent(TDocument document) {
+        Codec<TDocument> codec = codecRegistry.get(documentClass);
+        if (codec instanceof CollectibleCodec) {
+            return ((CollectibleCodec<TDocument>) codec).generateIdIfAbsentFromDocument(document);
+        }
+        return document;
     }
 
     @Override
@@ -416,7 +428,7 @@ public final class NativeMongoCollection<TDocument> implements MongoCollection<T
     private InsertManyResult insertManyInternal(@Nullable ClientSession clientSession, List<? extends TDocument> documents, InsertManyOptions options) {
         List<BsonDocument> bsonDocs = new ArrayList<>(documents.size());
         for (TDocument doc : documents) {
-            bsonDocs.add(documentToBson(doc));
+            bsonDocs.add(documentToBson(generateIdIfAbsent(doc)));
         }
         return nativeClient.insertMany(namespace, bsonDocs, options, operationContext, getNativeSession(clientSession));
     }
