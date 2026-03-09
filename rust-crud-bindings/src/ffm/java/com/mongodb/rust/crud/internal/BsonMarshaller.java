@@ -88,6 +88,23 @@ public final class BsonMarshaller {
     }
 
     // ==================== FFI Struct Methods (STUBBED) ====================
+    // Timing for encode vs copy
+    public static final boolean MARSHAL_TIMING = false;
+    private static long encodeTime, copyTime, marshalCount;
+
+    public static void printMarshalTimings() {
+        if (!MARSHAL_TIMING || marshalCount == 0) return;
+        System.out.printf("BsonMarshaller timings (avg over %d calls):%n", marshalCount);
+        System.out.printf("  BSON encode:     %.4f ms%n", encodeTime / 1_000_000.0 / marshalCount);
+        System.out.printf("  Copy to native:  %.4f ms%n", copyTime / 1_000_000.0 / marshalCount);
+    }
+
+    static {
+        if (MARSHAL_TIMING) {
+            Runtime.getRuntime().addShutdownHook(new Thread(BsonMarshaller::printMarshalTimings));
+        }
+    }
+
     /**
      * Allocates and populates a Bson struct in native memory.
      */
@@ -325,6 +342,26 @@ public final class BsonMarshaller {
     }
 
     // ==================== Private Helpers ====================
+
+    private static MemorySegment toBsonStruct(Arena arena, BsonDocument document, boolean isCollectibleDocument) {
+        long t0 = MARSHAL_TIMING ? System.nanoTime() : 0;
+        try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
+            encodeToBuffer(document, buffer, isCollectibleDocument);
+            long t1 = MARSHAL_TIMING ? System.nanoTime() : 0;
+            int size = buffer.getSize();
+            MemorySegment dataSegment = bsonOutputToSegment(arena, size, buffer);
+            MemorySegment bsonStruct = Bson.allocate(arena);
+            Bson.data(bsonStruct, dataSegment);
+            Bson.len(bsonStruct, size);
+            if (MARSHAL_TIMING) {
+                long t2 = System.nanoTime();
+                encodeTime += (t1 - t0);
+                copyTime += (t2 - t1);
+                marshalCount++;
+            }
+            return bsonStruct;
+        }
+    }
 
     private static MemorySegment bsonOutputToSegment(Arena arena, int size, ByteBufferBsonOutput buffer) {
         return byteBuffersToSegment(arena, size, buffer.getByteBuffers());

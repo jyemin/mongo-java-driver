@@ -384,6 +384,27 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         System.out.printf("  TOTAL INSTRUMENTED: %.4f ms%n", total);
     }
 
+    // InsertOne timing instrumentation
+    private static long insertArenaTime, insertMarshalTime, insertRegistryTime, insertFfiTime, insertCount;
+
+    public static void printInsertOneTimings() {
+        if (!TIMING_ENABLED || insertCount == 0) return;
+        System.out.printf("InsertOne timings (avg over %d calls):%n", insertCount);
+        System.out.printf("  Arena create:    %.4f ms%n", insertArenaTime / 1_000_000.0 / insertCount);
+        System.out.printf("  Marshal:         %.4f ms%n", insertMarshalTime / 1_000_000.0 / insertCount);
+        System.out.printf("  Registry:        %.4f ms%n", insertRegistryTime / 1_000_000.0 / insertCount);
+        System.out.printf("  FFI dispatch:    %.4f ms%n", insertFfiTime / 1_000_000.0 / insertCount);
+        double total = (insertArenaTime + insertMarshalTime + insertRegistryTime + insertFfiTime) / 1_000_000.0 / insertCount;
+        System.out.printf("  TOTAL JAVA SIDE: %.4f ms%n", total);
+    }
+
+    static {
+        // Print timing info on shutdown
+        if (TIMING_ENABLED) {
+            Runtime.getRuntime().addShutdownHook(new Thread(FfmAsyncClient::printInsertOneTimings));
+        }
+    }
+
     @Override
     public <T> void runCommand(String databaseName,
                                 BsonDocument command,
@@ -447,11 +468,15 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void insertOne(MongoNamespace namespace, BsonDocument document, InsertOneOptions options,
                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<InsertOneResult> callback) {
+        long t0 = TIMING_ENABLED ? System.nanoTime() : 0;
         Arena arena = Arena.ofAuto();
+        long t1 = TIMING_ENABLED ? System.nanoTime() : 0;
+        if (TIMING_ENABLED) insertArenaTime += (t1 - t0);
+
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
-            MemorySegment documentBson = BsonMarshaller.toBsonStruct(arena, document);
+            MemorySegment documentBson = BsonMarshaller.toBsonStructForInsert(arena, document);
             MemorySegment operationContext = buildOperationContext(arena, context, session);
 
             // bypass_document_validation: -1 = not set, 0 = false, 1 = true
@@ -464,6 +489,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
                     : MemorySegment.NULL;
 
+            long t2 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) insertMarshalTime += (t2 - t1);
+
             long opId = CallbackRegistry.register(new PendingOperation<>(
                     callback,
                     (result) -> {
@@ -473,6 +501,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     },
                     arena
             ));
+
+            long t3 = TIMING_ENABLED ? System.nanoTime() : 0;
+            if (TIMING_ENABLED) insertRegistryTime += (t3 - t2);
 
             MongoDbFfi.mongo_insert_one(
                     clientPtr,
@@ -484,6 +515,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                     comment,
                     insertOneCallbackStub,
                     CallbackRegistry.toUserdata(opId));
+
+            if (TIMING_ENABLED) {
+                long t4 = System.nanoTime();
+                insertFfiTime += (t4 - t3);
+                insertCount++;
+            }
         } catch (Exception e) {
             callback.onResult(null, e);
         }
