@@ -27,9 +27,12 @@ import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
+import org.bson.codecs.BsonValueCodecProvider;
 import org.bson.codecs.Decoder;
 import org.bson.codecs.DecoderContext;
+import org.bson.codecs.Encoder;
 import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.io.BsonOutput;
 
 import java.lang.foreign.Arena;
@@ -40,12 +43,15 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+
 /**
  * Utilities for marshalling BSON data between Java and FFI.
  */
 public final class BsonMarshaller {
 
-    private static final BsonDocumentCodec CODEC = new BsonDocumentCodec();
+    private static final CodecRegistry REGISTRY = fromProviders(new BsonValueCodecProvider());
+    private static final BsonDocumentCodec BSON_DOCUMENT_CODEC = new BsonDocumentCodec();
 
     private BsonMarshaller() {
     }
@@ -55,7 +61,7 @@ public final class BsonMarshaller {
      */
     public static BsonDocument decode(byte[] bytes) {
         try (BsonBinaryReader reader = new BsonBinaryReader(ByteBuffer.wrap(bytes))) {
-            return CODEC.decode(reader, DecoderContext.builder().build());
+            return BSON_DOCUMENT_CODEC.decode(reader, DecoderContext.builder().build());
         }
     }
 
@@ -106,18 +112,18 @@ public final class BsonMarshaller {
     }
 
     /**
+     * Allocates and populates a Bson struct in native memory for insert operations.
+     * Uses isEncodingCollectibleDocument(true) to ensure _id is written first in the byte stream.
+     */
+    public static MemorySegment toBsonStructForInsert(Arena arena, BsonDocument document) {
+        return toBsonStruct(arena, document, true);
+    }
+
+    /**
      * Allocates and populates a Bson struct in native memory.
      */
     public static MemorySegment toBsonStruct(Arena arena, BsonDocument document) {
-        try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
-            encodeToBuffer(document, buffer);
-            int size = buffer.getSize();
-            MemorySegment dataSegment = bsonOutputToSegment(arena, size, buffer);
-            MemorySegment bsonStruct = Bson.allocate(arena);
-            Bson.data(bsonStruct, dataSegment);
-            Bson.len(bsonStruct, size);
-            return bsonStruct;
-        }
+        return toBsonStruct(arena, document, false);
     }
 
     /**
@@ -210,6 +216,18 @@ public final class BsonMarshaller {
      * @return the BsonArray struct
      */
     public static MemorySegment toDocumentBsonArrayStruct(Arena arena, List<BsonDocument> documents) {
+        return toDocumentBsonArrayStruct(arena, documents, false);
+    }
+
+    /**
+     * Creates a BsonArray struct from a list of BsonDocuments for insert operations.
+     * Uses isEncodingCollectibleDocument(true) to ensure _id is written first in each document.
+     */
+    public static MemorySegment toDocumentBsonArrayStructForInsert(Arena arena, List<BsonDocument> documents) {
+        return toDocumentBsonArrayStruct(arena, documents, true);
+    }
+
+    private static MemorySegment toDocumentBsonArrayStruct(Arena arena, List<BsonDocument> documents, boolean isCollectibleDocument) {
         MemorySegment bsonArray = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
 
         if (documents.isEmpty()) {
@@ -223,7 +241,7 @@ public final class BsonMarshaller {
         try (ByteBufferBsonOutput buffer = new ByteBufferBsonOutput(PowerOfTwoBufferPool.DEFAULT)) {
             for (int i = 0; i < documents.size(); i++) {
                 docOffsets[i] = buffer.getPosition();
-                encodeToBuffer(documents.get(i), buffer);
+                encodeToBuffer(documents.get(i), buffer, isCollectibleDocument);
             }
 
             // Allocate single native segment for all document bytes
@@ -380,8 +398,16 @@ public final class BsonMarshaller {
     }
 
     private static void encodeToBuffer(BsonDocument document, BsonOutput buffer) {
+        encodeToBuffer(document, buffer, false);
+    }
+
+    private static void encodeToBuffer(BsonDocument document, BsonOutput buffer, boolean isCollectibleDocument) {
         try (BsonBinaryWriter writer = new BsonBinaryWriter(buffer)) {
-            CODEC.encode(writer, document, EncoderContext.builder().build());
+            @SuppressWarnings("unchecked")
+            Encoder<BsonDocument> encoder = (Encoder<BsonDocument>) REGISTRY.get(document.getClass());
+            encoder.encode(writer, document, EncoderContext.builder()
+                    .isEncodingCollectibleDocument(isCollectibleDocument)
+                    .build());
         }
     }
 }

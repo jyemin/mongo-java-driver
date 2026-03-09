@@ -533,7 +533,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         try {
             MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
             MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
-            MemorySegment documentsArray = BsonMarshaller.toDocumentBsonArrayStruct(arena, documents);
+            MemorySegment documentsArray = BsonMarshaller.toDocumentBsonArrayStructForInsert(arena, documents);
             MemorySegment operationContext = buildOperationContext(arena, context, session);
 
             // bypass_document_validation: -1 = not set, 0 = false, 1 = true
