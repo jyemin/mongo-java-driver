@@ -620,6 +620,203 @@ class NativeSyncClientTest {
         }
     }
 
+    // ==================== Drop Collection Tests ====================
+
+    @Test
+    void testDropCollection() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_drop_collection");
+
+            // Insert a document to ensure collection exists
+            client.insertOne(namespace,
+                    new BsonDocument("_id", new BsonInt32(1)).append("name", new BsonString("test")),
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Verify collection has data
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertTrue(cursor.hasNext());
+            }
+
+            // Drop the collection using the FFI method
+            assertDoesNotThrow(() -> client.dropCollection(
+                    namespace,
+                    new com.mongodb.client.model.DropCollectionOptions(),
+                    NativeOperationContext.builder().build(),
+                    null));
+
+            // Verify collection is empty (dropped)
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertFalse(cursor.hasNext());
+            }
+        }
+    }
+
+    @Test
+    void testDropCollectionThatDoesNotExist() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_drop_nonexistent_" + System.currentTimeMillis());
+
+            // Drop a collection that doesn't exist - should not throw
+            assertDoesNotThrow(() -> client.dropCollection(
+                    namespace,
+                    new com.mongodb.client.model.DropCollectionOptions(),
+                    NativeOperationContext.builder().build(),
+                    null));
+        }
+    }
+
+    @Test
+    void testDropCollectionWithSession() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            MongoNamespace namespace = new MongoNamespace(getDefaultDatabaseName(), "test_drop_with_session");
+
+            // Insert a document to ensure collection exists
+            client.insertOne(namespace,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Drop with session
+            NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
+            assertDoesNotThrow(() -> client.dropCollection(
+                    namespace,
+                    new com.mongodb.client.model.DropCollectionOptions(),
+                    NativeOperationContext.builder().build(),
+                    session));
+            session.close();
+
+            // Verify collection is dropped
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertFalse(cursor.hasNext());
+            }
+        }
+    }
+
+    // ==================== Drop Database Tests ====================
+
+    @Test
+    void testDropDatabase() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            String databaseName = "test_drop_database_" + System.currentTimeMillis();
+            MongoNamespace namespace = new MongoNamespace(databaseName, "test_collection");
+
+            // Insert a document to ensure database exists
+            client.insertOne(namespace,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Verify database has data
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertTrue(cursor.hasNext());
+            }
+
+            // Drop the database using the FFI method
+            assertDoesNotThrow(() -> client.dropDatabase(
+                    databaseName,
+                    NativeOperationContext.builder().build(),
+                    null));
+
+            // Verify database is dropped (collection is empty/gone)
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertFalse(cursor.hasNext());
+            }
+        }
+    }
+
+    @Test
+    void testDropDatabaseThatDoesNotExist() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            String databaseName = "test_drop_nonexistent_db_" + System.currentTimeMillis();
+
+            // Drop a database that doesn't exist - should not throw
+            assertDoesNotThrow(() -> client.dropDatabase(
+                    databaseName,
+                    NativeOperationContext.builder().build(),
+                    null));
+        }
+    }
+
+    @Test
+    void testDropDatabaseWithSession() {
+        MongoClientSettings settings = getMongoClientSettings();
+
+        try (NativeSyncClient client = NativeSyncClients.create(settings)) {
+            String databaseName = "test_drop_db_session_" + System.currentTimeMillis();
+            MongoNamespace namespace = new MongoNamespace(databaseName, "test_collection");
+
+            // Insert a document to ensure database exists
+            client.insertOne(namespace,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new InsertOneOptions(),
+                    NativeOperationContext.builder().build(),
+                    null);
+
+            // Drop with session
+            NativeSyncClientSession session = client.startSession(ClientSessionOptions.builder().build());
+            assertDoesNotThrow(() -> client.dropDatabase(
+                    databaseName,
+                    NativeOperationContext.builder().build(),
+                    session));
+            session.close();
+
+            // Verify database is dropped
+            try (NativeSyncCursor<BsonDocument> cursor = client.find(
+                    namespace,
+                    new BsonDocument(),
+                    new FindOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(),
+                    null)) {
+                assertFalse(cursor.hasNext());
+            }
+        }
+    }
+
     private void dropCollection(NativeSyncClient client, MongoNamespace namespace) {
         try {
             client.runCommand(

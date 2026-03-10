@@ -14,7 +14,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * typedef void (*DropCallback)(void *, const void *, const struct Error {
+ * typedef void (*DropCallback)(void *, const struct Error {
  *     uint8_t error_type;
  *     union ErrorUnion error;
  * } *)
@@ -30,11 +30,10 @@ public final class DropCallback {
      * The function pointer signature, expressed as a functional interface
      */
     public interface Function {
-        void apply(MemorySegment userdata, MemorySegment result, MemorySegment error);
+        void apply(MemorySegment userdata, MemorySegment error);
     }
 
     private static final FunctionDescriptor $DESC = FunctionDescriptor.ofVoid(
-        MongoDbFfi.C_POINTER,
         MongoDbFfi.C_POINTER,
         MongoDbFfi.C_POINTER
     );
@@ -61,9 +60,9 @@ public final class DropCallback {
     /**
      * Invoke the upcall stub {@code funcPtr}, with given parameters
      */
-    public static void invoke(MemorySegment funcPtr, MemorySegment userdata, MemorySegment result, MemorySegment error) {
+    public static void invoke(MemorySegment funcPtr, MemorySegment userdata, MemorySegment error) {
         try {
-             DOWN$MH.invokeExact(funcPtr, userdata, result, error);
+             DOWN$MH.invokeExact(funcPtr, userdata, error);
         } catch (Error | RuntimeException ex) {
             throw ex;
         } catch (Throwable ex$) {

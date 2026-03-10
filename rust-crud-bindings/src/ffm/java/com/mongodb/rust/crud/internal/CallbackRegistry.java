@@ -92,6 +92,17 @@ public final class CallbackRegistry {
     }
 
     /**
+     * Dispatches a callback for void operations (no result, only error).
+     * This should be called from callback stubs for operations like drop that don't return a result.
+     *
+     * @param userdata the userdata passed to the callback (contains operation ID as address)
+     * @param error the error from native code (may be NULL for success)
+     */
+    public static void dispatchVoid(MemorySegment userdata, MemorySegment error) {
+        dispatch(userdata, MemorySegment.NULL, error);
+    }
+
+    /**
      * Returns the number of pending operations. Useful for testing/debugging.
      */
     public static int getPendingCount() {

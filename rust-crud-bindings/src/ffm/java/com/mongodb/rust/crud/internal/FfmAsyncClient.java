@@ -123,7 +123,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                 (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
                 clientArena);
         this.dropCallbackStub = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
-                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                (userdata, error) -> CallbackRegistry.dispatchVoid(userdata, error),
                 clientArena);
     }
 
