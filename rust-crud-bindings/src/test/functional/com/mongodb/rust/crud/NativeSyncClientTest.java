@@ -23,13 +23,28 @@ import com.mongodb.ReadPreference;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import com.mongodb.TransactionOptions;
+import com.mongodb.client.model.AggregateOptions;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.EstimatedDocumentCountOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.FindOptions;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.InsertOneOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
+import com.mongodb.client.result.UpdateResult;
+import org.bson.BsonArray;
+import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
+import org.bson.BsonInt64;
 import org.bson.BsonObjectId;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -49,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -815,6 +831,470 @@ class NativeSyncClientTest {
                 assertFalse(cursor.hasNext());
             }
         }
+    }
+
+    // ==================== Delete Tests ====================
+
+    @Test
+    void testDeleteOne() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_delete_one");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonInt32(2)));
+
+            DeleteResult result = client.deleteOne(ns,
+                    new BsonDocument("x", new BsonInt32(1)),
+                    new DeleteOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(1, result.getDeletedCount());
+            assertEquals(2, countAll(client, ns));
+        }
+    }
+
+    @Test
+    void testDeleteOneNoMatch() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_delete_one_nomatch");
+            dropCollection(client, ns);
+            insertDocs(client, ns, new BsonDocument("_id", new BsonInt32(1)));
+
+            DeleteResult result = client.deleteOne(ns,
+                    new BsonDocument("_id", new BsonInt32(999)),
+                    new DeleteOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(0, result.getDeletedCount());
+        }
+    }
+
+    @Test
+    void testDeleteMany() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_delete_many");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonInt32(2)));
+
+            DeleteResult result = client.deleteMany(ns,
+                    new BsonDocument("x", new BsonInt32(1)),
+                    new DeleteOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(2, result.getDeletedCount());
+            assertEquals(1, countAll(client, ns));
+        }
+    }
+
+    // ==================== Update Tests ====================
+
+    @Test
+    void testUpdateOne() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_update_one");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)));
+
+            UpdateResult result = client.updateOne(ns,
+                    new BsonDocument("x", new BsonInt32(1)),
+                    new BsonDocument("$set", new BsonDocument("x", new BsonInt32(99))),
+                    new UpdateOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(1, result.getMatchedCount());
+            assertEquals(1, result.getModifiedCount());
+            assertNull(result.getUpsertedId());
+        }
+    }
+
+    @Test
+    void testUpdateOneUpsert() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_update_one_upsert");
+            dropCollection(client, ns);
+
+            UpdateResult result = client.updateOne(ns,
+                    new BsonDocument("_id", new BsonInt32(42)),
+                    new BsonDocument("$set", new BsonDocument("x", new BsonInt32(1))),
+                    new UpdateOptions().upsert(true),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(0, result.getMatchedCount());
+            assertNotNull(result.getUpsertedId());
+            assertEquals(1, countAll(client, ns));
+        }
+    }
+
+    @Test
+    void testUpdateMany() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_update_many");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonInt32(2)));
+
+            UpdateResult result = client.updateMany(ns,
+                    new BsonDocument("x", new BsonInt32(1)),
+                    new BsonDocument("$set", new BsonDocument("updated", new BsonBoolean(true))),
+                    new UpdateOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(2, result.getMatchedCount());
+            assertEquals(2, result.getModifiedCount());
+        }
+    }
+
+    @Test
+    void testUpdateManyWithPipeline() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_update_pipeline");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(10)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(20)));
+
+            // Pipeline update: wrap stages as {"$pipeline": [...]}
+            BsonArray stages = new BsonArray(Collections.singletonList(
+                    new BsonDocument("$set", new BsonDocument("doubled", new BsonDocument("$multiply",
+                            new BsonArray(Arrays.asList(new BsonString("$x"), new BsonInt32(2))))))));
+            BsonDocument pipelineUpdate = new BsonDocument("$pipeline", stages);
+
+            UpdateResult result = client.updateMany(ns,
+                    new BsonDocument(),
+                    pipelineUpdate,
+                    new UpdateOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(2, result.getMatchedCount());
+            assertEquals(2, result.getModifiedCount());
+
+            // Verify field was set
+            BsonDocument doc1 = findById(client, ns, 1);
+            assertNotNull(doc1);
+            assertEquals(20, doc1.getInt32("doubled").getValue());
+        }
+    }
+
+    @Test
+    void testReplaceOne() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_replace_one");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)).append("y", new BsonInt32(2)));
+
+            UpdateResult result = client.replaceOne(ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(1)).append("z", new BsonInt32(99)),
+                    new ReplaceOptions(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertTrue(result.wasAcknowledged());
+            assertEquals(1, result.getMatchedCount());
+            assertEquals(1, result.getModifiedCount());
+
+            BsonDocument replaced = findById(client, ns, 1);
+            assertNotNull(replaced);
+            assertFalse(replaced.containsKey("x"));
+            assertFalse(replaced.containsKey("y"));
+            assertEquals(99, replaced.getInt32("z").getValue());
+        }
+    }
+
+    // ==================== FindOneAnd* Tests ====================
+
+    @Test
+    void testFindOneAndDelete() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_delete");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(2)));
+
+            BsonDocument deleted = client.findOneAndDelete(ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new FindOneAndDeleteOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNotNull(deleted);
+            assertEquals(1, deleted.getInt32("_id").getValue());
+            assertEquals(1, countAll(client, ns));
+        }
+    }
+
+    @Test
+    void testFindOneAndDeleteNoMatch() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_delete_nomatch");
+            dropCollection(client, ns);
+            insertDocs(client, ns, new BsonDocument("_id", new BsonInt32(1)));
+
+            BsonDocument result = client.findOneAndDelete(ns,
+                    new BsonDocument("_id", new BsonInt32(999)),
+                    new FindOneAndDeleteOptions(),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNull(result);
+            assertEquals(1, countAll(client, ns));
+        }
+    }
+
+    @Test
+    void testFindOneAndReplaceBefore() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_replace");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)));
+
+            BsonDocument before = client.findOneAndReplace(ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(99)),
+                    new FindOneAndReplaceOptions().returnDocument(ReturnDocument.BEFORE),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNotNull(before);
+            assertEquals(1, before.getInt32("x").getValue());
+
+            BsonDocument after = findById(client, ns, 1);
+            assertNotNull(after);
+            assertEquals(99, after.getInt32("x").getValue());
+        }
+    }
+
+    @Test
+    void testFindOneAndReplaceAfter() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_replace_after");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)));
+
+            BsonDocument after = client.findOneAndReplace(ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(99)),
+                    new FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNotNull(after);
+            assertEquals(99, after.getInt32("x").getValue());
+        }
+    }
+
+    @Test
+    void testFindOneAndUpdate() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_update");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)));
+
+            BsonDocument after = client.findOneAndUpdate(ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new BsonDocument("$set", new BsonDocument("x", new BsonInt32(99))),
+                    new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNotNull(after);
+            assertEquals(99, after.getInt32("x").getValue());
+        }
+    }
+
+    @Test
+    void testFindOneAndUpdateUpsert() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_find_one_and_update_upsert");
+            dropCollection(client, ns);
+
+            BsonDocument after = client.findOneAndUpdate(ns,
+                    new BsonDocument("_id", new BsonInt32(42)),
+                    new BsonDocument("$set", new BsonDocument("x", new BsonInt32(1))),
+                    new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER),
+                    new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null);
+
+            assertNotNull(after);
+            assertEquals(42, after.getInt32("_id").getValue());
+            assertEquals(1, countAll(client, ns));
+        }
+    }
+
+    // ==================== Aggregate Tests ====================
+
+    @Test
+    void testAggregateCollection() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_aggregate");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(10)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(20)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonInt32(30)));
+
+            List<BsonDocument> pipeline = Arrays.asList(
+                    BsonDocument.parse("{$match: {x: {$gte: 15}}}"),
+                    BsonDocument.parse("{$sort: {x: 1}}"));
+
+            try (NativeSyncCursor<BsonDocument> cursor = client.aggregate(ns, pipeline,
+                    new AggregateOptions(), null, new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null)) {
+
+                List<BsonDocument> results = drainCursor(cursor);
+                assertEquals(2, results.size());
+                assertEquals(20, results.get(0).getInt32("x").getValue());
+                assertEquals(30, results.get(1).getInt32("x").getValue());
+            }
+        }
+    }
+
+    @Test
+    void testAggregateWithGroupStage() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_aggregate_group");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("cat", new BsonString("a")).append("v", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("cat", new BsonString("a")).append("v", new BsonInt32(2)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("cat", new BsonString("b")).append("v", new BsonInt32(10)));
+
+            List<BsonDocument> pipeline = Collections.singletonList(
+                    BsonDocument.parse("{$group: {_id: '$cat', total: {$sum: '$v'}}}"));
+
+            try (NativeSyncCursor<BsonDocument> cursor = client.aggregate(ns, pipeline,
+                    new AggregateOptions(), null, new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null)) {
+
+                List<BsonDocument> results = drainCursor(cursor);
+                assertEquals(2, results.size());
+                // Find group "a" and verify sum
+                BsonDocument groupA = results.stream()
+                        .filter(d -> "a".equals(d.getString("_id").getValue()))
+                        .findFirst().orElse(null);
+                assertNotNull(groupA);
+                assertEquals(3, groupA.getInt32("total").getValue());
+            }
+        }
+    }
+
+    @Test
+    void testAggregateDatabase() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            String dbName = getDefaultDatabaseName();
+            MongoNamespace ns = new MongoNamespace(dbName, "test_aggregate_db");
+            dropCollection(client, ns);
+            insertDocs(client, ns, new BsonDocument("_id", new BsonInt32(1)));
+
+            List<BsonDocument> pipeline = Arrays.asList(
+                    BsonDocument.parse("{$listLocalSessions: {}}"),
+                    BsonDocument.parse("{$limit: 1}"));
+
+            // Just verify it doesn't throw and returns a cursor
+            try (NativeSyncCursor<BsonDocument> cursor = client.aggregateDatabase(dbName, pipeline,
+                    new AggregateOptions(), null, new BsonDocumentCodec(),
+                    NativeOperationContext.builder().build(), null)) {
+                assertNotNull(cursor);
+            }
+        }
+    }
+
+    // ==================== Count Tests ====================
+
+    @Test
+    void testCountDocuments() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_count_docs");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonInt32(2)));
+
+            long total = client.countDocuments(ns, new BsonDocument(), new CountOptions(),
+                    NativeOperationContext.builder().build(), null);
+            assertEquals(3, total);
+
+            long filtered = client.countDocuments(ns, new BsonDocument("x", new BsonInt32(1)),
+                    new CountOptions(), NativeOperationContext.builder().build(), null);
+            assertEquals(2, filtered);
+        }
+    }
+
+    @Test
+    void testCountDocumentsEmpty() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_count_empty");
+            dropCollection(client, ns);
+
+            long count = client.countDocuments(ns, new BsonDocument(), new CountOptions(),
+                    NativeOperationContext.builder().build(), null);
+            assertEquals(0, count);
+        }
+    }
+
+    @Test
+    void testEstimatedDocumentCount() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_estimated_count");
+            dropCollection(client, ns);
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)),
+                    new BsonDocument("_id", new BsonInt32(3)));
+
+            long count = client.estimatedDocumentCount(ns, new EstimatedDocumentCountOptions(),
+                    NativeOperationContext.builder().build());
+            assertEquals(3, count);
+        }
+    }
+
+    // ==================== Test Helpers ====================
+
+    private void insertDocs(NativeSyncClient client, MongoNamespace ns, BsonDocument... docs) {
+        for (BsonDocument doc : docs) {
+            client.insertOne(ns, doc, new InsertOneOptions(), NativeOperationContext.builder().build(), null);
+        }
+    }
+
+    private long countAll(NativeSyncClient client, MongoNamespace ns) {
+        return client.countDocuments(ns, new BsonDocument(), new CountOptions(),
+                NativeOperationContext.builder().build(), null);
+    }
+
+    private BsonDocument findById(NativeSyncClient client, MongoNamespace ns, int id) {
+        NativeSyncCursor<BsonDocument> cursor = client.find(ns, new BsonDocument("_id", new BsonInt32(id)),
+                new FindOptions().limit(1), new BsonDocumentCodec(),
+                NativeOperationContext.builder().build(), null);
+        return cursor.hasNext() ? cursor.next() : null;
+    }
+
+    private List<BsonDocument> drainCursor(NativeSyncCursor<BsonDocument> cursor) {
+        List<BsonDocument> results = new ArrayList<>();
+        while (cursor.hasNext()) {
+            results.add(cursor.next());
+        }
+        return results;
     }
 
     private void dropCollection(NativeSyncClient client, MongoNamespace namespace) {

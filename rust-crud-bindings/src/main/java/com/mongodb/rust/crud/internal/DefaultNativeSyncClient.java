@@ -150,14 +150,6 @@ public final class DefaultNativeSyncClient implements NativeSyncClient {
     // ==================== Find Operations ====================
 
     @Override
-    @Nullable
-    public <T> T findOne(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                         NativeOperationContext context, @Nullable NativeSyncClientSession session) {
-        return blockForResult(callback -> asyncClient.findOne(namespace, filter, options, decoder, context, toAsync(session), callback),
-                "findOne");
-    }
-
-    @Override
     public <T> NativeSyncCursor<T> find(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
                                         NativeOperationContext context, @Nullable NativeSyncClientSession session) {
         NativeAsyncCursor<T> cursor = blockForResult(

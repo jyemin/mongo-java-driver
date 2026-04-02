@@ -120,14 +120,6 @@ public interface NativeSyncClient extends Closeable {
 
     // ==================== Find Operations ====================
 
-    @Nullable
-    <T> T findOne(MongoNamespace namespace,
-                  Bson filter,
-                  FindOptions options,
-                  Decoder<T> decoder,
-                  NativeOperationContext context,
-                  @Nullable NativeSyncClientSession session);
-
     <T> NativeSyncCursor<T> find(MongoNamespace namespace,
                                  Bson filter,
                                  FindOptions options,

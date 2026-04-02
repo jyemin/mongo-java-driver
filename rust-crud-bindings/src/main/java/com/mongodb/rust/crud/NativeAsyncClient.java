@@ -130,14 +130,6 @@ public interface NativeAsyncClient extends Closeable {
 
     // ==================== Find Operations ====================
 
-    <T> void findOne(MongoNamespace namespace,
-                     Bson filter,
-                     FindOptions options,
-                     Decoder<T> decoder,
-                     NativeOperationContext context,
-                     @Nullable NativeAsyncClientSession session,
-                     SingleResultCallback<T> callback);
-
     <T> void find(MongoNamespace namespace,
                   Bson filter,
                   FindOptions options,

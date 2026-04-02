@@ -37,16 +37,25 @@ import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
+import com.mongodb.internal.rust.crud.ffi.AggregateCallback;
 import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
+import com.mongodb.internal.rust.crud.ffi.CountCallback;
+import com.mongodb.internal.rust.crud.ffi.CursorResult;
+import com.mongodb.internal.rust.crud.ffi.DeleteCallback;
+import com.mongodb.internal.rust.crud.ffi.FindOneCallback;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.OperationContext;
+import com.mongodb.internal.rust.crud.ffi.ReplaceOneOptions;
 import com.mongodb.internal.rust.crud.ffi.RunCommandCallback;
 import com.mongodb.internal.rust.crud.ffi.SessionOptions;
 import com.mongodb.internal.rust.crud.ffi.TlsSettings;
+import com.mongodb.internal.rust.crud.ffi.UpdateCallback;
+import com.mongodb.internal.rust.crud.ffi.UpdateOneOptions;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeAsyncChangeStream;
 import com.mongodb.rust.crud.NativeAsyncClient;
+import org.bson.BsonArray;
 import com.mongodb.rust.crud.NativeAsyncClientSession;
 import com.mongodb.rust.crud.NativeAsyncCursor;
 import com.mongodb.rust.crud.NativeOperationContext;
@@ -76,15 +85,19 @@ import java.util.stream.Collectors;
  *   <li>Client creation/destruction</li>
  *   <li>Sessions (start, end, transactions)</li>
  *   <li>runCommand</li>
+ *   <li>insertOne, insertMany, find, findOne</li>
+ *   <li>updateOne, updateMany, replaceOne, deleteOne, deleteMany</li>
+ *   <li>findOneAndUpdate, findOneAndReplace, findOneAndDelete</li>
+ *   <li>aggregate (collection and database), countDocuments, estimatedDocumentCount</li>
+ *   <li>dropCollection, dropDatabase</li>
  * </ul>
  *
  * <h3>Not Yet Implemented:</h3>
  * <ul>
- *   <li>insertOne, insertMany, find, findOne</li>
- *   <li>updateOne, updateMany, replaceOne, deleteOne, deleteMany</li>
- *   <li>findOneAndUpdate, findOneAndReplace, findOneAndDelete</li>
- *   <li>aggregate, countDocuments, estimatedDocumentCount, distinct</li>
- *   <li>Index operations, Collection/database admin, Change streams, Bulk write</li>
+ *   <li>distinct</li>
+ *   <li>Index operations (createIndex, dropIndex, listIndexes)</li>
+ *   <li>Collection/database admin (createCollection, renameCollection, listCollections, listDatabases)</li>
+ *   <li>Change streams, Bulk write</li>
  * </ul>
  */
 public final class FfmAsyncClient implements NativeAsyncClient {
@@ -104,6 +117,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     private final MemorySegment insertOneCallbackStub;
     private final MemorySegment insertManyCallbackStub;
     private final MemorySegment dropCallbackStub;
+    private final MemorySegment deleteCallbackStub;
+    private final MemorySegment updateCallbackStub;
+    private final MemorySegment findOneCallbackStub;
+    private final MemorySegment countCallbackStub;
+    private final MemorySegment aggregateCallbackStub;
 
     public FfmAsyncClient(MongoClientSettings settings) {
         this.clientArena = Arena.ofShared();
@@ -124,6 +142,21 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                 clientArena);
         this.dropCallbackStub = com.mongodb.internal.rust.crud.ffi.DropCallback.allocate(
                 (userdata, error) -> CallbackRegistry.dispatchVoid(userdata, error),
+                clientArena);
+        this.deleteCallbackStub = DeleteCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.updateCallbackStub = UpdateCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.findOneCallbackStub = FindOneCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
+        this.countCallbackStub = CountCallback.allocate(
+                (userdata, count, error) -> CallbackRegistry.dispatchCount(userdata, count, error),
+                clientArena);
+        this.aggregateCallbackStub = AggregateCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
                 clientArena);
     }
 
@@ -595,39 +628,123 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     }
 
     @Override
-    public void updateOne(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
-        throw new UnsupportedOperationException("FFI: updateOne not yet implemented");
-    }
-
-    @Override
-    public void updateMany(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
-                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
-        throw new UnsupportedOperationException("FFI: updateMany not yet implemented");
-    }
-
-    @Override
-    public void replaceOne(MongoNamespace namespace, Bson filter, BsonDocument replacement, ReplaceOptions options,
-                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
-        throw new UnsupportedOperationException("FFI: replaceOne not yet implemented");
-    }
-
-    @Override
     public void deleteOne(MongoNamespace namespace, Bson filter, DeleteOptions options,
                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
-        throw new UnsupportedOperationException("FFI: deleteOne not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildDeleteOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    FfmAsyncClient::parseDeleteResult,
+                    arena));
+
+            MongoDbFfi.mongo_delete_one(clientPtr, operationContext, dbName, collName, filterBson, opts,
+                    deleteCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
     public void deleteMany(MongoNamespace namespace, Bson filter, DeleteOptions options,
                            NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<DeleteResult> callback) {
-        throw new UnsupportedOperationException("FFI: deleteMany not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildDeleteOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    FfmAsyncClient::parseDeleteResult,
+                    arena));
+
+            MongoDbFfi.mongo_delete_many(clientPtr, operationContext, dbName, collName, filterBson, opts,
+                    deleteCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
-    public <T> void findOne(MongoNamespace namespace, Bson filter, FindOptions options, Decoder<T> decoder,
-                            NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
-        throw new UnsupportedOperationException("FFI: findOne not yet implemented");
+    public void updateOne(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
+                          NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildUpdateOptions(arena, options);
+            MemorySegment[] updateAndPipeline = buildUpdateOrPipeline(arena, update.toBsonDocument());
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    FfmAsyncClient::parseUpdateResult,
+                    arena));
+
+            MongoDbFfi.mongo_update_one(clientPtr, operationContext, dbName, collName, filterBson,
+                    updateAndPipeline[0], updateAndPipeline[1], opts,
+                    updateCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
+    }
+
+    @Override
+    public void updateMany(MongoNamespace namespace, Bson filter, Bson update, UpdateOptions options,
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildUpdateOptions(arena, options);
+            MemorySegment[] updateAndPipeline = buildUpdateOrPipeline(arena, update.toBsonDocument());
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    FfmAsyncClient::parseUpdateResult,
+                    arena));
+
+            MongoDbFfi.mongo_update_many(clientPtr, operationContext, dbName, collName, filterBson,
+                    updateAndPipeline[0], updateAndPipeline[1], opts,
+                    updateCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
+    }
+
+    @Override
+    public void replaceOne(MongoNamespace namespace, Bson filter, BsonDocument replacement, ReplaceOptions options,
+                           NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<UpdateResult> callback) {
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment replacementBson = BsonMarshaller.toBsonStruct(arena, replacement);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildReplaceOneOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    FfmAsyncClient::parseUpdateResult,
+                    arena));
+
+            MongoDbFfi.mongo_replace_one(clientPtr, operationContext, dbName, collName, filterBson, replacementBson,
+                    opts, updateCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     // Timing instrumentation for find
@@ -715,11 +832,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         int batchSize = options.getBatchSize();
         com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, batchSize);
 
-        // Comment (nullable Bson)
-        com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts,
-                options.getComment() != null
-                        ? BsonMarshaller.toBsonValueStruct(arena, options.getComment())
-                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts, optComment(arena, options.getComment()));
 
         // Cursor type: 0 = NonTailable, 1 = Tailable, 2 = TailableAwait
         byte cursorType = 0;
@@ -732,79 +845,107 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         }
         com.mongodb.internal.rust.crud.ffi.FindOptions.cursor_type(opts, cursorType);
 
-        // Hint (either string name or Bson keys)
-        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_name(opts,
-                options.getHintString() != null ? arena.allocateFrom(options.getHintString()) : MemorySegment.NULL);
-        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_keys(opts,
-                options.getHint() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getHint().toBsonDocument())
-                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
 
         long limit = options.getLimit();
         com.mongodb.internal.rust.crud.ffi.FindOptions.limit(opts, limit);
         long skip = options.getSkip();
         com.mongodb.internal.rust.crud.ffi.FindOptions.skip(opts, skip);
-        // maxAwaitTimeMs, maxTimeMs: pass through (0 = no timeout)
         com.mongodb.internal.rust.crud.ffi.FindOptions.max_await_time_ms(opts, options.getMaxAwaitTimeMS());
         com.mongodb.internal.rust.crud.ffi.FindOptions.max_time_ms(opts, options.getMaxTimeMS());
 
-        // Bson options (nullable)
-        com.mongodb.internal.rust.crud.ffi.FindOptions.max(opts,
-                options.getMax() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getMax().toBsonDocument())
-                        : MemorySegment.NULL);
-        com.mongodb.internal.rust.crud.ffi.FindOptions.min(opts,
-                options.getMin() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getMin().toBsonDocument())
-                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.max(opts, optBsonDoc(arena, options.getMax()));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.min(opts, optBsonDoc(arena, options.getMin()));
 
         com.mongodb.internal.rust.crud.ffi.FindOptions.no_cursor_timeout(opts,
                 (byte) (options.isNoCursorTimeout() ? 1 : 0));
 
-        com.mongodb.internal.rust.crud.ffi.FindOptions.projection(opts,
-                options.getProjection() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getProjection().toBsonDocument())
-                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.projection(opts, optBsonDoc(arena, options.getProjection()));
 
         com.mongodb.internal.rust.crud.ffi.FindOptions.return_key(opts,
                 (byte) (options.isReturnKey() ? 1 : 0));
         com.mongodb.internal.rust.crud.ffi.FindOptions.show_record_id(opts,
                 (byte) (options.isShowRecordId() ? 1 : 0));
 
-        com.mongodb.internal.rust.crud.ffi.FindOptions.sort(opts,
-                options.getSort() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getSort().toBsonDocument())
-                        : MemorySegment.NULL);
-
-        com.mongodb.internal.rust.crud.ffi.FindOptions.collation(opts,
-                options.getCollation() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getCollation().asDocument())
-                        : MemorySegment.NULL);
-
-        com.mongodb.internal.rust.crud.ffi.FindOptions.let_vars(opts,
-                options.getLet() != null
-                        ? BsonMarshaller.toBsonStruct(arena, options.getLet().toBsonDocument())
-                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOptions.sort(opts, optBsonDoc(arena, options.getSort()));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.let_vars(opts, optLetVars(arena, options.getLet()));
 
         return opts;
     }
 
     @Override
-    public <T> void findOneAndUpdate(MongoNamespace namespace, Bson filter, Bson update, FindOneAndUpdateOptions options,
+    public <T> void findOneAndDelete(MongoNamespace namespace, Bson filter, FindOneAndDeleteOptions options,
                                       Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
-        throw new UnsupportedOperationException("FFI: findOneAndUpdate not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildFindOneAndDeleteOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> decodeFindOneResult(result, decoder),
+                    arena));
+
+            MongoDbFfi.mongo_find_one_and_delete(clientPtr, operationContext, dbName, collName, filterBson,
+                    opts, findOneCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
     public <T> void findOneAndReplace(MongoNamespace namespace, Bson filter, BsonDocument replacement, FindOneAndReplaceOptions options,
                                        Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
-        throw new UnsupportedOperationException("FFI: findOneAndReplace not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment replacementBson = BsonMarshaller.toBsonStruct(arena, replacement);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildFindOneAndReplaceOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> decodeFindOneResult(result, decoder),
+                    arena));
+
+            MongoDbFfi.mongo_find_one_and_replace(clientPtr, operationContext, dbName, collName, filterBson,
+                    replacementBson, opts, findOneCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
-    public <T> void findOneAndDelete(MongoNamespace namespace, Bson filter, FindOneAndDeleteOptions options,
+    public <T> void findOneAndUpdate(MongoNamespace namespace, Bson filter, Bson update, FindOneAndUpdateOptions options,
                                       Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<T> callback) {
-        throw new UnsupportedOperationException("FFI: findOneAndDelete not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildFindOneAndUpdateOptions(arena, options);
+            org.bson.BsonDocument updateDoc = update.toBsonDocument();
+            MemorySegment[] updateAndPipeline = buildUpdateOrPipeline(arena, updateDoc);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> decodeFindOneResult(result, decoder),
+                    arena));
+
+            MongoDbFfi.mongo_find_one_and_update(clientPtr, operationContext, dbName, collName, filterBson,
+                    updateAndPipeline[0], updateAndPipeline[1], opts,
+                    findOneCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     // ==================== Aggregate Operations ====================
@@ -813,14 +954,57 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     public <T> void aggregate(MongoNamespace namespace, List<BsonDocument> pipeline, AggregateOptions options,
                               @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
                               NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        throw new UnsupportedOperationException("FFI: aggregate not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment pipelineStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, pipeline);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildAggregateOptions(arena, options, bypassDocumentValidation);
+
+            MemorySegment sessionPtr = session != null
+                    ? ((FfmAsyncClientSession) session).getSessionPtr()
+                    : MemorySegment.NULL;
+            final MemorySegment capturedClientPtr = clientPtr;
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> FfmAsyncCursor.fromCursorResult(capturedClientPtr, result, sessionPtr, decoder),
+                    arena));
+
+            MongoDbFfi.mongo_aggregate_collection(clientPtr, operationContext, dbName, collName, pipelineStruct,
+                    opts, aggregateCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
     public <T> void aggregateDatabase(String databaseName, List<BsonDocument> pipeline, AggregateOptions options,
                                        @Nullable Boolean bypassDocumentValidation, Decoder<T> decoder,
                                        NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        throw new UnsupportedOperationException("FFI: aggregateDatabase not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(databaseName);
+            MemorySegment pipelineStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, pipeline);
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildAggregateOptions(arena, options, bypassDocumentValidation);
+
+            MemorySegment sessionPtr = session != null
+                    ? ((FfmAsyncClientSession) session).getSessionPtr()
+                    : MemorySegment.NULL;
+            final MemorySegment capturedClientPtr = clientPtr;
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> FfmAsyncCursor.fromCursorResult(capturedClientPtr, result, sessionPtr, decoder),
+                    arena));
+
+            MongoDbFfi.mongo_aggregate_database(clientPtr, operationContext, dbName, pipelineStruct,
+                    opts, aggregateCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     // ==================== Count Operations ====================
@@ -828,13 +1012,46 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     @Override
     public void countDocuments(MongoNamespace namespace, Bson filter, CountOptions options,
                                 NativeOperationContext context, @Nullable NativeAsyncClientSession session, SingleResultCallback<Long> callback) {
-        throw new UnsupportedOperationException("FFI: countDocuments not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildCountOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> result.address(),  // count encoded as address by dispatchCount
+                    arena));
+
+            MongoDbFfi.mongo_count_documents(clientPtr, operationContext, dbName, collName, filterBson,
+                    opts, countCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
     public void estimatedDocumentCount(MongoNamespace namespace, EstimatedDocumentCountOptions options,
                                         NativeOperationContext context, SingleResultCallback<Long> callback) {
-        throw new UnsupportedOperationException("FFI: estimatedDocumentCount not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment operationContext = buildOperationContext(arena, context, null);
+            MemorySegment opts = buildEstimatedDocumentCountOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> result.address(),  // count encoded as address by dispatchCount
+                    arena));
+
+            MongoDbFfi.mongo_estimated_document_count(clientPtr, operationContext, dbName, collName,
+                    opts, countCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     @Override
@@ -996,6 +1213,261 @@ public final class FfmAsyncClient implements NativeAsyncClient {
                            BulkWriteOptions options, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                            SingleResultCallback<BulkWriteResult> callback) {
         throw new UnsupportedOperationException("FFI: bulkWrite not yet implemented");
+    }
+
+    // ==================== Result Parsers ====================
+
+    private static com.mongodb.client.result.DeleteResult parseDeleteResult(MemorySegment result) {
+        long deletedCount = com.mongodb.internal.rust.crud.ffi.DeleteResult.deleted_count(result);
+        return com.mongodb.client.result.DeleteResult.acknowledged(deletedCount);
+    }
+
+    private static UpdateResult parseUpdateResult(MemorySegment result) {
+        long matchedCount = com.mongodb.internal.rust.crud.ffi.UpdateResult.matched_count(result);
+        long modifiedCount = com.mongodb.internal.rust.crud.ffi.UpdateResult.modified_count(result);
+        MemorySegment upsertedIdSegment = com.mongodb.internal.rust.crud.ffi.UpdateResult.upserted_id(result);
+        org.bson.BsonValue upsertedId = BsonMarshaller.fromBsonValueStruct(upsertedIdSegment);
+        // upserted_id is BsonNull (or zero-type) when no upsert occurred
+        org.bson.BsonValue finalUpsertedId = (upsertedId == null || upsertedId.isNull()) ? null : upsertedId;
+        return UpdateResult.acknowledged(matchedCount, modifiedCount, finalUpsertedId);
+    }
+
+    @Nullable
+    private static <T> T decodeFindOneResult(MemorySegment result, Decoder<T> decoder) {
+        if (result.address() == 0) {
+            return null;  // No document matched
+        }
+        MemorySegment bsonStruct = result.reinterpret(com.mongodb.internal.rust.crud.ffi.Bson.sizeof());
+        MemorySegment data = com.mongodb.internal.rust.crud.ffi.Bson.data(bsonStruct);
+        long len = com.mongodb.internal.rust.crud.ffi.Bson.len(bsonStruct);
+        if (data.address() == 0 || len == 0) {
+            return null;
+        }
+        return BsonMarshaller.decode(data, len, decoder);
+    }
+
+    // ==================== Options Builders ====================
+
+    // Common option field helpers — reduce repetition across 7+ builder methods
+
+    private static MemorySegment optCollation(Arena arena, @Nullable com.mongodb.client.model.Collation c) {
+        return c != null ? BsonMarshaller.toBsonStruct(arena, c.asDocument()) : MemorySegment.NULL;
+    }
+
+    private static MemorySegment optHintName(Arena arena, @Nullable String hintString) {
+        return hintString != null ? arena.allocateFrom(hintString) : MemorySegment.NULL;
+    }
+
+    private static MemorySegment optBsonDoc(Arena arena, @Nullable Bson doc) {
+        return doc != null ? BsonMarshaller.toBsonStruct(arena, doc.toBsonDocument()) : MemorySegment.NULL;
+    }
+
+    private static MemorySegment optLetVars(Arena arena, @Nullable Bson let) {
+        return let != null ? BsonMarshaller.toBsonStruct(arena, let.toBsonDocument()) : MemorySegment.NULL;
+    }
+
+    private static MemorySegment optComment(Arena arena, @Nullable org.bson.BsonValue comment) {
+        return comment != null ? BsonMarshaller.toBsonValueStruct(arena, comment) : MemorySegment.NULL;
+    }
+
+    private MemorySegment buildDeleteOptions(Arena arena, DeleteOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.DeleteOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.DeleteOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.DeleteOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.DeleteOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.DeleteOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        com.mongodb.internal.rust.crud.ffi.DeleteOptions.comment(opts, optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    private MemorySegment buildUpdateOptions(Arena arena, UpdateOptions options) {
+        MemorySegment opts = UpdateOneOptions.allocate(arena);
+        UpdateOneOptions.collation(opts, optCollation(arena, options.getCollation()));
+        UpdateOneOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        UpdateOneOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        UpdateOneOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        UpdateOneOptions.comment(opts, optComment(arena, options.getComment()));
+        List<? extends Bson> arrayFilters = options.getArrayFilters();
+        if (arrayFilters != null && !arrayFilters.isEmpty()) {
+            BsonArray filterArray = new BsonArray(
+                    arrayFilters.stream().map(f -> (org.bson.BsonValue) f.toBsonDocument()).collect(Collectors.toList()));
+            UpdateOneOptions.array_filters(opts, BsonMarshaller.toBsonArrayStruct(arena, filterArray));
+        } else {
+            UpdateOneOptions.array_filters(opts, MemorySegment.NULL);
+        }
+        UpdateOneOptions.upsert(opts, (byte) (options.isUpsert() ? 1 : 0));
+        UpdateOneOptions.bypass_document_validation(opts,
+                options.getBypassDocumentValidation() == null ? (byte) -1
+                        : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        return opts;
+    }
+
+    private MemorySegment buildReplaceOneOptions(Arena arena, ReplaceOptions options) {
+        MemorySegment opts = ReplaceOneOptions.allocate(arena);
+        ReplaceOneOptions.collation(opts, optCollation(arena, options.getCollation()));
+        ReplaceOneOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        ReplaceOneOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        ReplaceOneOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        ReplaceOneOptions.comment(opts, optComment(arena, options.getComment()));
+        ReplaceOneOptions.upsert(opts, (byte) (options.isUpsert() ? 1 : 0));
+        ReplaceOneOptions.bypass_document_validation(opts,
+                options.getBypassDocumentValidation() == null ? (byte) -1
+                        : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        return opts;
+    }
+
+    private MemorySegment buildAggregateOptions(Arena arena, AggregateOptions options, @Nullable Boolean bypassDocumentValidation) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.AggregateOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.allow_disk_use(opts,
+                options.getAllowDiskUse() == null ? (byte) -1 : (byte) (options.getAllowDiskUse() ? 1 : 0));
+        int batchSize = options.getBatchSize() == 0 ? -1 : options.getBatchSize();
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.batch_size(opts, batchSize);
+        // bypassDocumentValidation comes from the iterable, not options
+        byte bypass = bypassDocumentValidation == null ? (byte) -1 : (byte) (bypassDocumentValidation ? 1 : 0);
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.bypass_document_validation(opts, bypass);
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.comment(opts, optComment(arena, options.getComment()));
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.max_time_ms(opts, options.getMaxTimeMS());
+        com.mongodb.internal.rust.crud.ffi.AggregateOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        return opts;
+    }
+
+    private MemorySegment buildCountOptions(Arena arena, CountOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.CountOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.CountOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.CountOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.CountOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        long limit = options.getLimit();
+        com.mongodb.internal.rust.crud.ffi.CountOptions.limit(opts, limit == 0 ? -1L : limit);
+        long skip = options.getSkip();
+        com.mongodb.internal.rust.crud.ffi.CountOptions.skip(opts, skip == 0 ? -1L : skip);
+        com.mongodb.internal.rust.crud.ffi.CountOptions.max_time_ms(opts, options.getMaxTime(TimeUnit.MILLISECONDS));
+        com.mongodb.internal.rust.crud.ffi.CountOptions.comment(opts, optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    private MemorySegment buildEstimatedDocumentCountOptions(Arena arena, EstimatedDocumentCountOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.EstimatedDocumentCountOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.EstimatedDocumentCountOptions.max_time_ms(opts,
+                options.getMaxTime(TimeUnit.MILLISECONDS));
+        com.mongodb.internal.rust.crud.ffi.EstimatedDocumentCountOptions.comment(opts,
+                optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    private MemorySegment buildFindOneAndDeleteOptions(Arena arena, com.mongodb.client.model.FindOneAndDeleteOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.max_time_ms(opts, options.getMaxTime(TimeUnit.MILLISECONDS));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.projection(opts,
+                options.getProjection() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getProjection().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.sort(opts,
+                options.getSort() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getSort().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndDeleteOptions.comment(opts, optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    private MemorySegment buildFindOneAndReplaceOptions(Arena arena, com.mongodb.client.model.FindOneAndReplaceOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.bypass_document_validation(opts,
+                options.getBypassDocumentValidation() == null ? (byte) -1
+                        : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.max_time_ms(opts, options.getMaxTime(TimeUnit.MILLISECONDS));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.projection(opts,
+                options.getProjection() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getProjection().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.return_document(opts, toReturnDocument(options.getReturnDocument()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.sort(opts,
+                options.getSort() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getSort().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.upsert(opts, (byte) (options.isUpsert() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndReplaceOptions.comment(opts, optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    private MemorySegment buildFindOneAndUpdateOptions(Arena arena, com.mongodb.client.model.FindOneAndUpdateOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.allocate(arena);
+        // array_filters: embedded BsonArray struct
+        List<? extends Bson> arrayFilters = options.getArrayFilters();
+        if (arrayFilters != null && !arrayFilters.isEmpty()) {
+            List<org.bson.BsonDocument> filterDocs = arrayFilters.stream()
+                    .map(f -> f.toBsonDocument())
+                    .collect(Collectors.toList());
+            com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.array_filters(opts,
+                    BsonMarshaller.toDocumentBsonArrayStruct(arena, filterDocs));
+        } else {
+            com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.array_filters(opts, emptyBsonArray(arena));
+        }
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.bypass_document_validation(opts,
+                options.getBypassDocumentValidation() == null ? (byte) -1
+                        : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.max_time_ms(opts, options.getMaxTime(TimeUnit.MILLISECONDS));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.projection(opts,
+                options.getProjection() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getProjection().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.return_document(opts, toReturnDocument(options.getReturnDocument()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.sort(opts,
+                options.getSort() != null
+                        ? BsonMarshaller.toBsonStruct(arena, options.getSort().toBsonDocument())
+                        : MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.upsert(opts, (byte) (options.isUpsert() ? 1 : 0));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        com.mongodb.internal.rust.crud.ffi.FindOneAndUpdateOptions.comment(opts, optComment(arena, options.getComment()));
+        return opts;
+    }
+
+    /**
+     * Splits an update document into (update_doc, pipeline) pair for the FFI.
+     * When the update was specified as a pipeline via pipelineToBson(), it arrives as {"$pipeline": [...]}.
+     * Returns [updateDocOrNull, pipelineStruct] where exactly one is non-null/non-empty.
+     */
+    private MemorySegment[] buildUpdateOrPipeline(Arena arena, org.bson.BsonDocument updateDoc) {
+        if (updateDoc.containsKey("$pipeline")) {
+            org.bson.BsonArray pipelineArray = updateDoc.getArray("$pipeline");
+            List<org.bson.BsonDocument> stages = pipelineArray.stream()
+                    .map(v -> (org.bson.BsonDocument) v)
+                    .collect(Collectors.toList());
+            MemorySegment pipelineStruct = BsonMarshaller.toDocumentBsonArrayStruct(arena, stages);
+            return new MemorySegment[]{MemorySegment.NULL, pipelineStruct};
+        } else {
+            return new MemorySegment[]{BsonMarshaller.toBsonStruct(arena, updateDoc), emptyBsonArray(arena)};
+        }
+    }
+
+    private MemorySegment emptyBsonArray(Arena arena) {
+        MemorySegment bsonArray = com.mongodb.internal.rust.crud.ffi.BsonArray.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.BsonArray.data(bsonArray, MemorySegment.NULL);
+        com.mongodb.internal.rust.crud.ffi.BsonArray.len(bsonArray, 0);
+        return bsonArray;
+    }
+
+    private static byte toReturnDocument(@Nullable com.mongodb.client.model.ReturnDocument returnDocument) {
+        if (returnDocument == null) {
+            return (byte) -1;
+        }
+        return switch (returnDocument) {
+            case BEFORE -> (byte) 0;
+            case AFTER -> (byte) 1;
+        };
     }
 
     // ==================== Lifecycle ====================

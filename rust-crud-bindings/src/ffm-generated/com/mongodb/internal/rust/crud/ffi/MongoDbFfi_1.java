@@ -15141,6 +15141,137 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_aggregate_collection {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_aggregate_collection");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_collection(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_aggregate_collection$descriptor() {
+        return mongo_aggregate_collection.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_collection(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_aggregate_collection$handle() {
+        return mongo_aggregate_collection.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_collection(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_aggregate_collection$address() {
+        return mongo_aggregate_collection.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_aggregate_collection(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_aggregate_collection(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment pipeline, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_aggregate_collection.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_aggregate_collection", client, ctx, db_name, coll_name, pipeline, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, pipeline, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_aggregate_database {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_aggregate_database");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_database(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_aggregate_database$descriptor() {
+        return mongo_aggregate_database.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_database(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_aggregate_database$handle() {
+        return mongo_aggregate_database.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_aggregate_database(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_aggregate_database$address() {
+        return mongo_aggregate_database.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_aggregate_database(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, struct BsonArray pipeline, const struct AggregateOptions *opts, AggregateCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_aggregate_database(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment pipeline, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_aggregate_database.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_aggregate_database", client, ctx, db_name, pipeline, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, pipeline, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_client_destroy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER
@@ -15263,6 +15394,72 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_count_documents {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_count_documents");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_count_documents(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct CountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_count_documents$descriptor() {
+        return mongo_count_documents.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_count_documents(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct CountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_count_documents$handle() {
+        return mongo_count_documents.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_count_documents(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct CountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_count_documents$address() {
+        return mongo_count_documents.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_count_documents(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct CountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_count_documents(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_count_documents.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_count_documents", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_cursor_close {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER
@@ -15378,6 +15575,138 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
                 traceDowncall("mongo_cursor_get_more", client, cursor, session, userdata, callback);
             }
             mh$.invokeExact(client, cursor, session, userdata, callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_delete_many {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_delete_many");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_delete_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_delete_many$descriptor() {
+        return mongo_delete_many.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_delete_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_delete_many$handle() {
+        return mongo_delete_many.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_delete_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_delete_many$address() {
+        return mongo_delete_many.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_delete_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_delete_many(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_delete_many.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_delete_many", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_delete_one {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_delete_one");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_delete_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_delete_one$descriptor() {
+        return mongo_delete_one.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_delete_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_delete_one$handle() {
+        return mongo_delete_one.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_delete_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_delete_one$address() {
+        return mongo_delete_one.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_delete_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct DeleteOptions *opts, DeleteCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_delete_one(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_delete_one.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_delete_one", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15512,6 +15841,71 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_estimated_document_count {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_estimated_document_count");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_estimated_document_count(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct EstimatedDocumentCountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_estimated_document_count$descriptor() {
+        return mongo_estimated_document_count.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_estimated_document_count(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct EstimatedDocumentCountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_estimated_document_count$handle() {
+        return mongo_estimated_document_count.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_estimated_document_count(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct EstimatedDocumentCountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_estimated_document_count$address() {
+        return mongo_estimated_document_count.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_estimated_document_count(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct EstimatedDocumentCountOptions *opts, CountCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_estimated_document_count(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_estimated_document_count.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_estimated_document_count", client, ctx, db_name, coll_name, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_find {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER,
@@ -15571,6 +15965,207 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
                 traceDowncall("mongo_find", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_find_one_and_delete {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_delete");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_delete(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOneAndDeleteOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_find_one_and_delete$descriptor() {
+        return mongo_find_one_and_delete.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_delete(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOneAndDeleteOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_find_one_and_delete$handle() {
+        return mongo_find_one_and_delete.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_delete(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOneAndDeleteOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_find_one_and_delete$address() {
+        return mongo_find_one_and_delete.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_find_one_and_delete(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct FindOneAndDeleteOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_find_one_and_delete(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_find_one_and_delete.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_find_one_and_delete", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_find_one_and_replace {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_replace");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_replace(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct FindOneAndReplaceOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_find_one_and_replace$descriptor() {
+        return mongo_find_one_and_replace.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_replace(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct FindOneAndReplaceOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_find_one_and_replace$handle() {
+        return mongo_find_one_and_replace.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_replace(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct FindOneAndReplaceOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_find_one_and_replace$address() {
+        return mongo_find_one_and_replace.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_find_one_and_replace(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct FindOneAndReplaceOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_find_one_and_replace(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment replacement, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_find_one_and_replace.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_find_one_and_replace", client, ctx, db_name, coll_name, filter, replacement, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, replacement, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_find_one_and_update {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_find_one_and_update");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_update(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update_doc, struct BsonArray update_pipeline, const struct FindOneAndUpdateOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_find_one_and_update$descriptor() {
+        return mongo_find_one_and_update.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_update(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update_doc, struct BsonArray update_pipeline, const struct FindOneAndUpdateOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_find_one_and_update$handle() {
+        return mongo_find_one_and_update.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_find_one_and_update(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update_doc, struct BsonArray update_pipeline, const struct FindOneAndUpdateOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_find_one_and_update$address() {
+        return mongo_find_one_and_update.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_find_one_and_update(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update_doc, struct BsonArray update_pipeline, const struct FindOneAndUpdateOptions *opts, FindOneCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_find_one_and_update(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment update_doc, MemorySegment update_pipeline, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_find_one_and_update.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_find_one_and_update", client, ctx, db_name, coll_name, filter, update_doc, update_pipeline, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, update_doc, update_pipeline, opts, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15952,6 +16547,73 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
         }
     }
 
+    private static class mongo_replace_one {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_replace_one");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_replace_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct ReplaceOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_replace_one$descriptor() {
+        return mongo_replace_one.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_replace_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct ReplaceOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_replace_one$handle() {
+        return mongo_replace_one.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_replace_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct ReplaceOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_replace_one$address() {
+        return mongo_replace_one.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_replace_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *replacement, const struct ReplaceOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_replace_one(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment replacement, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_replace_one.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_replace_one", client, ctx, db_name, coll_name, filter, replacement, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, replacement, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class mongo_run_command {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             MongoDbFfi.C_POINTER,
@@ -16317,6 +16979,142 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
                 traceDowncall("mongo_session_start_transaction", client, session, options, callback, userdata);
             }
             mh$.invokeExact(client, session, options, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_update_many {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_update_many");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_update_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_update_many$descriptor() {
+        return mongo_update_many.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_update_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_update_many$handle() {
+        return mongo_update_many.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_update_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_update_many$address() {
+        return mongo_update_many.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_update_many(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_update_many(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment update, MemorySegment pipeline, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_update_many.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_update_many", client, ctx, db_name, coll_name, filter, update, pipeline, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, update, pipeline, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_update_one {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            BsonArray.layout(),
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_update_one");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_update_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_update_one$descriptor() {
+        return mongo_update_one.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_update_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_update_one$handle() {
+        return mongo_update_one.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_update_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_update_one$address() {
+        return mongo_update_one.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_update_one(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const struct Bson *filter, const struct Bson *update, struct BsonArray pipeline, const struct UpdateOneOptions *opts, UpdateCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_update_one(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment filter, MemorySegment update, MemorySegment pipeline, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_update_one.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_update_one", client, ctx, db_name, coll_name, filter, update, pipeline, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, filter, update, pipeline, opts, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -17155,114 +17953,6 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_X_VERSION_10_14() {
         return MAC_OS_X_VERSION_10_14;
-    }
-    private static final int MAC_OS_X_VERSION_10_14_1 = (int)101401L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_14_1 101401
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_14_1() {
-        return MAC_OS_X_VERSION_10_14_1;
-    }
-    private static final int MAC_OS_X_VERSION_10_14_4 = (int)101404L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_14_4 101404
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_14_4() {
-        return MAC_OS_X_VERSION_10_14_4;
-    }
-    private static final int MAC_OS_X_VERSION_10_14_5 = (int)101405L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_14_5 101405
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_14_5() {
-        return MAC_OS_X_VERSION_10_14_5;
-    }
-    private static final int MAC_OS_X_VERSION_10_14_6 = (int)101406L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_14_6 101406
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_14_6() {
-        return MAC_OS_X_VERSION_10_14_6;
-    }
-    private static final int MAC_OS_X_VERSION_10_15 = (int)101500L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_15 101500
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_15() {
-        return MAC_OS_X_VERSION_10_15;
-    }
-    private static final int MAC_OS_X_VERSION_10_15_1 = (int)101501L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_15_1 101501
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_15_1() {
-        return MAC_OS_X_VERSION_10_15_1;
-    }
-    private static final int MAC_OS_X_VERSION_10_15_4 = (int)101504L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_15_4 101504
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_15_4() {
-        return MAC_OS_X_VERSION_10_15_4;
-    }
-    private static final int MAC_OS_X_VERSION_10_16 = (int)101600L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_16 101600
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_16() {
-        return MAC_OS_X_VERSION_10_16;
-    }
-    private static final int MAC_OS_VERSION_11_0 = (int)110000L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_0 110000
-     * }
-     */
-    public static int MAC_OS_VERSION_11_0() {
-        return MAC_OS_VERSION_11_0;
-    }
-    private static final int MAC_OS_VERSION_11_1 = (int)110100L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_1 110100
-     * }
-     */
-    public static int MAC_OS_VERSION_11_1() {
-        return MAC_OS_VERSION_11_1;
-    }
-    private static final int MAC_OS_VERSION_11_3 = (int)110300L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_3 110300
-     * }
-     */
-    public static int MAC_OS_VERSION_11_3() {
-        return MAC_OS_VERSION_11_3;
-    }
-    private static final int MAC_OS_VERSION_11_4 = (int)110400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_VERSION_11_4 110400
-     * }
-     */
-    public static int MAC_OS_VERSION_11_4() {
-        return MAC_OS_VERSION_11_4;
     }
 }
 

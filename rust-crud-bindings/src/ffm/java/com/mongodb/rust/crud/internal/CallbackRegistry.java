@@ -103,6 +103,19 @@ public final class CallbackRegistry {
     }
 
     /**
+     * Dispatches a count callback result to the pending operation identified by userdata.
+     * Encodes the count value as the address of a synthetic MemorySegment so the standard
+     * dispatch path can be reused.
+     *
+     * @param userdata the userdata passed to the callback (contains operation ID as address)
+     * @param count the document count returned by native code
+     * @param error the error from native code (may be NULL for success)
+     */
+    public static void dispatchCount(MemorySegment userdata, long count, MemorySegment error) {
+        dispatch(userdata, MemorySegment.ofAddress(count), error);
+    }
+
+    /**
      * Returns the number of pending operations. Useful for testing/debugging.
      */
     public static int getPendingCount() {
