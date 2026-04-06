@@ -51,6 +51,12 @@ public abstract class UnifiedSyncTest extends UnifiedTest {
 
     @NonNull
     protected static Collection<Arguments> getTestData(final String directory) {
-        return getTestData(directory, false, Language.JAVA);
+        Collection<Arguments> all = getTestData(directory, false, Language.JAVA);
+        String filter = System.getProperty("testNameFilter");
+        if (filter == null) return all;
+        String[] patterns = filter.split("\\|");
+        return all.stream()
+                .filter(a -> java.util.Arrays.stream(patterns).anyMatch(((String) a.get()[0])::contains))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

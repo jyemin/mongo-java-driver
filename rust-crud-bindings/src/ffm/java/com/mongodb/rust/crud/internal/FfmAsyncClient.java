@@ -21,7 +21,6 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCompressor;
 import com.mongodb.MongoException;
 import com.mongodb.ReadConcern;
-import com.mongodb.TransactionOptions;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -37,13 +36,27 @@ import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionPoolSettings;
 import com.mongodb.connection.ServerSettings;
 import com.mongodb.connection.SocketSettings;
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ServerId;
+import com.mongodb.event.CommandFailedEvent;
+import com.mongodb.event.CommandListener;
+import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import com.mongodb.internal.rust.crud.ffi.AggregateCallback;
 import com.mongodb.internal.rust.crud.ffi.AuthSettings;
 import com.mongodb.internal.rust.crud.ffi.ConnectionSettings;
+import com.mongodb.internal.rust.crud.ffi.DestroyCallback;
+import com.mongodb.internal.rust.crud.ffi.FfiCommandFailedEvent;
+import com.mongodb.internal.rust.crud.ffi.FfiCommandStartedEvent;
+import com.mongodb.internal.rust.crud.ffi.FfiCommandSucceededEvent;
+import com.mongodb.internal.rust.crud.ffi.MongoCommandEventHandler;
 import com.mongodb.internal.rust.crud.ffi.CountCallback;
-import com.mongodb.internal.rust.crud.ffi.CursorResult;
 import com.mongodb.internal.rust.crud.ffi.DeleteCallback;
+import com.mongodb.internal.rust.crud.ffi.DistinctCallback;
+import com.mongodb.internal.rust.crud.ffi.DistinctResult;
 import com.mongodb.internal.rust.crud.ffi.FindOneCallback;
+import com.mongodb.internal.rust.crud.ffi.OwnedBsonValue;
 import com.mongodb.internal.rust.crud.ffi.MongoDbFfi;
 import com.mongodb.internal.rust.crud.ffi.OperationContext;
 import com.mongodb.internal.rust.crud.ffi.ReplaceOneOptions;
@@ -68,10 +81,12 @@ import org.bson.conversions.Bson;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -94,7 +109,6 @@ import java.util.stream.Collectors;
  *
  * <h3>Not Yet Implemented:</h3>
  * <ul>
- *   <li>distinct</li>
  *   <li>Index operations (createIndex, dropIndex, listIndexes)</li>
  *   <li>Collection/database admin (createCollection, renameCollection, listCollections, listDatabases)</li>
  *   <li>Change streams, Bulk write</li>
@@ -105,6 +119,10 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     private final MemorySegment clientPtr;
     private final Arena clientArena;
     private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final List<CommandListener> commandListeners;
+    // GC-managed arena for upcall stubs that must outlive clientArena — Rust's async shutdown
+    // (endSessions, SDAM teardown) fires event callbacks after mongo_client_destroy() returns.
+    // The destroy callback stub also lives here so it can be invoked after clientArena is closed.
 
     // Cache FFI handles to avoid repeated allocations and leaks
     private final ConcurrentHashMap<ReadPreference, MemorySegment> readPreferenceCache = new ConcurrentHashMap<>();
@@ -122,9 +140,11 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     private final MemorySegment findOneCallbackStub;
     private final MemorySegment countCallbackStub;
     private final MemorySegment aggregateCallbackStub;
+    private final MemorySegment distinctCallbackStub;
 
     public FfmAsyncClient(MongoClientSettings settings) {
         this.clientArena = Arena.ofShared();
+        this.commandListeners = settings.getCommandListeners();
         this.clientPtr = createClient(settings);
 
         // Initialize shared callback stubs - all use the same dispatch pattern
@@ -158,6 +178,9 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         this.aggregateCallbackStub = AggregateCallback.allocate(
                 (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
                 clientArena);
+        this.distinctCallbackStub = DistinctCallback.allocate(
+                (userdata, result, error) -> CallbackRegistry.dispatch(userdata, result, error),
+                clientArena);
     }
 
     private MemorySegment createClient(MongoClientSettings settings) {
@@ -183,9 +206,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         MemorySegment errorPtrPtr = clientArena.allocate(ValueLayout.ADDRESS);
         errorPtrPtr.set(ValueLayout.ADDRESS, 0, MemorySegment.NULL);
 
+        // Build command event handler (NULL if no listeners registered)
+        MemorySegment commandEventHandler = buildCommandEventHandler();
+
         // Call FFI
         MemorySegment clientPtr = MongoDbFfi.mongo_client_new(
-                connectionSettings, authSettings, tlsSettings, errorPtrPtr);
+                connectionSettings, authSettings, tlsSettings, commandEventHandler, errorPtrPtr);
 
         // Check for errors
         MemorySegment errorPtr = errorPtrPtr.get(ValueLayout.ADDRESS, 0);
@@ -832,7 +858,12 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         int batchSize = options.getBatchSize();
         com.mongodb.internal.rust.crud.ffi.FindOptions.batch_size(opts, batchSize);
 
-        com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts, optComment(arena, options.getComment()));
+        // FindOptions.comment is *const Bson (value wrapped in doc with empty key), unlike other options
+        // that use *const BsonValue directly.
+        BsonValue findComment = options.getComment();
+        MemorySegment findCommentSegment = findComment == null ? MemorySegment.NULL
+                : BsonMarshaller.toBsonStruct(arena, new org.bson.BsonDocument("", findComment));
+        com.mongodb.internal.rust.crud.ffi.FindOptions.comment(opts, findCommentSegment);
 
         // Cursor type: 0 = NonTailable, 1 = Tailable, 2 = TailableAwait
         byte cursorType = 0;
@@ -1058,7 +1089,39 @@ public final class FfmAsyncClient implements NativeAsyncClient {
     public <T> void distinct(MongoNamespace namespace, String fieldName, Bson filter, DistinctOptions options,
                               Decoder<T> decoder, NativeOperationContext context, @Nullable NativeAsyncClientSession session,
                               SingleResultCallback<NativeAsyncCursor<T>> callback) {
-        throw new UnsupportedOperationException("FFI: distinct not yet implemented");
+        Arena arena = Arena.ofAuto();
+        try {
+            MemorySegment dbName = arena.allocateFrom(namespace.getDatabaseName());
+            MemorySegment collName = arena.allocateFrom(namespace.getCollectionName());
+            MemorySegment fieldNameSeg = arena.allocateFrom(fieldName);
+            MemorySegment filterBson = BsonMarshaller.toBsonStruct(arena, filter.toBsonDocument());
+            MemorySegment operationContext = buildOperationContext(arena, context, session);
+            MemorySegment opts = buildDistinctOptions(arena, options);
+
+            long opId = CallbackRegistry.register(new PendingOperation<>(
+                    callback,
+                    (result) -> {
+                        long len = DistinctResult.len(result);
+                        if (len == 0) {
+                            return new ListBackedCursor<>(List.of());
+                        }
+                        MemorySegment valuesPtr = DistinctResult.values(result);
+                        MemorySegment valuesArray = valuesPtr.reinterpret(len * OwnedBsonValue.layout().byteSize());
+                        List<T> items = new ArrayList<>((int) len);
+                        for (int i = 0; i < len; i++) {
+                            MemorySegment valueSeg = OwnedBsonValue.asSlice(valuesArray, i);
+                            BsonValue bsonValue = BsonMarshaller.fromBsonValueStruct(valueSeg);
+                            items.add(decodeBsonValue(bsonValue, decoder));
+                        }
+                        return new ListBackedCursor<>(items);
+                    },
+                    arena));
+
+            MongoDbFfi.mongo_distinct(clientPtr, operationContext, dbName, collName, fieldNameSeg,
+                    filterBson, opts, distinctCallbackStub, CallbackRegistry.toUserdata(opId));
+        } catch (Exception e) {
+            callback.onResult(null, e);
+        }
     }
 
     // ==================== Index Operations ====================
@@ -1299,6 +1362,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         UpdateOneOptions.bypass_document_validation(opts,
                 options.getBypassDocumentValidation() == null ? (byte) -1
                         : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        UpdateOneOptions.sort(opts, optBsonDoc(arena, options.getSort()));
         return opts;
     }
 
@@ -1313,6 +1377,7 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         ReplaceOneOptions.bypass_document_validation(opts,
                 options.getBypassDocumentValidation() == null ? (byte) -1
                         : (byte) (options.getBypassDocumentValidation() ? 1 : 0));
+        ReplaceOneOptions.sort(opts, optBsonDoc(arena, options.getSort()));
         return opts;
     }
 
@@ -1331,6 +1396,16 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         com.mongodb.internal.rust.crud.ffi.AggregateOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
         com.mongodb.internal.rust.crud.ffi.AggregateOptions.max_time_ms(opts, options.getMaxTimeMS());
         com.mongodb.internal.rust.crud.ffi.AggregateOptions.let_vars(opts, optLetVars(arena, options.getLet()));
+        return opts;
+    }
+
+    private MemorySegment buildDistinctOptions(Arena arena, DistinctOptions options) {
+        MemorySegment opts = com.mongodb.internal.rust.crud.ffi.DistinctOptions.allocate(arena);
+        com.mongodb.internal.rust.crud.ffi.DistinctOptions.collation(opts, optCollation(arena, options.getCollation()));
+        com.mongodb.internal.rust.crud.ffi.DistinctOptions.hint_name(opts, optHintName(arena, options.getHintString()));
+        com.mongodb.internal.rust.crud.ffi.DistinctOptions.hint_keys(opts, optBsonDoc(arena, options.getHint()));
+        com.mongodb.internal.rust.crud.ffi.DistinctOptions.max_time_ms(opts, options.getMaxTimeMS());
+        com.mongodb.internal.rust.crud.ffi.DistinctOptions.comment(opts, optComment(arena, options.getComment()));
         return opts;
     }
 
@@ -1470,6 +1545,91 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         };
     }
 
+    // ==================== Command Monitoring ====================
+
+    private MemorySegment buildCommandEventHandler() {
+        if (commandListeners.isEmpty()) {
+            return MemorySegment.NULL;
+        }
+        // Allocate the handler struct in clientArena; mongo_client_new copies the fn pointers
+        // and userdata out before returning, so the struct doesn't need to outlive this call.
+        // Allocate upcall stubs in commandEventArena (GC-managed) so they outlive clientArena —
+        // the Rust closure capturing these fn pointers lives as long as the Rust client.
+        MemorySegment handler = MongoCommandEventHandler.allocate(clientArena);
+        MongoCommandEventHandler.started(handler,
+                MongoCommandEventHandler.started.allocate(
+                        (userdata, eventPtr) -> dispatchCommandStarted(eventPtr), clientArena));
+        MongoCommandEventHandler.succeeded(handler,
+                MongoCommandEventHandler.succeeded.allocate(
+                        (userdata, eventPtr) -> dispatchCommandSucceeded(eventPtr), clientArena));
+        MongoCommandEventHandler.failed(handler,
+                MongoCommandEventHandler.failed.allocate(
+                        (userdata, eventPtr) -> dispatchCommandFailed(eventPtr), clientArena));
+        MongoCommandEventHandler.userdata(handler, MemorySegment.NULL);
+        return handler;
+    }
+
+    private void dispatchCommandStarted(MemorySegment eventPtr) {
+        MemorySegment e = eventPtr.reinterpret(FfiCommandStartedEvent.sizeof());
+        String commandName = readFfiString(FfiCommandStartedEvent.command_name(e));
+        String databaseName = readFfiString(FfiCommandStartedEvent.db(e));
+        int requestId = FfiCommandStartedEvent.request_id(e);
+        int connectionId = FfiCommandStartedEvent.connection_id(e);
+        String address = readFfiString(FfiCommandStartedEvent.connection_address(e));
+        MemorySegment commandBsonPtr = FfiCommandStartedEvent.command(e);
+        BsonDocument command = commandBsonPtr.address() == 0 ? new BsonDocument()
+                : BsonMarshaller.fromBsonStruct(commandBsonPtr.reinterpret(com.mongodb.internal.rust.crud.ffi.Bson.sizeof()));
+        ConnectionDescription connDesc = buildConnectionDescription(address, connectionId);
+        CommandStartedEvent event = new CommandStartedEvent(null, 0, requestId, connDesc, databaseName, commandName, command);
+        for (CommandListener listener : commandListeners) {
+            try { listener.commandStarted(event); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchCommandSucceeded(MemorySegment eventPtr) {
+        MemorySegment e = eventPtr.reinterpret(FfiCommandSucceededEvent.sizeof());
+        String commandName = readFfiString(FfiCommandSucceededEvent.command_name(e));
+        int requestId = FfiCommandSucceededEvent.request_id(e);
+        int connectionId = FfiCommandSucceededEvent.connection_id(e);
+        String address = readFfiString(FfiCommandSucceededEvent.connection_address(e));
+        long durationNanos = FfiCommandSucceededEvent.duration_nanos(e);
+        MemorySegment replyBsonPtr = FfiCommandSucceededEvent.reply(e);
+        BsonDocument reply = replyBsonPtr.address() == 0 ? new BsonDocument()
+                : BsonMarshaller.fromBsonStruct(replyBsonPtr.reinterpret(com.mongodb.internal.rust.crud.ffi.Bson.sizeof()));
+        ConnectionDescription connDesc = buildConnectionDescription(address, connectionId);
+        CommandSucceededEvent event = new CommandSucceededEvent(null, 0, requestId, connDesc, null, commandName, reply, durationNanos);
+        for (CommandListener listener : commandListeners) {
+            try { listener.commandSucceeded(event); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchCommandFailed(MemorySegment eventPtr) {
+        MemorySegment e = eventPtr.reinterpret(FfiCommandFailedEvent.sizeof());
+        String commandName = readFfiString(FfiCommandFailedEvent.command_name(e));
+        int requestId = FfiCommandFailedEvent.request_id(e);
+        int connectionId = FfiCommandFailedEvent.connection_id(e);
+        String address = readFfiString(FfiCommandFailedEvent.connection_address(e));
+        long durationNanos = FfiCommandFailedEvent.duration_nanos(e);
+        MemorySegment failurePtr = FfiCommandFailedEvent.failure(e);
+        Throwable throwable = failurePtr.address() == 0 ? new RuntimeException("unknown failure")
+                : FfmErrorMapper.toException(failurePtr);
+        ConnectionDescription connDesc = buildConnectionDescription(address, connectionId);
+        CommandFailedEvent event = new CommandFailedEvent(null, 0, requestId, connDesc, null, commandName, durationNanos, throwable);
+        for (CommandListener listener : commandListeners) {
+            try { listener.commandFailed(event); } catch (Exception ignored) {}
+        }
+    }
+
+    private static String readFfiString(MemorySegment ptr) {
+        return ptr.address() == 0 ? "" : ptr.reinterpret(Long.MAX_VALUE).getString(0);
+    }
+
+    private static ConnectionDescription buildConnectionDescription(String address, int connectionId) {
+        ServerAddress serverAddress = (address == null || address.isEmpty()) ? new ServerAddress() : new ServerAddress(address);
+        ServerId serverId = new ServerId(new ClusterId(), serverAddress);
+        return new ConnectionDescription(serverId);
+    }
+
     // ==================== Lifecycle ====================
 
     @Override
@@ -1491,7 +1651,20 @@ public final class FfmAsyncClient implements NativeAsyncClient {
             readConcernCache.values().forEach(FfmReadConcern::destroy);
             readConcernCache.clear();
 
-            MongoDbFfi.mongo_client_destroy(clientPtr);
+            // Initiate async destruction. The callback fires after Rust has completed
+            // endSessions and SDAM shutdown — no more event callbacks will fire after that.
+            CountDownLatch shutdownLatch = new CountDownLatch(1);
+            MemorySegment destroyCallbackStub = DestroyCallback.allocate(
+                    (userdata) -> shutdownLatch.countDown(),
+                    clientArena);
+            MongoDbFfi.mongo_client_destroy(clientPtr, destroyCallbackStub, MemorySegment.NULL);
+
+            // Wait for Rust's async cleanup to complete before freeing clientArena.
+            try {
+                shutdownLatch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             clientArena.close();
         }
     }
@@ -1542,5 +1715,16 @@ public final class FfmAsyncClient implements NativeAsyncClient {
         }
         return readConcernCache.computeIfAbsent(readConcern,
                 rc -> FfmReadConcern.create(clientArena, rc));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T decodeBsonValue(BsonValue bsonValue, Decoder<T> decoder) {
+        // Wrap the value in a document and decode using the provided decoder
+        BsonDocument wrapper = new BsonDocument("v", bsonValue);
+        try (org.bson.BsonDocumentReader reader = new org.bson.BsonDocumentReader(wrapper)) {
+            reader.readStartDocument();
+            reader.readName();
+            return decoder.decode(reader, org.bson.codecs.DecoderContext.builder().build());
+        }
     }
 }

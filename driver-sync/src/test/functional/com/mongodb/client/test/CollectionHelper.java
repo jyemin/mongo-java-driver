@@ -180,28 +180,33 @@ public final class CollectionHelper<T> {
     }
 
     public void create(final WriteConcern writeConcern, final BsonDocument createOptions) {
-        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
-        for (String option : createOptions.keySet()) {
-            switch (option) {
-                case "capped":
-                    createCollectionOptions.capped(createOptions.getBoolean("capped").getValue());
-                    break;
-                case "size":
-                    createCollectionOptions.sizeInBytes(createOptions.getNumber("size").longValue());
-                    break;
-                case "encryptedFields":
-                    createCollectionOptions.encryptedFields(createOptions.getDocument("encryptedFields"));
-                    break;
-                case "validator":
-                    ValidationOptions validationOptions = new ValidationOptions();
-                    validationOptions.validator(createOptions.getDocument("validator"));
-                    createCollectionOptions.validationOptions(validationOptions);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported create collection option: " + option);
-            }
+        if (!createOptions.isEmpty()) {
+            throw new UnsupportedOperationException("TODO: remove this when createCollection is supported");
         }
-        create(namespace.getCollectionName(), createCollectionOptions, writeConcern);
+        // collection creation is implicit so this is a no-op
+
+//        CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions();
+//        for (String option : createOptions.keySet()) {
+//            switch (option) {
+//                case "capped":
+//                    createCollectionOptions.capped(createOptions.getBoolean("capped").getValue());
+//                    break;
+//                case "size":
+//                    createCollectionOptions.sizeInBytes(createOptions.getNumber("size").longValue());
+//                    break;
+//                case "encryptedFields":
+//                    createCollectionOptions.encryptedFields(createOptions.getDocument("encryptedFields"));
+//                    break;
+//                case "validator":
+//                    ValidationOptions validationOptions = new ValidationOptions();
+//                    validationOptions.validator(createOptions.getDocument("validator"));
+//                    createCollectionOptions.validationOptions(validationOptions);
+//                    break;
+//                default:
+//                    throw new UnsupportedOperationException("Unsupported create collection option: " + option);
+//            }
+//        }
+//        create(namespace.getCollectionName(), createCollectionOptions, writeConcern);
     }
 
     public void create(final String collectionName, final CreateCollectionOptions options, final WriteConcern writeConcern) {

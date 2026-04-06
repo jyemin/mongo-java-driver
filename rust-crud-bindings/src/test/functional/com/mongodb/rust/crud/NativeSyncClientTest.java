@@ -26,6 +26,7 @@ import com.mongodb.TransactionOptions;
 import com.mongodb.client.model.AggregateOptions;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.DistinctOptions;
 import com.mongodb.client.model.EstimatedDocumentCountOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
@@ -43,12 +44,16 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
+import org.bson.BsonDouble;
 import org.bson.BsonInt32;
 import org.bson.BsonInt64;
+import org.bson.BsonNull;
 import org.bson.BsonObjectId;
 import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.BsonDocumentCodec;
+import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.DocumentCodec;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
@@ -1266,6 +1271,76 @@ class NativeSyncClientTest {
             long count = client.estimatedDocumentCount(ns, new EstimatedDocumentCountOptions(),
                     NativeOperationContext.builder().build());
             assertEquals(3, count);
+        }
+    }
+
+    @Test
+    void testDistinct() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_distinct");
+            dropCollection(client, ns);
+
+            // Insert documents with different types for the "x" field
+            insertDocs(client, ns,
+                    new BsonDocument("_id", new BsonInt32(1)).append("x", new BsonInt32(1)),
+                    new BsonDocument("_id", new BsonInt32(2)).append("x", new BsonInt32(1)),  // duplicate
+                    new BsonDocument("_id", new BsonInt32(3)).append("x", new BsonString("hello")),
+                    new BsonDocument("_id", new BsonInt32(4)).append("x", new BsonDouble(3.14)),
+                    new BsonDocument("_id", new BsonInt32(5)).append("x", BsonNull.VALUE),
+                    new BsonDocument("_id", new BsonInt32(6)).append("x",
+                            new BsonDocument("nested", new BsonString("doc"))),
+                    new BsonDocument("_id", new BsonInt32(7)).append("x",
+                            new BsonArray(Arrays.asList(new BsonInt32(10), new BsonInt32(20)))),
+                    new BsonDocument("_id", new BsonInt32(8)).append("x", new BsonInt32(2)),
+                    new BsonDocument("_id", new BsonInt32(9)).append("y", new BsonInt32(99))  // no "x" field
+            );
+
+            // Distinct on "x" with no filter — should return all unique values
+            NativeSyncCursor<BsonValue> cursor = client.distinct(ns, "x", new BsonDocument(),
+                    new DistinctOptions(), new BsonValueCodec(),
+                    NativeOperationContext.builder().build(), null);
+            List<BsonValue> values = new ArrayList<>();
+            while (cursor.hasNext()) {
+                values.add(cursor.next());
+            }
+
+            // MongoDB unwinds arrays for distinct, so [10, 20] becomes two separate values (10 and 20).
+            // null appears once for both explicit null and missing field.
+            // Expected: null, 1, 2, 3.14, 10, 20, "hello", {"nested": "doc"}
+            assertEquals(8, values.size(), "Expected 8 distinct values, got: " + values);
+            assertTrue(values.contains(new BsonInt32(1)));
+            assertTrue(values.contains(new BsonInt32(2)));
+            assertTrue(values.contains(new BsonInt32(10)));
+            assertTrue(values.contains(new BsonInt32(20)));
+            assertTrue(values.contains(new BsonString("hello")));
+            assertTrue(values.contains(new BsonDouble(3.14)));
+            assertTrue(values.contains(BsonNull.VALUE));
+            assertTrue(values.contains(new BsonDocument("nested", new BsonString("doc"))));
+
+            // Distinct with filter — only string values
+            NativeSyncCursor<BsonValue> filtered = client.distinct(ns, "x",
+                    new BsonDocument("x", new BsonDocument("$type", new BsonString("string"))),
+                    new DistinctOptions(), new BsonValueCodec(),
+                    NativeOperationContext.builder().build(), null);
+            List<BsonValue> filteredValues = new ArrayList<>();
+            while (filtered.hasNext()) {
+                filteredValues.add(filtered.next());
+            }
+            assertEquals(1, filteredValues.size(), "Expected 1 distinct string value, got: " + filteredValues);
+            assertTrue(filteredValues.contains(new BsonString("hello")));
+        }
+    }
+
+    @Test
+    void testDistinctEmpty() {
+        try (NativeSyncClient client = NativeSyncClients.create(getMongoClientSettings())) {
+            MongoNamespace ns = new MongoNamespace(getDefaultDatabaseName(), "test_distinct_empty");
+            dropCollection(client, ns);
+
+            NativeSyncCursor<BsonValue> cursor = client.distinct(ns, "x", new BsonDocument(),
+                    new DistinctOptions(), new BsonValueCodec(),
+                    NativeOperationContext.builder().build(), null);
+            assertFalse(cursor.hasNext());
         }
     }
 

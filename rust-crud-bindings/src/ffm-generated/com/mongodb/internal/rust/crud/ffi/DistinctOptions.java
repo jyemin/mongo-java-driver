@@ -14,21 +14,18 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
 
 /**
  * {@snippet lang=c :
- * struct ReplaceOneOptions {
+ * struct DistinctOptions {
  *     const struct Bson *collation;
  *     const char *hint_name;
  *     const struct Bson *hint_keys;
- *     const struct Bson *let_vars;
+ *     int64_t max_time_ms;
  *     const struct BsonValue *comment;
- *     int8_t upsert;
- *     int8_t bypass_document_validation;
- *     const struct Bson *sort;
  * }
  * }
  */
-public class ReplaceOneOptions {
+public class DistinctOptions {
 
-    ReplaceOneOptions() {
+    DistinctOptions() {
         // Should not be called directly
     }
 
@@ -36,13 +33,9 @@ public class ReplaceOneOptions {
         MongoDbFfi.C_POINTER.withName("collation"),
         MongoDbFfi.C_POINTER.withName("hint_name"),
         MongoDbFfi.C_POINTER.withName("hint_keys"),
-        MongoDbFfi.C_POINTER.withName("let_vars"),
-        MongoDbFfi.C_POINTER.withName("comment"),
-        MongoDbFfi.C_CHAR.withName("upsert"),
-        MongoDbFfi.C_CHAR.withName("bypass_document_validation"),
-        MemoryLayout.paddingLayout(6),
-        MongoDbFfi.C_POINTER.withName("sort")
-    ).withName("ReplaceOneOptions");
+        MongoDbFfi.C_LONG_LONG.withName("max_time_ms"),
+        MongoDbFfi.C_POINTER.withName("comment")
+    ).withName("DistinctOptions");
 
     /**
      * The layout of this struct
@@ -183,48 +176,48 @@ public class ReplaceOneOptions {
         struct.set(hint_keys$LAYOUT, hint_keys$OFFSET, fieldValue);
     }
 
-    private static final AddressLayout let_vars$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("let_vars"));
+    private static final OfLong max_time_ms$LAYOUT = (OfLong)$LAYOUT.select(groupElement("max_time_ms"));
 
     /**
      * Layout for field:
      * {@snippet lang=c :
-     * const struct Bson *let_vars
+     * int64_t max_time_ms
      * }
      */
-    public static final AddressLayout let_vars$layout() {
-        return let_vars$LAYOUT;
+    public static final OfLong max_time_ms$layout() {
+        return max_time_ms$LAYOUT;
     }
 
-    private static final long let_vars$OFFSET = $LAYOUT.byteOffset(groupElement("let_vars"));
+    private static final long max_time_ms$OFFSET = $LAYOUT.byteOffset(groupElement("max_time_ms"));
 
     /**
      * Offset for field:
      * {@snippet lang=c :
-     * const struct Bson *let_vars
+     * int64_t max_time_ms
      * }
      */
-    public static final long let_vars$offset() {
-        return let_vars$OFFSET;
+    public static final long max_time_ms$offset() {
+        return max_time_ms$OFFSET;
     }
 
     /**
      * Getter for field:
      * {@snippet lang=c :
-     * const struct Bson *let_vars
+     * int64_t max_time_ms
      * }
      */
-    public static MemorySegment let_vars(MemorySegment struct) {
-        return struct.get(let_vars$LAYOUT, let_vars$OFFSET);
+    public static long max_time_ms(MemorySegment struct) {
+        return struct.get(max_time_ms$LAYOUT, max_time_ms$OFFSET);
     }
 
     /**
      * Setter for field:
      * {@snippet lang=c :
-     * const struct Bson *let_vars
+     * int64_t max_time_ms
      * }
      */
-    public static void let_vars(MemorySegment struct, MemorySegment fieldValue) {
-        struct.set(let_vars$LAYOUT, let_vars$OFFSET, fieldValue);
+    public static void max_time_ms(MemorySegment struct, long fieldValue) {
+        struct.set(max_time_ms$LAYOUT, max_time_ms$OFFSET, fieldValue);
     }
 
     private static final AddressLayout comment$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("comment"));
@@ -269,138 +262,6 @@ public class ReplaceOneOptions {
      */
     public static void comment(MemorySegment struct, MemorySegment fieldValue) {
         struct.set(comment$LAYOUT, comment$OFFSET, fieldValue);
-    }
-
-    private static final OfByte upsert$LAYOUT = (OfByte)$LAYOUT.select(groupElement("upsert"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * int8_t upsert
-     * }
-     */
-    public static final OfByte upsert$layout() {
-        return upsert$LAYOUT;
-    }
-
-    private static final long upsert$OFFSET = $LAYOUT.byteOffset(groupElement("upsert"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * int8_t upsert
-     * }
-     */
-    public static final long upsert$offset() {
-        return upsert$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * int8_t upsert
-     * }
-     */
-    public static byte upsert(MemorySegment struct) {
-        return struct.get(upsert$LAYOUT, upsert$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * int8_t upsert
-     * }
-     */
-    public static void upsert(MemorySegment struct, byte fieldValue) {
-        struct.set(upsert$LAYOUT, upsert$OFFSET, fieldValue);
-    }
-
-    private static final OfByte bypass_document_validation$LAYOUT = (OfByte)$LAYOUT.select(groupElement("bypass_document_validation"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * int8_t bypass_document_validation
-     * }
-     */
-    public static final OfByte bypass_document_validation$layout() {
-        return bypass_document_validation$LAYOUT;
-    }
-
-    private static final long bypass_document_validation$OFFSET = $LAYOUT.byteOffset(groupElement("bypass_document_validation"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * int8_t bypass_document_validation
-     * }
-     */
-    public static final long bypass_document_validation$offset() {
-        return bypass_document_validation$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * int8_t bypass_document_validation
-     * }
-     */
-    public static byte bypass_document_validation(MemorySegment struct) {
-        return struct.get(bypass_document_validation$LAYOUT, bypass_document_validation$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * int8_t bypass_document_validation
-     * }
-     */
-    public static void bypass_document_validation(MemorySegment struct, byte fieldValue) {
-        struct.set(bypass_document_validation$LAYOUT, bypass_document_validation$OFFSET, fieldValue);
-    }
-
-    private static final AddressLayout sort$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("sort"));
-
-    /**
-     * Layout for field:
-     * {@snippet lang=c :
-     * const struct Bson *sort
-     * }
-     */
-    public static final AddressLayout sort$layout() {
-        return sort$LAYOUT;
-    }
-
-    private static final long sort$OFFSET = $LAYOUT.byteOffset(groupElement("sort"));
-
-    /**
-     * Offset for field:
-     * {@snippet lang=c :
-     * const struct Bson *sort
-     * }
-     */
-    public static final long sort$offset() {
-        return sort$OFFSET;
-    }
-
-    /**
-     * Getter for field:
-     * {@snippet lang=c :
-     * const struct Bson *sort
-     * }
-     */
-    public static MemorySegment sort(MemorySegment struct) {
-        return struct.get(sort$LAYOUT, sort$OFFSET);
-    }
-
-    /**
-     * Setter for field:
-     * {@snippet lang=c :
-     * const struct Bson *sort
-     * }
-     */
-    public static void sort(MemorySegment struct, MemorySegment fieldValue) {
-        struct.set(sort$LAYOUT, sort$OFFSET, fieldValue);
     }
 
     /**

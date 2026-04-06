@@ -376,8 +376,9 @@ public final class Entities {
         }
 
         clientSettingsBuilder.applyToServerSettings(builder -> {
-            builder.heartbeatFrequency(50, TimeUnit.MILLISECONDS);
-            builder.minHeartbeatFrequency(50, TimeUnit.MILLISECONDS);
+            // TODO: Rust driver enforces minimum 500ms heartbeat; restore to 50ms when the native client supports it
+            builder.heartbeatFrequency(500, TimeUnit.MILLISECONDS);
+            builder.minHeartbeatFrequency(500, TimeUnit.MILLISECONDS);
         });
         if (entity.containsKey("uriOptions")) {
             entity.getDocument("uriOptions").forEach((key, value) -> {

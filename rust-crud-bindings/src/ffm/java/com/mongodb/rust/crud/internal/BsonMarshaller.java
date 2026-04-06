@@ -24,6 +24,7 @@ import org.bson.BsonArray;
 import org.bson.BsonBinaryReader;
 import org.bson.BsonBinaryWriter;
 import org.bson.BsonDocument;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.ByteBuf;
 import org.bson.codecs.BsonDocumentCodec;
@@ -318,7 +319,7 @@ public final class BsonMarshaller {
      * The struct contains raw value bytes plus a type byte. We reconstruct the value
      * by wrapping it back in a document and decoding.
      */
-    public static org.bson.BsonValue fromBsonValueStruct(MemorySegment bsonValueStruct) {
+    public static BsonValue fromBsonValueStruct(MemorySegment bsonValueStruct) {
         if (bsonValueStruct == null || bsonValueStruct.equals(MemorySegment.NULL)) {
             return null;
         }
@@ -328,6 +329,10 @@ public final class BsonMarshaller {
         byte bsonType = com.mongodb.internal.rust.crud.ffi.BsonValue.bson_type(bsonValueStruct);
 
         if (dataPtr.equals(MemorySegment.NULL) || len == 0) {
+            // BSON null (type 0x0A) has no value bytes — distinguish from "not present"
+            if (bsonType == BsonType.NULL.getValue()) {
+                return org.bson.BsonNull.VALUE;
+            }
             return null;
         }
 

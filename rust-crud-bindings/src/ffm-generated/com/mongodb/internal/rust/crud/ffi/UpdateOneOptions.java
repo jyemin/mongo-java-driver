@@ -23,6 +23,7 @@ import static java.lang.foreign.MemoryLayout.PathElement.*;
  *     const struct Bson *array_filters;
  *     int8_t upsert;
  *     int8_t bypass_document_validation;
+ *     const struct Bson *sort;
  * }
  * }
  */
@@ -41,7 +42,8 @@ public class UpdateOneOptions {
         MongoDbFfi.C_POINTER.withName("array_filters"),
         MongoDbFfi.C_CHAR.withName("upsert"),
         MongoDbFfi.C_CHAR.withName("bypass_document_validation"),
-        MemoryLayout.paddingLayout(6)
+        MemoryLayout.paddingLayout(6),
+        MongoDbFfi.C_POINTER.withName("sort")
     ).withName("UpdateOneOptions");
 
     /**
@@ -401,6 +403,50 @@ public class UpdateOneOptions {
      */
     public static void bypass_document_validation(MemorySegment struct, byte fieldValue) {
         struct.set(bypass_document_validation$LAYOUT, bypass_document_validation$OFFSET, fieldValue);
+    }
+
+    private static final AddressLayout sort$LAYOUT = (AddressLayout)$LAYOUT.select(groupElement("sort"));
+
+    /**
+     * Layout for field:
+     * {@snippet lang=c :
+     * const struct Bson *sort
+     * }
+     */
+    public static final AddressLayout sort$layout() {
+        return sort$LAYOUT;
+    }
+
+    private static final long sort$OFFSET = $LAYOUT.byteOffset(groupElement("sort"));
+
+    /**
+     * Offset for field:
+     * {@snippet lang=c :
+     * const struct Bson *sort
+     * }
+     */
+    public static final long sort$offset() {
+        return sort$OFFSET;
+    }
+
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * const struct Bson *sort
+     * }
+     */
+    public static MemorySegment sort(MemorySegment struct) {
+        return struct.get(sort$LAYOUT, sort$OFFSET);
+    }
+
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * const struct Bson *sort
+     * }
+     */
+    public static void sort(MemorySegment struct, MemorySegment fieldValue) {
+        struct.set(sort$LAYOUT, sort$OFFSET, fieldValue);
     }
 
     /**

@@ -15274,6 +15274,8 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     private static class mongo_client_destroy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER
         );
 
@@ -15285,7 +15287,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * void mongo_client_destroy(struct MongoClient *client)
+     * void mongo_client_destroy(struct MongoClient *client, DestroyCallback callback, void *userdata)
      * }
      */
     public static FunctionDescriptor mongo_client_destroy$descriptor() {
@@ -15295,7 +15297,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * void mongo_client_destroy(struct MongoClient *client)
+     * void mongo_client_destroy(struct MongoClient *client, DestroyCallback callback, void *userdata)
      * }
      */
     public static MethodHandle mongo_client_destroy$handle() {
@@ -15305,7 +15307,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * void mongo_client_destroy(struct MongoClient *client)
+     * void mongo_client_destroy(struct MongoClient *client, DestroyCallback callback, void *userdata)
      * }
      */
     public static MemorySegment mongo_client_destroy$address() {
@@ -15314,16 +15316,16 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * void mongo_client_destroy(struct MongoClient *client)
+     * void mongo_client_destroy(struct MongoClient *client, DestroyCallback callback, void *userdata)
      * }
      */
-    public static void mongo_client_destroy(MemorySegment client) {
+    public static void mongo_client_destroy(MemorySegment client, MemorySegment callback, MemorySegment userdata) {
         var mh$ = mongo_client_destroy.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("mongo_client_destroy", client);
+                traceDowncall("mongo_client_destroy", client, callback, userdata);
             }
-            mh$.invokeExact(client);
+            mh$.invokeExact(client, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15333,6 +15335,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     private static class mongo_client_new {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
             MongoDbFfi.C_POINTER,
@@ -15348,7 +15351,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Function descriptor for:
      * {@snippet lang=c :
-     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, struct Error **error_out)
+     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, const struct MongoCommandEventHandler *command_event_handler, struct Error **error_out)
      * }
      */
     public static FunctionDescriptor mongo_client_new$descriptor() {
@@ -15358,7 +15361,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Downcall method handle for:
      * {@snippet lang=c :
-     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, struct Error **error_out)
+     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, const struct MongoCommandEventHandler *command_event_handler, struct Error **error_out)
      * }
      */
     public static MethodHandle mongo_client_new$handle() {
@@ -15368,7 +15371,7 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
     /**
      * Address for:
      * {@snippet lang=c :
-     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, struct Error **error_out)
+     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, const struct MongoCommandEventHandler *command_event_handler, struct Error **error_out)
      * }
      */
     public static MemorySegment mongo_client_new$address() {
@@ -15377,16 +15380,16 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
 
     /**
      * {@snippet lang=c :
-     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, struct Error **error_out)
+     * struct MongoClient *mongo_client_new(const struct ConnectionSettings *connection_settings, const struct AuthSettings *auth_settings, const struct TlsSettings *tls_settings, const struct MongoCommandEventHandler *command_event_handler, struct Error **error_out)
      * }
      */
-    public static MemorySegment mongo_client_new(MemorySegment connection_settings, MemorySegment auth_settings, MemorySegment tls_settings, MemorySegment error_out) {
+    public static MemorySegment mongo_client_new(MemorySegment connection_settings, MemorySegment auth_settings, MemorySegment tls_settings, MemorySegment command_event_handler, MemorySegment error_out) {
         var mh$ = mongo_client_new.HANDLE;
         try {
             if (TRACE_DOWNCALLS) {
-                traceDowncall("mongo_client_new", connection_settings, auth_settings, tls_settings, error_out);
+                traceDowncall("mongo_client_new", connection_settings, auth_settings, tls_settings, command_event_handler, error_out);
             }
-            return (MemorySegment)mh$.invokeExact(connection_settings, auth_settings, tls_settings, error_out);
+            return (MemorySegment)mh$.invokeExact(connection_settings, auth_settings, tls_settings, command_event_handler, error_out);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15707,6 +15710,73 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
                 traceDowncall("mongo_delete_one", client, ctx, db_name, coll_name, filter, opts, callback, userdata);
             }
             mh$.invokeExact(client, ctx, db_name, coll_name, filter, opts, callback, userdata);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class mongo_distinct {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER,
+            MongoDbFfi.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mongo_distinct");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void mongo_distinct(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const char *field_name, const struct Bson *filter, const struct DistinctOptions *opts, DistinctCallback callback, void *userdata)
+     * }
+     */
+    public static FunctionDescriptor mongo_distinct$descriptor() {
+        return mongo_distinct.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void mongo_distinct(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const char *field_name, const struct Bson *filter, const struct DistinctOptions *opts, DistinctCallback callback, void *userdata)
+     * }
+     */
+    public static MethodHandle mongo_distinct$handle() {
+        return mongo_distinct.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void mongo_distinct(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const char *field_name, const struct Bson *filter, const struct DistinctOptions *opts, DistinctCallback callback, void *userdata)
+     * }
+     */
+    public static MemorySegment mongo_distinct$address() {
+        return mongo_distinct.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void mongo_distinct(struct MongoClient *client, const struct OperationContext *ctx, const char *db_name, const char *coll_name, const char *field_name, const struct Bson *filter, const struct DistinctOptions *opts, DistinctCallback callback, void *userdata)
+     * }
+     */
+    public static void mongo_distinct(MemorySegment client, MemorySegment ctx, MemorySegment db_name, MemorySegment coll_name, MemorySegment field_name, MemorySegment filter, MemorySegment opts, MemorySegment callback, MemorySegment userdata) {
+        var mh$ = mongo_distinct.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("mongo_distinct", client, ctx, db_name, coll_name, field_name, filter, opts, callback, userdata);
+            }
+            mh$.invokeExact(client, ctx, db_name, coll_name, field_name, filter, opts, callback, userdata);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -17944,15 +18014,6 @@ class MongoDbFfi_1 extends MongoDbFfi$shared {
      */
     public static int MAC_OS_X_VERSION_10_13_4() {
         return MAC_OS_X_VERSION_10_13_4;
-    }
-    private static final int MAC_OS_X_VERSION_10_14 = (int)101400L;
-    /**
-     * {@snippet lang=c :
-     * #define MAC_OS_X_VERSION_10_14 101400
-     * }
-     */
-    public static int MAC_OS_X_VERSION_10_14() {
-        return MAC_OS_X_VERSION_10_14;
     }
 }
 

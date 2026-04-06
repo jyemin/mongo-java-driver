@@ -63,12 +63,15 @@ tasks.withType<Test> {
         ?: rustDriverDir.resolve("target/release").absolutePath
     environment("DYLD_LIBRARY_PATH", nativeLibPath)
     environment("LD_LIBRARY_PATH", nativeLibPath)
+    System.getenv("RUST_BACKTRACE")?.let { environment("RUST_BACKTRACE", it) }
+    System.getProperty("testNameFilter")?.let { systemProperty("testNameFilter", it) }
 
     // Needed for MicrometerProseTest to set env variable programmatically (calls
     // `field.setAccessible(true)`)
     if (testJavaVersion >= DEFAULT_JAVA_VERSION) {
         jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     }
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 configureMavenPublication {

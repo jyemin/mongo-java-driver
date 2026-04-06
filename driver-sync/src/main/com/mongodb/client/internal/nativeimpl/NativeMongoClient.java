@@ -31,7 +31,13 @@ import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
+import com.mongodb.ServerAddress;
+import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterDescription;
+import com.mongodb.connection.ClusterType;
+import com.mongodb.connection.ServerConnectionState;
+import com.mongodb.connection.ServerDescription;
+import com.mongodb.connection.ServerType;
 import com.mongodb.lang.Nullable;
 import com.mongodb.rust.crud.NativeOperationContext;
 import com.mongodb.rust.crud.NativeSyncClient;
@@ -58,6 +64,10 @@ public final class NativeMongoClient implements MongoClient {
     private final NativeSyncClient nativeClient;
     private final AtomicBoolean closed;
     private final boolean ownsClient;
+
+    // Cached cluster description — populated lazily via hello command
+    @Nullable
+    private volatile ClusterDescription cachedClusterDescription;
 
     // Settings that can be overridden via with*() methods
     private final CodecRegistry codecRegistry;
@@ -111,8 +121,45 @@ public final class NativeMongoClient implements MongoClient {
 
     @Override
     public ClusterDescription getClusterDescription() {
-        // TODO: Implement cluster description from native client
-        throw new UnsupportedOperationException("getClusterDescription not yet implemented");
+        // TODO: this all needs to be replaced with Native implementation
+        ClusterDescription desc = cachedClusterDescription;
+        if (desc == null) {
+            desc = detectClusterDescription();
+            cachedClusterDescription = desc;
+        }
+        return desc;
+    }
+
+    private ClusterDescription detectClusterDescription() {
+        Document hello = getDatabase("admin").runCommand(new Document("hello", 1));
+        ServerType serverType;
+        if ("isdbgrid".equals(hello.getString("msg"))) {
+            serverType = ServerType.SHARD_ROUTER;
+        } else if (hello.containsKey("setName")) {
+            if (Boolean.TRUE.equals(hello.getBoolean("arbiterOnly"))) {
+                serverType = ServerType.REPLICA_SET_ARBITER;
+            } else if (Boolean.TRUE.equals(hello.getBoolean("secondary"))) {
+                serverType = ServerType.REPLICA_SET_SECONDARY;
+            } else if (Boolean.TRUE.equals(hello.getBoolean("isWritablePrimary"))) {
+                serverType = ServerType.REPLICA_SET_PRIMARY;
+            } else {
+                serverType = ServerType.REPLICA_SET_OTHER;
+            }
+        } else {
+            serverType = ServerType.STANDALONE;
+        }
+        String me = hello.getString("me");
+        ServerAddress address = me != null ? new ServerAddress(me) : new ServerAddress();
+        ServerDescription serverDescription = ServerDescription.builder()
+                .address(address)
+                .type(serverType)
+                .state(com.mongodb.connection.ServerConnectionState.CONNECTED)
+                .ok(true)
+                .build();
+        ClusterType clusterType = serverType.getClusterType();
+        ClusterConnectionMode connectionMode = clusterType == ClusterType.STANDALONE
+                ? ClusterConnectionMode.SINGLE : ClusterConnectionMode.MULTIPLE;
+        return new ClusterDescription(connectionMode, clusterType, Collections.singletonList(serverDescription));
     }
 
     @Override
