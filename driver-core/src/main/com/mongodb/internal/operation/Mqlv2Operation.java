@@ -26,12 +26,24 @@ import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.codecs.Decoder;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.mongodb.assertions.Assertions.notNull;
+import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.connection.CommandHelper.applyMaxTimeMS;
+import static com.mongodb.internal.operation.AsyncOperationHelper.CommandReadTransformerAsync;
+import static com.mongodb.internal.operation.AsyncOperationHelper.executeRetryableReadAsync;
+import static com.mongodb.internal.operation.CommandOperationHelper.CommandCreator;
 import static com.mongodb.internal.operation.ExplainHelper.asExplainCommand;
+import static com.mongodb.internal.operation.OperationHelper.LOGGER;
+import static com.mongodb.internal.operation.OperationHelper.applyTimeoutModeToOperationContext;
 import static com.mongodb.internal.operation.ServerVersionHelper.UNKNOWN_WIRE_VERSION;
+import static com.mongodb.internal.operation.SyncOperationHelper.CommandReadTransformer;
+import static com.mongodb.internal.operation.SyncOperationHelper.executeRetryableRead;
 
 /**
  * An operation that executes an MQLv2 query.
@@ -39,76 +51,130 @@ import static com.mongodb.internal.operation.ServerVersionHelper.UNKNOWN_WIRE_VE
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 public class Mqlv2Operation<T> implements ReadOperationExplainable<T> {
-    private final Mqlv2OperationImpl<T> wrapped;
+    private static final String COMMAND_NAME = "mqlv2";
+    private static final String CURSOR = "cursor";
+    private static final String FIRST_BATCH = "firstBatch";
+    private static final List<String> FIELD_NAMES_WITH_RESULT = Arrays.asList(FIRST_BATCH);
+
+    private final String databaseName;
+    private final String mqlv2Source;
+    private final Decoder<T> decoder;
+
+    private boolean retryReads;
+    @Nullable private Integer batchSize;
+    @Nullable private Long maxTimeMS;
+    @Nullable private TimeoutMode timeoutMode;
 
     public Mqlv2Operation(final String databaseName, final String mqlv2Source, final Decoder<T> decoder) {
-        this.wrapped = new Mqlv2OperationImpl<>(
-                notNull("databaseName", databaseName),
-                notNull("mqlv2Source", mqlv2Source),
-                notNull("decoder", decoder));
+        this.databaseName = notNull("databaseName", databaseName);
+        this.mqlv2Source = notNull("mqlv2Source", mqlv2Source);
+        this.decoder = notNull("decoder", decoder);
     }
 
     public Integer getBatchSize() {
-        return wrapped.getBatchSize();
+        return batchSize;
     }
 
     public Mqlv2Operation<T> batchSize(@Nullable final Integer batchSize) {
-        wrapped.batchSize(batchSize);
+        this.batchSize = batchSize;
         return this;
     }
 
     public Mqlv2Operation<T> retryReads(final boolean retryReads) {
-        wrapped.retryReads(retryReads);
+        this.retryReads = retryReads;
         return this;
     }
 
     public boolean getRetryReads() {
-        return wrapped.getRetryReads();
+        return retryReads;
     }
 
     public Mqlv2Operation<T> maxTime(@Nullable final Long maxTimeMS) {
-        wrapped.maxTimeMS(maxTimeMS);
+        this.maxTimeMS = maxTimeMS;
         return this;
     }
 
     @Nullable
     public Long getMaxTime() {
-        return wrapped.getMaxTimeMS();
+        return maxTimeMS;
     }
 
     public Mqlv2Operation<T> timeoutMode(@Nullable final TimeoutMode timeoutMode) {
-        wrapped.timeoutMode(timeoutMode);
+        if (timeoutMode != null) {
+            this.timeoutMode = timeoutMode;
+        }
         return this;
     }
 
     @Override
     public String getCommandName() {
-        return wrapped.getCommandName();
+        return COMMAND_NAME;
     }
 
     @Override
     public MongoNamespace getNamespace() {
-        return wrapped.getNamespace();
+        return new MongoNamespace(databaseName, "$cmd");
     }
 
     @Override
     public BatchCursor<T> execute(final ReadBinding binding, final OperationContext operationContext) {
-        return wrapped.execute(binding, operationContext);
+        return executeRetryableRead(binding, applyTimeoutModeToOperationContext(timeoutMode, operationContext), databaseName,
+                getCommandCreator(), CommandResultDocumentCodec.create(decoder, FIELD_NAMES_WITH_RESULT),
+                transformer(), retryReads);
     }
 
     @Override
     public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext,
             final SingleResultCallback<AsyncBatchCursor<T>> callback) {
-        wrapped.executeAsync(binding, operationContext, callback);
+        SingleResultCallback<AsyncBatchCursor<T>> errHandlingCallback = errorHandlingCallback(callback, LOGGER);
+        executeRetryableReadAsync(binding, applyTimeoutModeToOperationContext(timeoutMode, operationContext), databaseName,
+                getCommandCreator(), CommandResultDocumentCodec.create(decoder, FIELD_NAMES_WITH_RESULT),
+                asyncTransformer(), retryReads,
+                errHandlingCallback);
     }
 
     @Override
     public <R> ReadOperationSimple<R> asExplainableOperation(@Nullable final ExplainVerbosity verbosity, final Decoder<R> resultDecoder) {
         return new ExplainCommandOperation<>(getNamespace().getDatabaseName(), getCommandName(),
                 (operationContext, serverDescription, connectionDescription) -> {
-                    BsonDocument command = wrapped.getCommand(operationContext, UNKNOWN_WIRE_VERSION);
+                    BsonDocument command = getCommand(operationContext, UNKNOWN_WIRE_VERSION);
                     applyMaxTimeMS(operationContext.getTimeoutContext(), command);
                     return asExplainCommand(command, verbosity);
                 }, resultDecoder);
+    }
+
+    private CommandCreator getCommandCreator() {
+        return (operationContext, serverDescription, connectionDescription) ->
+                getCommand(operationContext, connectionDescription.getMaxWireVersion());
+    }
+
+    BsonDocument getCommand(final OperationContext operationContext, final int maxWireVersion) {
+        BsonDocument commandDocument = new BsonDocument(COMMAND_NAME, new BsonString(mqlv2Source));
+        // The mqlv2 server command has strict IDL and does not accept a `cursor` sub-document.
+        // Batch size is currently a client-side no-op; the server returns all results in firstBatch
+        // with cursorId 0 (no continuation). If batchSize support is added to mqlv2 server-side,
+        // re-enable cursor emission here.
+        applyMaxTimeMS(operationContext.getTimeoutContext(), commandDocument);
+        return commandDocument;
+    }
+
+    private CommandReadTransformer<BsonDocument, CommandBatchCursor<T>> transformer() {
+        return (result, source, connection, operationContext) ->
+                new CommandBatchCursor<>(getEffectiveTimeoutMode(), 0L, operationContext, new CommandCursor<>(
+                        result, batchSize != null ? batchSize : 0,
+                        decoder, null, source, connection
+                ));
+    }
+
+    private CommandReadTransformerAsync<BsonDocument, AsyncBatchCursor<T>> asyncTransformer() {
+        return (result, source, connection, operationContext) ->
+                new AsyncCommandBatchCursor<>(getEffectiveTimeoutMode(), 0L,
+                        operationContext, new AsyncCommandCursor<>(
+                        result, batchSize != null ? batchSize : 0, decoder, null, source, connection
+                ));
+    }
+
+    private TimeoutMode getEffectiveTimeoutMode() {
+        return timeoutMode != null ? timeoutMode : TimeoutMode.CURSOR_LIFETIME;
     }
 }
