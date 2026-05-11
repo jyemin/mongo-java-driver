@@ -201,7 +201,7 @@ public class Serializer {
     }
 
     private String renderPath(final String name, final FieldPathTree subtree) {
-        if (subtree instanceof FieldPathTree.Leaf leaf) {
+        if (subtree instanceof FieldPathTree.Leaf) {
             return name;
         }
         FieldPathTree.Interior interior = (FieldPathTree.Interior) subtree;
