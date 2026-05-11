@@ -23,7 +23,6 @@ import com.mongodb.mqlv2.ast.SortSpec;
 import com.mongodb.mqlv2.ast.Stage;
 import com.mongodb.mqlv2.ast.Value;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -127,13 +126,27 @@ public class Serializer {
     }
 
     private String serValue(final Value v) {
-        if (v instanceof Value.VNull) return "null";
-        if (v instanceof Value.VMissing) return "missing";
-        if (v instanceof Value.VUndefined) return "undefined()";
-        if (v instanceof Value.VBool b) return Boolean.toString(b.value());
-        if (v instanceof Value.VInt i) return Long.toString(i.value());
-        if (v instanceof Value.VDouble d) return Double.toString(d.value());
-        if (v instanceof Value.VString s) return "\"" + escapeString(s.value()) + "\"";
+        if (v instanceof Value.VNull) {
+            return "null";
+        }
+        if (v instanceof Value.VMissing) {
+            return "missing";
+        }
+        if (v instanceof Value.VUndefined) {
+            return "undefined()";
+        }
+        if (v instanceof Value.VBool b) {
+            return Boolean.toString(b.value());
+        }
+        if (v instanceof Value.VInt i) {
+            return Long.toString(i.value());
+        }
+        if (v instanceof Value.VDouble d) {
+            return Double.toString(d.value());
+        }
+        if (v instanceof Value.VString s) {
+            return "\"" + escapeString(s.value()) + "\"";
+        }
         if (v instanceof Value.VDate d) {
             return "date(\"" + java.time.Instant.ofEpochMilli(d.millisSinceEpoch()) + "\")";
         }

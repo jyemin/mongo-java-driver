@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-package com.mongodb.mqlv2.ast;
-
-import java.util.List;
-
 /**
- * Used by set and group stages. {@code path} is the dot-decomposed field path; e.g.
- * "a.b.c" -> List.of("a", "b", "c"). {@code value} is the expression assigned to that path.
- *
- * @param path  the dot-decomposed field path.
- * @param value the expression assigned to {@code path}.
+ * Experimental MQLv2 driver API: AST taxonomy, serializer, and {@code Pipeline} wrapper
+ * implementing {@code Mqlv2Source} so AST constructions can be passed directly to
+ * {@code MongoDatabase.mqlv2(Mqlv2Source)}.
  */
-public record Assignment(List<String> path, Expr value) {}
+package com.mongodb.mqlv2;

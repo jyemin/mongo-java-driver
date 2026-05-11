@@ -45,13 +45,27 @@ class Mqlv2ConformanceTest {
 
     // --- AST helpers ---
 
-    private static Expr lit(final long n) { return new Expr.ValueLit(new Value.VInt(n)); }
-    private static Expr lit(final String s) { return new Expr.ValueLit(new Value.VString(s)); }
-    private static Expr field(final String name) { return new Expr.FieldAccess(new Expr.CurrentValue(), name); }
-    private static Expr eq(final Expr l, final Expr r) { return new Expr.BinaryOp(BinaryOpType.EQ, l, r); }
-    private static Expr add(final Expr l, final Expr r) { return new Expr.BinaryOp(BinaryOpType.ADD, l, r); }
-    private static Expr mul(final Expr l, final Expr r) { return new Expr.BinaryOp(BinaryOpType.MUL, l, r); }
-    private static Expr bag(final Expr... es) { return new Expr.BagConstructor(List.of(es)); }
+    private static Expr lit(final long n) {
+        return new Expr.ValueLit(new Value.VInt(n));
+    }
+    private static Expr lit(final String s) {
+        return new Expr.ValueLit(new Value.VString(s));
+    }
+    private static Expr field(final String name) {
+        return new Expr.FieldAccess(new Expr.CurrentValue(), name);
+    }
+    private static Expr eq(final Expr l, final Expr r) {
+        return new Expr.BinaryOp(BinaryOpType.EQ, l, r);
+    }
+    private static Expr add(final Expr l, final Expr r) {
+        return new Expr.BinaryOp(BinaryOpType.ADD, l, r);
+    }
+    private static Expr mul(final Expr l, final Expr r) {
+        return new Expr.BinaryOp(BinaryOpType.MUL, l, r);
+    }
+    private static Expr bag(final Expr... es) {
+        return new Expr.BagConstructor(List.of(es));
+    }
     @SafeVarargs
     private static Expr doc(final Map.Entry<String, Expr>... fields) {
         List<Map.Entry<Expr, Expr>> entries = new ArrayList<>();
@@ -60,13 +74,21 @@ class Mqlv2ConformanceTest {
         }
         return new Expr.DocumentConstructor(entries);
     }
-    private static Map.Entry<String, Expr> kv(final String k, final Expr v) { return Map.entry(k, v); }
+    private static Map.Entry<String, Expr> kv(final String k, final Expr v) {
+        return Map.entry(k, v);
+    }
 
     // --- Expected helpers ---
 
-    private static BsonDocument bd(final String json) { return BsonDocument.parse(json); }
-    private static Set<BsonDocument> bset(final BsonDocument... docs) { return new HashSet<>(Arrays.asList(docs)); }
-    private static Set<BsonDocument> asSet(final List<BsonDocument> docs) { return new HashSet<>(docs); }
+    private static BsonDocument bd(final String json) {
+        return BsonDocument.parse(json);
+    }
+    private static Set<BsonDocument> bset(final BsonDocument... docs) {
+        return new HashSet<>(Arrays.asList(docs));
+    }
+    private static Set<BsonDocument> asSet(final List<BsonDocument> docs) {
+        return new HashSet<>(docs);
+    }
 
     private List<BsonDocument> run(final Stage ast) {
         return db.mqlv2(new Pipeline(ast), BsonDocument.class).into(new ArrayList<>());

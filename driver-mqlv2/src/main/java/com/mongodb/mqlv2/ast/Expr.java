@@ -54,6 +54,9 @@ public sealed interface Expr {
     /**
      * Untyped function call. The function name is validated against the registry at construction
      * time by the builder layer (in a future facade plan), not here.
+     *
+     * @param name the function name (must appear in the function registry).
+     * @param args the arguments to the function.
      */
     record FunctionCall(String name, List<Expr> args) implements Expr {}
 

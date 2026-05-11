@@ -22,6 +22,8 @@ import com.mongodb.mqlv2.ast.Stage;
 /**
  * Top-level wrapper around a {@link Stage} that implements {@link Mqlv2Source}, allowing it to be
  * passed directly to {@code MongoDatabase.mqlv2(Mqlv2Source)}.
+ *
+ * @param root the root stage of the pipeline.
  */
 public record Pipeline(Stage root) implements Mqlv2Source {
     @Override
