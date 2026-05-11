@@ -29,8 +29,10 @@ import com.mongodb.client.ListCollectionNamesIterable;
 import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.Mqlv2Iterable;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.CreateViewOptions;
+import com.mongodb.client.model.Mqlv2Source;
 import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
@@ -387,6 +389,44 @@ public class MongoDatabaseImpl implements MongoDatabase {
                                                           final Class<TResult> resultClass) {
         notNull("clientSession", clientSession);
         return createAggregateIterable(clientSession, pipeline, resultClass);
+    }
+
+
+    private <TResult> Mqlv2Iterable<TResult> createMqlv2Iterable(
+            @Nullable final ClientSession clientSession,
+            final String mqlv2Source,
+            final Class<TResult> resultClass) {
+        return new Mqlv2IterableImpl<>(
+                clientSession,
+                name,
+                mqlv2Source,
+                resultClass,
+                codecRegistry,
+                readPreference,
+                readConcern,
+                executor,
+                retryReads,
+                timeoutSettings);
+    }
+
+    @Override
+    public Mqlv2Iterable<Document> mqlv2(final String mqlV2Query) {
+        return createMqlv2Iterable(null, mqlV2Query, Document.class);
+    }
+
+    @Override
+    public Mqlv2Iterable<Document> mqlv2(final Mqlv2Source source) {
+        return mqlv2(source.toMqlv2());
+    }
+
+    @Override
+    public <TResult> Mqlv2Iterable<TResult> mqlv2(final String mqlV2Query, final Class<TResult> resultClass) {
+        return createMqlv2Iterable(null, mqlV2Query, resultClass);
+    }
+
+    @Override
+    public <TResult> Mqlv2Iterable<TResult> mqlv2(final Mqlv2Source source, final Class<TResult> resultClass) {
+        return mqlv2(source.toMqlv2(), resultClass);
     }
 
     private <TResult> AggregateIterable<TResult> createAggregateIterable(@Nullable final ClientSession clientSession,
