@@ -25,6 +25,8 @@ base.archivesName.set("driver-mqlv2")
 dependencies {
     api(project(path = ":driver-core", configuration = "default"))
     testImplementation(project(path = ":driver-sync", configuration = "default"))
+    testImplementation(project(path = ":driver-sync", configuration = "testArtifacts"))
+    testImplementation(project(path = ":driver-core", configuration = "testArtifacts"))
     testImplementation(project(path = ":bson", configuration = "default"))
 }
 

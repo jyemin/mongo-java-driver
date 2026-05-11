@@ -15,8 +15,7 @@
  */
 package com.mongodb.mqlv2;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
+import com.mongodb.client.Fixture;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.mqlv2.ast.Assignment;
 import com.mongodb.mqlv2.ast.BinaryOpType;
@@ -29,10 +28,7 @@ import com.mongodb.mqlv2.ast.Stage;
 import com.mongodb.mqlv2.ast.UnaryOpType;
 import com.mongodb.mqlv2.ast.Value;
 import org.bson.BsonDocument;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,26 +39,12 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Mqlv2ConformanceTest {
 
-    private MongoClient mongoClient;
-    private MongoDatabase db;
+    private final MongoDatabase db = Fixture.getDefaultDatabase();
 
-    @BeforeAll
-    void setUp() {
-        mongoClient = MongoClients.create("mongodb://localhost:27017");
-        db = mongoClient.getDatabase("test");
-    }
+    // --- AST helpers ---
 
-    @AfterAll
-    void tearDown() {
-        if (mongoClient != null) {
-            mongoClient.close();
-        }
-    }
-
-    // AST helpers
     private static Expr lit(final long n) { return new Expr.ValueLit(new Value.VInt(n)); }
     private static Expr lit(final String s) { return new Expr.ValueLit(new Value.VString(s)); }
     private static Expr field(final String name) { return new Expr.FieldAccess(new Expr.CurrentValue(), name); }
@@ -70,19 +52,18 @@ class Mqlv2ConformanceTest {
     private static Expr add(final Expr l, final Expr r) { return new Expr.BinaryOp(BinaryOpType.ADD, l, r); }
     private static Expr mul(final Expr l, final Expr r) { return new Expr.BinaryOp(BinaryOpType.MUL, l, r); }
     private static Expr bag(final Expr... es) { return new Expr.BagConstructor(List.of(es)); }
-
     @SafeVarargs
     private static Expr doc(final Map.Entry<String, Expr>... fields) {
         List<Map.Entry<Expr, Expr>> entries = new ArrayList<>();
         for (Map.Entry<String, Expr> f : fields) {
-            entries.add(Map.entry(new Expr.ValueLit(new Value.VString(f.getKey())), f.getValue()));
+            entries.add(Map.entry(lit(f.getKey()), f.getValue()));
         }
         return new Expr.DocumentConstructor(entries);
     }
-
     private static Map.Entry<String, Expr> kv(final String k, final Expr v) { return Map.entry(k, v); }
 
-    // Expected-builder helpers
+    // --- Expected helpers ---
+
     private static BsonDocument bd(final String json) { return BsonDocument.parse(json); }
     private static Set<BsonDocument> bset(final BsonDocument... docs) { return new HashSet<>(Arrays.asList(docs)); }
     private static Set<BsonDocument> asSet(final List<BsonDocument> docs) { return new HashSet<>(docs); }
