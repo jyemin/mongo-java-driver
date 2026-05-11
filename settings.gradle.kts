@@ -28,6 +28,7 @@ include(":bson")
 include(":bson-kotlin")
 include(":bson-kotlinx")
 include(":bson-record-codec")
+include(":driver-mqlv2")
 include(":bson-scala")
 
 include(":driver-core")
