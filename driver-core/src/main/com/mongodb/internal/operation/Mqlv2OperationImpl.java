@@ -25,7 +25,6 @@ import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
-import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.codecs.Decoder;
 
@@ -133,11 +132,10 @@ class Mqlv2OperationImpl<T> implements ReadOperationCursor<T> {
 
     BsonDocument getCommand(final OperationContext operationContext, final int maxWireVersion) {
         BsonDocument commandDocument = new BsonDocument(COMMAND_NAME, new BsonString(mqlv2Source));
-        BsonDocument cursor = new BsonDocument();
-        if (batchSize != null) {
-            cursor.put("batchSize", new BsonInt32(batchSize));
-        }
-        commandDocument.put(CURSOR, cursor);
+        // The mqlv2 server command has strict IDL and does not accept a `cursor` sub-document.
+        // Batch size is currently a client-side no-op; the server returns all results in firstBatch
+        // with cursorId 0 (no continuation). If batchSize support is added to mqlv2 server-side,
+        // re-enable cursor emission here.
         applyMaxTimeMS(operationContext.getTimeoutContext(), commandDocument);
         return commandDocument;
     }
