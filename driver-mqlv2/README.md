@@ -107,14 +107,12 @@ Construct AST records directly. Verbose, unambiguous, and the baseline against w
 facades are measured.
 
 ```java
+// orders: { customerId: Long, total: Double, status: String }
 new Stage.MatchStage(
-    new Stage.FromStageSimple(new Expr.BagConstructor(List.of(
-        new Expr.ValueLit(new Value.VInt(1)),
-        new Expr.ValueLit(new Value.VInt(2)),
-        new Expr.ValueLit(new Value.VInt(3))))),
+    new Stage.FromStageSimple(new Expr.VarRef("orders")),
     new Expr.BinaryOp(BinaryOpType.EQ,
-        new Expr.CurrentValue(),
-        new Expr.ValueLit(new Value.VInt(2))))
+        new Expr.FieldAccess(new Expr.CurrentValue(), "status"),
+        new Expr.ValueLit(new Value.VString("shipped"))))
 ```
 
 Used directly in `Mqlv2ConformanceTest` — the reference shape every facade has to match.
@@ -130,8 +128,7 @@ be star-imported.
 ```java
 import static com.mongodb.mqlv2.facade.untyped.Untyped.*;
 
-from(bag(lit(1), lit(2), lit(3)))
-    .match(current().eq(lit(2)))
+from(var("orders")).match(field("status").eq(lit("shipped")))
 ```
 
 All `ExprU` look the same to the compiler — no type checks. Mistakes surface at server
@@ -148,8 +145,8 @@ let callers commit to a type when inference can't.
 ```java
 import static com.mongodb.mqlv2.facade.typed.Typed.*;
 
-from(bag(lit(1L), lit(2L), lit(3L)))
-    .match(current().eq(lit(2L)))   // ExprT<Boolean>; lit(2L) is ExprT<Long>
+from(var("orders")).match(field("status").eq(lit("shipped")))
+// eq is parametric — no Class<T> witness needed for the string comparison
 ```
 
 Type-system policy at a glance:
@@ -192,7 +189,7 @@ in MQLv2 arrow is legal on any expression.
 form (`intField("x")` → `IntExprT`). Pick the one that matches what you know about the
 field.
 
-**Compile-time rejections** — the two bugs from the phantom facade that motivated this:
+**Compile-time rejections** — the two issues from the phantom facade that motivated this:
 
 ```java
 // Phantom — both compile silently
@@ -218,155 +215,157 @@ output. Same trade-off as `MqlInteger` in `com.mongodb.client.model.mql.*`. `min
 
 Five queries, four ways. (All come from the conformance tests.)
 
-### 1. Simplest match
+Collection schemas used below:
+- `orders`:    `{ customerId: Long, total: Double, status: String }`
+- `products`:  `{ name: String, price: Double, category: String }`
+- `employees`: `{ name: String, salary: Long, department: { name: String } }`
+- `customers`: `{ id: Long, name: String }`
+
+### 1. Match on a collection
 
 ```mql
-from <<1, 2, 3>> | match $ == 2
+from $orders | match status == "shipped"
 ```
 
 ```java
 // Bare AST
 new Stage.MatchStage(
-    new Stage.FromStageSimple(new Expr.BagConstructor(List.of(
-        new Expr.ValueLit(new Value.VInt(1)),
-        new Expr.ValueLit(new Value.VInt(2)),
-        new Expr.ValueLit(new Value.VInt(3))))),
+    new Stage.FromStageSimple(new Expr.VarRef("orders")),
     new Expr.BinaryOp(BinaryOpType.EQ,
-        new Expr.CurrentValue(),
-        new Expr.ValueLit(new Value.VInt(2))))
+        new Expr.FieldAccess(new Expr.CurrentValue(), "status"),
+        new Expr.ValueLit(new Value.VString("shipped"))))
 
 // Untyped
-from(bag(lit(1), lit(2), lit(3)))
-    .match(current().eq(lit(2)))
+from(var("orders")).match(field("status").eq(lit("shipped")))
 
-// Typed
-from(bag(lit(1L), lit(2L), lit(3L)))
-    .match(current().eq(lit(2L)))
+// Typed — eq is parametric; no Class<T> witness needed
+from(var("orders")).match(field("status").eq(lit("shipped")))
 
 // Subtyped
-from(bag(intLit(1L), intLit(2L), intLit(3L)))
-        .match(intCurrent().eq(intLit(2L)));
+from(var("orders")).match(strField("status").eq(strLit("shipped")))
 ```
 
 ### 2. Format with arithmetic
 
 ```mql
-from <<{a:1},{a:2}>> | format {doubled: a * 2}
+from $products | format {name, discounted: price * 0.9}
 ```
 
 ```java
+// Bare AST
+new Stage.FormatStage(
+    new Stage.FromStageSimple(new Expr.VarRef("products")),
+    new Expr.DocumentConstructor(List.of(
+        Map.entry(new Expr.ValueLit(new Value.VString("name")),
+                  new Expr.FieldAccess(new Expr.CurrentValue(), "name")),
+        Map.entry(new Expr.ValueLit(new Value.VString("discounted")),
+                  new Expr.BinaryOp(BinaryOpType.MUL,
+                      new Expr.FieldAccess(new Expr.CurrentValue(), "price"),
+                      new Expr.ValueLit(new Value.VDouble(0.9)))))))
+
 // Untyped
-from(bag(doc(entry("a", lit(1))), doc(entry("a", lit(2)))))
-    .format(doc(entry("doubled", field("a").mul(lit(2)))))
+from(var("products")).format(doc(
+    entry("name",       field("name")),
+    entry("discounted", field("price").mul(lit(0.9)))))
 
-// Typed — strict arithmetic forces a Class<T> witness
-from(bag(doc(entry("a", lit(1L))), doc(entry("a", lit(2L)))))
-    .format(doc(entry("doubled", field("a", Long.class).mul(lit(2L)))))
+// Typed — arithmetic requires a Class<T> witness on field()
+from(var("products")).format(doc(
+    entry("name",       field("name")),
+    entry("discounted", field("price", Double.class).mul(lit(0.9)))))
 
-// Subtyped — intField returns IntExprT, so mul is in scope
-from(bag(doc(entry("a", intLit(1L))), doc(entry("a", intLit(2L)))))
-        .format(doc(entry("doubled", intField("a").mul(intLit(2L)))));
+// Subtyped — numField returns NumExprT; mul is in scope without a witness
+from(var("products")).format(doc(
+    entry("name",       field("name")),
+    entry("discounted", numField("price").mul(numLit(0.9)))))
 ```
 
-### 3. Group with arrow + sum
+### 3. Group with aggregation
 
 ```mql
-from <<{a:1,b:2},{a:1,b:3},{a:2,b:4}>> | group (k=a) (s=sum($->b))
+from $orders | group (customerId=customerId) (orderCount=count($*), totalSpent=sum($->total))
 ```
 
 ```java
 // Untyped
-from(bag(
-    doc(entry("a", lit(1)), entry("b", lit(2))),
-    doc(entry("a", lit(1)), entry("b", lit(3))),
-    doc(entry("a", lit(2)), entry("b", lit(4)))))
-    .group(
-        List.of(assign("k", field("a"))),
-        List.of(assign("s", sum(current().arrow("b")))))
+from(var("orders")).group(
+    List.of(assign("customerId", field("customerId"))),
+    List.of(assign("orderCount", count()),
+            assign("totalSpent", sum(current().arrow("total")))))
 
-// Typed — no annotations needed; sum is parametric and we don't .add anywhere
-from(bag(
-    doc(entry("a", lit(1L)), entry("b", lit(2L))),
-    doc(entry("a", lit(1L)), entry("b", lit(3L))),
-    doc(entry("a", lit(2L)), entry("b", lit(4L)))))
-    .group(
-        List.of(assign("k", field("a"))),
-        List.of(assign("s", sum(current().arrow("b")))))
+// Typed — sum and count are parametric; no annotations needed
+from(var("orders")).group(
+    List.of(assign("customerId", field("customerId"))),
+    List.of(assign("orderCount", count()),
+            assign("totalSpent", sum(current().arrow("total")))))
 
 // Subtyped — numArrow returns NumExprT; sum accepts NumExprT
-from(bag(
-    doc(entry("a", intLit(1L)), entry("b", intLit(2L))),
-    doc(entry("a", intLit(1L)), entry("b", intLit(3L))),
-    doc(entry("a", intLit(2L)), entry("b", intLit(4L)))))
-    .group(
-        List.of(assign("k", field("a"))),
-        List.of(assign("s", sum(current().numArrow("b")))));
+from(var("orders")).group(
+    List.of(assign("customerId", field("customerId"))),
+    List.of(assign("orderCount", count()),
+            assign("totalSpent", sum(current().numArrow("total")))))
 ```
 
-### 4. Let + variable
+### 4. Multi-stage with arrow traversal
 
 ```mql
-from let $x = 2 in $x + 3
+from $employees | match salary > 80000 | format {name, dept: department->name}
 ```
 
 ```java
 // Untyped
-from(letIn(var("x").add(lit(3)), entry("x", lit(2))))
+from(var("employees"))
+    .match(field("salary").gt(lit(80000L)))
+    .format(doc(
+        entry("name", field("name")),
+        entry("dept", field("department").arrow("name"))))
 
-// Typed — var needs a Class<T> witness because add is strict
-from(letIn(var("x", Long.class).add(lit(3L)), entry("x", lit(2L))))
+// Typed — gt is parametric; arrow returns ExprT<Object>; no witnesses needed
+from(var("employees"))
+    .match(field("salary").gt(lit(80000L)))
+    .format(doc(
+        entry("name", field("name")),
+        entry("dept", field("department").arrow("name"))))
 
-// Subtyped — intVar returns IntExprT, so add is in scope without a witness
-from(letIn(intVar("x").add(intLit(3L)), entry("x", intLit(2L))));
+// Subtyped — intField for salary; docField then strArrow to type the traversal
+from(var("employees"))
+    .match(intField("salary").gt(intLit(80000L)))
+    .format(doc(
+        entry("name", field("name")),
+        entry("dept", docField("department").strArrow("name"))))
 ```
 
 ### 5. Left-outer join
 
 ```mql
-from c=<<{id:1},{id:2},{id:3}>>
-  | join leftOuter o=<<{id:1,v:"x"},{id:3,v:"z"}>> (c.id == o.id)
+from c=$customers
+  | join leftOuter o=$orders (c.id == o.customerId)
+  | format {customer: c.name, total: o.total}
 ```
 
 ```java
 // Untyped
-from(entry("c", bag(
-        doc(entry("id", lit(1))),
-        doc(entry("id", lit(2))),
-        doc(entry("id", lit(3))))))
-    .join(
-        JoinType.LEFT_OUTER,
-        "o",
-        bag(
-            doc(entry("id", lit(1)), entry("v", lit("x"))),
-            doc(entry("id", lit(3)), entry("v", lit("z")))),
-        field("c").field("id").eq(field("o").field("id")))
+from(entry("c", var("customers")))
+    .join(JoinType.LEFT_OUTER, "o", var("orders"),
+        field("c").field("id").eq(field("o").field("customerId")))
+    .format(doc(
+        entry("customer", field("c").field("name")),
+        entry("total",    field("o").field("total"))))
 
-// Typed — identical (eq is parametric; field chains stay ExprT<Object>; match
-//         enforcement happens because join condition is typed ExprT<Boolean>).
-from(entry("c", bag(
-        doc(entry("id", lit(1L))),
-        doc(entry("id", lit(2L))),
-        doc(entry("id", lit(3L))))))
-    .join(
-        JoinType.LEFT_OUTER,
-        "o",
-        bag(
-            doc(entry("id", lit(1L)), entry("v", lit("x"))),
-            doc(entry("id", lit(3L)), entry("v", lit("z")))),
-        field("c").field("id").eq(field("o").field("id")))
+// Typed — eq is parametric; field chains return ExprT<Object>
+from(entry("c", var("customers")))
+    .join(JoinType.LEFT_OUTER, "o", var("orders"),
+        field("c").field("id").eq(field("o").field("customerId")))  
+    .format(doc(
+        entry("customer", field("c").field("name")),
+        entry("total",    field("o").field("total"))))
 
-// Subtyped — docField on c/o, intField on the id leaves
-from(entry("c", bag(
-        doc(entry("id", intLit(1L))),
-        doc(entry("id", intLit(2L))),
-        doc(entry("id", intLit(3L))))))
-    .join(
-        JoinType.LEFT_OUTER,
-        "o",
-        bag(
-            doc(entry("id", intLit(1L)), entry("v", strLit("x"))),
-            doc(entry("id", intLit(3L)), entry("v", strLit("z")))),
-        docField("c").intField("id").eq(docField("o").intField("id")))
+// Subtyped — typed field accessors on DocExprT recover the leaf type for the predicate
+from(entry("c", var("customers")))
+    .join(JoinType.LEFT_OUTER, "o", var("orders"),
+        docField("c").intField("id").eq(docField("o").intField("customerId")))
+    .format(doc(
+        entry("customer", field("c").field("name")),
+        entry("total",    field("o").field("total"))))
 ```
 
 ## Trade-offs summary
@@ -412,9 +411,9 @@ test fixture (`org.mongodb.test.uri`) is honored; default is `mongodb://localhos
 Test count: **80** across five files —
 - `SerializerTest` (6, no mongod)
 - `Mqlv2ConformanceTest` (17, bare AST against server)
-- `UntypedFacadeTest` (17, facade AST + server)
-- `TypedFacadeTest` (17, typed facade AST + server)
-- `SubtypedFacadeTest` (23, subtyped facade AST + server; includes date extractor and comparison tests)
+- `UntypedFacadeTest` (19, facade AST + server)
+- `TypedFacadeTest` (19, typed facade AST + server)
+- `SubtypedFacadeTest` (19, subtyped facade AST + server; includes date extractor and comparison tests)
 
 Every conformance test asserts both **AST equivalence with the bare form** (`equals` on
 the underlying record graphs) and **`BsonDocument` result equality against the live
