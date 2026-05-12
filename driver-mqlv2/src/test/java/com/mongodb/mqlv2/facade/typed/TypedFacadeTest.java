@@ -130,6 +130,7 @@ class TypedFacadeTest {
 
     @Test
     void matchSimple() {
+        // from <<1, 2, 3>> | match $ == 2
         PipelineBuilderT facade =
                 from(bag(lit(1L), lit(2L), lit(3L)))
                         .match(current(Long.class).eq(lit(2L)));
@@ -143,6 +144,7 @@ class TypedFacadeTest {
 
     @Test
     void formatWithDocAndMul() {
+        // from <<{a:1},{a:2}>> | format {doubled: a * 2}
         PipelineBuilderT facade =
                 from(bag(doc(entry("a", lit(1L))), doc(entry("a", lit(2L)))))
                         .format(doc(entry("doubled", field("a", Long.class).mul(lit(2L)))));
@@ -158,6 +160,7 @@ class TypedFacadeTest {
 
     @Test
     void sortDescThenAsc() {
+        // from <<{a:3,b:2},{a:1,b:7},{a:5,b:2},{a:5,b:1}>> | sort a desc, b
         PipelineBuilderT facade =
                 from(bag(
                         doc(entry("a", lit(3L)), entry("b", lit(2L))),
@@ -187,6 +190,7 @@ class TypedFacadeTest {
 
     @Test
     void limit() {
+        // from <<3,1,4,1,5,9,2,6>> | sort $ | limit 3
         PipelineBuilderT facade =
                 from(bag(lit(3L), lit(1L), lit(4L), lit(1L), lit(5L), lit(9L), lit(2L), lit(6L)))
                         .sort(asc(current()))
@@ -206,6 +210,7 @@ class TypedFacadeTest {
 
     @Test
     void projectBranching() {
+        // from <<{a:{x:1,y:2,z:3}, b:9}>> | project a.x, a.z, b
         PipelineBuilderT facade =
                 from(bag(doc(
                         entry("a", doc(entry("x", lit(1L)), entry("y", lit(2L)), entry("z", lit(3L)))),
@@ -229,6 +234,7 @@ class TypedFacadeTest {
 
     @Test
     void setWithArithmetic() {
+        // from <<{a:1},{a:2}>> | set z.add1 = a + 1
         PipelineBuilderT facade =
                 from(bag(doc(entry("a", lit(1L))), doc(entry("a", lit(2L)))))
                         .set(assign("z.add1", field("a", Long.class).add(lit(1L))));
@@ -246,6 +252,7 @@ class TypedFacadeTest {
 
     @Test
     void unset() {
+        // from <<{a:1,b:2}>> | unset b
         PipelineBuilderT facade =
                 from(bag(doc(entry("a", lit(1L)), entry("b", lit(2L)))))
                         .unset("b");
@@ -283,6 +290,7 @@ class TypedFacadeTest {
 
     @Test
     void unwindSimple() {
+        // from <<[1,2,3]>> | unwind $
         PipelineBuilderT facade =
                 from(bag(arr(lit(1L), lit(2L), lit(3L))))
                         .unwind(current());
@@ -299,6 +307,7 @@ class TypedFacadeTest {
 
     @Test
     void anyExpressionAndArrow() {
+        // from <<{a:[{b:1},{b:2}]},{a:[{b:3}]}>> | match a->b any ($ == 2)
         PipelineBuilderT facade =
                 from(bag(
                         doc(entry("a", arr(doc(entry("b", lit(1L))), doc(entry("b", lit(2L)))))),
@@ -322,6 +331,7 @@ class TypedFacadeTest {
 
     @Test
     void groupWithSumArrow() {
+        // from <<{a:1,b:2},{a:1,b:3},{a:2,b:4}>> | group (k=a) (s=sum($->b))
         PipelineBuilderT facade =
                 from(bag(
                         doc(entry("a", lit(1L)), entry("b", lit(2L))),
@@ -347,6 +357,7 @@ class TypedFacadeTest {
 
     @Test
     void letExpr() {
+        // from let $x = 2 in $x + 3
         PipelineBuilderT facade = from(letIn(var("x", Long.class).add(lit(3L)), entry("x", lit(2L))));
         Stage bare = new Stage.FromStageSimple(
                 new Expr.LetExpr(
@@ -359,6 +370,7 @@ class TypedFacadeTest {
 
     @Test
     void topLevelAggViaFunctionCall() {
+        // from sum(<<1,2,3,4>>)
         PipelineBuilderT facade = from(sum(bag(lit(1L), lit(2L), lit(3L), lit(4L))));
         Stage bare = new Stage.FromStageSimple(
                 new Expr.FunctionCall("sum", List.of(bBag(bLit(1), bLit(2), bLit(3), bLit(4)))));
@@ -369,6 +381,7 @@ class TypedFacadeTest {
 
     @Test
     void notAndIsNullish() {
+        // from <<{a:1},{a:null},{a:missing}>> | match not isNullish(a)
         PipelineBuilderT facade =
                 from(bag(
                         doc(entry("a", lit(1L))),
@@ -389,6 +402,7 @@ class TypedFacadeTest {
 
     @Test
     void crossProductFromNested() {
+        // from s=<<1,2,3>>, s2=<<10,20>>
         PipelineBuilderT facade = fromNested(
                 entry("s", bag(lit(1L), lit(2L), lit(3L))),
                 entry("s2", bag(lit(10L), lit(20L))));
