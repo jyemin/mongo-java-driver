@@ -652,4 +652,26 @@ public interface MongoDatabase {
      */
     @Alpha(Reason.CLIENT)
     <TResult> Mqlv2Iterable<TResult> mqlv2(Mqlv2Source source, Class<TResult> resultClass);
+
+    /**
+     * Executes an MQLv2 query against this database using a client session.
+     *
+     * @param clientSession the client session with which to associate this operation
+     * @param source      the MQLv2 source.
+     * @return an iterable containing the result documents.
+     */
+    @Alpha(Reason.CLIENT)
+    Mqlv2Iterable<Document> mqlv2(ClientSession clientSession, Mqlv2Source source);
+
+    /**
+     * Executes an MQLv2 query against this database using a client session, decoding into the given class.
+     *
+     * @param clientSession the client session with which to associate this operation
+     * @param source      the MQLv2 source.
+     * @param resultClass the class to decode each result document into.
+     * @param <TResult>   the result document type.
+     * @return an iterable containing the typed result documents.
+     */
+    @Alpha(Reason.CLIENT)
+    <TResult> Mqlv2Iterable<TResult> mqlv2(ClientSession clientSession, Mqlv2Source source, Class<TResult> resultClass);
 }

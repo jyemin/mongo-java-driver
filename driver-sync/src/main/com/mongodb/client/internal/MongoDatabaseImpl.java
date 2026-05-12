@@ -419,6 +419,21 @@ public class MongoDatabaseImpl implements MongoDatabase {
         return createMqlv2Iterable(null, source.toMqlv2(), resultClass);
     }
 
+    @Override
+    public Mqlv2Iterable<Document> mqlv2(final ClientSession clientSession, final Mqlv2Source source) {
+        notNull("clientSession", clientSession);
+        notNull("source", source);
+        return createMqlv2Iterable(clientSession, source.toMqlv2(), Document.class);
+    }
+
+    @Override
+    public <TResult> Mqlv2Iterable<TResult> mqlv2(
+            final ClientSession clientSession, final Mqlv2Source source, final Class<TResult> resultClass) {
+        notNull("clientSession", clientSession);
+        notNull("source", source);
+        return createMqlv2Iterable(clientSession, source.toMqlv2(), resultClass);
+    }
+
     private <TResult> AggregateIterable<TResult> createAggregateIterable(@Nullable final ClientSession clientSession,
                                                                          final List<? extends Bson> pipeline,
                                                                          final Class<TResult> resultClass) {
