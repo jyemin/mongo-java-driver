@@ -20,51 +20,49 @@ The public `MongoDatabase.mqlv2(...)` methods (added in `driver-sync`) are marke
 
 ## Architecture
 
+The user-side pieces (AST, the things that implement `Mqlv2Source`, and the shared
+`Serializer`) all live in the `driver-mqlv2` module. The driver entry point
+`MongoDatabase.mqlv2(...)` lives in `driver-sync`; it accepts any `Mqlv2Source` and
+hands the rendered text to a wire-level `Mqlv2Operation` in `driver-core`.
+
 ```
-       User code (one of three styles)
-                 │
-                 ▼
-   ┌─────────────────────────────────────┐
-   │  Facades (optional)                 │
-   │    com.mongodb.mqlv2.facade.untyped  │  ExprU, PipelineBuilder, Untyped
-   │    com.mongodb.mqlv2.facade.typed    │  ExprT<T>, PipelineBuilderT, Typed
-   │    com.mongodb.mqlv2.facade.subtyped │  ExprT hierarchy, PipelineBuilderS, Subtyped
-   └─────────────────────────────────────┘
-                 │
-                 ▼ build
-   ┌─────────────────────────────────────┐
-   │  AST (canonical)                    │
-   │    com.mongodb.mqlv2.ast.{Stage,    │  sealed interfaces + records
-   │      Expr, Value, FieldPathTree,    │
-   │      SortSpec, Assignment, ...}     │
-   └─────────────────────────────────────┘
-                 │
-                 ▼ serialize
-   ┌─────────────────────────────────────┐
-   │  Serializer (single class)          │  AST → MQLv2 surface text
-   │    com.mongodb.mqlv2.Serializer     │
-   └─────────────────────────────────────┘
-                 │
-                 ▼ wrapped by
-   ┌─────────────────────────────────────┐
-   │  Pipeline / PipelineBuilder(T)      │  implements Mqlv2Source
-   └─────────────────────────────────────┘
-                 │
-                 ▼ db.mqlv2(...)
-        ┌───────────────────┐
-        │  Mqlv2Operation   │  driver-core, in driver-core/internal/operation
-        │  (wire-level)     │  builds {mqlv2: "<text>", $db: ...}
-        └───────────────────┘
-                 │
-                 ▼  wire
-            ┌──────────┐
-            │  mongod  │  experimental `mqlv2` command
-            └──────────┘
+  ┌──────────────────────────────────────────────────────────────────┐
+  │ driver-mqlv2                                                     │
+  │                                                                  │
+  │   Stage AST   (com.mongodb.mqlv2.ast.*)                          │
+  │     sealed Stage / Expr / Value / FieldPathTree / SortSpec / ... │
+  │     built either by hand or via one of the facade builders below │
+  │                                                                  │
+  │   Mqlv2Source  (interface, in driver-core)                       │
+  │     { String toMqlv2(); }                                        │
+  │     implemented by four things in driver-mqlv2:                  │
+  │       · facade.untyped.PipelineBuilder                           │
+  │       · facade.typed.PipelineBuilderT                            │
+  │       · facade.subtyped.PipelineBuilderS                         │
+  │       · com.mongodb.mqlv2.Pipeline   (bare-AST wrapper)          │
+  │     each one's toMqlv2() calls Serializer.serialize(stage)       │
+  │                                                                  │
+  │   Serializer  (com.mongodb.mqlv2.Serializer)                     │
+  │     utility: Stage → MQLv2 surface text                          │
+  └──────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼  db.mqlv2(Mqlv2Source, Class<T>)
+                                 │
+            ┌──────────────────────────────────────┐
+            │ Mqlv2Operation  (driver-core)        │
+            │   wire command: { mqlv2: "<text>",   │
+            │                   $db: "<dbName>" }  │
+            └──────────────────────────────────────┘
+                                 │
+                                 ▼  wire
+                              ┌──────┐
+                              │mongod│
+                              └──────┘
 ```
 
-The AST is the load-bearing layer. All three facades produce the same AST shapes (the
-conformance tests assert this — `facade.stage().equals(bareAst)` for every test case).
-Anything that compiles via a facade serializes to text the server accepts.
+All three facades produce the same AST shapes — the conformance tests assert
+`facade.stage().equals(bareAst)` for every query. Anything that compiles via a facade
+serializes to text the server accepts.
 
 ## The AST
 
