@@ -129,7 +129,7 @@ public final class Untyped {
     }
 
     @SafeVarargs
-    public static PipelineBuilder fromNested(final Map.Entry<String, ExprU>... sources) {
+    public static PipelineBuilder from(final Map.Entry<String, ExprU>... sources) {
         List<Map.Entry<String, Expr>> entries = new ArrayList<>();
         for (Map.Entry<String, ExprU> s : sources) {
             entries.add(Map.entry(s.getKey(), s.getValue().toExpr()));

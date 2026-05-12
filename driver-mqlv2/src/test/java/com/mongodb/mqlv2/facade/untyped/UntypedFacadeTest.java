@@ -58,7 +58,6 @@ import static com.mongodb.mqlv2.facade.untyped.Untyped.doc;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.entry;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.field;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.from;
-import static com.mongodb.mqlv2.facade.untyped.Untyped.fromNested;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.isNullish;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.letIn;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.lit;
@@ -418,7 +417,7 @@ class UntypedFacadeTest {
     @Test
     void crossProductFromNested() {
         // from s=<<1,2,3>>, s2=<<10,20>>
-        PipelineBuilder facade = fromNested(
+        PipelineBuilder facade = from(
                 entry("s", bag(lit(1), lit(2), lit(3))),
                 entry("s2", bag(lit(10), lit(20))));
         Stage bare = new Stage.FromStageNested(List.of(
@@ -440,7 +439,7 @@ class UntypedFacadeTest {
     @Test
     void joinDefaultInner() {
         PipelineBuilder facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", lit(1)), entry("items", lit(10))),
                         doc(entry("id", lit(2)), entry("items", lit(5))))))
                         .join(
@@ -474,7 +473,7 @@ class UntypedFacadeTest {
     @Test
     void joinLeftOuter() {
         PipelineBuilder facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", lit(1))),
                         doc(entry("id", lit(2))),
                         doc(entry("id", lit(3))))))

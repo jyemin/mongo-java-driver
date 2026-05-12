@@ -126,7 +126,7 @@ public final class Typed {
     }
 
     @SafeVarargs
-    public static PipelineBuilderT fromNested(final Map.Entry<String, ExprT<?>>... sources) {
+    public static PipelineBuilderT from(final Map.Entry<String, ExprT<?>>... sources) {
         List<Map.Entry<String, Expr>> entries = new ArrayList<>();
         for (Map.Entry<String, ExprT<?>> s : sources) {
             entries.add(Map.entry(s.getKey(), s.getValue().toExpr()));

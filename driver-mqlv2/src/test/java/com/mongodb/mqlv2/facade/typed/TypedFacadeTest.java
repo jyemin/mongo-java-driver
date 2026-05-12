@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,6 @@ import static com.mongodb.mqlv2.facade.typed.Typed.doc;
 import static com.mongodb.mqlv2.facade.typed.Typed.entry;
 import static com.mongodb.mqlv2.facade.typed.Typed.field;
 import static com.mongodb.mqlv2.facade.typed.Typed.from;
-import static com.mongodb.mqlv2.facade.typed.Typed.fromNested;
 import static com.mongodb.mqlv2.facade.typed.Typed.isNullish;
 import static com.mongodb.mqlv2.facade.typed.Typed.letIn;
 import static com.mongodb.mqlv2.facade.typed.Typed.lit;
@@ -419,7 +417,7 @@ class TypedFacadeTest {
     @Test
     void crossProductFromNested() {
         // from s=<<1,2,3>>, s2=<<10,20>>
-        PipelineBuilderT facade = fromNested(
+        PipelineBuilderT facade = from(
                 entry("s", bag(lit(1L), lit(2L), lit(3L))),
                 entry("s2", bag(lit(10L), lit(20L))));
         Stage bare = new Stage.FromStageNested(List.of(
@@ -441,7 +439,7 @@ class TypedFacadeTest {
     @Test
     void joinDefaultInner() {
         PipelineBuilderT facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", lit(1L)), entry("items", lit(10L))),
                         doc(entry("id", lit(2L)), entry("items", lit(5L))))))
                         .join(
@@ -475,7 +473,7 @@ class TypedFacadeTest {
     @Test
     void joinLeftOuter() {
         PipelineBuilderT facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", lit(1L))),
                         doc(entry("id", lit(2L))),
                         doc(entry("id", lit(3L))))))

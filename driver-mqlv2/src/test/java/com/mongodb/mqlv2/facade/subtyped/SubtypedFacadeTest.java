@@ -51,7 +51,6 @@ import static com.mongodb.mqlv2.facade.subtyped.Subtyped.docField;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.entry;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.field;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.from;
-import static com.mongodb.mqlv2.facade.subtyped.Subtyped.fromNested;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.intCurrent;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.intField;
 import static com.mongodb.mqlv2.facade.subtyped.Subtyped.intLit;
@@ -408,7 +407,7 @@ class SubtypedFacadeTest {
     @Test
     void crossProductFromNested() {
         // from s=<<1,2,3>>, s2=<<10,20>>
-        PipelineBuilderS facade = fromNested(
+        PipelineBuilderS facade = from(
                 entry("s", bag(intLit(1L), intLit(2L), intLit(3L))),
                 entry("s2", bag(intLit(10L), intLit(20L))));
         Stage bare = new Stage.FromStageNested(List.of(
@@ -430,7 +429,7 @@ class SubtypedFacadeTest {
     @Test
     void joinDefaultInner() {
         PipelineBuilderS facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", intLit(1L)), entry("items", intLit(10L))),
                         doc(entry("id", intLit(2L)), entry("items", intLit(5L))))))
                         .join(
@@ -464,7 +463,7 @@ class SubtypedFacadeTest {
     @Test
     void joinLeftOuter() {
         PipelineBuilderS facade =
-                fromNested(entry("c", bag(
+                from(entry("c", bag(
                         doc(entry("id", intLit(1L))),
                         doc(entry("id", intLit(2L))),
                         doc(entry("id", intLit(3L))))))

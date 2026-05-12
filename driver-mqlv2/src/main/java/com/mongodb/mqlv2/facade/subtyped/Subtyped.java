@@ -202,7 +202,7 @@ public final class Subtyped {
     }
 
     @SafeVarargs
-    public static PipelineBuilderS fromNested(final Map.Entry<String, ExprT>... sources) {
+    public static PipelineBuilderS from(final Map.Entry<String, ExprT>... sources) {
         List<Map.Entry<String, Expr>> entries = new ArrayList<>();
         for (Map.Entry<String, ExprT> s : sources) {
             entries.add(Map.entry(s.getKey(), s.getValue().toExpr()));

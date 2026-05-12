@@ -329,7 +329,7 @@ from c=<<{id:1},{id:2},{id:3}>>
 
 ```java
 // Untyped
-fromNested(entry("c", bag(
+from(entry("c", bag(
         doc(entry("id", lit(1))),
         doc(entry("id", lit(2))),
         doc(entry("id", lit(3))))))
@@ -343,7 +343,7 @@ fromNested(entry("c", bag(
 
 // Typed — identical (eq is parametric; field chains stay ExprT<Object>; match
 //         enforcement happens because join condition is typed ExprT<Boolean>).
-fromNested(entry("c", bag(
+from(entry("c", bag(
         doc(entry("id", lit(1L))),
         doc(entry("id", lit(2L))),
         doc(entry("id", lit(3L))))))
@@ -356,7 +356,7 @@ fromNested(entry("c", bag(
         field("c").field("id").eq(field("o").field("id")))
 
 // Subtyped — docField on c/o, intField on the id leaves
-fromNested(entry("c", bag(
+from(entry("c", bag(
         doc(entry("id", intLit(1L))),
         doc(entry("id", intLit(2L))),
         doc(entry("id", intLit(3L))))))
