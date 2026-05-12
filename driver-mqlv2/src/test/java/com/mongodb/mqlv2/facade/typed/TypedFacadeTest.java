@@ -133,7 +133,7 @@ class TypedFacadeTest {
         // from <<1, 2, 3>> | match $ == 2
         PipelineBuilderT facade =
                 from(bag(lit(1L), lit(2L), lit(3L)))
-                        .match(current(Long.class).eq(lit(2L)));
+                        .match(current().eq(lit(2L)));
         Stage bare = new Stage.MatchStage(
                 new Stage.FromStageSimple(bBag(bLit(1), bLit(2), bLit(3))),
                 bEq(new Expr.CurrentValue(), bLit(2)));
@@ -312,7 +312,7 @@ class TypedFacadeTest {
                 from(bag(
                         doc(entry("a", arr(doc(entry("b", lit(1L))), doc(entry("b", lit(2L)))))),
                         doc(entry("a", arr(doc(entry("b", lit(3L))))))))
-                        .match(field("a").arrow("b").any(current(Long.class).eq(lit(2L))));
+                        .match(field("a").arrow("b").any(current().eq(lit(2L))));
         Stage bare = new Stage.MatchStage(
                 new Stage.FromStageSimple(bBag(
                         bDoc(bKv("a", new Expr.ArrayConstructor(List.of(
