@@ -373,7 +373,7 @@ from(entry("c", bag(
 
 |                                  | Bare AST | Untyped facade | Typed facade | Subtyped facade |
 |----------------------------------|----------|----------------|--------------|-----------------|
-| Lines per query (median)         | ~10×     | 1×             | 1×           | 1×              |
+| Lines per query (median)         | ~2.5× (up to 7× for nested expressions like `let`) | 1× | 1× | 1× |
 | Reads like MQLv2 source          | ✗        | ✓              | ✓ (mostly)   | ✓ (mostly)      |
 | Compile-time checks              | none     | none           | `match`, arithmetic; loose elsewhere | `match`, arithmetic, string/date ops; method-name gating |
 | `Class<T>` witnesses required    | n/a      | none           | for arithmetic with `field`/`var`/`current` of unknown type | none (use typed factory: `intField`, `intVar`, `intCurrent`) |
