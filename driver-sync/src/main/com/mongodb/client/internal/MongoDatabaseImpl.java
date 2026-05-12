@@ -410,23 +410,13 @@ public class MongoDatabaseImpl implements MongoDatabase {
     }
 
     @Override
-    public Mqlv2Iterable<Document> mqlv2(final String mqlV2Query) {
-        return createMqlv2Iterable(null, mqlV2Query, Document.class);
-    }
-
-    @Override
     public Mqlv2Iterable<Document> mqlv2(final Mqlv2Source source) {
-        return mqlv2(source.toMqlv2());
-    }
-
-    @Override
-    public <TResult> Mqlv2Iterable<TResult> mqlv2(final String mqlV2Query, final Class<TResult> resultClass) {
-        return createMqlv2Iterable(null, mqlV2Query, resultClass);
+        return createMqlv2Iterable(null, source.toMqlv2(), Document.class);
     }
 
     @Override
     public <TResult> Mqlv2Iterable<TResult> mqlv2(final Mqlv2Source source, final Class<TResult> resultClass) {
-        return mqlv2(source.toMqlv2(), resultClass);
+        return createMqlv2Iterable(null, source.toMqlv2(), resultClass);
     }
 
     private <TResult> AggregateIterable<TResult> createAggregateIterable(@Nullable final ClientSession clientSession,

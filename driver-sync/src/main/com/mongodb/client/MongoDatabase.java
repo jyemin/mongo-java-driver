@@ -630,23 +630,6 @@ public interface MongoDatabase {
      */
     <TResult> AggregateIterable<TResult> aggregate(ClientSession clientSession, List<? extends Bson> pipeline, Class<TResult> resultClass);
 
-
-    /**
-     * Executes an MQLv2 query against this database.
-     *
-     * <p>The MQLv2 query language is experimental. The schema for the language is documented at
-     * {@code src/third_party/mqlv2/schema/language.yaml} in the mongodb/mongo repository.</p>
-     *
-     * @param mqlV2Query the canonical MQLv2 query text.
-     * @return an iterable containing the result documents.
-     * @since EXPERIMENTAL
-     */
-    @Alpha(Reason.CLIENT)
-    default Mqlv2Iterable<Document> mqlv2(String mqlV2Query) {
-        throw new UnsupportedOperationException(
-                "mqlv2 is experimental and not implemented by this MongoDatabase");
-    }
-
     /**
      * Executes an MQLv2 query against this database, using a {@link Mqlv2Source} (typically a facade
      * pipeline builder) as the query source.
@@ -656,25 +639,7 @@ public interface MongoDatabase {
      * @since EXPERIMENTAL
      */
     @Alpha(Reason.CLIENT)
-    default Mqlv2Iterable<Document> mqlv2(Mqlv2Source source) {
-        throw new UnsupportedOperationException(
-                "mqlv2 is experimental and not implemented by this MongoDatabase");
-    }
-
-    /**
-     * Executes an MQLv2 query against this database, decoding result documents into the given class.
-     *
-     * @param mqlV2Query  the canonical MQLv2 query text.
-     * @param resultClass the class to decode each result document into.
-     * @param <TResult>   the result document type.
-     * @return an iterable containing the typed result documents.
-     * @since EXPERIMENTAL
-     */
-    @Alpha(Reason.CLIENT)
-    default <TResult> Mqlv2Iterable<TResult> mqlv2(String mqlV2Query, Class<TResult> resultClass) {
-        throw new UnsupportedOperationException(
-                "mqlv2 is experimental and not implemented by this MongoDatabase");
-    }
+    Mqlv2Iterable<Document> mqlv2(Mqlv2Source source);
 
     /**
      * Executes an MQLv2 query against this database, decoding result documents into the given class.
@@ -686,9 +651,5 @@ public interface MongoDatabase {
      * @since EXPERIMENTAL
      */
     @Alpha(Reason.CLIENT)
-    default <TResult> Mqlv2Iterable<TResult> mqlv2(Mqlv2Source source, Class<TResult> resultClass) {
-        throw new UnsupportedOperationException(
-                "mqlv2 is experimental and not implemented by this MongoDatabase");
-    }
-
+    <TResult> Mqlv2Iterable<TResult> mqlv2(Mqlv2Source source, Class<TResult> resultClass);
 }
