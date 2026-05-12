@@ -14,8 +14,9 @@ The public `MongoDatabase.mqlv2(...)` methods (added in `driver-sync`) are marke
 2. A **serializer** that turns an AST into canonical MQLv2 text.
 3. A **`Pipeline`** wrapper that implements `Mqlv2Source` so an AST root can be passed
    directly to `MongoDatabase.mqlv2(...)`.
-4. Two **builder facades** on top of the AST — one untyped, one typed via phantom type
-   parameters. Same AST underneath; different ergonomics on top.
+4. Three **builder facades** on top of the AST — one untyped, one typed via phantom type
+   parameters, one subtyped via a sealed-interface hierarchy. Same AST underneath; different
+   ergonomics on top.
 
 ## Architecture
 
@@ -25,8 +26,9 @@ The public `MongoDatabase.mqlv2(...)` methods (added in `driver-sync`) are marke
                  ▼
    ┌─────────────────────────────────────┐
    │  Facades (optional)                 │
-   │    com.mongodb.mqlv2.facade.untyped │  ExprU, PipelineBuilder, Untyped
-   │    com.mongodb.mqlv2.facade.typed   │  ExprT<T>, PipelineBuilderT, Typed
+   │    com.mongodb.mqlv2.facade.untyped  │  ExprU, PipelineBuilder, Untyped
+   │    com.mongodb.mqlv2.facade.typed    │  ExprT<T>, PipelineBuilderT, Typed
+   │    com.mongodb.mqlv2.facade.subtyped │  ExprT hierarchy, PipelineBuilderS, Subtyped
    └─────────────────────────────────────┘
                  │
                  ▼ build
@@ -60,7 +62,7 @@ The public `MongoDatabase.mqlv2(...)` methods (added in `driver-sync`) are marke
             └──────────┘
 ```
 
-The AST is the load-bearing layer. Both facades produce the same AST shapes (the
+The AST is the load-bearing layer. All three facades produce the same AST shapes (the
 conformance tests assert this — `facade.stage().equals(bareAst)` for every test case).
 Anything that compiles via a facade serializes to text the server accepts.
 
@@ -164,9 +166,60 @@ Type-system policy at a glance:
 | `field(String, Class<T>)` (and overloads) | — | — | `ExprT<T>` |
 | `match(...)` (on `PipelineBuilderT`) | — | `ExprT<Boolean>` | next stage |
 
+### Subtyped facade (`com.mongodb.mqlv2.facade.subtyped.*`)
+
+A small sealed-interface hierarchy delivers the type safety the phantom facade only promises:
+
+```
+ExprT  (root, sealed)
+├── NumExprT  ── arithmetic
+│   └── IntExprT  ── arithmetic stays Int when both sides are Int
+├── BoolExprT  ── and/or/not
+├── StrExprT  ── regexMatch
+├── DateExprT  ── year/month/dayOfMonth/dayOfYear/dayOfWeek/hour/minute/second/millisecond
+├── DocExprT  ── per-type field accessors (intField, strField, ...)
+└── ArrExprT<E>  ── elementAt/unwind/any
+```
+
+A single package-private record `ExprImpl` implements every interface (mirrors the
+`MqlExpression` precedent in `com.mongodb.client.model.mql`). Factories return the
+narrowest applicable interface; arithmetic is only visible where it's meaningful.
+Arrow path-walk (`arrow`/`intArrow`/.../`arrArrow`) lives on base `ExprT` because
+MQLv2's arrow operator is permissive.
+
+**Three tiers of commitment.** For any field/var/current there are three options: untyped
+(`field("x")` → `ExprT`), generic-numeric (`numField("x")` → `NumExprT`), or strict-int
+(`intField("x")` → `IntExprT`). Use whichever level of commitment matches what you know
+about the data.
+
+**What now refuses to compile** (the motivating bugs from the phantom facade):
+
+```java
+// Phantom — both currently compile silently
+field("a", String.class).mul(lit(""));      // String × String → ExprT<String>
+field("a", Long.class).mul(litDate(1000));  // Long × Long-as-date → ExprT<Long>
+
+// Subtyped — both refuse to compile
+strField("a").mul(strLit(""));               // ✗ mul is not on StrExprT
+intField("a").mul(dateLit(1000));            // ✗ mul wants NumExprT; DateExprT is not a NumExprT
+```
+
+**Escape hatch.** If you have a base `ExprT` (e.g. from `field("x")` with no type
+commitment) and want to call a typed operation, use the pure-cast refiners:
+`expr.asNum()` / `asInt()` / `asStr()` / `asBool()` / `asDate()` / `asDoc()` / `asArr()`.
+These do not change the AST; they only retype the wrapper.
+
+**Caveat: integer arithmetic and overflow.** `IntExprT.add(IntExprT)`, `mul`, `sub`,
+`div`, plus `sum(IntExprT)` and `avg(IntExprT)`, all statically return `IntExprT` even
+though the MongoDB runtime widens to `double` (or `Decimal128`) when the result
+overflows `int64`. This matches the existing `MqlInteger` precedent in
+`com.mongodb.client.model.mql.*` and is a deliberate ergonomic choice — the static
+type tracks the *intent*, not the worst-case runtime type. `min`/`max`/`count` and the
+date-component extractors are exact: their `IntExprT` returns are sound.
+
 ## Side-by-side comparison
 
-Five queries, three ways. (All come from the conformance tests.)
+Five queries, four ways. (All come from the conformance tests.)
 
 ### 1. Simplest match
 
@@ -192,6 +245,10 @@ from(bag(lit(1), lit(2), lit(3)))
 // Typed
 from(bag(lit(1L), lit(2L), lit(3L)))
     .match(current().eq(lit(2L)))
+
+// Subtyped
+from(bag(intLit(1L), intLit(2L), intLit(3L)))
+        .match(intCurrent().eq(intLit(2L)));
 ```
 
 ### 2. Format with arithmetic
@@ -208,6 +265,10 @@ from(bag(doc(entry("a", lit(1))), doc(entry("a", lit(2)))))
 // Typed — strict arithmetic forces a Class<T> witness
 from(bag(doc(entry("a", lit(1L))), doc(entry("a", lit(2L)))))
     .format(doc(entry("doubled", field("a", Long.class).mul(lit(2L)))))
+
+// Subtyped — intField returns IntExprT; mul is visible and type-safe
+from(bag(doc(entry("a", intLit(1L))), doc(entry("a", intLit(2L)))))
+        .format(doc(entry("doubled", intField("a").mul(intLit(2L)))));
 ```
 
 ### 3. Group with arrow + sum
@@ -234,6 +295,15 @@ from(bag(
     .group(
         List.of(assign("k", field("a"))),
         List.of(assign("s", sum(current().arrow("b")))))
+
+// Subtyped — numArrow returns NumExprT; sum accepts NumExprT
+from(bag(
+    doc(entry("a", intLit(1L)), entry("b", intLit(2L))),
+    doc(entry("a", intLit(1L)), entry("b", intLit(3L))),
+    doc(entry("a", intLit(2L)), entry("b", intLit(4L)))))
+    .group(
+        List.of(assign("k", field("a"))),
+        List.of(assign("s", sum(current().numArrow("b")))));
 ```
 
 ### 4. Let + variable
@@ -248,6 +318,9 @@ from(letIn(var("x").add(lit(3)), entry("x", lit(2))))
 
 // Typed — var needs a Class<T> witness because add is strict
 from(letIn(var("x", Long.class).add(lit(3L)), entry("x", lit(2L))))
+
+// Subtyped — intVar returns IntExprT; add is visible without a witness
+from(letIn(intVar("x").add(intLit(3L)), entry("x", intLit(2L))));
 ```
 
 ### 5. Left-outer join
@@ -284,20 +357,35 @@ fromNested(entry("c", bag(
             doc(entry("id", lit(1L)), entry("v", lit("x"))),
             doc(entry("id", lit(3L)), entry("v", lit("z")))),
         field("c").field("id").eq(field("o").field("id")))
+
+// Subtyped — docField returns DocExprT; intField narrows to IntExprT for the join key
+fromNested(entry("c", bag(
+        doc(entry("id", intLit(1L))),
+        doc(entry("id", intLit(2L))),
+        doc(entry("id", intLit(3L))))))
+    .join(
+        JoinType.LEFT_OUTER,
+        "o",
+        bag(
+            doc(entry("id", intLit(1L)), entry("v", strLit("x"))),
+            doc(entry("id", intLit(3L)), entry("v", strLit("z")))),
+        docField("c").intField("id").eq(docField("o").intField("id")))
 ```
 
 ## Trade-offs summary
 
-|                                  | Bare AST | Untyped facade | Typed facade |
-|----------------------------------|----------|----------------|--------------|
-| Lines per query (median)         | ~10×     | 1×             | 1×           |
-| Reads like MQLv2 source          | ✗        | ✓              | ✓ (mostly)   |
-| Compile-time checks              | none     | none           | `match`, arithmetic; loose elsewhere |
-| `Class<T>` witnesses required    | n/a      | none           | for arithmetic with `field`/`var`/`current` of unknown type |
-| Mistakes surface at              | server   | server         | compile (some) + server (rest) |
-| Encourages explicit typing       | no       | no             | yes (forces commit on arithmetic) |
-| Builder syntax noise             | high     | low            | low           |
-| Mixed-type comparisons accepted  | yes      | yes            | yes (parametric `eq`) |
+|                                  | Bare AST | Untyped facade | Typed facade | Subtyped facade |
+|----------------------------------|----------|----------------|--------------|-----------------|
+| Lines per query (median)         | ~10×     | 1×             | 1×           | 1×              |
+| Reads like MQLv2 source          | ✗        | ✓              | ✓ (mostly)   | ✓ (mostly)      |
+| Compile-time checks              | none     | none           | `match`, arithmetic; loose elsewhere | `match`, arithmetic, string/date ops; method-name gating |
+| `Class<T>` witnesses required    | n/a      | none           | for arithmetic with `field`/`var`/`current` of unknown type | none (use typed factory: `intField`, `intVar`, `intCurrent`) |
+| Mistakes surface at              | server   | server         | compile (some) + server (rest) | compile (more) + server (rest) |
+| Encourages explicit typing       | no       | no             | yes (forces commit on arithmetic) | yes (method-name encodes type intent) |
+| Builder syntax noise             | high     | low            | low          | low             |
+| Mixed-type comparisons accepted  | yes      | yes            | yes (parametric `eq`) | yes (parametric `eq`) |
+| Arithmetic on strings caught?    | no       | no             | no           | **yes**         |
+| Date confused with Long caught?  | no       | no             | no (dates wrap as `ExprT<Long>`) | **yes** (`DateExprT` is not `NumExprT`) |
 
 The typed facade's payoff is concentrated in three places: `match()` (must be Boolean),
 arithmetic (must agree on `T`), and function calls (typed results like `count()→Long`,
@@ -305,6 +393,12 @@ arithmetic (must agree on `T`), and function calls (typed results like `count()�
 parametric on the other side, so `field("status").eq(lit("paid"))` compiles without
 annotation. The visible cost in user code is mostly `Class<T>` witnesses on the
 arithmetic-side `field`/`var`/`current` calls.
+
+The subtyped facade adds method-name gating on top: `StrExprT` has no `mul`, `DateExprT`
+is not a subtype of `NumExprT`, so confusing dates with numbers or strings with numbers
+is caught at compile time. The cost is learning typed factory names (`intLit`, `strLit`,
+`dateLit`, `intField`, `dateField`, `intCurrent`, `intVar`); the reward is that the two
+most common phantom-facade bugs become compile errors.
 
 ## Running the tests
 
@@ -314,17 +408,18 @@ test fixture (`org.mongodb.test.uri`) is honored; default is `mongodb://localhos
 ```bash
 ./gradlew :driver-mqlv2:test                          # all driver-mqlv2 tests
 ./gradlew :driver-mqlv2:test --tests "*Conformance*"  # AST conformance only
-./gradlew :driver-mqlv2:test --tests "*FacadeTest*"   # both facades
+./gradlew :driver-mqlv2:test --tests "*FacadeTest*"   # all three facades
 ./gradlew :driver-mqlv2:check                         # tests + checkstyle + spotbugs
 ```
 
-Test count: **57** across four files —
+Test count: **80** across five files —
 - `SerializerTest` (6, no mongod)
 - `Mqlv2ConformanceTest` (17, bare AST against server)
 - `UntypedFacadeTest` (17, facade AST + server)
 - `TypedFacadeTest` (17, typed facade AST + server)
+- `SubtypedFacadeTest` (23, subtyped facade AST + server; includes date extractor and comparison tests)
 
 Every conformance test asserts both **AST equivalence with the bare form** (`equals` on
 the underlying record graphs) and **`BsonDocument` result equality against the live
-server**, so the three test files exercise the same 17 queries by three different
-construction styles and prove they all produce identical results.
+server**, so the four test files exercise queries by four different construction styles
+and prove they all produce identical results.
