@@ -30,6 +30,7 @@ import com.mongodb.mqlv2.ast.Value;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -39,6 +40,16 @@ import java.util.Set;
 
 import static com.mongodb.mqlv2.facade.untyped.Untyped.arr;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.asc;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.dayOfMonth;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.dayOfWeek;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.dayOfYear;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.hour;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.litDate;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.millisecond;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.minute;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.month;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.second;
+import static com.mongodb.mqlv2.facade.untyped.Untyped.year;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.assign;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.bag;
 import static com.mongodb.mqlv2.facade.untyped.Untyped.current;
@@ -85,6 +96,10 @@ class UntypedFacadeTest {
 
     private static Expr bMul(final Expr l, final Expr r) {
         return new Expr.BinaryOp(BinaryOpType.MUL, l, r);
+    }
+
+    private static Expr bFn(final String name, final Expr... args) {
+        return new Expr.FunctionCall(name, List.of(args));
     }
 
     private static Expr bBag(final Expr... es) {
@@ -491,5 +506,86 @@ class UntypedFacadeTest {
                         bd("{\"c\": {\"id\": 2}}"),
                         bd("{\"c\": {\"id\": 3}, \"o\": {\"id\": 3, \"v\": \"z\"}}")),
                 asSet(run(facade)));
+    }
+
+    @Test
+    void dateExtractors() {
+        // 2024-01-15T10:30:45.123Z (Monday), dayOfWeek=2 (Sun=1 convention)
+        long dtMillis = Instant.parse("2024-01-15T10:30:45.123Z").toEpochMilli();
+
+        PipelineBuilder facade =
+                from(bag(doc(entry("dt", litDate(dtMillis)))))
+                        .format(doc(
+                                entry("y",  year(field("dt"))),
+                                entry("m",  month(field("dt"))),
+                                entry("dm", dayOfMonth(field("dt"))),
+                                entry("dy", dayOfYear(field("dt"))),
+                                entry("dw", dayOfWeek(field("dt"))),
+                                entry("h",  hour(field("dt"))),
+                                entry("mn", minute(field("dt"))),
+                                entry("s",  second(field("dt"))),
+                                entry("ms", millisecond(field("dt")))));
+
+        Expr bDt = new Expr.ValueLit(new Value.VDate(dtMillis));
+        Stage bare = new Stage.FormatStage(
+                new Stage.FromStageSimple(bBag(bDoc(bKv("dt", bDt)))),
+                bDoc(
+                        bKv("y",  bFn("year",        bField("dt"))),
+                        bKv("m",  bFn("month",       bField("dt"))),
+                        bKv("dm", bFn("dayOfMonth",  bField("dt"))),
+                        bKv("dy", bFn("dayOfYear",   bField("dt"))),
+                        bKv("dw", bFn("dayOfWeek",   bField("dt"))),
+                        bKv("h",  bFn("hour",        bField("dt"))),
+                        bKv("mn", bFn("minute",      bField("dt"))),
+                        bKv("s",  bFn("second",      bField("dt"))),
+                        bKv("ms", bFn("millisecond", bField("dt")))));
+
+        assertSameAst(facade.stage(), bare);
+        assertEquals(
+                List.of(bd("{\"y\":2024,\"m\":1,\"dm\":15,\"dy\":15,\"dw\":2,\"h\":10,\"mn\":30,\"s\":45,\"ms\":123}")),
+                run(facade));
+    }
+
+    @Test
+    void dateComparisons() {
+        long jan1  = Instant.parse("2024-01-01T00:00:00Z").toEpochMilli();
+        long dec31 = Instant.parse("2024-12-31T23:59:59Z").toEpochMilli();
+        long mid   = Instant.parse("2024-06-15T10:30:00Z").toEpochMilli();
+
+        // litDate(jan1) < litDate(dec31)  => true
+        PipelineBuilder facadeLt = from(litDate(jan1).lt(litDate(dec31)));
+        Stage bareLt = new Stage.FromStageSimple(
+                new Expr.BinaryOp(BinaryOpType.LT,
+                        new Expr.ValueLit(new Value.VDate(jan1)),
+                        new Expr.ValueLit(new Value.VDate(dec31))));
+        assertSameAst(facadeLt.stage(), bareLt);
+        assertEquals(List.of(bd("{\"value\": true}")), run(facadeLt));
+
+        // litDate(mid) == litDate(mid)  => true
+        PipelineBuilder facadeEqTrue = from(litDate(mid).eq(litDate(mid)));
+        Stage bareEqTrue = new Stage.FromStageSimple(
+                new Expr.BinaryOp(BinaryOpType.EQ,
+                        new Expr.ValueLit(new Value.VDate(mid)),
+                        new Expr.ValueLit(new Value.VDate(mid))));
+        assertSameAst(facadeEqTrue.stage(), bareEqTrue);
+        assertEquals(List.of(bd("{\"value\": true}")), run(facadeEqTrue));
+
+        // litDate(jan1) == litDate(dec31)  => false
+        PipelineBuilder facadeEqFalse = from(litDate(jan1).eq(litDate(dec31)));
+        Stage bareEqFalse = new Stage.FromStageSimple(
+                new Expr.BinaryOp(BinaryOpType.EQ,
+                        new Expr.ValueLit(new Value.VDate(jan1)),
+                        new Expr.ValueLit(new Value.VDate(dec31))));
+        assertSameAst(facadeEqFalse.stage(), bareEqFalse);
+        assertEquals(List.of(bd("{\"value\": false}")), run(facadeEqFalse));
+
+        // litDate(mid) is litDate(mid)  => true
+        PipelineBuilder facadeIs = from(litDate(mid).is(litDate(mid)));
+        Stage bareIs = new Stage.FromStageSimple(
+                new Expr.BinaryOp(BinaryOpType.IS,
+                        new Expr.ValueLit(new Value.VDate(mid)),
+                        new Expr.ValueLit(new Value.VDate(mid))));
+        assertSameAst(facadeIs.stage(), bareIs);
+        assertEquals(List.of(bd("{\"value\": true}")), run(facadeIs));
     }
 }
