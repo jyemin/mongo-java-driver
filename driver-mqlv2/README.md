@@ -101,6 +101,22 @@ expected result documents.
 
 ## The facades
 
+**Why MQLv2 expressions map cleanly to a builder API.** In MQLv1, nested aggregation
+expressions are written outermost-operator-first — `{$reduce: {input: {$map: {input: {$filter: …}}}}}` — so the base operand is buried at the innermost level. A Java fluent API
+naturally inverts this: `arr.filter(…).map(…).reduce(…)` puts the base first. Every
+translation between shell syntax and the Java API required mentally reversing the nesting.
+
+MQLv2 expressions are postfix, like its pipeline stages. `filter`, `map`, and `reduce` do
+not exist in MQLv2 yet, but if they were added following the same idiom as `any` —
+`sequence any (pred)` — the surface syntax would read:
+
+```
+arr filter ($ > 0) map ($ * 2) reduce (0, $ + acc)
+```
+
+The Java facade would then read in exactly the same order: `arr.filter(…).map(…).reduce(…)`.
+The surface query and the builder API are structurally isomorphic; no mental inversion required.
+
 ### Bare AST (no facade)
 
 Construct AST records directly. Verbose, unambiguous, and the baseline against which the
