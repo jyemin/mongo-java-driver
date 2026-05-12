@@ -168,12 +168,13 @@ Type-system policy at a glance:
 
 ### Subtyped facade (`com.mongodb.mqlv2.facade.subtyped.*`)
 
-A small sealed-interface hierarchy delivers the type safety the phantom facade only promises:
+Sealed-interface hierarchy. Each operation lives on the subtype it applies to, so the
+type system rejects things like multiplying two strings or comparing a date to a long.
 
 ```
 ExprT  (root, sealed)
-├── NumExprT  ── arithmetic
-│   └── IntExprT  ── arithmetic stays Int when both sides are Int
+├── NumExprT  ── add/sub/mul/div
+│   └── IntExprT  ── same arithmetic; stays Int when both sides are Int
 ├── BoolExprT  ── and/or/not
 ├── StrExprT  ── regexMatch
 ├── DateExprT  ── year/month/dayOfMonth/dayOfYear/dayOfWeek/hour/minute/second/millisecond
@@ -181,21 +182,22 @@ ExprT  (root, sealed)
 └── ArrExprT<E>  ── elementAt/unwind/any
 ```
 
-A single package-private record `ExprImpl` implements every interface (mirrors the
-`MqlExpression` precedent in `com.mongodb.client.model.mql`). Factories return the
-narrowest applicable interface; arithmetic is only visible where it's meaningful.
-Arrow path-walk (`arrow`/`intArrow`/.../`arrArrow`) lives on base `ExprT` because
-MQLv2's arrow operator is permissive.
+A single package-private record `ExprImpl` implements every interface — same approach as
+`MqlExpression` in `com.mongodb.client.model.mql`. Factories return the narrowest applicable
+interface, so `mul` is reachable only on `NumExprT`/`IntExprT`, `regexMatch` only on
+`StrExprT`, the nine date-component methods only on `DateExprT`. The arrow operator (`arrow`
+plus typed variants `intArrow`/`numArrow`/.../`arrArrow`) sits on the base `ExprT` because
+in MQLv2 arrow is legal on any expression.
 
-**Three tiers of commitment.** For any field/var/current there are three options: untyped
-(`field("x")` → `ExprT`), generic-numeric (`numField("x")` → `NumExprT`), or strict-int
-(`intField("x")` → `IntExprT`). Use whichever level of commitment matches what you know
-about the data.
+**Three tiers per accessor.** Each of field/var/current has an untyped form
+(`field("x")` → `ExprT`), a numeric form (`numField("x")` → `NumExprT`), and an integer
+form (`intField("x")` → `IntExprT`). Pick the one that matches what you know about the
+field.
 
-**What now refuses to compile** (the motivating bugs from the phantom facade):
+**Compile-time rejections** — the two bugs from the phantom facade that motivated this:
 
 ```java
-// Phantom — both currently compile silently
+// Phantom — both compile silently
 field("a", String.class).mul(lit(""));      // String × String → ExprT<String>
 field("a", Long.class).mul(litDate(1000));  // Long × Long-as-date → ExprT<Long>
 
@@ -204,18 +206,15 @@ strField("a").mul(strLit(""));               // ✗ mul is not on StrExprT
 intField("a").mul(dateLit(1000));            // ✗ mul wants NumExprT; DateExprT is not a NumExprT
 ```
 
-**Escape hatch.** If you have a base `ExprT` (e.g. from `field("x")` with no type
-commitment) and want to call a typed operation, use the pure-cast refiners:
-`expr.asNum()` / `asInt()` / `asStr()` / `asBool()` / `asDate()` / `asDoc()` / `asArr()`.
-These do not change the AST; they only retype the wrapper.
+**Escape hatch.** A base `ExprT` can be re-typed via the pure-cast refiners `asNum()` /
+`asInt()` / `asStr()` / `asBool()` / `asDate()` / `asDoc()` / `asArr()`. They do not change
+the AST; they rewrap the same `Expr` in a different interface type.
 
-**Caveat: integer arithmetic and overflow.** `IntExprT.add(IntExprT)`, `mul`, `sub`,
-`div`, plus `sum(IntExprT)` and `avg(IntExprT)`, all statically return `IntExprT` even
-though the MongoDB runtime widens to `double` (or `Decimal128`) when the result
-overflows `int64`. This matches the existing `MqlInteger` precedent in
-`com.mongodb.client.model.mql.*` and is a deliberate ergonomic choice — the static
-type tracks the *intent*, not the worst-case runtime type. `min`/`max`/`count` and the
-date-component extractors are exact: their `IntExprT` returns are sound.
+**Integer overflow.** `IntExprT.add/sub/mul/div(IntExprT)` and `sum`/`avg` over `IntExprT`
+all return `IntExprT` statically, but on int64 overflow the MongoDB runtime widens to
+`double` or `Decimal128`. The static type tracks the input, not a guarantee about the
+output. Same trade-off as `MqlInteger` in `com.mongodb.client.model.mql.*`. `min`/`max`/
+`count` and the date-component extractors don't widen — their `IntExprT` returns are exact.
 
 ## Side-by-side comparison
 
@@ -266,7 +265,7 @@ from(bag(doc(entry("a", lit(1))), doc(entry("a", lit(2)))))
 from(bag(doc(entry("a", lit(1L))), doc(entry("a", lit(2L)))))
     .format(doc(entry("doubled", field("a", Long.class).mul(lit(2L)))))
 
-// Subtyped — intField returns IntExprT; mul is visible and type-safe
+// Subtyped — intField returns IntExprT, so mul is in scope
 from(bag(doc(entry("a", intLit(1L))), doc(entry("a", intLit(2L)))))
         .format(doc(entry("doubled", intField("a").mul(intLit(2L)))));
 ```
@@ -319,7 +318,7 @@ from(letIn(var("x").add(lit(3)), entry("x", lit(2))))
 // Typed — var needs a Class<T> witness because add is strict
 from(letIn(var("x", Long.class).add(lit(3L)), entry("x", lit(2L))))
 
-// Subtyped — intVar returns IntExprT; add is visible without a witness
+// Subtyped — intVar returns IntExprT, so add is in scope without a witness
 from(letIn(intVar("x").add(intLit(3L)), entry("x", intLit(2L))));
 ```
 
@@ -358,7 +357,7 @@ fromNested(entry("c", bag(
             doc(entry("id", lit(3L)), entry("v", lit("z")))),
         field("c").field("id").eq(field("o").field("id")))
 
-// Subtyped — docField returns DocExprT; intField narrows to IntExprT for the join key
+// Subtyped — docField on c/o, intField on the id leaves
 fromNested(entry("c", bag(
         doc(entry("id", intLit(1L))),
         doc(entry("id", intLit(2L))),
@@ -381,7 +380,7 @@ fromNested(entry("c", bag(
 | Compile-time checks              | none     | none           | `match`, arithmetic; loose elsewhere | `match`, arithmetic, string/date ops; method-name gating |
 | `Class<T>` witnesses required    | n/a      | none           | for arithmetic with `field`/`var`/`current` of unknown type | none (use typed factory: `intField`, `intVar`, `intCurrent`) |
 | Mistakes surface at              | server   | server         | compile (some) + server (rest) | compile (more) + server (rest) |
-| Encourages explicit typing       | no       | no             | yes (forces commit on arithmetic) | yes (method-name encodes type intent) |
+| Encourages explicit typing       | no       | no             | yes (forces commit on arithmetic) | yes (typed factory names carry the type) |
 | Builder syntax noise             | high     | low            | low          | low             |
 | Mixed-type comparisons accepted  | yes      | yes            | yes (parametric `eq`) | yes (parametric `eq`) |
 | Arithmetic on strings caught?    | no       | no             | no           | **yes**         |
@@ -394,11 +393,11 @@ parametric on the other side, so `field("status").eq(lit("paid"))` compiles with
 annotation. The visible cost in user code is mostly `Class<T>` witnesses on the
 arithmetic-side `field`/`var`/`current` calls.
 
-The subtyped facade adds method-name gating on top: `StrExprT` has no `mul`, `DateExprT`
-is not a subtype of `NumExprT`, so confusing dates with numbers or strings with numbers
-is caught at compile time. The cost is learning typed factory names (`intLit`, `strLit`,
-`dateLit`, `intField`, `dateField`, `intCurrent`, `intVar`); the reward is that the two
-most common phantom-facade bugs become compile errors.
+The subtyped facade gates operations by subtype: `StrExprT` has no `mul`, `DateExprT` is
+not a subtype of `NumExprT`, so confusing dates with numbers or strings with numbers
+fails to compile. The cost is a wider set of factory names (`intLit`, `strLit`, `dateLit`,
+`intField`, `dateField`, `intCurrent`, `intVar`); the two bugs the phantom facade silently
+admitted become compile errors.
 
 ## Running the tests
 
