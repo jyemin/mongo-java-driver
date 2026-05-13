@@ -18,6 +18,7 @@ package com.mongodb.client;
 
 import com.mongodb.annotations.Alpha;
 import com.mongodb.annotations.Reason;
+import org.bson.conversions.Bson;
 
 import java.util.concurrent.TimeUnit;
 
@@ -51,4 +52,12 @@ public interface Mqlv2Iterable<TResult> extends MongoIterable<TResult> {
      * @return this
      */
     Mqlv2Iterable<TResult> maxTime(long maxTime, TimeUnit timeUnit);
+
+    /**
+     * Set variables that can be referenced in the query as {@code $varName}.
+     *
+     * @param variables a document mapping variable names to their values
+     * @return this
+     */
+    Mqlv2Iterable<TResult> let(Bson variables);
 }

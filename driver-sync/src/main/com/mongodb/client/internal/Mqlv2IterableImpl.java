@@ -25,6 +25,7 @@ import com.mongodb.internal.operation.Mqlv2Operation;
 import com.mongodb.internal.operation.ReadOperationCursor;
 import com.mongodb.lang.Nullable;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +42,7 @@ final class Mqlv2IterableImpl<TResult> extends MongoIterableImpl<TResult> implem
     private final boolean retryReads;
 
     @Nullable private Long maxTimeMS;
+    @Nullable private Bson let;
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     Mqlv2IterableImpl(@Nullable final ClientSession clientSession, final String databaseName, final String mqlv2Source,
@@ -69,6 +71,12 @@ final class Mqlv2IterableImpl<TResult> extends MongoIterableImpl<TResult> implem
     }
 
     @Override
+    public Mqlv2Iterable<TResult> let(final Bson variables) {
+        this.let = variables;
+        return this;
+    }
+
+    @Override
     public ReadOperationCursor<TResult> asReadOperation() {
         Mqlv2Operation<TResult> operation = new Mqlv2Operation<>(databaseName, mqlv2Source, codecRegistry.get(resultClass));
         operation.retryReads(retryReads);
@@ -78,6 +86,9 @@ final class Mqlv2IterableImpl<TResult> extends MongoIterableImpl<TResult> implem
         }
         if (maxTimeMS != null) {
             operation.maxTime(maxTimeMS);
+        }
+        if (let != null) {
+            operation.let(let);
         }
         operation.timeoutMode(getTimeoutMode());
         return operation;

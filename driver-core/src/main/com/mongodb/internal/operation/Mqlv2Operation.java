@@ -28,6 +28,7 @@ import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.codecs.Decoder;
+import org.bson.conversions.Bson;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,6 +65,7 @@ public class Mqlv2Operation<T> implements ReadOperationExplainable<T> {
     @Nullable private Integer batchSize;
     @Nullable private Long maxTimeMS;
     @Nullable private TimeoutMode timeoutMode;
+    @Nullable private BsonDocument let;
 
     public Mqlv2Operation(final String databaseName, final String mqlv2Source, final Decoder<T> decoder) {
         this.databaseName = notNull("databaseName", databaseName);
@@ -104,6 +106,16 @@ public class Mqlv2Operation<T> implements ReadOperationExplainable<T> {
             this.timeoutMode = timeoutMode;
         }
         return this;
+    }
+
+    public Mqlv2Operation<T> let(@Nullable final Bson variables) {
+        this.let = variables == null ? null : variables.toBsonDocument(BsonDocument.class, null);
+        return this;
+    }
+
+    @Nullable
+    public BsonDocument getLet() {
+        return let;
     }
 
     @Override
@@ -150,10 +162,9 @@ public class Mqlv2Operation<T> implements ReadOperationExplainable<T> {
 
     BsonDocument getCommand(final OperationContext operationContext, final int maxWireVersion) {
         BsonDocument commandDocument = new BsonDocument(COMMAND_NAME, new BsonString(mqlv2Source));
-        // The mqlv2 server command has strict IDL and does not accept a `cursor` sub-document.
-        // Batch size is currently a client-side no-op; the server returns all results in firstBatch
-        // with cursorId 0 (no continuation). If batchSize support is added to mqlv2 server-side,
-        // re-enable cursor emission here.
+        if (let != null) {
+            commandDocument.put("let", let);
+        }
         applyMaxTimeMS(operationContext.getTimeoutContext(), commandDocument);
         return commandDocument;
     }
