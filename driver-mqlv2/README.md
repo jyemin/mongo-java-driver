@@ -264,7 +264,7 @@ from(var("orders")).match(strField("status").eq(strLit("shipped")))
 ### 2. Format with arithmetic
 
 ```mql
-from $products | format {name, discounted: price * 0.9}
+from $products | format {name: name, discounted: price * 0.9}
 ```
 
 ```java
