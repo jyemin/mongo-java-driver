@@ -49,7 +49,7 @@ public class Serializer {
         } else if (stage instanceof Stage.ProjectStage s) {
             return serialize(s.prev()) + " | project " + renderTreeTopLevel(s.tree());
         } else if (stage instanceof Stage.LimitStage s) {
-            return serialize(s.prev()) + " | limit " + s.count();
+            return serialize(s.prev()) + " | limit " + ser(s.count());
         } else if (stage instanceof Stage.SortStage s) {
             return serialize(s.prev()) + " | sort " + s.specs().stream()
                     .map(this::serSortSpec).collect(Collectors.joining(", "));

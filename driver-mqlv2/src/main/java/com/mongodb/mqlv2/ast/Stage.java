@@ -41,7 +41,7 @@ public sealed interface Stage {
 
     record ProjectStage(Stage prev, FieldPathTree tree) implements Stage {}
 
-    record LimitStage(Stage prev, int count) implements Stage {}
+    record LimitStage(Stage prev, Expr count) implements Stage {}
 
     record SortStage(Stage prev, List<SortSpec> specs) implements Stage {}
 

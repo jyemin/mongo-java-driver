@@ -139,7 +139,7 @@ class Mqlv2ConformanceTest {
                         new Stage.FromStageSimple(bag(
                                 lit(3), lit(1), lit(4), lit(1), lit(5), lit(9), lit(2), lit(6))),
                         List.of(new SortSpec(new Expr.CurrentValue(), SortDirection.ASC))),
-                3);
+                new Expr.ValueLit(new Value.VInt(3)));
         assertEquals(
                 List.of(bd("{\"value\": 1}"), bd("{\"value\": 1}"), bd("{\"value\": 2}")),
                 run(ast));

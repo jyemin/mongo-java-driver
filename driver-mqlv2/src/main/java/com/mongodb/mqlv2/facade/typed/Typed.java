@@ -42,6 +42,10 @@ public final class Typed {
         return new ExprT<>(new Expr.ValueLit(new Value.VInt(n)));
     }
 
+    public static ExprT<Integer> lit(final int n) {
+        return new ExprT<>(new Expr.ValueLit(new Value.VInt(n)));
+    }
+
     public static ExprT<Double> lit(final double d) {
         return new ExprT<>(new Expr.ValueLit(new Value.VDouble(d)));
     }

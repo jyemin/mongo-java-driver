@@ -201,13 +201,13 @@ class SubtypedFacadeTest {
                 from(bag(intLit(3L), intLit(1L), intLit(4L), intLit(1L),
                         intLit(5L), intLit(9L), intLit(2L), intLit(6L)))
                         .sort(asc(current()))
-                        .limit(3);
+                        .limit(intLit(3));
         Stage bare = new Stage.LimitStage(
                 new Stage.SortStage(
                         new Stage.FromStageSimple(bBag(
                                 bLit(3), bLit(1), bLit(4), bLit(1), bLit(5), bLit(9), bLit(2), bLit(6))),
                         List.of(new SortSpec(new Expr.CurrentValue(), SortDirection.ASC))),
-                3);
+                new Expr.ValueLit(new Value.VInt(3)));
 
         assertSameAst(facade.stage(), bare);
         assertEquals(

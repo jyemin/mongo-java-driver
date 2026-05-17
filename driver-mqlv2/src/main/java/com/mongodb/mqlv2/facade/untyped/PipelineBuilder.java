@@ -61,8 +61,8 @@ public final class PipelineBuilder implements Mqlv2Source {
         return new PipelineBuilder(new Stage.AggStage(stage, expr.toExpr()));
     }
 
-    public PipelineBuilder limit(final int count) {
-        return new PipelineBuilder(new Stage.LimitStage(stage, count));
+    public PipelineBuilder limit(final ExprU count) {
+        return new PipelineBuilder(new Stage.LimitStage(stage, count.toExpr()));
     }
 
     public PipelineBuilder sort(final SortSpec... specs) {

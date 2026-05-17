@@ -208,13 +208,13 @@ class TypedFacadeTest {
         PipelineBuilderT facade =
                 from(bag(lit(3L), lit(1L), lit(4L), lit(1L), lit(5L), lit(9L), lit(2L), lit(6L)))
                         .sort(asc(current()))
-                        .limit(3);
+                        .limit(lit(3));
         Stage bare = new Stage.LimitStage(
                 new Stage.SortStage(
                         new Stage.FromStageSimple(bBag(
                                 bLit(3), bLit(1), bLit(4), bLit(1), bLit(5), bLit(9), bLit(2), bLit(6))),
                         List.of(new SortSpec(new Expr.CurrentValue(), SortDirection.ASC))),
-                3);
+                new Expr.ValueLit(new Value.VInt(3)));
 
         assertSameAst(facade.stage(), bare);
         assertEquals(
