@@ -91,7 +91,7 @@ class SerializerTest {
         Stage ast = new Stage.UnwindComplexStage(
                 new Stage.FromStageSimple(new Expr.BagConstructor(List.of())),
                 "i", aStar, body);
-        assertEquals("from <<>> | unwind $i=a* in {\"idx\": $i}", s.serialize(ast));
+        assertEquals("from <<>> | unwind $i=a* in {idx: $i}", s.serialize(ast));
     }
 
     @Test
@@ -107,7 +107,7 @@ class SerializerTest {
                 List.of(new Assignment(List.of("k"), a)),
                 List.of(new Assignment(List.of("s"), sumExpr)));
         assertEquals(
-                "from <<{\"a\": 1, \"b\": 2}>> | group (k = a) (s = sum($->b))",
+                "from <<{a: 1, b: 2}>> | group (k = a) (s = sum($->b))",
                 s.serialize(ast));
     }
 }

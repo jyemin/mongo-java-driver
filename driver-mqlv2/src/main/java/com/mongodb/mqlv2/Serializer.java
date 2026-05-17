@@ -106,7 +106,7 @@ public class Serializer {
             return "[" + e.elements().stream().map(this::ser).collect(Collectors.joining(", ")) + "]";
         } else if (expr instanceof Expr.DocumentConstructor e) {
             return "{" + e.fields().stream()
-                    .map(p -> ser(p.getKey()) + ": " + ser(p.getValue()))
+                    .map(p -> serDocKey(p.getKey()) + ": " + ser(p.getValue()))
                     .collect(Collectors.joining(", ")) + "}";
         } else if (expr instanceof Expr.Any e) {
             return ser(e.sequence()) + " any (" + ser(e.predicate()) + ")";
@@ -161,6 +161,39 @@ public class Serializer {
             return seq.ordered() ? "[" + body + "]" : "<<" + body + ">>";
         }
         throw new IllegalArgumentException("Unhandled Value: " + v.getClass().getName());
+    }
+
+    /**
+     * Document-constructor keys: emit a bareword identifier if the key is a {@link Value.VString} whose
+     * value matches the MQLv2 identifier shape (per the lexer: {@code [A-Za-z_][A-Za-z0-9_]*}); otherwise
+     * fall back to the quoted-string form via {@link #ser(Expr)}.
+     *
+     * <p>The MQLv2 grammar treats {@code {a: 1}} and {@code {"a": 1}} as identical, so this is purely a
+     * surface choice. Preferring bareword identifiers keeps the emitted text closer to what humans write
+     * and what other Mql tooling produces.
+     */
+    private String serDocKey(final Expr key) {
+        if (key instanceof Expr.ValueLit lit && lit.value() instanceof Value.VString vs && isMqlIdentifier(vs.value())) {
+            return vs.value();
+        }
+        return ser(key);
+    }
+
+    private static boolean isMqlIdentifier(final String s) {
+        if (s.isEmpty()) {
+            return false;
+        }
+        char first = s.charAt(0);
+        if (!(Character.isLetter(first) || first == '_')) {
+            return false;
+        }
+        for (int i = 1; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!(Character.isLetterOrDigit(c) || c == '_')) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String escapeString(final String s) {
