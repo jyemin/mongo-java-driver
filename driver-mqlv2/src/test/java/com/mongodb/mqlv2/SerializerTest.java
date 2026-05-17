@@ -110,4 +110,13 @@ class SerializerTest {
                 "from <<{a: 1, b: 2}>> | group (k = a) (s = sum($->b))",
                 s.serialize(ast));
     }
+
+    @Test
+    void serializeExprStandalone() {
+        Serializer s = new Serializer();
+        Expr e = new Expr.BinaryOp(BinaryOpType.EQ,
+                new Expr.FieldAccess(new Expr.CurrentValue(), "sku"),
+                new Expr.ValueLit(new Value.VString("WIDGET-1")));
+        assertEquals("(sku == \"WIDGET-1\")", s.serialize(e));
+    }
 }

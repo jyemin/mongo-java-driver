@@ -81,6 +81,10 @@ public class Serializer {
         throw new IllegalArgumentException("Unhandled Stage: " + stage.getClass().getName());
     }
 
+    public String serialize(final Expr expr) {
+        return ser(expr);
+    }
+
     private String ser(final Expr expr) {
         if (expr instanceof Expr.ValueLit e) {
             return serValue(e.value());
