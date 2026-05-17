@@ -95,7 +95,13 @@ public class Serializer {
         } else if (expr instanceof Expr.BinaryOp e) {
             return "(" + ser(e.left()) + " " + e.op().surface() + " " + ser(e.right()) + ")";
         } else if (expr instanceof Expr.UnaryOp e) {
-            return "(" + e.op().surface() + " " + ser(e.arg()) + ")";
+            // MQLv2 grammar precedence: `not` (prec 4) binds tighter than `any` (prec 1), so
+            // `not arr any (cond)` would parse as `(not arr) any (cond)`. When the operand is
+            // an Any expression, wrap it in extra parens so the unary operator scopes correctly.
+            // Other low-precedence operand shapes (BinaryOp/OR, BinaryOp/AND) already render
+            // with their own outer parens via the BinaryOp branch above, so no extra wrap needed.
+            String argText = (e.arg() instanceof Expr.Any) ? "(" + ser(e.arg()) + ")" : ser(e.arg());
+            return "(" + e.op().surface() + " " + argText + ")";
         } else if (expr instanceof Expr.FieldAccess e) {
             return (e.target() instanceof Expr.CurrentValue) ? e.field() : ser(e.target()) + "." + e.field();
         } else if (expr instanceof Expr.ArrowOp e) {

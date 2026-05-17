@@ -112,6 +112,18 @@ class SerializerTest {
     }
 
     @Test
+    void notAnyWrapsAnyInExtraParens() {
+        // `not arr any (cond)` would parse as `(not arr) any (cond)` per MQLv2 grammar precedence;
+        // Serializer wraps the Any operand in extra parens so the unary operator scopes correctly.
+        Expr any = new Expr.Any(
+                new Expr.FieldAccess(new Expr.CurrentValue(), "scores"),
+                new Expr.BinaryOp(BinaryOpType.EQ, new Expr.CurrentValue(), new Expr.ValueLit(new Value.VInt(30))));
+        assertEquals(
+                "(not (scores any (($ == 30))))",
+                s.serialize(new Expr.UnaryOp(com.mongodb.mqlv2.ast.UnaryOpType.NOT, any)));
+    }
+
+    @Test
     void serializeExprStandalone() {
         Serializer s = new Serializer();
         Expr e = new Expr.BinaryOp(BinaryOpType.EQ,
