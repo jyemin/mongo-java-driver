@@ -252,13 +252,16 @@ new Stage.MatchStage(
         new Expr.ValueLit(new Value.VString("shipped"))))
 
 // Untyped
-from(var("orders")).match(field("status").eq(lit("shipped")))
+from(var("orders"))
+    .match(field("status").eq(lit("shipped")))
 
 // Typed — eq is parametric; no Class<T> witness needed
-from(var("orders")).match(field("status").eq(lit("shipped")))
+from(var("orders"))
+    .match(field("status").eq(lit("shipped")))
 
 // Subtyped
-from(var("orders")).match(strField("status").eq(strLit("shipped")))
+from(var("orders"))
+    .match(strField("status").eq(strLit("shipped")))
 ```
 
 ### 2. Format with arithmetic
@@ -280,19 +283,22 @@ new Stage.FormatStage(
                       new Expr.ValueLit(new Value.VDouble(0.9)))))))
 
 // Untyped
-from(var("products")).format(doc(
-    entry("name",       field("name")),
-    entry("discounted", field("price").mul(lit(0.9)))))
+from(var("products"))
+    .format(doc(
+        entry("name",       field("name")),
+        entry("discounted", field("price").mul(lit(0.9)))))
 
 // Typed — arithmetic requires a Class<T> witness on field()
-from(var("products")).format(doc(
-    entry("name",       field("name")),
-    entry("discounted", field("price", Double.class).mul(lit(0.9)))))
+from(var("products"))
+    .format(doc(
+        entry("name",       field("name")),
+        entry("discounted", field("price", Double.class).mul(lit(0.9)))))
 
 // Subtyped — numField returns NumExprT; mul is in scope without a witness
-from(var("products")).format(doc(
-    entry("name",       field("name")),
-    entry("discounted", numField("price").mul(numLit(0.9)))))
+from(var("products"))
+    .format(doc(
+        entry("name",       field("name")),
+        entry("discounted", numField("price").mul(numLit(0.9)))))
 ```
 
 ### 3. Group with aggregation
@@ -303,22 +309,25 @@ from $orders | group (customerId=customerId) (orderCount=count($*), totalSpent=s
 
 ```java
 // Untyped
-from(var("orders")).group(
-    List.of(assign("customerId", field("customerId"))),
-    List.of(assign("orderCount", count()),
-            assign("totalSpent", sum(current().arrow("total")))))
+from(var("orders"))
+    .group(
+        List.of(assign("customerId", field("customerId"))),
+        List.of(assign("orderCount", count()),
+                assign("totalSpent", sum(current().arrow("total")))))
 
 // Typed — sum and count are parametric; no annotations needed
-from(var("orders")).group(
-    List.of(assign("customerId", field("customerId"))),
-    List.of(assign("orderCount", count()),
-            assign("totalSpent", sum(current().arrow("total")))))
+from(var("orders"))
+    .group(
+        List.of(assign("customerId", field("customerId"))),
+        List.of(assign("orderCount", count()),
+                assign("totalSpent", sum(current().arrow("total")))))
 
 // Subtyped — numArrow returns NumExprT; sum accepts NumExprT
-from(var("orders")).group(
-    List.of(assign("customerId", field("customerId"))),
-    List.of(assign("orderCount", count()),
-            assign("totalSpent", sum(current().numArrow("total")))))
+from(var("orders"))
+    .group(
+        List.of(assign("customerId", field("customerId"))),
+        List.of(assign("orderCount", count()),
+                assign("totalSpent", sum(current().numArrow("total")))))
 ```
 
 ### 4. Multi-stage with arrow traversal
