@@ -330,10 +330,10 @@ from(var("orders"))
                 assign("totalSpent", sum(current().numArrow("total")))))
 ```
 
-### 4. Multi-stage with arrow traversal
+### 4. Multi-stage with dot traversal
 
 ```mql
-from $employees | match salary > 80000 | format {name, dept: department->name}
+from $employees | match salary > 80000 | format {name, dept: department.name}
 ```
 
 ```java
@@ -342,21 +342,21 @@ from(var("employees"))
     .match(field("salary").gt(lit(80000L)))
     .format(doc(
         entry("name", field("name")),
-        entry("dept", field("department").arrow("name"))))
+        entry("dept", field("department").field("name"))))
 
-// Typed — gt is parametric; arrow returns ExprT<Object>; no witnesses needed
+// Typed — gt is parametric; field returns ExprT<Object>; no witnesses needed
 from(var("employees"))
     .match(field("salary").gt(lit(80000L)))
     .format(doc(
         entry("name", field("name")),
-        entry("dept", field("department").arrow("name"))))
+        entry("dept", field("department").field("name"))))
 
-// Subtyped — intField for salary; docField then strArrow to type the traversal
+// Subtyped — intField for salary; docField then strField to type the traversal
 from(var("employees"))
     .match(intField("salary").gt(intLit(80000L)))
     .format(doc(
         entry("name", field("name")),
-        entry("dept", docField("department").strArrow("name"))))
+        entry("dept", docField("department").strField("name"))))
 ```
 
 ### 5. Left-outer join
