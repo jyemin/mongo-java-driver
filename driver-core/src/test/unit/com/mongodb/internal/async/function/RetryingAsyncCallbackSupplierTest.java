@@ -16,7 +16,7 @@
 package com.mongodb.internal.async.function;
 
 import com.mongodb.internal.async.function.RetryingSyncSupplierTest.AssertingUnusedRetryPolicy;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.internal.time.StartTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +36,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 final class RetryingAsyncCallbackSupplierTest {
     private ExecutorService executorService;
-    private AsyncClientExecutor clientExecutor;
+    private AsyncSleeper clientExecutor;
 
     @BeforeEach
     void beforeEach() {
         executorService = Executors.newSingleThreadScheduledExecutor();
-        clientExecutor = AsyncClientExecutor.backedBy(executorService);
+        clientExecutor = AsyncSleeper.backedBy(executorService);
     }
 
     @AfterEach
@@ -137,7 +137,7 @@ final class RetryingAsyncCallbackSupplierTest {
         RetryControl<?> retryControl = new RetryControl<>((retryContext, attemptFailedResult) ->
                 new RetryPolicy.Decision(attemptFailedResult, new RetryPolicy.Decision.RetryAttemptInfo(backoff)));
         RetryingAsyncCallbackSupplier<Void> retryingSupplier = new RetryingAsyncCallbackSupplier<>(
-                AsyncClientExecutor.backedBy(executorService),
+                AsyncSleeper.backedBy(executorService),
                 retryControl,
                 functionCallback -> {
                     beginAsync().thenRun(c -> {

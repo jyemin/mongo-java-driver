@@ -27,7 +27,7 @@ import com.mongodb.internal.connection.ClientMetadata;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.StreamFactoryFactory;
 import com.mongodb.internal.mockito.MongoMockito;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -79,7 +79,7 @@ class MongoClientTest {
         StreamFactoryFactory streamFactoryFactory = MongoMockito.mock(
                 StreamFactoryFactory.class,
                 mock -> {
-                    when(mock.getClientExecutor()).thenReturn(AsyncClientExecutor.NO_OP);
+                    when(mock.getExecutor()).thenReturn(null);
                     try {
                         doNothing().when(mock).close();
                     } catch (Exception e) {

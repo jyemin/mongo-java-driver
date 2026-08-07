@@ -17,7 +17,7 @@ package com.mongodb.internal.async.function;
 
 import com.mongodb.annotations.NotThreadSafe;
 import com.mongodb.internal.async.function.RetryPolicy.Decision.RetryAttemptInfo;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.lang.Nullable;
 
 import java.time.Duration;
@@ -42,7 +42,7 @@ public final class RetryingSyncSupplier<R> implements Supplier<R> {
     private final Supplier<R> syncFunction;
 
     /**
-     * See {@link RetryingAsyncCallbackSupplier#RetryingAsyncCallbackSupplier(AsyncClientExecutor, RetryControl, AsyncCallbackSupplier)}.
+     * See {@link RetryingAsyncCallbackSupplier#RetryingAsyncCallbackSupplier(AsyncSleeper, RetryControl, AsyncCallbackSupplier)}.
      */
     public RetryingSyncSupplier(final RetryControl<?> control, final Supplier<R> syncFunction) {
         this.control = control;

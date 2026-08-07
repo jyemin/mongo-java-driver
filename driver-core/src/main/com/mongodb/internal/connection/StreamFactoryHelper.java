@@ -24,12 +24,12 @@ import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.connection.TransportSettings;
 import com.mongodb.internal.connection.netty.NettyStreamFactoryFactory;
-import com.mongodb.internal.thread.AsyncClientExecutor;
 import com.mongodb.lang.Nullable;
 import com.mongodb.spi.dns.InetAddressResolver;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -49,8 +49,9 @@ public final class StreamFactoryHelper {
                 }
 
                 @Override
-                public AsyncClientExecutor getClientExecutor() {
-                    return AsyncClientExecutor.NO_OP;
+                @Nullable
+                public Executor getExecutor() {
+                    return null;
                 }
 
                 @Override

@@ -31,7 +31,7 @@ import com.mongodb.internal.connection.NoOpSessionContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.observability.micrometer.TracingManager;
 import com.mongodb.internal.selector.ReadPreferenceServerSelector;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import com.mongodb.lang.Nullable;
 import com.mongodb.selector.ServerSelector;
@@ -73,7 +73,7 @@ public class ServerSessionPool {
 
     public ServerSessionPool(
             final Cluster cluster,
-            final AsyncClientExecutor clientExecutor,
+            final AsyncSleeper clientExecutor,
             final TimeoutSettings timeoutSettings,
             @Nullable final ServerApi serverApi) {
         this(cluster,

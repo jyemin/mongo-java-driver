@@ -37,7 +37,7 @@ import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
 import com.mongodb.internal.observability.micrometer.TracingManager;
 import com.mongodb.internal.session.ServerSessionPool;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.lang.Nullable;
 import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.reactivestreams.client.ClientSession;
@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static java.lang.String.format;
@@ -74,7 +75,7 @@ public final class MongoClientImpl implements MongoClient {
     private static final Logger LOGGER = Loggers.getLogger("client");
     private final MongoClientSettings settings;
     private final StreamFactoryFactory streamFactoryFactory;
-
+    private final AsyncSleeper asyncSleeper;
     private final MongoClusterImpl delegate;
     private final AtomicBoolean closed;
 
@@ -94,9 +95,10 @@ public final class MongoClientImpl implements MongoClient {
         notNull("settings", settings);
         notNull("cluster", cluster);
 
+        this.asyncSleeper = AsyncSleeper.backedBy(assertNotNull(streamFactoryFactory.getExecutor()));
         TracingManager tracingManager = new TracingManager(settings.getObservabilitySettings());
         TimeoutSettings timeoutSettings = TimeoutSettings.create(settings);
-        ServerSessionPool serverSessionPool = new ServerSessionPool(cluster, streamFactoryFactory.getClientExecutor(), timeoutSettings, settings.getServerApi());
+        ServerSessionPool serverSessionPool = new ServerSessionPool(cluster, asyncSleeper, timeoutSettings, settings.getServerApi());
         ClientSessionHelper clientSessionHelper = new ClientSessionHelper(this, serverSessionPool, tracingManager);
 
         AutoEncryptionSettings autoEncryptSettings = settings.getAutoEncryptionSettings();
@@ -160,6 +162,11 @@ public final class MongoClientImpl implements MongoClient {
             }
             getServerSessionPool().close();
             getCluster().close();
+            try {
+                asyncSleeper.close();
+            } catch (Exception e) {
+                LOGGER.warn("Exception closing resource", e);
+            }
             try {
                 streamFactoryFactory.close();
             } catch (Exception e) {
@@ -341,9 +348,9 @@ public final class MongoClientImpl implements MongoClient {
     }
 
     /**
-     * @see StreamFactoryFactory#getClientExecutor()
+     * @see StreamFactoryFactory#getExecutor() ()
      */
-    public AsyncClientExecutor getClientExecutor() {
-        return streamFactoryFactory.getClientExecutor();
+    public AsyncSleeper getAsyncSleeper() {
+        return asyncSleeper;
     }
 }

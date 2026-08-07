@@ -18,7 +18,9 @@ package com.mongodb.internal.connection;
 
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.lang.Nullable;
+
+import java.util.concurrent.Executor;
 
 /**
  * A factory of {@code StreamFactory} instances.
@@ -34,7 +36,8 @@ public interface StreamFactoryFactory extends AutoCloseable {
      */
     StreamFactory create(SocketSettings socketSettings, SslSettings sslSettings);
 
-    AsyncClientExecutor getClientExecutor();
+    @Nullable
+    Executor getExecutor();
 
     @Override
     void close();

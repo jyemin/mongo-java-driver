@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class UnimplementedAsyncClientExecutorTest {
+class UnimplementedAsyncSleeperTest {
     @ParameterizedTest
     @ValueSource(longs = {0, 200})
     void sleepAsync(final long durationMs) {
@@ -37,7 +37,7 @@ class UnimplementedAsyncClientExecutorTest {
     private static void assertSleepAsync(final Duration duration) {
         CompletableFuture<Void> callbackExceptionFuture = new CompletableFuture<>();
         CompletableFuture<Thread> callbackThreadFuture = new CompletableFuture<>();
-        try (UnimplementedAsyncClientExecutor unimplementedClientExecutor = UnimplementedAsyncClientExecutor.instance()) {
+        try (UnimplementedAsyncSleeper unimplementedClientExecutor = UnimplementedAsyncSleeper.instance()) {
             unimplementedClientExecutor.sleepAsync(duration, (result, t) -> {
                 if (t != null) {
                     callbackExceptionFuture.completeExceptionally(t);

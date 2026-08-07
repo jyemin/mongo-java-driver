@@ -38,7 +38,7 @@ import com.mongodb.internal.client.model.changestream.ChangeStreamLevel
 import com.mongodb.internal.connection.ClientMetadata
 import com.mongodb.internal.connection.Cluster
 import com.mongodb.internal.connection.StreamFactoryFactory
-import com.mongodb.internal.thread.AsyncClientExecutor
+import com.mongodb.internal.thread.AsyncSleeper
 import org.bson.BsonDocument
 import org.bson.Document
 import org.bson.codecs.UuidCodec
@@ -229,7 +229,7 @@ class MongoClientSpecification extends Specification {
 
     def mockStreamFactoryFactory() {
         Mock(StreamFactoryFactory) {
-            getClientExecutor() >> AsyncClientExecutor.NO_OP
+            getExecutor() >> null
         }
     }
 }

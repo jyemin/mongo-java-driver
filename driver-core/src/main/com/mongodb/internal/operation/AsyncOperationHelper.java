@@ -327,7 +327,7 @@ final class AsyncOperationHelper {
             final RetryControl<SpecRetryPolicy> retryControl,
             final OperationContext operationContext,
             final AsyncCallbackSupplier<R> supplier) {
-        return new RetryingAsyncCallbackSupplier<>(operationContext.getClientExecutor(), retryControl, callback -> {
+        return new RetryingAsyncCallbackSupplier<>(operationContext.getAsyncSleeper(), retryControl, callback -> {
             retryControl.getPolicy().onAttemptStart(retryControl, operationContext);
             supplier.get(callback);
         });

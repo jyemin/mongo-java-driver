@@ -25,7 +25,7 @@ import com.mongodb.internal.connection.Cluster
 import com.mongodb.internal.connection.Connection
 import com.mongodb.internal.connection.Server
 import com.mongodb.internal.connection.ServerTuple
-import com.mongodb.internal.thread.AsyncClientExecutor
+import com.mongodb.internal.thread.AsyncSleeper
 import com.mongodb.internal.validator.NoOpFieldNameValidator
 import org.bson.BsonArray
 import org.bson.BsonBinarySubType
@@ -229,6 +229,6 @@ class ServerSessionPoolSpecification extends Specification {
     }
 
     static createServerSessionPool(Cluster cluster) {
-        new ServerSessionPool(cluster, AsyncClientExecutor.NO_OP, TIMEOUT_SETTINGS, getServerApi())
+        new ServerSessionPool(cluster, AsyncSleeper.NO_OP, TIMEOUT_SETTINGS, getServerApi())
     }
 }

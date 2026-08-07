@@ -28,7 +28,7 @@ import com.mongodb.internal.connection.StreamFactoryFactory;
 import com.mongodb.internal.mockito.MongoMockito;
 import com.mongodb.internal.observability.micrometer.TracingManager;
 import com.mongodb.internal.session.ServerSessionPool;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.ListDatabasesPublisher;
@@ -40,6 +40,7 @@ import org.mockito.Mock;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -211,7 +212,7 @@ public class MongoClientImplTest extends TestHelper {
                     .thenReturn(new ClientMetadata("test", mongoDriverInformation));
         });
         StreamFactoryFactory streamFactoryFactory = MongoMockito.mock(StreamFactoryFactory.class, mock -> {
-            when(mock.getClientExecutor()).thenReturn(AsyncClientExecutor.NO_OP);
+            when(mock.getExecutor()).thenReturn(Executors.newSingleThreadExecutor()); // this is wrong...
         });
         return new MongoClientImpl(MongoClientSettings.builder().build(),
                 mongoDriverInformation, cluster, streamFactoryFactory, OPERATION_EXECUTOR);

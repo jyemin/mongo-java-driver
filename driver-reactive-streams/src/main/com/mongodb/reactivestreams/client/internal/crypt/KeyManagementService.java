@@ -36,7 +36,7 @@ import com.mongodb.internal.connection.TlsChannelStreamFactoryFactory;
 import com.mongodb.internal.crypt.capi.MongoKeyDecryptor;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.internal.time.Timeout;
 import com.mongodb.lang.Nullable;
 import org.bson.ByteBuf;
@@ -183,7 +183,7 @@ class KeyManagementService implements Closeable {
                         throw new MongoOperationTimeoutException(TIMEOUT_ERROR_MESSAGE);
                     });
         }
-        return OperationContext.simpleOperationContext(timeoutSettings, null, AsyncClientExecutor.NO_OP);
+        return OperationContext.simpleOperationContext(timeoutSettings, null, AsyncSleeper.NO_OP);
     }
 
     @NonNull

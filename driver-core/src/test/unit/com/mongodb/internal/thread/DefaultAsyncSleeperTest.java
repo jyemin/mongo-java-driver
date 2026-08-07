@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DefaultAsyncClientExecutorTest {
+class DefaultAsyncSleeperTest {
     private static final long SLEEP_DURATION_MILLIS = 200;
 
     private ExecutorService executorService;
@@ -73,8 +73,8 @@ class DefaultAsyncClientExecutorTest {
     @ValueSource(longs = {0, SLEEP_DURATION_MILLIS})
     void sleepAsync(final long durationMs) {
         Duration duration = Duration.ofMillis(durationMs);
-        try (DefaultAsyncClientExecutor backedByExecutorService = new DefaultAsyncClientExecutor(executorService);
-             DefaultAsyncClientExecutor backedByScheduledExecutorService = new DefaultAsyncClientExecutor(scheduledExecutorService)) {
+        try (DefaultAsyncSleeper backedByExecutorService = new DefaultAsyncSleeper(executorService);
+             DefaultAsyncSleeper backedByScheduledExecutorService = new DefaultAsyncSleeper(scheduledExecutorService)) {
             assertAll(
                     () -> assertSleepAsync(backedByExecutorService, duration),
                     () -> assertSleepAsync(backedByScheduledExecutorService, duration)
@@ -83,7 +83,7 @@ class DefaultAsyncClientExecutorTest {
     }
 
     private static void assertSleepAsync(
-            final DefaultAsyncClientExecutor clientExecutor, final Duration duration) throws Exception {
+            final DefaultAsyncSleeper clientExecutor, final Duration duration) throws Exception {
         StartTime startTime = StartTime.now();
         CompletableFuture<Duration> callbackDelayFuture = new CompletableFuture<>();
         CompletableFuture<Thread> callbackThreadFuture = new CompletableFuture<>();
@@ -112,8 +112,8 @@ class DefaultAsyncClientExecutorTest {
     @ValueSource(longs = {0, SLEEP_DURATION_MILLIS})
     void closeBeforeSleepAsync(final long durationMs) {
         Duration duration = Duration.ofMillis(durationMs);
-        try (DefaultAsyncClientExecutor backedByExecutorService = new DefaultAsyncClientExecutor(executorService);
-             DefaultAsyncClientExecutor backedByScheduledExecutorService = new DefaultAsyncClientExecutor(scheduledExecutorService)) {
+        try (DefaultAsyncSleeper backedByExecutorService = new DefaultAsyncSleeper(executorService);
+             DefaultAsyncSleeper backedByScheduledExecutorService = new DefaultAsyncSleeper(scheduledExecutorService)) {
             assertAll(
                     () -> assertCloseOrBackingExecutorShutdownBeforeSleepAsync(backedByExecutorService, duration, backedByExecutorService::close),
                     () -> assertCloseOrBackingExecutorShutdownBeforeSleepAsync(backedByScheduledExecutorService, duration, backedByScheduledExecutorService::close)
@@ -122,14 +122,14 @@ class DefaultAsyncClientExecutorTest {
     }
 
     /**
-     * {@link AsyncClientExecutor#close()} and {@link com.mongodb.connection.NettyTransportSettings.Builder#eventLoopGroup(EventLoopGroup)}
+     * {@link AsyncSleeper#close()} and {@link com.mongodb.connection.NettyTransportSettings.Builder#eventLoopGroup(EventLoopGroup)}
      * forbit this scenario, but we still handle it.
      */
     @Test
     void backingExecutorShutdownBeforeSleepAsync() {
         Duration duration = Duration.ofMillis(SLEEP_DURATION_MILLIS);
-        try (DefaultAsyncClientExecutor backedByExecutorService = new DefaultAsyncClientExecutor(executorService);
-             DefaultAsyncClientExecutor backedByScheduledExecutorService = new DefaultAsyncClientExecutor(scheduledExecutorService)) {
+        try (DefaultAsyncSleeper backedByExecutorService = new DefaultAsyncSleeper(executorService);
+             DefaultAsyncSleeper backedByScheduledExecutorService = new DefaultAsyncSleeper(scheduledExecutorService)) {
             assertAll(
                     () -> assertCloseOrBackingExecutorShutdownBeforeSleepAsync(backedByExecutorService, duration, executorService::shutdownNow),
                     () -> assertCloseOrBackingExecutorShutdownBeforeSleepAsync(backedByScheduledExecutorService, duration, scheduledExecutorService::shutdownNow)
@@ -138,7 +138,7 @@ class DefaultAsyncClientExecutorTest {
     }
 
     private static void assertCloseOrBackingExecutorShutdownBeforeSleepAsync(
-            final DefaultAsyncClientExecutor clientExecutor, final Duration duration, final Runnable doBeforeSleepAsync) throws Exception {
+            final DefaultAsyncSleeper clientExecutor, final Duration duration, final Runnable doBeforeSleepAsync) throws Exception {
         doBeforeSleepAsync.run();
         AtomicInteger completionCount = new AtomicInteger();
         CompletableFuture<Void> callbackFuture = new CompletableFuture<>();
@@ -159,8 +159,8 @@ class DefaultAsyncClientExecutorTest {
     @Test
     void closeWhileSleepingInSleepAsync() {
         Duration duration = Duration.ofMillis(SLEEP_DURATION_MILLIS);
-        try (DefaultAsyncClientExecutor backedByExecutorService = new DefaultAsyncClientExecutor(executorService);
-             DefaultAsyncClientExecutor backedByScheduledExecutorService = new DefaultAsyncClientExecutor(scheduledExecutorService)) {
+        try (DefaultAsyncSleeper backedByExecutorService = new DefaultAsyncSleeper(executorService);
+             DefaultAsyncSleeper backedByScheduledExecutorService = new DefaultAsyncSleeper(scheduledExecutorService)) {
             assertAll(
                     () -> assertCloseWhileSleepingInSleepAsync(backedByExecutorService, duration),
                     () -> assertCloseWhileSleepingInSleepAsync(backedByScheduledExecutorService, duration)
@@ -169,7 +169,7 @@ class DefaultAsyncClientExecutorTest {
     }
 
     private static void assertCloseWhileSleepingInSleepAsync(
-            final DefaultAsyncClientExecutor clientExecutor, final Duration duration) throws Exception {
+            final DefaultAsyncSleeper clientExecutor, final Duration duration) throws Exception {
         AtomicInteger completionCount = new AtomicInteger();
         CompletableFuture<Void> callbackFuture = new CompletableFuture<>();
         clientExecutor.sleepAsync(duration, (result, t) -> {
@@ -191,8 +191,8 @@ class DefaultAsyncClientExecutorTest {
     @Test
     void closeWhileCallbackIsBeingCompletedInSleepAsync() {
         Duration duration = Duration.ofMillis(SLEEP_DURATION_MILLIS);
-        try (DefaultAsyncClientExecutor backedByExecutorService = new DefaultAsyncClientExecutor(executorService);
-             DefaultAsyncClientExecutor backedByScheduledExecutorService = new DefaultAsyncClientExecutor(scheduledExecutorService)) {
+        try (DefaultAsyncSleeper backedByExecutorService = new DefaultAsyncSleeper(executorService);
+             DefaultAsyncSleeper backedByScheduledExecutorService = new DefaultAsyncSleeper(scheduledExecutorService)) {
             assertAll(
                     () -> assertCloseWhileCallbackIsBeingCompletedInSleepAsync(backedByExecutorService, duration),
                     () -> assertCloseWhileCallbackIsBeingCompletedInSleepAsync(backedByScheduledExecutorService, duration)
@@ -201,7 +201,7 @@ class DefaultAsyncClientExecutorTest {
     }
 
     private static void assertCloseWhileCallbackIsBeingCompletedInSleepAsync(
-            final DefaultAsyncClientExecutor clientExecutor, final Duration duration) throws Exception {
+            final DefaultAsyncSleeper clientExecutor, final Duration duration) throws Exception {
         AtomicInteger completionCount = new AtomicInteger();
         CompletableFuture<Void> callbackFuture = new CompletableFuture<>();
         CompletableFuture<Void> closeFuture = new CompletableFuture<>();

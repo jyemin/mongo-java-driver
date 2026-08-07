@@ -59,7 +59,7 @@ import com.mongodb.internal.operation.Operations;
 import com.mongodb.internal.operation.ReadOperation;
 import com.mongodb.internal.operation.WriteOperation;
 import com.mongodb.internal.session.ServerSessionPool;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -103,7 +103,7 @@ final class MongoClusterImpl implements MongoCluster {
     private final UuidRepresentation uuidRepresentation;
     private final WriteConcern writeConcern;
     private final Operations<BsonDocument> operations;
-    private final AsyncClientExecutor clientExecutor;
+    private final AsyncSleeper clientExecutor;
     private final TracingManager tracingManager;
 
     MongoClusterImpl(
@@ -113,7 +113,7 @@ final class MongoClusterImpl implements MongoCluster {
             final boolean retryReads, final boolean retryWrites, final boolean enableOverloadRetargeting,
             @Nullable final ServerApi serverApi, final ServerSessionPool serverSessionPool, final TimeoutSettings timeoutSettings,
             final UuidRepresentation uuidRepresentation, final WriteConcern writeConcern,
-            final AsyncClientExecutor clientExecutor, final TracingManager tracingManager) {
+            final AsyncSleeper clientExecutor, final TracingManager tracingManager) {
         this.autoEncryptionSettings = autoEncryptionSettings;
         this.cluster = cluster;
         this.codecRegistry = codecRegistry;

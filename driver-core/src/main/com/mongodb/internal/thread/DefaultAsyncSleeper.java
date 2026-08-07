@@ -41,11 +41,11 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 @ThreadSafe
-final class DefaultAsyncClientExecutor implements AsyncClientExecutor {
+final class DefaultAsyncSleeper implements AsyncSleeper {
     private final Executor backingExecutor;
     private final Set<ScheduledCallbackCompletion> scheduledCallbackCompletions;
     /**
-     * While holding this lock, no application code may be executed, and driver code external to {@link DefaultAsyncClientExecutor}
+     * While holding this lock, no application code may be executed, and driver code external to {@link DefaultAsyncSleeper}
      * should be either avoided or carefully vetted. This is to avoid unexpected delays and deadlocks.
      * For example, {@link ScheduledCallbackCompletion#reject(RejectedExecutionException)}, {@link ScheduledCallbackCompletion#run()}
      * must not be executed while holding the lock.
@@ -53,7 +53,7 @@ final class DefaultAsyncClientExecutor implements AsyncClientExecutor {
     private final ReentrantLock closeLock;
     private volatile boolean closed;
 
-    DefaultAsyncClientExecutor(final Executor backingExecutor) {
+    DefaultAsyncSleeper(final Executor backingExecutor) {
         this.backingExecutor = backingExecutor;
         scheduledCallbackCompletions = ConcurrentHashMap.newKeySet();
         closeLock = new ReentrantLock();

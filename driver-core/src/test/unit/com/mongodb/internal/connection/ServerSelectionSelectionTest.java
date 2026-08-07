@@ -41,7 +41,7 @@ import com.mongodb.internal.mockito.MongoMockito;
 import com.mongodb.internal.observability.micrometer.TracingManager;
 import com.mongodb.internal.selector.ReadPreferenceServerSelector;
 import com.mongodb.internal.selector.WritableServerSelector;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.internal.time.Timeout;
 import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
@@ -304,7 +304,7 @@ public class ServerSelectionSelectionTest {
                         IgnorableRequestContext.INSTANCE,
                         NoOpSessionContext.INSTANCE,
                         new TimeoutContext(TIMEOUT_SETTINGS.withServerSelectionTimeoutMS(0)),
-                        AsyncClientExecutor.NO_OP,
+                        AsyncSleeper.NO_OP,
                         TracingManager.NO_OP,
                         null,
                         null,

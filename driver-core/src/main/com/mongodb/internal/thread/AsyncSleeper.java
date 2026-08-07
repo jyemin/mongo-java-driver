@@ -34,25 +34,25 @@ import java.util.concurrent.ScheduledExecutorService;
  * If an application violates the contract, it bears the responsibility.
  * <p>
  * Purposefully not {@link ExecutorService}, because it does not manage the underlying resources, if any.
- * They must be managed externally to {@link AsyncClientExecutor}.
+ * They must be managed externally to {@link AsyncSleeper}.
  * Nonetheless, it is still {@link AutoCloseable}. See {@link #close()} for the details.
  * <p>
  * This class is not part of the public API and may be removed or changed at any time.
  *
- * @see StreamFactoryFactory#getClientExecutor()
+ * @see StreamFactoryFactory#getExecutor() ()
  * @see CommonExecutor
  */
 @ThreadSafe
-public interface AsyncClientExecutor extends AutoCloseable {
-    AsyncClientExecutor NO_OP = UnimplementedAsyncClientExecutor.instance();
+public interface AsyncSleeper extends AutoCloseable {
+    AsyncSleeper NO_OP = UnimplementedAsyncSleeper.instance();
 
     /**
      * @param executor The executor to use for executing tasks.
      * If it is a {@link ScheduledExecutorService}, then it is also used for scheduling,
      * otherwise {@link CommonExecutor} is used for scheduling.
      */
-    static AsyncClientExecutor backedBy(final Executor executor) {
-        return new DefaultAsyncClientExecutor(executor);
+    static AsyncSleeper backedBy(final Executor executor) {
+        return new DefaultAsyncSleeper(executor);
     }
 
     /**
@@ -69,7 +69,7 @@ public interface AsyncClientExecutor extends AutoCloseable {
 
     /**
      * Must be called before shutting down the {@linkplain #backedBy(Executor) backing executor},
-     * to notify this {@link AsyncClientExecutor} that the backing executor may be about to shut down.
+     * to notify this {@link AsyncSleeper} that the backing executor may be about to shut down.
      * This method guarantees exactly-once {@linkplain SingleResultCallback#onResult(Object, Throwable) completion}
      * of all callbacks that may have not been completed otherwise if the backing executor shuts down.
      * An example of such a callback is one scheduled via {@link #sleepAsync(Duration, SingleResultCallback)}.

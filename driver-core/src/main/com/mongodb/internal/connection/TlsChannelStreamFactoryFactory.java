@@ -20,7 +20,6 @@ import com.mongodb.MongoClientException;
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.AsyncCompletionHandler;
-import com.mongodb.connection.AsyncTransportSettings;
 import com.mongodb.connection.SocketSettings;
 import com.mongodb.connection.SslSettings;
 import com.mongodb.internal.connection.tlschannel.BufferAllocator;
@@ -30,7 +29,6 @@ import com.mongodb.internal.connection.tlschannel.async.AsynchronousTlsChannel;
 import com.mongodb.internal.connection.tlschannel.async.AsynchronousTlsChannelGroup;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
-import com.mongodb.internal.thread.AsyncClientExecutor;
 import com.mongodb.lang.Nullable;
 import com.mongodb.spi.dns.InetAddressResolver;
 
@@ -71,7 +69,6 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
 
     private final SelectorMonitor selectorMonitor;
     private final AsynchronousTlsChannelGroup group;
-    private final AsyncClientExecutor clientExecutor;
     private final PowerOfTwoBufferPool bufferPool = PowerOfTwoBufferPool.DEFAULT;
     private final InetAddressResolver inetAddressResolver;
 
@@ -82,7 +79,6 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
             @Nullable final ExecutorService executorService) {
         this.inetAddressResolver = inetAddressResolver;
         this.group = new AsynchronousTlsChannelGroup(executorService);
-        clientExecutor = AsyncClientExecutor.backedBy(group);
         selectorMonitor = new SelectorMonitor();
         selectorMonitor.start();
     }
@@ -98,26 +94,17 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
                 selectorMonitor);
     }
 
-    /**
-     * The {@linkplain AsyncClientExecutor} {@linkplain AsyncClientExecutor#backedBy(Executor) backed by} the same {@link ExecutorService}
-     * used by {@link #create(SocketSettings, SslSettings)} for a {@link StreamFactory}.
-     * That {@link ExecutorService} may be provided by an application via {@link AsyncTransportSettings#getExecutorService()}.
-     */
     @Override
-    public AsyncClientExecutor getClientExecutor() {
-        return clientExecutor;
+    public Executor getExecutor() {
+        return group;
     }
 
     @Override
     public void close() {
         try {
-            clientExecutor.close();
+            selectorMonitor.close();
         } finally {
-            try {
-                selectorMonitor.close();
-            } finally {
-                group.shutdown();
-            }
+            group.shutdown();
         }
     }
 
@@ -175,7 +162,7 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
                                 ((SocketRegistration) selectionKey.attachment()).runAfterConnectActionIfNotCanceled();
                             }
 
-                            for (Iterator<SocketRegistration> iter = pendingRegistrations.iterator(); iter.hasNext();) {
+                            for (Iterator<SocketRegistration> iter = pendingRegistrations.iterator(); iter.hasNext(); ) {
                                 SocketRegistration pendingRegistration = iter.next();
                                 pendingRegistration.socketChannel.register(selector, SelectionKey.OP_CONNECT, pendingRegistration);
                                 iter.remove();
@@ -261,8 +248,8 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
         }
 
         private void scheduleTimeoutInterruption(final AsyncCompletionHandler<Void> handler,
-                                                 final SelectorMonitor.SocketRegistration socketRegistration,
-                                                 final int connectTimeoutMs) {
+                final SelectorMonitor.SocketRegistration socketRegistration,
+                final int connectTimeoutMs) {
             group.getTimeoutExecutor().schedule(() -> {
                 if (socketRegistration.tryCancelPendingConnection()) {
                     closeAndTimeout(handler, socketRegistration.socketChannel);
@@ -357,13 +344,13 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
 
             @Override
             public <A> void read(final ByteBuffer dst, final long timeout, final TimeUnit unit, @Nullable final A attach,
-                                 final CompletionHandler<Integer, ? super A> handler) {
+                    final CompletionHandler<Integer, ? super A> handler) {
                 wrapped.read(dst, timeout, unit, attach, handler);
             }
 
             @Override
             public <A> void read(final ByteBuffer[] dsts, final int offset, final int length, final long timeout, final TimeUnit unit,
-                                 @Nullable final A attach, final CompletionHandler<Long, ? super A> handler) {
+                    @Nullable final A attach, final CompletionHandler<Long, ? super A> handler) {
                 wrapped.read(dsts, offset, length, timeout, unit, attach, handler);
             }
 
@@ -379,13 +366,13 @@ public class TlsChannelStreamFactoryFactory implements StreamFactoryFactory {
 
             @Override
             public <A> void write(final ByteBuffer src, final long timeout, final TimeUnit unit, final A attach,
-                                  final CompletionHandler<Integer, ? super A> handler) {
+                    final CompletionHandler<Integer, ? super A> handler) {
                 wrapped.write(src, timeout, unit, attach, handler);
             }
 
             @Override
             public <A> void write(final ByteBuffer[] srcs, final int offset, final int length, final long timeout, final TimeUnit unit,
-                                  final A attach, final CompletionHandler<Long, ? super A> handler) {
+                    final A attach, final CompletionHandler<Long, ? super A> handler) {
                 wrapped.write(srcs, offset, length, timeout, unit, attach, handler);
             }
 

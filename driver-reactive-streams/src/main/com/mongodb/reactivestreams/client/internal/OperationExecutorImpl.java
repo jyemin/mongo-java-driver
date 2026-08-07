@@ -243,7 +243,7 @@ public class OperationExecutorImpl implements OperationExecutor {
                 requestContext,
                 new ReadConcernAwareNoOpSessionContext(readConcern),
                 createTimeoutContext(session, timeoutSettings),
-                mongoClient.getClientExecutor(),
+                mongoClient.getAsyncSleeper(),
                 tracingManager,
                 mongoClient.getSettings().getServerApi(),
                 commandName,

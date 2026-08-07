@@ -19,7 +19,7 @@ import com.mongodb.annotations.NotThreadSafe;
 import com.mongodb.internal.async.MutableValue;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.RetryPolicy.Decision.RetryAttemptInfo;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 
 import java.time.Duration;
 
@@ -38,18 +38,18 @@ import static com.mongodb.internal.async.AsyncRunnable.beginAsync;
  */
 @NotThreadSafe
 public final class RetryingAsyncCallbackSupplier<R> implements AsyncCallbackSupplier<R> {
-    private final AsyncClientExecutor clientExecutor;
+    private final AsyncSleeper clientExecutor;
     private final RetryControl<?> control;
     private final AsyncCallbackSupplier<R> asyncFunction;
 
     /**
-     * @param clientExecutor For {@linkplain AsyncClientExecutor#sleepAsync(Duration, SingleResultCallback) delaying} attempts
+     * @param clientExecutor For {@linkplain AsyncSleeper#sleepAsync(Duration, SingleResultCallback) delaying} attempts
      * according to {@link RetryAttemptInfo#getBackoff()}.
      * @param control The {@link RetryControl} to control the new {@link RetryingAsyncCallbackSupplier}.
      * @param asyncFunction The retryable {@link AsyncCallbackSupplier} to be decorated.
      */
     public RetryingAsyncCallbackSupplier(
-            final AsyncClientExecutor clientExecutor,
+            final AsyncSleeper clientExecutor,
             final RetryControl<?> control,
             final AsyncCallbackSupplier<R> asyncFunction) {
         this.clientExecutor = clientExecutor;

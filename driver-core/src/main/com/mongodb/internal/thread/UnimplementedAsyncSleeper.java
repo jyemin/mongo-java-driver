@@ -23,14 +23,14 @@ import java.time.Duration;
 import static com.mongodb.assertions.Assertions.fail;
 
 @ThreadSafe
-final class UnimplementedAsyncClientExecutor implements AsyncClientExecutor {
-    private static final UnimplementedAsyncClientExecutor INSTANCE = new UnimplementedAsyncClientExecutor();
+final class UnimplementedAsyncSleeper implements AsyncSleeper {
+    private static final UnimplementedAsyncSleeper INSTANCE = new UnimplementedAsyncSleeper();
 
-    static UnimplementedAsyncClientExecutor instance() {
+    static UnimplementedAsyncSleeper instance() {
         return INSTANCE;
     }
 
-    private UnimplementedAsyncClientExecutor() {
+    private UnimplementedAsyncSleeper() {
     }
 
     /**
@@ -38,7 +38,7 @@ final class UnimplementedAsyncClientExecutor implements AsyncClientExecutor {
      */
     @Override
     public void sleepAsync(final Duration duration, final SingleResultCallback<Void> callback) {
-        DefaultAsyncClientExecutor.sleepAsync(false, duration, callback, () -> {
+        DefaultAsyncSleeper.sleepAsync(false, duration, callback, () -> {
             throw fail();
         });
     }

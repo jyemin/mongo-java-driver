@@ -20,7 +20,7 @@ import com.mongodb.internal.async.function.AsyncCallbackLoop;
 import com.mongodb.internal.async.function.LoopControl;
 import com.mongodb.internal.async.function.RetryControl;
 import com.mongodb.internal.async.function.RetryingAsyncCallbackSupplier;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -235,7 +235,7 @@ public interface AsyncRunnable extends AsyncSupplier<Void>, AsyncConsumer<Void> 
         return thenRun(callback -> {
             new RetryingAsyncCallbackSupplier<Void>(
                     // `AsyncClientExecutor` is not needed, given the contract of `SimpleRetryPolicy`, `RetryingAsyncCallbackSupplier`
-                    AsyncClientExecutor.NO_OP,
+                    AsyncSleeper.NO_OP,
                     new RetryControl<>(new SimpleRetryPolicy(shouldRetry)),
                     // `finish` is required here instead of `unsafeFinish`
                     // because only `finish` meets the contract of

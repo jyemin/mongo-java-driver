@@ -35,7 +35,7 @@ import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.VisibleForTesting;
 import com.mongodb.internal.diagnostics.logging.Logger;
 import com.mongodb.internal.diagnostics.logging.Loggers;
-import com.mongodb.internal.thread.AsyncClientExecutor;
+import com.mongodb.internal.thread.AsyncSleeper;
 import com.mongodb.lang.Nullable;
 import com.mongodb.spi.dns.DnsClient;
 
@@ -66,7 +66,7 @@ public final class DefaultClusterFactory {
                                  final StreamFactory streamFactory,
                                  final TimeoutSettings heartbeatTimeoutSettings,
                                  final StreamFactory heartbeatStreamFactory,
-                                 final AsyncClientExecutor clientExecutor,
+                                 final AsyncSleeper clientExecutor,
                                  @Nullable final MongoCredential credential,
                                  final LoggerSettings loggerSettings,
                                  @Nullable final CommandListener commandListener,
