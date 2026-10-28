@@ -1,0 +1,60 @@
+description: handshake-hello-shape
+# POC: a real schema bump is needed for the new fields; 1.27 is the runner's current max.
+schemaVersion: '1.27'
+runOnRequirements:
+  - minServerVersion: '4.4'
+    auth: false
+createEntities:
+  - client:
+      id: &client client
+      useMultipleMongoses: false
+      # Clear every variable the driver inspects for client.env, so the host cannot leak into the handshake.
+      setEnvironment:
+        AWS_EXECUTION_ENV: null
+        AWS_LAMBDA_RUNTIME_API: null
+        FUNCTIONS_WORKER_RUNTIME: null
+        K_SERVICE: null
+        FUNCTION_NAME: null
+        VERCEL: null
+        KUBERNETES_SERVICE_HOST: null
+      observeWireMessages:
+        connections: [application]
+        phases: [handshake]
+  - database:
+      id: &database database
+      client: *client
+      databaseName: handshake-test
+tests:
+  - description: legacy hello handshake contains exactly the specified fields
+    operations:
+      - name: runCommand
+        object: *database
+        arguments: { commandName: ping, command: { ping: 1 } }
+    expectWireMessages:
+      - client: *client
+        messages:
+          - opcode: OP_QUERY
+            responseTo: 0
+            flags: []
+            fullCollectionName: admin.$cmd
+            numberToSkip: 0
+            numberToReturn: -1
+            command:
+              isMaster: 1
+              helloOk: true
+              backpressure: "2"
+              client:
+                application: { name: client }
+                driver:
+                  name: { $$type: string }
+                  version: { $$type: string }
+                os:
+                  type: { $$type: string }
+                  name: { $$unsetOrMatches: { $$type: string } }
+                  architecture: { $$unsetOrMatches: { $$type: string } }
+                  version: { $$unsetOrMatches: { $$type: string } }
+                platform: { $$unsetOrMatches: { $$type: string } }
+                # Only /.dockerenv can still populate env, and only with container.runtime.
+                env:
+                  $$unsetOrMatches:
+                    container: { runtime: docker }

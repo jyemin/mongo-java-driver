@@ -241,6 +241,11 @@ abstract class ContextElement {
                     + "   Count: " + count + "\n";
         }
     }
+    static ContextElement ofWireMessages(final String client, final BsonArray expectedMessages,
+            final List<BsonDocument> actualMessages) {
+        return new WireMessageMatchingContextElement(client, expectedMessages, actualMessages);
+    }
+
     public static ContextElement ofLogMessages(final String client, final BsonArray expectedMessages,
             final List<LogMessage> actualMessages) {
         return new LogMessageMatchingContextElement(client, expectedMessages, actualMessages);
@@ -501,6 +506,31 @@ abstract class ContextElement {
                     + "   actualMessages="
                     + new BsonDocument("messages", new BsonArray(actualMessages.stream()
                     .map(LogMatcher::logMessageAsDocument).collect(Collectors.toList())))
+                    .toJson(JsonWriterSettings.builder().indent(true).build()) + "\n";
+        }
+    }
+
+    private static class WireMessageMatchingContextElement extends ContextElement {
+        private final String client;
+        private final BsonArray expectedMessages;
+        private final List<BsonDocument> actualMessages;
+
+        WireMessageMatchingContextElement(final String client, final BsonArray expectedMessages,
+                final List<BsonDocument> actualMessages) {
+            super();
+            this.client = client;
+            this.expectedMessages = expectedMessages;
+            this.actualMessages = actualMessages;
+        }
+
+        @Override
+        public String toString() {
+            return "Wire Message Matching Context\n"
+                    + "   client='" + client + '\'' + "\n"
+                    + "   expectedMessages="
+                    + new BsonDocument("messages", expectedMessages).toJson(JsonWriterSettings.builder().indent(true).build()) + "\n"
+                    + "   actualMessages="
+                    + new BsonDocument("messages", new BsonArray(actualMessages))
                     .toJson(JsonWriterSettings.builder().indent(true).build()) + "\n";
         }
     }

@@ -21,7 +21,9 @@ import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -43,12 +45,23 @@ final class ValueMatcher {
     }
 
     public void assertValuesMatch(final BsonValue expected, final BsonValue actual) {
-        assertValuesMatch(expected, actual, null, -1);
+        assertValuesMatch(expected, actual, null, -1, false, true);
+    }
+
+    /**
+     * Matches according to the unified test format's rule that a document other than the root document must not contain keys that
+     * are absent from the expected document. The expected value is not treated as the root, so extra keys are rejected at every level
+     * unless {@code $$matchAsRoot} is used.
+     */
+    void assertValuesMatchStrict(final BsonValue expected, final BsonValue actual) {
+        assertValuesMatch(expected, actual, null, -1, true, false);
     }
 
     private void assertValuesMatch(final BsonValue initialExpected, @Nullable final BsonValue actual,
-                                   @Nullable final String keyContext, final int arrayPositionContext) {
+                                   @Nullable final String keyContext, final int arrayPositionContext,
+                                   final boolean strict, final boolean isRoot) {
         BsonValue expected = initialExpected;
+        boolean root = isRoot;
         context.push(ContextElement.ofValueMatcher(expected, actual, keyContext, arrayPositionContext));
 
         try {
@@ -78,6 +91,7 @@ final class ValueMatcher {
                         break;
                     case "$$matchAsRoot":
                         expected = expectedDocument.getDocument("$$matchAsRoot");
+                        root = true;
                         break;
                     default:
                         throw new UnsupportedOperationException("Unsupported special operator: " + expectedDocument.getFirstKey());
@@ -134,13 +148,19 @@ final class ValueMatcher {
                     }
 
                     assertNotNull(context.getMessage("Actual document must contain key " + key), actualValue);
-                    assertValuesMatch(value, actualValue, key, -1);
+                    assertValuesMatch(value, actualValue, key, -1, strict, false);
                 });
+                if (strict && !root) {
+                    Set<String> unexpectedKeys = new HashSet<>(actualDocument.keySet());
+                    unexpectedKeys.removeAll(expectedDocument.keySet());
+                    assertTrue(context.getMessage("Actual document must not contain keys that are not expected: " + unexpectedKeys),
+                            unexpectedKeys.isEmpty());
+                }
             } else if (expected.isArray()) {
                 assertTrue(context.getMessage("Actual value must be an array but is " + actual.getBsonType()), actual.isArray());
                 assertEquals(context.getMessage("Arrays must be the same size"), expected.asArray().size(), actual.asArray().size());
                 for (int i = 0; i < expected.asArray().size(); i++) {
-                    assertValuesMatch(expected.asArray().get(i), actual.asArray().get(i), keyContext, i);
+                    assertValuesMatch(expected.asArray().get(i), actual.asArray().get(i), keyContext, i, strict, false);
                 }
             } else if (expected.isNumber()) {
                 assertTrue(context.getMessage("Expected a number"), actual.isNumber());

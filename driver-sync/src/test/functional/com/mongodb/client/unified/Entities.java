@@ -16,15 +16,18 @@
 
 package com.mongodb.client.unified;
 
+import com.mongodb.AuthenticationMechanism;
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCompressor;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.ServerApi;
 import com.mongodb.ServerApiVersion;
 import com.mongodb.TransactionOptions;
@@ -40,6 +43,7 @@ import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterDescription;
 import com.mongodb.event.ConnectionReadyEvent;
 import com.mongodb.event.TestServerMonitorListener;
+import com.mongodb.internal.EnvironmentProvider;
 import com.mongodb.internal.connection.ServerMonitoringModeUtil;
 import com.mongodb.internal.connection.TestClusterListener;
 import com.mongodb.internal.connection.TestCommandListener;
@@ -72,6 +76,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.mongodb.AuthenticationMechanism.MONGODB_OIDC;
 import static com.mongodb.ClusterFixture.getEnv;
@@ -90,6 +95,7 @@ import static com.mongodb.internal.connection.AbstractConnectionPoolTest.waitFor
 import static java.lang.String.format;
 import static java.lang.System.getenv;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assume.assumeTrue;
 
 public final class Entities {
@@ -97,7 +103,7 @@ public final class Entities {
             asList(
                     "id", "autoEncryptOpts", "uriOptions", "serverApi", "useMultipleMongoses", "storeEventsAsEntities",
                     "observeEvents", "observeLogMessages", "observeSensitiveCommands", "ignoreCommandMonitoringEvents",
-                    "awaitMinPoolSizeMS", "observeTracingMessages"));
+                    "awaitMinPoolSizeMS", "observeTracingMessages", "observeWireMessages", "setEnvironment"));
     private final Set<String> entityNames = new HashSet<>();
     private final Map<String, ExecutorService> threads = new HashMap<>();
     private final Map<String, ArrayList<Future<?>>> tasks = new HashMap<>();
@@ -111,6 +117,7 @@ public final class Entities {
     private final Map<String, ClientEncryption> clientEncryptions = new HashMap<>();
     private final Map<String, TestCommandListener> clientCommandListeners = new HashMap<>();
     private final Map<String, TestLoggingInterceptor> clientLoggingInterceptors = new HashMap<>();
+    private final Map<String, TestWireMessageInterceptor> clientWireMessageInterceptors = new HashMap<>();
     private final Map<String, InMemoryOtelSetup.Builder.OtelBuildingBlocks> clientTracing = new HashMap<>();
     private final Set<InMemoryOtelSetup> inMemoryOTelInstances = new HashSet<>();
     private final Map<String, TestConnectionPoolListener> clientConnectionPoolListeners = new HashMap<>();
@@ -233,6 +240,14 @@ public final class Entities {
 
     public TestCommandListener getClientCommandListener(final String id) {
         return getEntity(id + "-command-listener", clientCommandListeners, "command listener");
+    }
+
+    void assertAllWireMessagesWellFormed() {
+        clientWireMessageInterceptors.values().forEach(TestWireMessageInterceptor::assertAllMessagesWellFormed);
+    }
+
+    TestWireMessageInterceptor getClientWireMessageInterceptor(final String id) {
+        return getEntity(id + "-wire-message-interceptor", clientWireMessageInterceptors, "wire message interceptor");
     }
 
     public TestLoggingInterceptor getClientLoggingInterceptor(final String id) {
@@ -468,7 +483,26 @@ public final class Entities {
                         clientSettingsBuilder.applyToServerSettings(builder -> builder.serverMonitoringMode(
                                 ServerMonitoringModeUtil.fromString(value.asString().getValue())));
                         break;
+                    case "directConnection":
+                        if (value.asBoolean().getValue()) {
+                            ServerAddress firstHost = clientSettingsBuilder.build().getClusterSettings().getHosts().get(0);
+                            clientSettingsBuilder.applyToClusterSettings(builder ->
+                                    builder.hosts(singletonList(firstHost)).mode(ClusterConnectionMode.SINGLE));
+                        }
+                        break;
+                    case "compressors":
+                        clientSettingsBuilder.compressorList(Stream.of(value.asString().getValue().split(","))
+                                .map(Entities::toCompressor)
+                                .collect(Collectors.toList()));
+                        break;
                     case "authMechanism":
+                        if (value.equals(new BsonString("SCRAM-SHA-256"))) {
+                            // keep the username, source and password of the test URI, and require the SCRAM-SHA-256 mechanism
+                            MongoCredential testCredential = getMongoClientSettingsBuilder().build().getCredential();
+                            assumeTrue("The test URI must contain credentials", testCredential != null);
+                            clientSettingsBuilder.credential(testCredential.withMechanism(AuthenticationMechanism.SCRAM_SHA_256));
+                            break;
+                        }
                         if (value.equals(new BsonString(MONGODB_OIDC.getMechanismName()))) {
                             // authMechanismProperties depends on authMechanism
                             BsonDocument authMechanismProperties = entity
@@ -620,7 +654,26 @@ public final class Entities {
                     clientLoggingInterceptors);
         }
 
-        putEntity(id, mongoClientSupplier.apply(clientSettings), clients);
+        if (entity.containsKey("observeWireMessages")) {
+            BsonDocument observeWireMessagesDocument = entity.getDocument("observeWireMessages");
+            Set<WireMessage.Source> sources = observeWireMessagesDocument.getArray("connections").stream()
+                    .map(value -> WireMessage.Source.valueOf(value.asString().getValue().toUpperCase()))
+                    .collect(Collectors.toSet());
+            Set<WireMessage.Phase> phases = observeWireMessagesDocument.getArray("phases").stream()
+                    .map(value -> WireMessage.Phase.valueOf(value.asString().getValue().toUpperCase()))
+                    .collect(Collectors.toSet());
+            putEntity(id + "-wire-message-interceptor",
+                    new TestWireMessageInterceptor(clientSettings.getApplicationName(), sources, phases), clientWireMessageInterceptors);
+        }
+
+        // The client metadata document, which includes the environment-derived `env` field, is built when the client is created.
+        try (EnvironmentProvider.EnvironmentOverride environment = EnvironmentProvider.envOverride()) {
+            if (entity.containsKey("setEnvironment")) {
+                entity.getDocument("setEnvironment").forEach((name, value) ->
+                        environment.set(name, value.isNull() ? null : value.asString().getValue()));
+            }
+            putEntity(id, mongoClientSupplier.apply(clientSettings), clients);
+        }
         if (waitForPoolAsyncWorkManagerStart) {
             waitForPoolAsyncWorkManagerStart();
         }
@@ -653,6 +706,19 @@ public final class Entities {
                 .get("minPoolSize", new BsonInt32(0))
                 .asInt32().getValue();
         return minPoolSize != 0 && clientEntity.containsKey("awaitMinPoolSizeMS");
+    }
+
+    private static MongoCompressor toCompressor(final String name) {
+        switch (name) {
+            case "zlib":
+                return MongoCompressor.createZlibCompressor();
+            case "snappy":
+                return MongoCompressor.createSnappyCompressor();
+            case "zstd":
+                return MongoCompressor.createZstdCompressor();
+            default:
+                throw new UnsupportedOperationException("Unsupported compressor: " + name);
+        }
     }
 
     private static LogMessage.Component toComponent(final Map.Entry<String, BsonValue> entry) {
@@ -825,6 +891,7 @@ public final class Entities {
         clientEncryptions.values().forEach(ClientEncryption::close);
         clients.values().forEach(MongoClient::close);
         clientLoggingInterceptors.values().forEach(TestLoggingInterceptor::close);
+        clientWireMessageInterceptors.values().forEach(TestWireMessageInterceptor::close);
         threads.values().forEach(ExecutorService::shutdownNow);
         inMemoryOTelInstances.forEach(InMemoryOtelSetup::close);
     }

@@ -1,0 +1,179 @@
+{
+  "description": "handshake-hello-never-compressed",
+  "schemaVersion": "1.27",
+  "runOnRequirements": [
+    {
+      "minServerVersion": "4.4",
+      "auth": false
+    }
+  ],
+  "createEntities": [
+    {
+      "client": {
+        "id": "client",
+        "useMultipleMongoses": false,
+        "uriOptions": {
+          "compressors": "zlib"
+        },
+        "setEnvironment": {
+          "AWS_EXECUTION_ENV": null,
+          "AWS_LAMBDA_RUNTIME_API": null,
+          "FUNCTIONS_WORKER_RUNTIME": null,
+          "K_SERVICE": null,
+          "FUNCTION_NAME": null,
+          "VERCEL": null,
+          "KUBERNETES_SERVICE_HOST": null
+        },
+        "observeWireMessages": {
+          "connections": [
+            "application"
+          ],
+          "phases": [
+            "operation"
+          ]
+        }
+      }
+    },
+    {
+      "database": {
+        "id": "database",
+        "client": "client",
+        "databaseName": "handshake-test"
+      }
+    }
+  ],
+  "tests": [
+    {
+      "description": "an application hello and an application isMaster are sent as plain OP_MSG on a client that compresses",
+      "operations": [
+        {
+          "name": "runCommand",
+          "object": "database",
+          "arguments": {
+            "commandName": "hello",
+            "command": {
+              "hello": 1
+            }
+          }
+        },
+        {
+          "name": "runCommand",
+          "object": "database",
+          "arguments": {
+            "commandName": "isMaster",
+            "command": {
+              "isMaster": 1
+            }
+          }
+        },
+        {
+          "name": "runCommand",
+          "object": "database",
+          "arguments": {
+            "commandName": "ping",
+            "command": {
+              "ping": 1
+            }
+          }
+        }
+      ],
+      "expectWireMessages": [
+        {
+          "client": "client",
+          "source": "application",
+          "ignoreExtraMessages": true,
+          "messages": [
+            {
+              "opcode": "OP_MSG",
+              "responseTo": 0,
+              "flags": [],
+              "sections": [
+                {
+                  "kind": 0,
+                  "body": {
+                    "hello": 1,
+                    "$db": "handshake-test",
+                    "lsid": {
+                      "$$type": "object"
+                    },
+                    "$clusterTime": {
+                      "$$unsetOrMatches": {
+                        "$$type": "object"
+                      }
+                    },
+                    "$readPreference": {
+                      "$$unsetOrMatches": {
+                        "mode": "primaryPreferred"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "opcode": "OP_MSG",
+              "responseTo": 0,
+              "flags": [],
+              "sections": [
+                {
+                  "kind": 0,
+                  "body": {
+                    "isMaster": 1,
+                    "$db": "handshake-test",
+                    "lsid": {
+                      "$$type": "object"
+                    },
+                    "$clusterTime": {
+                      "$$unsetOrMatches": {
+                        "$$type": "object"
+                      }
+                    },
+                    "$readPreference": {
+                      "$$unsetOrMatches": {
+                        "mode": "primaryPreferred"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "opcode": "OP_COMPRESSED",
+              "responseTo": 0,
+              "originalOpcode": "OP_MSG",
+              "compressorId": 2,
+              "uncompressedSize": {
+                "$$type": "int"
+              },
+              "message": {
+                "flags": [],
+                "sections": [
+                  {
+                    "kind": 0,
+                    "body": {
+                      "ping": 1,
+                      "$db": "handshake-test",
+                      "lsid": {
+                        "$$type": "object"
+                      },
+                      "$clusterTime": {
+                        "$$unsetOrMatches": {
+                          "$$type": "object"
+                        }
+                      },
+                      "$readPreference": {
+                        "$$unsetOrMatches": {
+                          "mode": "primaryPreferred"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

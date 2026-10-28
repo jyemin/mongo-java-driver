@@ -1,0 +1,61 @@
+description: handshake-hello-server-api
+schemaVersion: '1.27'
+runOnRequirements:
+  - minServerVersion: '5.0'
+    auth: false
+createEntities:
+  - client:
+      id: &client client
+      useMultipleMongoses: false
+      # Clear every variable the driver inspects for client.env, so the host cannot leak into the handshake.
+      setEnvironment:
+        AWS_EXECUTION_ENV: null
+        AWS_LAMBDA_RUNTIME_API: null
+        FUNCTIONS_WORKER_RUNTIME: null
+        K_SERVICE: null
+        FUNCTION_NAME: null
+        VERCEL: null
+        KUBERNETES_SERVICE_HOST: null
+      serverApi: { version: '1' }
+      observeWireMessages:
+        connections: [application]
+        phases: [handshake]
+  - database:
+      id: &database database
+      client: *client
+      databaseName: handshake-test
+tests:
+  - description: with serverApi the handshake uses hello and carries apiVersion
+    operations:
+      - name: runCommand
+        object: *database
+        arguments: { commandName: ping, command: { ping: 1 } }
+    expectWireMessages:
+      - client: *client
+        messages:
+          - opcode: OP_MSG
+            responseTo: 0
+            flags: []
+            command:
+              hello: 1
+              helloOk: true
+              backpressure: "2"
+              apiVersion: '1'
+              client:
+                application: { name: client }
+                driver:
+                  name: { $$type: string }
+                  version: { $$type: string }
+                os:
+                  type: { $$type: string }
+                  name: { $$unsetOrMatches: { $$type: string } }
+                  architecture: { $$unsetOrMatches: { $$type: string } }
+                  version: { $$unsetOrMatches: { $$type: string } }
+                platform: { $$unsetOrMatches: { $$type: string } }
+                # Only /.dockerenv can still populate env, and only with container.runtime.
+                env:
+                  $$unsetOrMatches:
+                    container: { runtime: docker }
+              $db: admin
+              # Added by the driver on a direct connection to a replica set member; absent on a standalone.
+              $readPreference: { $$unsetOrMatches: { mode: primaryPreferred } }

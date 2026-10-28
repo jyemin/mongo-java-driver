@@ -1,0 +1,160 @@
+{
+  "description": "handshake-rtt",
+  "schemaVersion": "1.27",
+  "runOnRequirements": [
+    {
+      "minServerVersion": "4.4",
+      "auth": false
+    }
+  ],
+  "createEntities": [
+    {
+      "client": {
+        "id": "client",
+        "useMultipleMongoses": false,
+        "uriOptions": {
+          "directConnection": true,
+          "serverMonitoringMode": "stream",
+          "heartbeatFrequencyMS": 500,
+          "compressors": "zlib"
+        },
+        "setEnvironment": {
+          "AWS_EXECUTION_ENV": null,
+          "AWS_LAMBDA_RUNTIME_API": null,
+          "FUNCTIONS_WORKER_RUNTIME": null,
+          "K_SERVICE": null,
+          "FUNCTION_NAME": null,
+          "VERCEL": null,
+          "KUBERNETES_SERVICE_HOST": null
+        },
+        "observeWireMessages": {
+          "connections": [
+            "rtt"
+          ],
+          "phases": [
+            "handshake",
+            "operation"
+          ]
+        }
+      }
+    },
+    {
+      "database": {
+        "id": "database",
+        "client": "client",
+        "databaseName": "handshake-test"
+      }
+    }
+  ],
+  "tests": [
+    {
+      "description": "the round trip time connection handshakes like any other, then pings with plain hello",
+      "operations": [
+        {
+          "name": "waitForWireMessages",
+          "object": "testRunner",
+          "arguments": {
+            "client": "client",
+            "source": "rtt",
+            "count": 3
+          }
+        }
+      ],
+      "expectWireMessages": [
+        {
+          "client": "client",
+          "source": "rtt",
+          "ignoreExtraMessages": true,
+          "messages": [
+            {
+              "opcode": "OP_QUERY",
+              "responseTo": 0,
+              "flags": [],
+              "fullCollectionName": "admin.$cmd",
+              "numberToSkip": 0,
+              "numberToReturn": -1,
+              "command": {
+                "isMaster": 1,
+                "helloOk": true,
+                "backpressure": "2",
+                "client": {
+                  "application": {
+                    "name": "client"
+                  },
+                  "driver": {
+                    "name": {
+                      "$$type": "string"
+                    },
+                    "version": {
+                      "$$type": "string"
+                    }
+                  },
+                  "os": {
+                    "type": {
+                      "$$type": "string"
+                    },
+                    "name": {
+                      "$$unsetOrMatches": {
+                        "$$type": "string"
+                      }
+                    },
+                    "architecture": {
+                      "$$unsetOrMatches": {
+                        "$$type": "string"
+                      }
+                    },
+                    "version": {
+                      "$$unsetOrMatches": {
+                        "$$type": "string"
+                      }
+                    }
+                  },
+                  "platform": {
+                    "$$unsetOrMatches": {
+                      "$$type": "string"
+                    }
+                  },
+                  "env": {
+                    "$$unsetOrMatches": {
+                      "container": {
+                        "runtime": "docker"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "opcode": "OP_MSG",
+              "responseTo": 0,
+              "flags": [],
+              "command": {
+                "hello": 1,
+                "$db": "admin",
+                "$readPreference": {
+                  "$$unsetOrMatches": {
+                    "mode": "primaryPreferred"
+                  }
+                }
+              }
+            },
+            {
+              "opcode": "OP_MSG",
+              "responseTo": 0,
+              "flags": [],
+              "command": {
+                "hello": 1,
+                "$db": "admin",
+                "$readPreference": {
+                  "$$unsetOrMatches": {
+                    "mode": "primaryPreferred"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
