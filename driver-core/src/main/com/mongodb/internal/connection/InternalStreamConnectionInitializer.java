@@ -227,6 +227,7 @@ public class InternalStreamConnectionInitializer implements InternalConnectionIn
     }
 
     private String getHandshakeCommandName() {
-        return serverApi == null ? LEGACY_HELLO : HELLO;
+        // A server API version and load balanced mode both require the hello command
+        return serverApi == null && clusterConnectionMode != ClusterConnectionMode.LOAD_BALANCED ? LEGACY_HELLO : HELLO;
     }
 }
