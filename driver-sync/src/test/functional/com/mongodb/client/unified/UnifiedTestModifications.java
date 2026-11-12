@@ -318,6 +318,10 @@ public final class UnifiedTestModifications {
                 .directory("open-telemetry/tests");
         def.skipJira("https://jira.mongodb.org/browse/JAVA-6289 TODO-JAVA-6289")
                 .file("open-telemetry/tests", "error_type");
+        def.skipJira("https://jira.mongodb.org/browse/JAVA-6282")
+                .test("open-telemetry/tests", "operation getMore", "getMore is nested under its own operation span")
+                .test("open-telemetry/tests", "transaction getMore spans",
+                        "getMore inside a transaction nests under the transaction span");
 
         // TODO-JAVA-5712
 
@@ -623,6 +627,9 @@ public final class UnifiedTestModifications {
                 .file("unified-test-format/tests/valid-pass", "kmsProviders-mixed_kms_credential_fields");
         def.skipJira("https://jira.mongodb.org/browse/JAVA-5672")
                 .file("unified-test-format/tests/valid-pass", "operator-matchAsRoot");
+        def.skipUnknownReason("The test runner does not support the $$gte operator (unified test format 1.29), "
+                        + "and there is no Jira ticket for it yet")
+                .file("unified-test-format/tests/valid-pass", "operator-gte");
 
         // valid fail
 
