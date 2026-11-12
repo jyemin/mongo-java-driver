@@ -130,6 +130,8 @@ public class InternalStreamConnection implements InternalConnection {
     @Nullable
     private final Authenticator authenticator;
     private final boolean isMonitoringConnection;
+    // POC: a monitoring connection is a round trip time connection if it was opened by a thread named like the RTT monitor.
+    private volatile boolean isRoundTripTimeConnection;
     private final ServerId serverId;
     private final ConnectionGenerationSupplier connectionGenerationSupplier;
     private final StreamFactory streamFactory;
@@ -233,6 +235,7 @@ public class InternalStreamConnection implements InternalConnection {
     @Override
     public void open(final OperationContext originalOperationContext) {
         isTrue("Open already called", stream == null);
+        isRoundTripTimeConnection = isMonitoringConnection && Thread.currentThread().getName().startsWith("cluster-rtt-");
         stream = streamFactory.create(serverId.getAddress());
         OperationContext operationContext = originalOperationContext;
         boolean beforeHandshake = true;
@@ -551,6 +554,35 @@ public class InternalStreamConnection implements InternalConnection {
             trySendMessage(message, compressedBsonOutput, operationContext);
         }
         responseTo = message.getId();
+    }
+
+    /**
+     * Hands a copy of the bytes that are about to be written to the stream to the registered {@link WireMessageInterceptor}, if any.
+     * This is the only place that observes messages, so that what is observed is what is sent and not what a message object says it
+     * encoded.
+     */
+    private void interceptWireMessage(final List<ByteBuf> byteBuffers) {
+        WireMessageInterceptor interceptor = WireMessageInterceptors.get(getClusterId().getDescription());
+        if (interceptor == null) {
+            return;
+        }
+        int size = 0;
+        for (ByteBuf cur : byteBuffers) {
+            size += cur.remaining();
+        }
+        byte[] bytes = new byte[size];
+        int offset = 0;
+        for (ByteBuf cur : byteBuffers) {
+            // an absolute get: it does not move the position, so the real write is unaffected
+            cur.get(cur.position(), bytes, offset, cur.remaining());
+            offset += cur.remaining();
+        }
+        interceptor.intercept(
+                !isMonitoringConnection ? WireMessageInterceptor.Source.APPLICATION
+                        : isRoundTripTimeConnection ? WireMessageInterceptor.Source.RTT : WireMessageInterceptor.Source.MONITOR,
+                opened() ? WireMessageInterceptor.Phase.OPERATION : WireMessageInterceptor.Phase.HANDSHAKE,
+                serverId.getAddress(),
+                bytes);
     }
 
     private void trySendMessage(final CommandMessage message, final ByteBufferBsonOutput bsonOutput,
@@ -887,6 +919,7 @@ public class InternalStreamConnection implements InternalConnection {
             throw new MongoSocketClosedException("Cannot write to a closed stream", getServerAddress());
         }
         try {
+            interceptWireMessage(byteBuffers);
             stream.write(byteBuffers, operationContext);
         } catch (Throwable t) {
             close();
@@ -907,6 +940,7 @@ public class InternalStreamConnection implements InternalConnection {
             }
             c.complete(c);
         }).thenRunTryCatchAsyncBlocks(c -> {
+            interceptWireMessage(byteBuffers);
             stream.writeAsync(byteBuffers, operationContext, c.asHandler());
         }, Throwable.class, (t, c) -> {
             try {
