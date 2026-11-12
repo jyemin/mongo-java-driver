@@ -18,8 +18,10 @@ package com.mongodb.client.unified;
 
 import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.UnixServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
@@ -111,7 +113,7 @@ public abstract class UnifiedTest {
     private static final Set<String> PRESTART_POOL_ASYNC_WORK_MANAGER_FILE_DESCRIPTIONS = Collections.singleton(
             "wait queue timeout errors include details about checked out connections");
 
-    private static final String MAX_SUPPORTED_SCHEMA_VERSION = "1.27";
+    private static final String MAX_SUPPORTED_SCHEMA_VERSION = "1.30";
     private static final List<Integer> MAX_SUPPORTED_SCHEMA_VERSION_COMPONENTS = Arrays.stream(MAX_SUPPORTED_SCHEMA_VERSION.split("\\."))
             .map(Integer::parseInt)
             .collect(Collectors.toList());
@@ -150,6 +152,7 @@ public abstract class UnifiedTest {
         private final ErrorMatcher errorMatcher = new ErrorMatcher(context, valueMatcher);
         private final EventMatcher eventMatcher = new EventMatcher(valueMatcher, context);
         private final LogMatcher logMatcher = new LogMatcher(valueMatcher, context);
+        private final WireMessageMatcher wireMessageMatcher = new WireMessageMatcher(valueMatcher, context);
 
         AssertionContext getAssertionContext() {
             return context;
@@ -170,6 +173,10 @@ public abstract class UnifiedTest {
         LogMatcher getLogMatcher() {
             return logMatcher;
         }
+
+        WireMessageMatcher getWireMessageMatcher() {
+            return wireMessageMatcher;
+        }
     }
 
     protected UnifiedTest() {
@@ -181,9 +188,15 @@ public abstract class UnifiedTest {
 
     @NonNull
     protected static Collection<Arguments> getTestData(final String directory, final boolean isReactive, final Language language) {
+        return getTestData(directory, getSpecTestDocuments(directory), isReactive, language);
+    }
+
+    @NonNull
+    protected static Collection<Arguments> getTestData(final String directory, final List<BsonDocument> fileDocuments,
+            final boolean isReactive, final Language language) {
         List<Arguments> data = new ArrayList<>();
 
-        for (BsonDocument fileDocument : getSpecTestDocuments(directory)) {
+        for (BsonDocument fileDocument : fileDocuments) {
             if (!fileDocument.containsKey("schemaVersion")) {
                 LOGGER.info("Not a unified test file: " + fileDocument.getString("fileName").getValue());
                 continue;
@@ -390,6 +403,11 @@ public abstract class UnifiedTest {
                 compareLogMessages(rootContext, definition, tweaks);
             }
 
+            entities.assertAllWireMessagesWellFormed();
+            if (definition.containsKey("expectWireMessages")) {
+                compareWireMessages(rootContext, definition);
+            }
+
             if (definition.containsKey("expectTracingMessages")) {
                 compareTracingSpans(definition);
             }
@@ -514,6 +532,61 @@ public abstract class UnifiedTest {
         }
     }
 
+    private OperationResult executeWaitForWireMessages(final BsonDocument operation) {
+        BsonDocument arguments = operation.getDocument("arguments");
+        String clientId = arguments.getString("client").getValue();
+        TestWireMessageInterceptor interceptor = entities.getClientWireMessageInterceptor(clientId);
+        WireMessage.Source source = WireMessage.Source.valueOf(arguments.getString("source").getValue().toUpperCase());
+        int count = arguments.getNumber("count").intValue();
+        try {
+            if (source == WireMessage.Source.APPLICATION) {
+                interceptor.waitForMessages(source, count, 10, TimeUnit.SECONDS);
+            } else {
+                // monitor and rtt: every server that the client monitors must have had count messages written to it
+                interceptor.waitForMessagesFromEachServer(() -> entities.getClient(clientId).getClusterDescription(), source, count,
+                        10, TimeUnit.SECONDS);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new MongoInterruptedException("Interrupted while waiting for wire messages", e);
+        }
+        return OperationResult.NONE;
+    }
+
+    private void compareWireMessages(final UnifiedTestContext rootContext, final BsonDocument definition) {
+        for (BsonValue cur : definition.getArray("expectWireMessages")) {
+            BsonDocument curWireMessagesForClient = cur.asDocument();
+            boolean ignoreExtraMessages = curWireMessagesForClient.getBoolean("ignoreExtraMessages", BsonBoolean.FALSE).getValue();
+            String clientId = curWireMessagesForClient.getString("client").getValue();
+            TestWireMessageInterceptor wireMessageInterceptor = entities.getClientWireMessageInterceptor(clientId);
+            WireMessage.Source source = curWireMessagesForClient.containsKey("source")
+                    ? WireMessage.Source.valueOf(curWireMessagesForClient.getString("source").getValue().toUpperCase())
+                    : null;
+            if (source == null && (wireMessageInterceptor.selects(WireMessage.Source.MONITOR)
+                    || wireMessageInterceptor.selects(WireMessage.Source.RTT))) {
+                throw new IllegalStateException("source must be specified if the client observes monitor or rtt messages");
+            }
+            if (source == WireMessage.Source.MONITOR || source == WireMessage.Source.RTT) {
+                if (!ignoreExtraMessages) {
+                    throw new IllegalStateException("ignoreExtraMessages must be true for monitor and rtt messages");
+                }
+                try {
+                    for (ServerAddress serverAddress : wireMessageInterceptor.waitForServers(
+                            () -> entities.getClient(clientId).getClusterDescription(), 10, TimeUnit.SECONDS)) {
+                        rootContext.getWireMessageMatcher().assertWireMessageEquality(clientId + " (" + serverAddress + ")", true,
+                                curWireMessagesForClient.getArray("messages"), wireMessageInterceptor.getMessages(source, serverAddress));
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new MongoInterruptedException("Interrupted while waiting for the servers to be known", e);
+                }
+            } else {
+                rootContext.getWireMessageMatcher().assertWireMessageEquality(clientId, ignoreExtraMessages,
+                        curWireMessagesForClient.getArray("messages"), wireMessageInterceptor.getMessages(source));
+            }
+        }
+    }
+
     private void compareTracingSpans(final BsonDocument definition) {
         BsonArray curTracingSpansForClients = definition.getArray("expectTracingMessages");
         for (BsonValue tracingSpan : curTracingSpansForClients) {
@@ -599,6 +672,8 @@ public abstract class UnifiedTest {
                     return executeWait(operation);
                 case "waitForEvent":
                     return executeWaitForEvent(context, operation);
+                case "waitForWireMessages":
+                    return executeWaitForWireMessages(operation);
                 case "waitForPrimaryChange":
                     return executeWaitPrimaryChange(context, operation);
                 case "waitForThread":

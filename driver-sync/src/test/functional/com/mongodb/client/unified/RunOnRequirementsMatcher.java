@@ -78,6 +78,24 @@ final class RunOnRequirementsMatcher {
                             break requirementLoop;
                         }
                         break;
+                    case "compression":
+                        boolean compressionRequired = curRequirement.getValue().asBoolean().getValue();
+                        boolean compressionEnabled = !clientSettings.getCompressorList().isEmpty();
+
+                        if (compressionRequired != compressionEnabled) {
+                            requirementMet = false;
+                            break requirementLoop;
+                        }
+                        break;
+                    case "serverApi":
+                        boolean serverApiRequired = curRequirement.getValue().asBoolean().getValue();
+                        boolean serverApiDeclared = clientSettings.getServerApi() != null;
+
+                        if (serverApiRequired != serverApiDeclared) {
+                            requirementMet = false;
+                            break requirementLoop;
+                        }
+                        break;
                     case "authMechanism":
                         boolean containsMechanism = getServerParameters()
                                 .getArray("authenticationMechanisms")
