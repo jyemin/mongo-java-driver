@@ -56,7 +56,6 @@ import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 import static com.mongodb.assertions.Assertions.assertTrue;
 import static com.mongodb.assertions.Assertions.fail;
 import static com.mongodb.assertions.Assertions.notNull;
-import static com.mongodb.connection.ClusterConnectionMode.LOAD_BALANCED;
 import static com.mongodb.connection.ClusterConnectionMode.SINGLE;
 import static com.mongodb.connection.ServerType.SHARD_ROUTER;
 import static com.mongodb.connection.ServerType.STANDALONE;
@@ -517,9 +516,7 @@ public final class CommandMessage extends RequestMessage {
 
     private static OpCode getOpCode(final MessageSettings settings, final ClusterConnectionMode clusterConnectionMode,
             @Nullable final ServerApi serverApi) {
-        return isServerVersionKnown(settings) || clusterConnectionMode == LOAD_BALANCED || serverApi != null
-                ? OpCode.OP_MSG
-                : OpCode.OP_QUERY;
+        return OpCode.OP_MSG;
     }
 
     private static boolean isServerVersionKnown(final MessageSettings settings) {
